@@ -2,9 +2,9 @@ import sys
 from PyQt6.QtWidgets import QApplication, QWidget, QGridLayout, QTextEdit, QPushButton, QLabel, QLineEdit, QMainWindow, QDialog, QCheckBox, QVBoxLayout
 from PyQt6.QtCore import QObject, QTimer, pyqtSlot, QSettings
 from wiktionaryparser import WiktionaryParser
-from config import SettingsDialog
+from simplesentencemining.config import SettingsDialog
 from os import path
-from tools import addNote
+from simplesentencemining.tools import addNote
 
 import functools
 
