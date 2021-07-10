@@ -77,8 +77,6 @@ class DictionaryWindow(QMainWindow):
 
     def initDictionary(self):
         self.parser = WiktionaryParser()
-        #self.parser.set_default_language(self.config['DEFAULT'].get("target_language"))
-        #print("Target language is set to: " + self.parser.get_default_language())
 
     def configure(self):
         self.settings_dialog = SettingsDialog(self)
@@ -115,13 +113,13 @@ class DictionaryWindow(QMainWindow):
         self.setSentence(text)
 
     def lookup(self, word):
-        print("Looking up: ", word)
-        item = self.parser.fetch(word)
+        print("Looking up: ", word, " in ", self.settings.value("target_language", "english"))
+        item = self.parser.fetch(word, self.settings.value("target_language", "english"))
         meanings = []
         for i in item:
             for j in i['definitions']:
-                meanings.append("\n".join(j['text'][1:]))
-        return word + "\n" + 30*"=" + "\n" + ("\n" + 30*"-" + "\n").join(meanings)
+                meanings.append("\n".join([str(item[0]) + ". " + item[1] for item in list(enumerate(j['text']))[1:]]))
+        return word + ":\n" + ("\n\n").join(meanings)
 
     def createNote(self):
         sentence = self.sentence.toPlainText()
@@ -140,13 +138,7 @@ class DictionaryWindow(QMainWindow):
 
 
 class MyTextEdit(QTextEdit):
-    #def focusOutEvent(self, e):
-    #    start = self.selectionStart()
-    #    if start == -1:
-    #        return
-    #    length = self.selectionLength()
-    #    super().focusOutEvent(e)
-    #    self.setSelection(start, length)
+
     @pyqtSlot()
     def mouseDoubleClickEvent(self, e):
         super().mouseDoubleClickEvent(e)
@@ -158,8 +150,6 @@ class MyTextEdit(QTextEdit):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     w = DictionaryWindow()
-
-    #keybinder.register_hotkey(w.winId(), "Shift+Ctrl+A", lambda _:print("hello"))
     
     w.show()
     sys.exit(app.exec())
