@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QDialog, QCheckBox, QGridLayout, QLineEdit, QComboBox, QLabel
+from PyQt5.QtWidgets import QDialog, QCheckBox, QGridLayout, QLineEdit, QComboBox, QLabel
 from ssmtool.tools import getDeckList, getNoteTypes, getFields
 
 class SettingsDialog(QDialog):

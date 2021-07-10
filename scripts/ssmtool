@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from ssmtool.__main__ import DictionaryWindow
 import sys
-from PyQt6.QtWidgets import QApplication
+from PyQt5.QtWidgets import QApplication
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     w = DictionaryWindow()

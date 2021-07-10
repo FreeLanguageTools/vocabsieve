@@ -8,7 +8,7 @@ This program monitors your clipboard at all times and when a change is detected,
 | Name | Note |
 ------ | ------
 |Anki with AnkiConnect | Needed for exporting notes|
-|PyQt6 | Needed when using pip. Will install automatically.|
+|PyQt5 | Needed when using pip. Will install automatically.|
 
 It has not been thoroughly tested on all platforms, but it should work on Linux, MacOS, and Microsoft Windows, or any platforms supporting Python and PyQt.
 
