@@ -1,5 +1,6 @@
 import json
 import urllib.request
+import unicodedata
 
 def request(action, **params):
     return {'action': action, 'params': params, 'version': 6}
@@ -32,3 +33,37 @@ def getFields(server, name):
 def addNote(server, content):
     result = invoke('addNote', server, note=content)
     return result
+
+def getVersion(server):
+    result = invoke('version', server)
+    return result
+
+def removeAccents(word):
+    print("Removing accent marks from query ", word)
+    ACCENT_MAPPING = {
+        '́': '',
+        '̀': '',
+        'а́': 'а',
+        'а̀': 'а',
+        'е́': 'е',
+        'ѐ': 'е',
+        'и́': 'и',
+        'ѝ': 'и',
+        'о́': 'о',
+        'о̀': 'о',
+        'у́': 'у',
+        'у̀': 'у',
+        'ы́': 'ы',
+        'ы̀': 'ы',
+        'э́': 'э',
+        'э̀': 'э',
+        'ю́': 'ю',
+        '̀ю': 'ю',
+        'я́́': 'я',
+        'я̀': 'я',
+    }
+    word = unicodedata.normalize('NFKC', word)
+    for old, new in ACCENT_MAPPING.items():
+        word = word.replace(old, new)
+    print("Remaining: ", word)
+    return word

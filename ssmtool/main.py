@@ -1,10 +1,10 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QTextEdit, QPushButton, QLabel, QLineEdit, QMainWindow, QDialog, QCheckBox, QVBoxLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QTextEdit, QPushButton, QLabel, QLineEdit, QMainWindow, QDialog, QCheckBox, QVBoxLayout, QMessageBox
 from PyQt5.QtCore import QObject, QTimer, pyqtSlot, QSettings
 from wiktionaryparser import WiktionaryParser
-from ssmtool.config import SettingsDialog
 from os import path
-from ssmtool.tools import addNote
+from .config import SettingsDialog
+from .tools import addNote, removeAccents
 
 import functools
 
@@ -56,10 +56,12 @@ class DictionaryWindow(QMainWindow):
         self.lookup_button = QPushButton("Get Definition")
         self.toanki_button = QPushButton("Add note")
         self.config_button = QPushButton("Configure..")
+        self.read_button = QPushButton("Read from clipboard")
     
     def setupWidgets(self):
         self.layout = QGridLayout(self.widget)
-        self.layout.addWidget(self.label_sentence, 0, 0, 1, 2)
+        self.layout.addWidget(self.label_sentence, 0, 0)
+        self.layout.addWidget(self.read_button, 0, 1)
         self.layout.addWidget(self.label_word, 2, 0, 1, 2)
         self.layout.addWidget(self.label_def, 4, 0, 1, 2)
 
@@ -74,6 +76,7 @@ class DictionaryWindow(QMainWindow):
         self.lookup_button.clicked.connect(self.getDefinition)
         self.config_button.clicked.connect(self.configure)
         self.toanki_button.clicked.connect(self.createNote)
+        self.read_button.clicked.connect(self.clipboardChanged)
 
     def initDictionary(self):
         self.parser = WiktionaryParser()
@@ -114,7 +117,7 @@ class DictionaryWindow(QMainWindow):
 
     def lookup(self, word):
         print("Looking up: ", word, " in ", self.settings.value("target_language", "english"))
-        item = self.parser.fetch(word, self.settings.value("target_language", "english"))
+        item = self.parser.fetch(removeAccents(word), self.settings.value("target_language", "english"))
         meanings = []
         for i in item:
             for j in i['definitions']:
@@ -122,9 +125,9 @@ class DictionaryWindow(QMainWindow):
         return word + ":\n" + ("\n\n").join(meanings)
 
     def createNote(self):
-        sentence = self.sentence.toPlainText()
+        sentence = self.sentence.toPlainText().replace("\n", "<br>")
         word = self.word.text()
-        definition = self.definition.toPlainText()
+        definition = self.definition.toPlainText().replace("\n", "<br>")
         content = {
             "deckName": self.settings.value("deck_name"),
             "modelName": self.settings.value("note_type"),
@@ -134,6 +137,7 @@ class DictionaryWindow(QMainWindow):
                 self.settings.value("definition_field"): definition
             }
         }
+        print("Sending request with:\n", content)
         addNote(self.settings.value("anki_api"), content)
 
 
@@ -147,12 +151,11 @@ class MyTextEdit(QTextEdit):
         self.textCursor().clearSelection()
 
 
-if __name__ == "__main__":
+    
+def main():
     app = QApplication(sys.argv)
     w = DictionaryWindow()
     
     w.show()
     sys.exit(app.exec())
 
-    
-    
