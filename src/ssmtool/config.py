@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QDialog, QCheckBox, QGridLayout, QLineEdit, QComboBox, QLabel
-from simplesentencemining.tools import getDeckList, getNoteTypes, getFields
+from ssmtool.tools import getDeckList, getNoteTypes, getFields
 
 class SettingsDialog(QDialog):
     def __init__(self, parent):
