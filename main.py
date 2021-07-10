@@ -4,6 +4,7 @@ from PyQt6.QtCore import QObject, QTimer, pyqtSlot, QSettings
 from wiktionaryparser import WiktionaryParser
 from config import SettingsDialog
 from os import path
+from tools import addNote
 
 import functools
 
@@ -31,6 +32,7 @@ class DictionaryWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Simple Sentence Mining")
+        self.setFixedSize(400, 500)
         self.widget = QWidget()
         self.settings = QSettings("FreeLanguageTools", "SimpleSentenceMining")
         self.initDictionary()
@@ -41,9 +43,13 @@ class DictionaryWindow(QMainWindow):
         QApplication.clipboard().dataChanged.connect(self.clipboardChanged)
         
     def initWidgets(self):
-        self.sentence = MyLineEdit("Sentence here")
-        self.word = MyLineEdit("Word here")
-        self.definition = QTextEdit("Definition here")
+        self.sentence = MyTextEdit("Sentence here")
+        self.sentence.setMinimumHeight(30)
+        self.sentence.setMaximumHeight(120)
+        self.word = QLineEdit("Word here")
+        self.definition = MyTextEdit("Definition here")
+        self.definition.setMinimumHeight(70)
+        self.definition.setMaximumHeight(400)
         self.label_sentence = QLabel("Sentence")
         self.label_word = QLabel("Word")
         self.label_def = QLabel("Definition")
@@ -67,6 +73,7 @@ class DictionaryWindow(QMainWindow):
 
         self.lookup_button.clicked.connect(self.getDefinition)
         self.config_button.clicked.connect(self.configure)
+        self.toanki_button.clicked.connect(self.createNote)
 
     def initDictionary(self):
         self.parser = WiktionaryParser()
@@ -80,18 +87,25 @@ class DictionaryWindow(QMainWindow):
 
     def getDefinition(self):
         result = ""
-        selected = self.sentence.selectedText().lower()
-        cursor = self.definition.textCursor()
+        cursor = self.sentence.textCursor()
+        selected = cursor.selectedText().lower()
+        cursor2 = self.definition.textCursor()
+        selected2 = cursor2.selectedText().lower()
         if selected != "":
             result = self.lookup(selected)
-            self.word.setText(self.sentence.selectedText().lower())
+            self.word.setText(selected)
             self.definition.setText(result)
-            self.sentence.deselect()
-        elif cursor.selectedText() != "":
-            result = self.lookup(cursor.selectedText().lower())
+            cursor.clearSelection()
+            self.sentence.setTextCursor(cursor)
+        elif selected2 != "":
+            result = self.lookup(selected2)
+            self.definition.setText(result)
+            cursor.clearSelection()
+            self.sentence.setTextCursor(cursor)
+            #cursor2.clearSelection()
         else:
             return
-        self.definition.setText(result)
+        
     
     def setSentence(self, content):
         self.sentence.setText(content)
@@ -101,6 +115,7 @@ class DictionaryWindow(QMainWindow):
         self.setSentence(text)
 
     def lookup(self, word):
+        print("Looking up: ", word)
         item = self.parser.fetch(word)
         meanings = []
         for i in item:
@@ -108,19 +123,36 @@ class DictionaryWindow(QMainWindow):
                 meanings.append("\n".join(j['text'][1:]))
         return word + "\n" + 30*"=" + "\n" + ("\n" + 30*"-" + "\n").join(meanings)
 
+    def createNote(self):
+        sentence = self.sentence.toPlainText()
+        word = self.word.text()
+        definition = self.definition.toPlainText()
+        content = {
+            "deckName": self.settings.value("deck_name"),
+            "modelName": self.settings.value("note_type"),
+            "fields": {
+                self.settings.value("sentence_field"): sentence,
+                self.settings.value("word_field"): word,
+                self.settings.value("definition_field"): definition
+            }
+        }
+        addNote(self.settings.value("anki_api"), content)
 
-class MyLineEdit(QLineEdit):
-    def focusOutEvent(self, e):
-        start = self.selectionStart()
-        if start == -1:
-            return
-        length = self.selectionLength()
-        super().focusOutEvent(e)
-        self.setSelection(start, length)
+
+class MyTextEdit(QTextEdit):
+    #def focusOutEvent(self, e):
+    #    start = self.selectionStart()
+    #    if start == -1:
+    #        return
+    #    length = self.selectionLength()
+    #    super().focusOutEvent(e)
+    #    self.setSelection(start, length)
     @pyqtSlot()
     def mouseDoubleClickEvent(self, e):
         super().mouseDoubleClickEvent(e)
         GlobalObject().dispatchEvent("double clicked")
+        print("Event sent")
+        self.textCursor().clearSelection()
 
 
 if __name__ == "__main__":
