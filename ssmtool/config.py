@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QDialog, QCheckBox, QGridLayout, QLineEdit, QComboBox, QLabel
-from ssmtool.tools import getDeckList, getNoteTypes, getFields
+from PyQt5.QtWidgets import QDialog, QCheckBox, QGridLayout, QLineEdit, QComboBox, QLabel, QMessageBox
+from .tools import getDeckList, getNoteTypes, getFields, getVersion
 
 class SettingsDialog(QDialog):
     def __init__(self, parent):
@@ -72,15 +72,22 @@ class SettingsDialog(QDialog):
         self.word_field.currentTextChanged.connect(self.syncSettings)
         self.definition_field.currentTextChanged.connect(self.syncSettings)
         self.anki_api.editingFinished.connect(self.syncSettings)
+        self.anki_api.editingFinished.connect(self.loadSettings)
 
     def loadSettings(self):
-        print("loading")
+        print("loading, will also check api")
         self.allow_editing.setChecked(self.settings.value("allow_editing", True, type=bool))
         self.lemmatization.setChecked(self.settings.value("lemmatization", type=bool))
         self.target_language.setCurrentText(self.settings.value("target_language"))
         self.anki_api.setText(self.settings.value("anki_api", "http://localhost:8765"))
 
         api = self.anki_api.text()
+
+        try:
+            print("API version is: ", getVersion(api))
+        except Exception as e:
+            self.errorNoConnection(e)
+            return
 
         decks = getDeckList(api)
         self.deck_name.clear()
@@ -96,7 +103,17 @@ class SettingsDialog(QDialog):
     def loadFields(self):
         print("loading fields")
         api = self.anki_api.text()
+        try:
+            print("API version is: ", getVersion(api))
+        except Exception as _:
+            self.errorNoConnection(e)
+            return
         current_type = self.note_type.currentText()
+        print("Current note type is:", current_type) 
+
+        if current_type == "":
+            return
+
         fields = getFields(api, current_type)
 
         self.sentence_field.clear()
@@ -123,3 +140,11 @@ class SettingsDialog(QDialog):
         self.settings.setValue("definition_field", self.definition_field.currentText())
         self.settings.setValue("anki_api", self.anki_api.text())
         self.settings.sync()
+    
+    def errorNoConnection(self, error):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Critical)
+        msg.setText("Error")
+        msg.setInformativeText(str(error) + 
+            "\nAnkiConnect must be running to use the configuration tool.")
+        msg.exec()
