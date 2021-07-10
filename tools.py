@@ -4,9 +4,9 @@ import urllib.request
 def request(action, **params):
     return {'action': action, 'params': params, 'version': 6}
 
-def invoke(action, **params):
+def invoke(action, server, **params):
     requestJson = json.dumps(request(action, **params)).encode('utf-8')
-    response = json.load(urllib.request.urlopen(urllib.request.Request('http://localhost:8765', requestJson)))
+    response = json.load(urllib.request.urlopen(urllib.request.Request(server, requestJson)))
     if len(response) != 2:
         raise Exception('response has an unexpected number of fields')
     if 'error' not in response:
@@ -17,5 +17,18 @@ def invoke(action, **params):
         raise Exception(response['error'])
     return response['result']
 
-result = invoke('deckNames')
-print('got list of decks: {}'.format(result))
+def getDeckList(server):
+    result = invoke('deckNames', server)
+    return result
+
+def getNoteTypes(server):
+    result = invoke('modelNames', server)
+    return result
+
+def getFields(server, name):
+    result = invoke('modelFieldNames', server, modelName=name)
+    return result
+
+def addNote(server, content):
+    result = invoke('addNote', server, note=content)
+    return result
