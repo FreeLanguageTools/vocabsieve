@@ -1,12 +1,13 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QTextEdit, QPushButton, QLabel, QLineEdit, QMainWindow, QDialog, QCheckBox, QVBoxLayout, QMessageBox
-from PyQt5.QtCore import QObject, QTimer, pyqtSlot, QSettings
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 from wiktionaryparser import WiktionaryParser
 from os import path
-from .config import SettingsDialog
-from .tools import addNote, removeAccents
-
 import functools
+from .config import *
+from .tools import *
+from . import __version__
 
 @functools.lru_cache()
 class GlobalObject(QObject):
@@ -39,39 +40,49 @@ class DictionaryWindow(QMainWindow):
         self.setCentralWidget(self.widget)
         self.initWidgets()
         self.setupWidgets()
+        self.setupShortcuts()
+
         GlobalObject().addEventListener("double clicked", self.getDefinition)
         QApplication.clipboard().dataChanged.connect(self.clipboardChanged)
-        
+
     def initWidgets(self):
-        self.sentence = MyTextEdit("Sentence here")
+        self.namelabel = QLabel("Simple Sentence Mining v" + __version__)
+        self.namelabel.setFont(QFont("Sans Serif", QApplication.font().pointSize() * 1.5))
+        self.sentence = MyTextEdit("")
         self.sentence.setMinimumHeight(30)
         self.sentence.setMaximumHeight(120)
-        self.word = QLineEdit("Word here")
-        self.definition = MyTextEdit("Definition here")
+        self.word = QLineEdit("")
+        self.definition = MyTextEdit("")
         self.definition.setMinimumHeight(70)
-        self.definition.setMaximumHeight(400)
+        self.definition.setMaximumHeight(800)
         self.label_sentence = QLabel("Sentence")
+        self.label_sentence.setToolTip("You can look up any word in this box by double clicking it, or alternatively by selecting it, then press \"Get definition\".")
         self.label_word = QLabel("Word")
         self.label_def = QLabel("Definition")
-        self.lookup_button = QPushButton("Get Definition")
-        self.toanki_button = QPushButton("Add note")
+        self.lookup_button = QPushButton("Get definition (Ctrl+D)")
+        self.toanki_button = QPushButton("Add note (Ctrl+S)")
         self.config_button = QPushButton("Configure..")
         self.read_button = QPushButton("Read from clipboard")
     
+        self.sentence.setReadOnly(not (self.settings.value("allow_editing", True, type=bool)))
+        self.sentence.setReadOnly(not (self.settings.value("allow_editing", True, type=bool)))
+
     def setupWidgets(self):
         self.layout = QGridLayout(self.widget)
-        self.layout.addWidget(self.label_sentence, 0, 0)
-        self.layout.addWidget(self.read_button, 0, 1)
-        self.layout.addWidget(self.label_word, 2, 0, 1, 2)
-        self.layout.addWidget(self.label_def, 4, 0, 1, 2)
+        self.layout.addWidget(self.namelabel, 0, 0, 1, 2)
+        self.layout.addWidget(QLabel("Anything copied to clipboard will appear here."), 1, 0, 1, 2)
+        self.layout.addWidget(self.label_sentence, 2, 0)
+        self.layout.addWidget(self.read_button, 2, 1)
+        self.layout.addWidget(self.label_word, 4, 0)
+        self.layout.addWidget(self.lookup_button, 4, 1)
+        self.layout.addWidget(self.label_def, 6, 0, 1, 2)
 
-        self.layout.addWidget(self.sentence, 1, 0, 1, 2)
-        self.layout.addWidget(self.word, 3, 0, 1, 2)
-        self.layout.addWidget(self.definition, 5, 0, 1, 2)
+        self.layout.addWidget(self.sentence, 3, 0, 1, 2)
+        self.layout.addWidget(self.word, 5, 0, 1, 2)
+        self.layout.addWidget(self.definition, 7, 0, 1, 2)
 
-        self.layout.addWidget(self.lookup_button, 6, 0)
-        self.layout.addWidget(self.toanki_button, 6, 1)
-        self.layout.addWidget(self.config_button, 7, 0, 1, 2)
+        self.layout.addWidget(self.toanki_button, 8, 0, 1, 2)
+        self.layout.addWidget(self.config_button, 9, 0, 1, 2)
 
         self.lookup_button.clicked.connect(self.getDefinition)
         self.config_button.clicked.connect(self.configure)
@@ -85,6 +96,12 @@ class DictionaryWindow(QMainWindow):
         self.settings_dialog = SettingsDialog(self)
         self.settings_dialog.show()
 
+    def setupShortcuts(self):
+        self.shortcut_toanki = QShortcut(QKeySequence('Ctrl+S'), self)
+        self.shortcut_toanki.activated.connect(self.createNote)
+        self.shortcut_getdef = QShortcut(QKeySequence('Ctrl+D'), self)
+        self.shortcut_getdef.activated.connect(self.getDefinition)
+
 
     def getDefinition(self):
         result = ""
@@ -92,20 +109,16 @@ class DictionaryWindow(QMainWindow):
         selected = cursor.selectedText().lower()
         cursor2 = self.definition.textCursor()
         selected2 = cursor2.selectedText().lower()
-        if selected != "":
-            result = self.lookup(selected)
-            self.word.setText(selected)
-            self.definition.setText(result)
-            cursor.clearSelection()
-            self.sentence.setTextCursor(cursor)
-        elif selected2 != "":
-            result = self.lookup(selected2)
-            self.definition.setText(result)
-            cursor.clearSelection()
-            self.sentence.setTextCursor(cursor)
-            #cursor2.clearSelection()
-        else:
+        target = str.strip(selected or selected2 or "")
+        if target == "":
             return
+        result = self.lookup(target)
+        self.word.setText(target)
+        self.definition.setText(result)
+        cursor.clearSelection()
+        self.sentence.setTextCursor(cursor)
+
+
         
     
     def setSentence(self, content):
@@ -122,7 +135,7 @@ class DictionaryWindow(QMainWindow):
         for i in item:
             for j in i['definitions']:
                 meanings.append("\n".join([str(item[0]) + ". " + item[1] for item in list(enumerate(j['text']))[1:]]))
-        return word + ":\n" + ("\n\n").join(meanings)
+        return ("\n\n").join(meanings)
 
     def createNote(self):
         sentence = self.sentence.toPlainText().replace("\n", "<br>")
@@ -138,8 +151,27 @@ class DictionaryWindow(QMainWindow):
             }
         }
         print("Sending request with:\n", content)
-        addNote(self.settings.value("anki_api"), content)
+        
+        api = self.settings.value("anki_api")
+        try:
+            addNote(api, content)
+            self.sentence.clear()
+            self.word.clear()
+            self.definition.clear()
+        except Exception as e:
+            self.errorNoConnection(e)
+            return
+        
 
+
+
+    def errorNoConnection(self, error):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Critical)
+        msg.setText("Error")
+        msg.setInformativeText(str(error) + 
+            "\nAnkiConnect must be running in order to add notes.\nIf you have AnkiConnect running at an alternative endpoint, be sure to change it in the configuration.")
+        msg.exec()
 
 class MyTextEdit(QTextEdit):
 
