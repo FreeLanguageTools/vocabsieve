@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QDialog, QCheckBox, QGridLayout, QLineEdit, QComboBox, QLabel, QMessageBox
-from .tools import getDeckList, getNoteTypes, getFields, getVersion
+from PyQt5.QtWidgets import *
+from .tools import *
 
 class SettingsDialog(QDialog):
     def __init__(self, parent):
@@ -12,7 +12,7 @@ class SettingsDialog(QDialog):
 
     def initWidgets(self):
         self.layout = QGridLayout(self)
-
+        self.setFixedSize(320, 350)
         self.allow_editing = QCheckBox("Allow directly editing")
         self.lemmatization = QCheckBox("Use lemmatization (NOT IMPLEMENTED)")
         self.target_language = QComboBox()
@@ -25,13 +25,21 @@ class SettingsDialog(QDialog):
 
     def setupWidgets(self):
         languages = [
-            "english",
-            "french",
-            "spanish",
-            "russian",
-            "japanese",
-            "italian",
-            "chinese"
+            "English",
+            "Chinese",
+            "Italian",
+            "Finnish",
+            "Japanese",
+            "Spanish",
+            "French",
+            "German",
+            "Latin",
+            "Polish",
+            "Portuguese",
+            "Russian",
+            "Serbo-Croatian",
+            "Dutch",
+            "Romanian"
         ]
         self.target_language.addItems(languages)
         self.layout.addWidget(self.allow_editing, 0, 0, 1, 2)
@@ -41,7 +49,7 @@ class SettingsDialog(QDialog):
         self.layout.addWidget(QLabel("Target language"), 2, 0)
         self.layout.addWidget(self.target_language, 2, 1)
 
-        self.layout.addWidget(QLabel('API endpoint for AnkiConnect'), 3, 0)
+        self.layout.addWidget(QLabel('AnkiConnect API'), 3, 0)
         self.layout.addWidget(self.anki_api, 3,1)
 
         self.layout.addWidget(QLabel("Deck name"), 4, 0)
@@ -105,7 +113,7 @@ class SettingsDialog(QDialog):
         api = self.anki_api.text()
         try:
             print("API version is: ", getVersion(api))
-        except Exception as _:
+        except Exception as e:
             self.errorNoConnection(e)
             return
         current_type = self.note_type.currentText()
