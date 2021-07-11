@@ -3,6 +3,8 @@ Simple Sentence Mining (`ssmtool`) is a program for sentence mining, in which se
 
 This program monitors your clipboard at all times and when a change is detected, the contents gets copied onto the "Sentence" field. From there, you can double click any word, and the program will send a query to Wiktionary, and display the result on the "Definition" field, while simultaneously filling in the "word" field for you. You may also double click from words in the "Definition" field to get definition, because Wiktionary sometimes simply lists the base forms of inflected words.
 
+![Demo](demo.gif)
+
 ## Prerequisites
 
 | Name | Note |
@@ -27,6 +29,8 @@ Standalone version available in the [Releases](https://github.com/FreeLanguageTo
 
 Alternatively, you can also install with pip: `pip install ssmtool`
 ([Instructions on setting up PIP](https://www.geeksforgeeks.org/how-to-install-pip-in-macos/))
+
+**Important**: On macOS it is important to have Anki open on the foreground, otherwise the API will respond very slowly, causing lags in the application.
 
 ## How to use
 0. Configure it by pressing the "Configure.." button at the bottom. (only once)
