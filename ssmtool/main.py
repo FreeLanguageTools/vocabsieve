@@ -33,7 +33,7 @@ class DictionaryWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Simple Sentence Mining")
-        self.setFixedSize(400, 500)
+        self.resize(400, 500)
         self.widget = QWidget()
         self.settings = QSettings("FreeLanguageTools", "SimpleSentenceMining")
         self.initDictionary()

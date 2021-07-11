@@ -12,7 +12,7 @@ class SettingsDialog(QDialog):
 
     def initWidgets(self):
         self.layout = QGridLayout(self)
-        self.setFixedSize(320, 350)
+        self.resize(320, 350)
         self.allow_editing = QCheckBox("Allow directly editing")
         self.lemmatization = QCheckBox("Use lemmatization (NOT IMPLEMENTED)")
         self.target_language = QComboBox()
