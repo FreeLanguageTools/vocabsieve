@@ -1,0 +1,4 @@
+__pycache__/
+dist/
+*.un~
+ssmtool.egg-info/
