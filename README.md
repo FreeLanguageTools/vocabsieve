@@ -17,18 +17,14 @@ It has not been thoroughly tested on all platforms, but it should work on Linux,
 ## Installation
 ### Linux
 Install with pip: `pip install ssmtool`
-### Windows
+### Windows, macOS
 Standalone version available in the [Releases](https://github.com/FreeLanguageTools/ssmtool/releases) tab.
 
 Alternatively, you can also install with pip: `pip install ssmtool`
-([Instructions on setting up PIP](https://nitratine.net/blog/post/how-to-setup-pythons-pip/))
 
+([Instructions on setting up PIP on Windows](https://nitratine.net/blog/post/how-to-setup-pythons-pip/))
 
-### MacOS
-Standalone version available in the [Releases](https://github.com/FreeLanguageTools/ssmtool/releases) tab.
-
-Alternatively, you can also install with pip: `pip install ssmtool`
-([Instructions on setting up PIP](https://www.geeksforgeeks.org/how-to-install-pip-in-macos/))
+([Instructions on setting up PIP on macOS](https://www.geeksforgeeks.org/how-to-install-pip-in-macos/))
 
 **Important**: On macOS it is important to have Anki open on the foreground, otherwise the API will respond very slowly, causing lags in the application.
 
@@ -40,12 +36,15 @@ Alternatively, you can also install with pip: `pip install ssmtool`
 4. Double click on a word in the "Sentence" field to look it up.
 5. If needed, double click on a word in the "Definition" field to look it up.
 6. Click on the "Add note" button.
-## Suggested tools
+## Recommended tools
+*Disclaimer: These projects are not affiliated with `ssmtool`*
 | Service | Plugin | Note |
 --------- | ------ | ------
-| Netflix | [Subadub](https://chrome.google.com/webstore/detail/subadub/jamiekdimmhnnemaaimmdahnahfmfdfk) | Chrome extension to make subtitles selectable (also copy-able) |
+| Netflix | Subadub ([Firefox](https://addons.mozilla.org/en-US/firefox/addon/subadub/), [Chrome](https://chrome.google.com/webstore/detail/subadub/jamiekdimmhnnemaaimmdahnahfmfdfk)) | Chrome extension to make subtitles selectable (also copy-able) |
 | Youtube  | [youtube-dl](https://github.com/ytdl-org/youtube-dl) | Download videos from youtube (videos can be played locally with subtitles, which are then copy-able with mpv). |
 | mpv | [mpvacious](https://github.com/Ajatt-Tools/mpvacious) | Automatically copies subtitles to clipboard (which will show up on this tool) |
+| Anki | [AwesomeTTS](https://ankiweb.net/shared/info/814349176) | Automatically generates TTS for cards generated from this tool. You can configure it to produce TTS on demand for the note type used by `ssmtool`, complementing your flashcards.
+
 
 
 ## Future plans
