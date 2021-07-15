@@ -13,10 +13,11 @@ class SettingsDialog(QDialog):
     def initWidgets(self):
         self.layout = QGridLayout(self)
         self.resize(320, 350)
-        self.allow_editing = QCheckBox("Allow directly editing")
-        self.lemmatization = QCheckBox("Use lemmatization (NOT IMPLEMENTED)")
+        self.allow_editing = QCheckBox("Allow directly editing (Requires restart to take effect)")
+        self.lemmatization = QCheckBox("Use lemmatization (Experimental)")
         self.target_language = QComboBox()
         self.deck_name = QComboBox()
+        self.tags = QLineEdit()
         self.note_type = QComboBox()
         self.sentence_field = QComboBox()
         self.word_field = QComboBox()
@@ -24,27 +25,10 @@ class SettingsDialog(QDialog):
         self.anki_api = QLineEdit()
 
     def setupWidgets(self):
-        languages = [
-            "English",
-            "Chinese",
-            "Italian",
-            "Finnish",
-            "Japanese",
-            "Spanish",
-            "French",
-            "German",
-            "Latin",
-            "Polish",
-            "Portuguese",
-            "Russian",
-            "Serbo-Croatian",
-            "Dutch",
-            "Romanian"
-        ]
+        languages = code.keys()
         self.target_language.addItems(languages)
         self.layout.addWidget(self.allow_editing, 0, 0, 1, 2)
         self.layout.addWidget(self.lemmatization, 1, 0, 1, 2)
-        self.lemmatization.setCheckable(False)
 
         self.layout.addWidget(QLabel("Target language"), 2, 0)
         self.layout.addWidget(self.target_language, 2, 1)
@@ -55,17 +39,20 @@ class SettingsDialog(QDialog):
         self.layout.addWidget(QLabel("Deck name"), 4, 0)
         self.layout.addWidget(self.deck_name, 4, 1)
 
-        self.layout.addWidget(QLabel("Note type"), 5, 0)
-        self.layout.addWidget(self.note_type, 5,1)
+        self.layout.addWidget(QLabel('Default tags'), 5, 0)
+        self.layout.addWidget(self.tags, 5, 1)
 
-        self.layout.addWidget(QLabel('Field name for "Sentence"'), 6, 0)
-        self.layout.addWidget(self.sentence_field, 6, 1)
+        self.layout.addWidget(QLabel("Note type"), 6, 0)
+        self.layout.addWidget(self.note_type, 6,1)
 
-        self.layout.addWidget(QLabel('Field name for "Word"'), 7, 0)
-        self.layout.addWidget(self.word_field, 7, 1)
+        self.layout.addWidget(QLabel('Field name for "Sentence"'), 7, 0)
+        self.layout.addWidget(self.sentence_field, 7, 1)
 
-        self.layout.addWidget(QLabel('Field name for "Definition"'), 8, 0)
-        self.layout.addWidget(self.definition_field, 8, 1)
+        self.layout.addWidget(QLabel('Field name for "Word"'), 8, 0)
+        self.layout.addWidget(self.word_field, 8, 1)
+
+        self.layout.addWidget(QLabel('Field name for "Definition"'), 9, 0)
+        self.layout.addWidget(self.definition_field, 9, 1)
 
 
         
@@ -74,6 +61,7 @@ class SettingsDialog(QDialog):
         self.lemmatization.clicked.connect(self.syncSettings)
         self.target_language.currentTextChanged.connect(self.syncSettings)
         self.deck_name.currentTextChanged.connect(self.syncSettings)
+        self.tags.editingFinished.connect(self.syncSettings)
         self.note_type.currentTextChanged.connect(self.syncSettings)
         self.note_type.currentTextChanged.connect(self.loadFields)
         self.sentence_field.currentTextChanged.connect(self.syncSettings)
@@ -85,9 +73,10 @@ class SettingsDialog(QDialog):
     def loadSettings(self):
         print("loading, will also check api")
         self.allow_editing.setChecked(self.settings.value("allow_editing", True, type=bool))
-        self.lemmatization.setChecked(self.settings.value("lemmatization", type=bool))
+        self.lemmatization.setChecked(self.settings.value("lemmatization", True, type=bool))
         self.target_language.setCurrentText(self.settings.value("target_language"))
         self.anki_api.setText(self.settings.value("anki_api", "http://localhost:8765"))
+        self.tags.setText(self.settings.value("tags", "ssmtool"))
 
         api = self.anki_api.text()
 
@@ -142,6 +131,7 @@ class SettingsDialog(QDialog):
         self.settings.setValue("lemmatization", self.lemmatization.isChecked())
         self.settings.setValue("target_language", self.target_language.currentText())
         self.settings.setValue("deck_name", self.deck_name.currentText())
+        self.settings.setValue("tags", self.tags.text())
         self.settings.setValue("note_type", self.note_type.currentText())
         self.settings.setValue("sentence_field", self.sentence_field.currentText())
         self.settings.setValue("word_field", self.word_field.currentText())

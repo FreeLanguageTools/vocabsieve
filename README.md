@@ -10,13 +10,14 @@ This program monitors your clipboard at all times and when a change is detected,
 | Name | Note |
 ------ | ------
 |Anki with AnkiConnect | Needed for exporting notes|
-|PyQt5 | Needed when using pip. Will install automatically.|
 
-It has not been thoroughly tested on all platforms, but it should work on Linux, MacOS, and Microsoft Windows, or any platforms supporting Python and PyQt.
 
 ## Installation
 ### Linux
 Install with pip: `pip install ssmtool`
+
+Packages on Gentoo GURU and Arch Linux AUR will be soon available.
+
 ### Windows, macOS
 Standalone version available in the [Releases](https://github.com/FreeLanguageTools/ssmtool/releases) tab.
 
@@ -51,10 +52,12 @@ Alternatively, you can also install with pip: `pip install ssmtool`
 This program is still at an early stage. More features will be added soon.
 
 Current plans include:
-- Tags
 - Audio
+- Usage statistics
 - Other dictionaries
-- Lemmatization step and auto-selecting the most difficult words
+- Auto-selecting the most difficult words
 
 ## Credits
+All the definitions provided by the program come from the English Wiktionary, without which this program would never have been created.
+
 App icon is made from icons by Freepik available on Flaticon.
