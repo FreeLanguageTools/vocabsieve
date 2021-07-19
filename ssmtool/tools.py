@@ -4,6 +4,9 @@ import unicodedata
 import pymorphy2
 import requests
 from bs4 import BeautifulSoup
+
+
+
 morph = pymorphy2.MorphAnalyzer()
 
 code = {
@@ -101,7 +104,7 @@ def fmt_result(definitions):
 
 def wiktionary(word, language, lemmatize=True):
     "Get definitions from Wiktionary"
-
+    print("lemmatize is", lemmatize, "in wiktionary()")
     if lemmatize and language == 'ru':
         word = lem_word(word)
     res = requests.get('https://en.wiktionary.org/api/rest_v1/page/definition/' + word)
@@ -131,4 +134,22 @@ def wiktionary(word, language, lemmatize=True):
     return {"word": word, "definition": definitions}
 
 def lem_word(word):
+
     return morph.parse(word)[0].normal_form
+
+def is_json(myjson):
+  try:
+    json_object = json.loads(myjson)
+    json_object['word']
+    json_object['sentence']
+  except ValueError as e:
+    return False
+  return True
+
+
+def failed_lookup(word, setting):
+    return "<b>Definition for \"" + word + "\" not found.</b><br>Check the following:<br>" +\
+            "- Language setting (Current: " + setting + ")<br>" +\
+            "- Is the correct word being looked up?<br>" +\
+            "- Are you connected to the Internet?<br>" +\
+            "Otherwise, then Wiktionary probably just does not have this word listed."
