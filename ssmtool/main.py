@@ -5,16 +5,20 @@ from PyQt5.QtGui import *
 from os import path
 import functools
 import platform
+import json
 
 from .config import *
 from .tools import *
 from . import __version__
 
+
+# If on macOS, display the modifier key as "Cmd", else display it as "Ctrl"
 if platform.system() == "Darwin":
     MOD = "Cmd"
 else:
     MOD = "Ctrl"
 
+# This is needed to make sure the textedit widget can access the main window.
 @functools.lru_cache()
 class GlobalObject(QObject):
     def __init__(self):
@@ -48,7 +52,7 @@ class DictionaryWindow(QMainWindow):
         self.updateAnkiButtonState()
         self.setupShortcuts()
 
-        GlobalObject().addEventListener("double clicked", self.getDefinition)
+        GlobalObject().addEventListener("double clicked", self.lookupClicked)
         QApplication.clipboard().dataChanged.connect(self.clipboardChanged)
 
 
@@ -94,7 +98,7 @@ class DictionaryWindow(QMainWindow):
         self.layout.addWidget(self.toanki_button, 10, 0, 1, 2)
         self.layout.addWidget(self.config_button, 11, 0, 1, 2)
 
-        self.lookup_button.clicked.connect(self.getDefinition)
+        self.lookup_button.clicked.connect(self.lookupClicked)
         self.config_button.clicked.connect(self.configure)
         self.toanki_button.clicked.connect(self.createNote)
         self.read_button.clicked.connect(self.clipboardChanged)
@@ -115,48 +119,67 @@ class DictionaryWindow(QMainWindow):
         self.shortcut_toanki = QShortcut(QKeySequence('Ctrl+S'), self)
         self.shortcut_toanki.activated.connect(self.createNote)
         self.shortcut_getdef = QShortcut(QKeySequence('Ctrl+D'), self)
-        self.shortcut_getdef.activated.connect(self.getDefinition)
+        self.shortcut_getdef.activated.connect(self.lookupClicked)
 
 
-    def getDefinition(self):
-        lemmatize = self.settings.value("lemmatization", True, type=bool)
+    def getCurrentWord(self):
         result = ""
         cursor = self.sentence.textCursor()
         selected = cursor.selectedText().lower()
         cursor2 = self.definition.textCursor()
         selected2 = cursor2.selectedText().lower()
         target = str.strip(selected or selected2 or "")
+
+        return target
+
+    def lookupClicked(self):
+        target = self.getCurrentWord()
         if target == "":
             return
-        failure_msg = "<b>Definition for \"" + target + "\" not found.</b><br>Check the following:<br>" +\
-                    "- Language setting (Current: " + self.settings.value("target_language", "English") + ")<br>" +\
-                    "- Is the correct word being looked up?<br>" +\
-                    "- Are you connected to the Internet?<br>" +\
-                    "Otherwise, then Wiktionary probably just does not have this word listed."
         try:
-            result = self.lookup(target, lemmatize)
+            result = self.lookup(target)
         except Exception as e:
             print(e)
             result = {"word": target, 
-                "definition": failure_msg}
+                "definition": failed_lookup(target, self.settings.value("target_language", "English"))}
+        print(result)
+        self.setState(result['word'], result['definition'])
 
-        self.word.setText(result['word'])
-        self.definition.setText(result['definition'])
+    def setState(self, word, definition):
+        self.word.setText(word)
+        self.definition.setText(definition)
+        cursor = self.sentence.textCursor()
         cursor.clearSelection()
         self.sentence.setTextCursor(cursor)
-
-
-        
     
     def setSentence(self, content):
-        self.sentence.setText(content)
+        self.sentence.setText(str.strip(content))
+    
+    def setWord(self, content):
+        self.word.setText(content)
 
     def clipboardChanged(self):
         text = QApplication.clipboard().text()
-        self.setSentence(text)
+        if is_json(text):
+            copyobj = json.loads(text)
+            target = copyobj['word']
+            self.setSentence(copyobj['sentence'])
+            self.setWord(target)
+            try:
+                result = self.lookup(target)
+            except Exception as e:
+                print(e)
+                result = {
+                    "word": target, 
+                    "definition": failed_lookup(target, self.settings.value("target_language", "English"))
+                    }
+            self.setState(result['word'], result['definition'])
+        else:
+            self.setSentence(text)
 
-    def lookup(self, word, lemmatize=True):
-        print("Looking up:", word, "in", self.settings.value("target_language", "english"))
+    def lookup(self, word):
+        lemmatize = self.settings.value("lemmatization", True, type=bool)
+        print("Looking up:", word, "in", self.settings.value("target_language", "english"), "Lemmatization is: ", str(lemmatize))
         language_code = code[self.settings.value("target_language", "english")]
         item = wiktionary(removeAccents(word), language_code, lemmatize)
         return {"word": item['word'], "definition": fmt_result(item['definition'])}
@@ -196,7 +219,10 @@ class DictionaryWindow(QMainWindow):
         msg.setIcon(QMessageBox.Critical)
         msg.setText("Error")
         msg.setInformativeText(str(error) + 
-            "\nHints:\nAnkiConnect must be running in order to add notes.\nIf you have AnkiConnect running at an alternative endpoint, be sure to change it in the configuration.")
+            "\nHints:\
+            \nAnkiConnect must be running in order to add notes.\
+            \nIf you have AnkiConnect running at an alternative endpoint\
+            , be sure to change it in the configuration.")
         msg.exec()
 
 class MyTextEdit(QTextEdit):
