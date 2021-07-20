@@ -153,3 +153,6 @@ def failed_lookup(word, setting):
             "- Is the correct word being looked up?<br>" +\
             "- Are you connected to the Internet?<br>" +\
             "Otherwise, then Wiktionary probably just does not have this word listed."
+
+def is_oneword(s):
+    return len(s.split()) == 1
