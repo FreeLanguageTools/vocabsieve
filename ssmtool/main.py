@@ -18,9 +18,11 @@ if platform.system() == "Darwin":
 else:
     MOD = "Ctrl"
 
-# This is needed to make sure the textedit widget can access the main window.
 @functools.lru_cache()
 class GlobalObject(QObject):
+    """
+    We need this to enable the textedit widget to communicate with the main window
+    """
     def __init__(self):
         super().__init__()
         self._events = {}
@@ -47,6 +49,7 @@ class DictionaryWindow(QMainWindow):
         self.widget = QWidget()
         self.settings = QSettings("FreeLanguageTools", "SimpleSentenceMining")
         self.setCentralWidget(self.widget)
+
         self.initWidgets()
         self.setupWidgets()
         self.updateAnkiButtonState()
@@ -54,7 +57,6 @@ class DictionaryWindow(QMainWindow):
 
         GlobalObject().addEventListener("double clicked", self.lookupClicked)
         QApplication.clipboard().dataChanged.connect(self.clipboardChanged)
-
 
     def initWidgets(self):
         self.namelabel = QLabel("Simple Sentence Mining v" + __version__)
@@ -74,10 +76,10 @@ class DictionaryWindow(QMainWindow):
         self.lookup_button = QPushButton(f"Get definition ({MOD}-D)")
         self.toanki_button = QPushButton(f"Add note ({MOD}-S)")
         self.config_button = QPushButton("Configure..")
-        self.read_button = QPushButton("Read from clipboard")
+        self.read_button = QPushButton("Read clipboard")
     
         self.sentence.setReadOnly(not (self.settings.value("allow_editing", True, type=bool)))
-        self.sentence.setReadOnly(not (self.settings.value("allow_editing", True, type=bool)))
+        self.definition.setReadOnly(not (self.settings.value("allow_editing", True, type=bool)))
 
     def setupWidgets(self):
         self.layout = QGridLayout(self.widget)
@@ -101,15 +103,14 @@ class DictionaryWindow(QMainWindow):
         self.lookup_button.clicked.connect(self.lookupClicked)
         self.config_button.clicked.connect(self.configure)
         self.toanki_button.clicked.connect(self.createNote)
-        self.read_button.clicked.connect(self.clipboardChanged)
+        self.read_button.clicked.connect(lambda _: self.clipboardChanged(True))
         self.sentence.textChanged.connect(self.updateAnkiButtonState)
 
-    def updateAnkiButtonState(self):
-        if self.sentence.toPlainText() == "":
+    def updateAnkiButtonState(self, forceDisable=False):
+        if self.sentence.toPlainText() == "" or forceDisable:
             self.toanki_button.setEnabled(False)
         else:
             self.toanki_button.setEnabled(True)
-
 
     def configure(self):
         self.settings_dialog = SettingsDialog(self)
@@ -120,7 +121,6 @@ class DictionaryWindow(QMainWindow):
         self.shortcut_toanki.activated.connect(self.createNote)
         self.shortcut_getdef = QShortcut(QKeySequence('Ctrl+D'), self)
         self.shortcut_getdef.activated.connect(self.lookupClicked)
-
 
     def getCurrentWord(self):
         result = ""
@@ -158,31 +158,52 @@ class DictionaryWindow(QMainWindow):
     def setWord(self, content):
         self.word.setText(content)
 
-    def clipboardChanged(self):
+    def clipboardChanged(self, evenWhenFocused=False):
+        """
+        If the input is just a single word, we look it up right away.
+        If it's a json and has the required fields, we use these fields to
+        populate the relevant fields.
+        Otherwise we dump everything to the Sentence field.
+        By default this is not activated when the window is in focus to prevent
+        mistakes, unless it is used from the button.
+        """
         text = QApplication.clipboard().text()
+        if self.isActiveWindow() and not evenWhenFocused:
+            return
         if is_json(text):
             copyobj = json.loads(text)
             target = copyobj['word']
             self.setSentence(copyobj['sentence'])
             self.setWord(target)
-            try:
-                result = self.lookup(target)
-            except Exception as e:
-                print(e)
-                result = {
-                    "word": target, 
-                    "definition": failed_lookup(target, self.settings.value("target_language", "English"))
-                    }
+            result = self.lookup(target)
+            self.setState(result['word'], result['definition'])
+        elif is_oneword(text):
+            self.setSentence(text)
+            self.setWord(text)
+            result = self.lookup(text)
             self.setState(result['word'], result['definition'])
         else:
             self.setSentence(text)
-
+            
     def lookup(self, word):
+        """
+        Look up a word and return a dict with the lemmatized form (if enabled) 
+        and definition
+        """
         lemmatize = self.settings.value("lemmatization", True, type=bool)
         print("Looking up:", word, "in", self.settings.value("target_language", "english"), "Lemmatization is: ", str(lemmatize))
         language_code = code[self.settings.value("target_language", "english")]
-        item = wiktionary(removeAccents(word), language_code, lemmatize)
-        return {"word": item['word'], "definition": fmt_result(item['definition'])}
+        try:
+            item = wiktionary(removeAccents(word), language_code, lemmatize)
+            item['definition'] = fmt_result(item['definition'])
+        except Exception as e:
+            print(e)
+            self.updateAnkiButtonState(True)
+            item = {
+                "word": word, 
+                "definition": failed_lookup(word, self.settings.value("target_language", "English"))
+                }
+        return item
 
     def createNote(self):
         sentence = self.sentence.toPlainText().replace("\n", "<br>")
@@ -211,10 +232,10 @@ class DictionaryWindow(QMainWindow):
             self.errorNoConnection(e)
             return
         
-
-
-
     def errorNoConnection(self, error):
+        """
+        Dialog window sent when something goes wrong in configuration step
+        """
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Critical)
         msg.setText("Error")
@@ -233,8 +254,6 @@ class MyTextEdit(QTextEdit):
         GlobalObject().dispatchEvent("double clicked")
         print("Event sent")
         self.textCursor().clearSelection()
-
-
     
 def main():
     app = QApplication(sys.argv)
