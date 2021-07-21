@@ -3,3 +3,7 @@ lxml
 pymorphy2
 pymorphy2-dicts-ru
 beautifulsoup4
+pytest
+pytest-qt
+requests
+pytest-xvfb
