@@ -23,7 +23,7 @@ for:
   -
     matrix:
       only:
-        - image: Ubuntu2004
+        - image: Ubuntu
     init: 
       - "echo $HOME/$PYTHON_UBU --version"
       - "sudo apt install xvfb"
