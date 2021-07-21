@@ -53,10 +53,11 @@ for:
       - "npm i -g create-dmg"
       - "cd build"
       - "create-dmg ssmtool.app || true"
+      - "mv \"ssmtool undefined.dmg\" ssmtool-v$APPVEYOR_BUILD_VERSION.dmg"
       - "ls"
 
     artifacts:
-      path: cx_freeze/build/ssmtool undefined.dmg
+      path: cx_freeze/build/ssmtool-v$(APPVEYOR_BUILD_VERSION).dmg
       name: App
 
 
@@ -66,7 +67,7 @@ for:
       provider: GitHub
       auth_token:
         secure: GMdaty/QRo0ATH06dsAQ2LtyUTQUuk45Pp23OTDKBevsBdnhCPW6iAGPcYO1Vyj3
-      artifact: ssmtool.dmg
+      artifact: ssmtool-v$(APPVEYOR_BUILD_VERSION).dmg
       draft: true
       on:
         branch: test_build
