@@ -17,5 +17,5 @@ install:
   - "%PYTHON%\\python.exe -m pip install cx_freeze"
   - "%PYTHON%\\python.exe -m pip install ."
   - "cd cx_freeze"
-  - "%PYTHON%\\python.exe cx_freeze/setup.py bdist_msi"
+  - "%PYTHON%\\python.exe setup.py bdist_msi"
   - ps: "ls"
