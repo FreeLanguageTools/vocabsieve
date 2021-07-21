@@ -27,10 +27,9 @@ for:
     init: 
       - "echo $HOME/$PYTHON_UBU --version"
     install:
-      - "Xvfb :0 -screen 0 1024x768x16 &"
       - "$HOME/$PYTHON_UBU -m pip install -r requirements.txt"
     test_script:
-      - "DISPLAY=:0.0 $HOME/$PYTHON_UBU -m tox"
+      - "xvfb-run $HOME/$PYTHON_UBU -m tox"
     
   - 
     matrix:
