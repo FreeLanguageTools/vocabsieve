@@ -2,3 +2,8 @@ __pycache__/
 dist/
 *.un~
 ssmtool.egg-info/
+.pytest_cache
+cx_freeze/build
+.coverage
+htmlcov
+.tox
