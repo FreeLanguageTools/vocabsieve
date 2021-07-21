@@ -28,6 +28,7 @@ for:
       - "echo $HOME/$PYTHON_UBU --version"
     install:
       - "$HOME/$PYTHON_UBU -m pip install -r requirements.txt"
+      - "$HOME/$PYTHON_UBU -m pip install ."
     test_script:
       - "xvfb-run $HOME/$PYTHON_UBU -m pytest"
     
