@@ -34,6 +34,21 @@ for:
       - "%PYTHON_WIN%\\python.exe setup.py bdist_msi"
       - ps: "ls"
 
+    artifacts:
+      path: cx_freeze/dist/*.msi
+      name: Windows App
+    
+    deploy: 
+      release: ssmtool-v$(APPVEYOR_BUILD_VERSION)
+        description: new release
+        provider: GitHub
+        auth_token:
+          secure: GMdaty/QRo0ATH06dsAQ2LtyUTQUuk45Pp23OTDKBevsBdnhCPW6iAGPcYO1Vyj3
+        artifact: cx_freeze/dist/ssmtool-v$(APPVEYOR_BUILD_VERSION).msi
+        draft: true
+        on:
+          branch: test_build
+          APPVEYOR_REPO_TAG: false
   -
     matrix:
       only:
@@ -49,7 +64,7 @@ for:
       - "$HOME/$PYTHON_MAC/bin/python -m pip install cx_freeze pymorphy2_dicts"
       - "$HOME/$PYTHON_MAC/bin/python -m pip install ."
       - "cd cx_freeze"
-      - "$HOME/$PYTHON_MAC/bin/python setup.py bdist_mac --iconfile icon.icns --bundle-name=ssmtool --custom-info-plist Info.plist"
+      - "$HOME/$PYTHON_MAC/bin/python setup.py bdist_mac --iconfile icon.icns --bundle-name=ssmtool --custom-info-plist Info.plist -q"
       - "npm i -g create-dmg"
       - "cd build"
       - "create-dmg ssmtool.app || true"
@@ -58,7 +73,7 @@ for:
 
     artifacts:
       path: cx_freeze/build/ssmtool-v$(APPVEYOR_BUILD_VERSION).dmg
-      name: App
+      name: Mac App
 
 
     deploy:
@@ -67,7 +82,7 @@ for:
       provider: GitHub
       auth_token:
         secure: GMdaty/QRo0ATH06dsAQ2LtyUTQUuk45Pp23OTDKBevsBdnhCPW6iAGPcYO1Vyj3
-      artifact: ssmtool-v$(APPVEYOR_BUILD_VERSION).dmg
+      artifact: cx_freeze/build/ssmtool-v$(APPVEYOR_BUILD_VERSION).dmg
       draft: true
       on:
         branch: test_build
