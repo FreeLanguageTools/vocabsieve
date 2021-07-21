@@ -2,7 +2,6 @@ build: off
 version: "0.1.13-{build}"
 
 image:
-  - Ubuntu
   - macOS
   - Visual Studio 2019
 
@@ -20,19 +19,6 @@ environment:
 
 
 for:
-  -
-    matrix:
-      only:
-        - image: Ubuntu
-    init: 
-      - "echo $HOME/$PYTHON_UBU --version"
-      - "sudo apt install xvfb"
-    install:
-      - "$HOME/$PYTHON_UBU -m pip install -r requirements.txt"
-      - "$HOME/$PYTHON_UBU -m pip install ."
-    test_script:
-      - "xvfb-run $HOME/$PYTHON_UBU -m pytest"
-    
   - 
     matrix:
       only:
