@@ -1,5 +1,5 @@
 build: off
-version: "0.1.13-{build}"
+version: "0.1.13"
 
 image:
   - macOS
@@ -39,12 +39,12 @@ for:
       name: Windows App
     
     deploy: 
-      release: ssmtool-v$(APPVEYOR_BUILD_VERSION)
+      release: v$(APPVEYOR_BUILD_VERSION)
       description: new release
       provider: GitHub
       auth_token:
         secure: GMdaty/QRo0ATH06dsAQ2LtyUTQUuk45Pp23OTDKBevsBdnhCPW6iAGPcYO1Vyj3
-      artifact: cx_freeze/dist/ssmtool-v$(APPVEYOR_BUILD_VERSION).msi
+      artifact: cx_freeze/dist/ssmtool-v$(APPVEYOR_BUILD_VERSION)-win32.msi
       draft: true
       on:
         branch: test_build
@@ -78,7 +78,6 @@ for:
 
 
     deploy:
-      release: ssmtool-v$(APPVEYOR_BUILD_VERSION)
       description: new release
       provider: GitHub
       auth_token:
