@@ -29,7 +29,7 @@ for:
     install:
       - "$HOME/$PYTHON_UBU -m pip install -r requirements.txt"
     test_script:
-      - "xvfb-run $HOME/$PYTHON_UBU -m tox"
+      - "xvfb-run $HOME/$PYTHON_UBU -m pytest"
     
   - 
     matrix:
@@ -49,9 +49,6 @@ for:
       - "cd cx_freeze"
       - "%PYTHON_WIN%\\python.exe setup.py bdist_msi"
       - ps: "ls"
-
-    test_script:
-      - "%PYTHON_WIN%\\python.exe -m tox"
 
     artifacts:
       path: cx_freeze/dist/*.msi
