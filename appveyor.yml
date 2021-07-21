@@ -1,4 +1,5 @@
 build: off
+version: "0.1.13-{build}"
 
 environment:
   matrix:
@@ -14,5 +15,5 @@ init:
 install:
   - "%PYTHON%\\python.exe -m pip install -r requirements.txt"
   - "%PYTHON%\\python.exe -m pip install cx_freeze"
-  - "%PYTHON%\\python.exe build/setup.py bdist_msi"
+  - "%PYTHON%\\python.exe cx_freeze/setup.py bdist_msi"
   - ps: "ls"
