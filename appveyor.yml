@@ -27,10 +27,10 @@ for:
     init: 
       - "echo $HOME/$PYTHON_UBU --version"
     install:
-      - "sudo apt install xvfb"
+      - "Xvfb :0 -screen 0 1024x768x16 &"
       - "$HOME/$PYTHON_UBU -m pip install -r requirements.txt"
     test_script:
-      - "$HOME/$PYTHON_UBU -m tox"
+      - "DISPLAY=:0.0 $HOME/$PYTHON_UBU -m tox"
     
   - 
     matrix:
