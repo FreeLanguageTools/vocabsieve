@@ -40,7 +40,7 @@ for:
         - image: macOS
     
     init:
-      - "ls $PYTHON_MAC"
+      - "ls"
       - "echo $PYTHON_MAC $PYTHON_VERSION $PYTHON_ARCH"
       - "$PYTHON_MAC/bin/python --version"
     
