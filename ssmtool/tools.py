@@ -6,8 +6,10 @@ import requests
 from bs4 import BeautifulSoup
 
 
-
-morph = pymorphy2.MorphAnalyzer()
+try:
+    morph = pymorphy2.MorphAnalyzer(lang="ru")
+except ValueError:
+    morph = pymorphy2.MorphAnalyzer(lang="ru-old")
 
 code = {
     "English": "en",
