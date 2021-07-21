@@ -37,18 +37,6 @@ for:
     artifacts:
       path: cx_freeze/dist/*.msi
       name: Windows App
-    
-    deploy: 
-      release: v$(APPVEYOR_BUILD_VERSION)
-      description: new release
-      provider: GitHub
-      auth_token:
-        secure: GMdaty/QRo0ATH06dsAQ2LtyUTQUuk45Pp23OTDKBevsBdnhCPW6iAGPcYO1Vyj3
-      artifact: cx_freeze/dist/ssmtool-v$(APPVEYOR_BUILD_VERSION)-win32.msi
-      draft: true
-      on:
-        branch: test_build
-        APPVEYOR_REPO_TAG: false
         
   -
     matrix:
@@ -77,13 +65,13 @@ for:
       name: Mac App
 
 
-    deploy:
-      description: new release
-      provider: GitHub
-      auth_token:
-        secure: GMdaty/QRo0ATH06dsAQ2LtyUTQUuk45Pp23OTDKBevsBdnhCPW6iAGPcYO1Vyj3
-      artifact: cx_freeze/build/ssmtool-v$(APPVEYOR_BUILD_VERSION).dmg
-      draft: true
-      on:
-        branch: test_build
-        APPVEYOR_REPO_TAG: false
+deploy:
+  description: new release
+  provider: GitHub
+  auth_token:
+    secure: GMdaty/QRo0ATH06dsAQ2LtyUTQUuk45Pp23OTDKBevsBdnhCPW6iAGPcYO1Vyj3
+  artifact: Windows App, Mac App
+  draft: true
+  on:
+    branch: test_build
+    APPVEYOR_REPO_TAG: false
