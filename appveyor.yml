@@ -2,7 +2,7 @@ build: off
 version: "0.1.13-{build}"
 
 image:
-  - Ubuntu2004
+  - Ubuntu
   - macOS
   - Visual Studio 2019
 
@@ -26,6 +26,7 @@ for:
         - image: Ubuntu2004
     init: 
       - "echo $HOME/$PYTHON_UBU --version"
+      - "sudo apt install xvfb"
     install:
       - "$HOME/$PYTHON_UBU -m pip install -r requirements.txt"
       - "$HOME/$PYTHON_UBU -m pip install ."
