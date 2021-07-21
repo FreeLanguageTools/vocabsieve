@@ -49,10 +49,11 @@ for:
       - "$HOME/$PYTHON_MAC/bin/python -m pip install cx_freeze pymorphy2_dicts"
       - "$HOME/$PYTHON_MAC/bin/python -m pip install ."
       - "cd cx_freeze"
-      - "$HOME/$PYTHON_MAC/bin/python setup.py bdist_dmg --iconfile icon.cns --bundle-name=ssmtool --custom-info-plist Info.plist"
+      - "$HOME/$PYTHON_MAC/bin/python setup.py bdist_mac --iconfile icon.cns --bundle-name=ssmtool --custom-info-plist Info.plist"
       - "npm i -g create-dmg"
       - "cd build"
       - "create-dmg ssmtool.app"
+      - "ls"
 
     deploy:
       release: ssmtool-v$(APPVEYOR_BUILD_VERSION)
@@ -60,7 +61,7 @@ for:
       provider: GitHub
       auth_token:
         secure: GMdaty/QRo0ATH06dsAQ2LtyUTQUuk45Pp23OTDKBevsBdnhCPW6iAGPcYO1Vyj3
-      artifact: build/ssmtool.app
+      artifact: ssmtool.dmg
       draft: true
       on:
         branch: test_build
