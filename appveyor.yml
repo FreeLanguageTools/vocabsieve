@@ -41,7 +41,7 @@ for:
     
     init:
       - "echo $PYTHON_MAC $PYTHON_VERSION $PYTHON_ARCH"
-      - "%PYTHON_MAC/python --version"
+      - "$PYTHON_MAC/python --version"
     
     install:
       - "$PYTHON_MAC/python -m pip install -r requirements.txt"
