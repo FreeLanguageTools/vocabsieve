@@ -18,9 +18,9 @@ init:
   - "%PYTHON%\\python.exe --version"
 
 install:
-  - "{PYTHON_CMD} -m pip install -r requirements.txt"
-  - "{PYTHON_CMD} -m pip install cx_freeze pymorphy2_dicts"
-  - "{PYTHON_CMD} -m pip install ."
-  - "cd cx_freeze"
-  - "{PYTHON_CMD} setup.py {BUILD_CMD}"
+  - ps: {PYTHON_CMD} -m pip install -r requirements.txt
+  - ps: {PYTHON_CMD} -m pip install cx_freeze pymorphy2_dicts
+  - ps: {PYTHON_CMD} -m pip install .
+  - ps: cd cx_freeze
+  - ps: {PYTHON_CMD} setup.py {BUILD_CMD}
   - ps: "ls"
