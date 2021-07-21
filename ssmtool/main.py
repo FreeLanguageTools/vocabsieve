@@ -191,8 +191,8 @@ class DictionaryWindow(QMainWindow):
         and definition
         """
         lemmatize = self.settings.value("lemmatization", True, type=bool)
-        print("Looking up:", word, "in", self.settings.value("target_language", "english"), "Lemmatization is: ", str(lemmatize))
-        language_code = code[self.settings.value("target_language", "english")]
+        print("Looking up:", word, "in", self.settings.value("target_language", "English"), "Lemmatization is: ", str(lemmatize))
+        language_code = code[self.settings.value("target_language", "English")]
         try:
             item = wiktionary(removeAccents(word), language_code, lemmatize)
             item['definition'] = fmt_result(item['definition'])

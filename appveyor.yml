@@ -2,6 +2,7 @@ build: off
 version: "0.1.13-{build}"
 
 image:
+  - Ubuntu2004
   - macOS
   - Visual Studio 2019
 
@@ -13,11 +14,24 @@ environment:
     - TOXENV: py39
       PYTHON_WIN: "C:\\Python39"
       PYTHON_MAC: "venv3.9.1"
+      PYTHON_UBU: "$HOME/venv3.9"
       PYTHON_VERSION: "3.9.1"
       PYTHON_ARCH: "64"
 
 
 for:
+  -
+    matrix:
+      only:
+        - image: Ubuntu2004
+    init: 
+      - "echo $PYTHON_UBU --version"
+    install:
+      - "sudo apt install xvfb"
+      - "$PYTHON_UBU -m pip install -r requirements.txt"
+    test_script:
+      - "$PYTHON_UBU -m tox"
+    
   - 
     matrix:
       only:
