@@ -62,6 +62,7 @@ for:
       - "create-dmg ssmtool.app || true"
       - "mv \"ssmtool undefined.dmg\" ssmtool-$APPVEYOR_REPO_TAG_NAME.dmg"
       - "ls"
+      - "cd ../../"
 
     test_script:
       - "$HOME/$PYTHON_MAC/bin/python -m tox"
