@@ -33,10 +33,7 @@ for:
       - "cd cx_freeze"
       - "%PYTHON_WIN%\\python.exe setup.py bdist_msi"
       - ps: "ls"
-
-    test_script:
-      - "%PYTHON_WIN%\\python.exe -m tox"
-
+      
     artifacts:
       path: cx_freeze/dist/*.msi
       name: Windows App
@@ -63,9 +60,6 @@ for:
       - "mv \"ssmtool undefined.dmg\" ssmtool-$APPVEYOR_REPO_TAG_NAME.dmg"
       - "ls"
       - "cd ../../"
-
-    test_script:
-      - "$HOME/$PYTHON_MAC/bin/python -m tox"
 
     artifacts:
       path: cx_freeze/build/ssmtool-$(APPVEYOR_REPO_TAG_NAME).dmg
