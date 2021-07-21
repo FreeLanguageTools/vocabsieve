@@ -52,7 +52,7 @@ for:
       - "$HOME/$PYTHON_MAC/bin/python setup.py bdist_mac --iconfile icon.icns --bundle-name=ssmtool --custom-info-plist Info.plist"
       - "npm i -g create-dmg"
       - "cd build"
-      - "create-dmg ssmtool.app"
+      - "create-dmg ssmtool.app || true"
       - "ls"
 
     artifacts:
