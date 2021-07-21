@@ -57,11 +57,11 @@ for:
       - "npm i -g create-dmg"
       - "cd build"
       - "create-dmg ssmtool.app || true"
-      - "mv \"ssmtool undefined.dmg\" ssmtool-v$APPVEYOR_BUILD_VERSION.dmg"
+      - "mv \"ssmtool undefined.dmg\" ssmtool-$APPVEYOR_BUILD_VERSION.dmg"
       - "ls"
 
     artifacts:
-      path: cx_freeze/build/ssmtool-v$(APPVEYOR_BUILD_VERSION).dmg
+      path: cx_freeze/build/ssmtool-$(APPVEYOR_REPO_TAG_NAME).dmg
       name: Mac App
 
 
@@ -73,5 +73,5 @@ deploy:
   artifact: Windows App, Mac App
   draft: true
   on:
-    branch: test_build
-    APPVEYOR_REPO_TAG: false
+    branch: master
+    APPVEYOR_REPO_TAG: true
