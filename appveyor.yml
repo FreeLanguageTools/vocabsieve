@@ -47,5 +47,6 @@ for:
     install:
       - "$HOME/$PYTHON_MAC/bin/python -m pip install -r requirements.txt"
       - "$HOME/$PYTHON_MAC/bin/python -m pip install cx_freeze pymorphy2_dicts"
+      - "$HOME/$PYTHON_MAC/bin/python -m pip install ."
       - "cd cx_freeze"
       - "$HOME/$PYTHON_MAC/bin/python setup.py bdist_dmg"
