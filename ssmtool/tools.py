@@ -109,7 +109,11 @@ def wiktionary(word, language, lemmatize=True):
     print("lemmatize is", lemmatize, "in wiktionary()")
     if lemmatize and language == 'ru':
         word = lem_word(word)
-    res = requests.get('https://en.wiktionary.org/api/rest_v1/page/definition/' + word)
+    try:
+        res = requests.get('https://en.wiktionary.org/api/rest_v1/page/definition/' + word, timeout=4)
+    except Exception as e:
+        print(e)
+
     if res.status_code != 200:
         raise Exception("Lookup error")
     definitions = []
@@ -140,13 +144,16 @@ def lem_word(word):
     return morph.parse(word)[0].normal_form
 
 def is_json(myjson):
-  try:
-    json_object = json.loads(myjson)
-    json_object['word']
-    json_object['sentence']
-  except ValueError as e:
-    return False
-  return True
+    try:
+        json_object = json.loads(myjson)
+        json_object['word']
+        json_object['sentence']
+    except ValueError as e:
+        return False
+    except Exception as e:
+        print(e)
+        return False
+    return True
 
 
 def failed_lookup(word, setting):
