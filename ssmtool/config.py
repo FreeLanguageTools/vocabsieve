@@ -5,6 +5,7 @@ class SettingsDialog(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
         self.settings = parent.settings
+        self.parent = parent
         self.initWidgets()
         self.setupWidgets()
         self.loadSettings()
@@ -14,7 +15,9 @@ class SettingsDialog(QDialog):
         self.layout = QGridLayout(self)
         self.resize(320, 350)
         self.allow_editing = QCheckBox("Allow directly editing (Requires restart to take effect)")
-        self.lemmatization = QCheckBox("Use lemmatization (Experimental)")
+        self.lemmatization = QCheckBox("Use lemmatization (Restart needed)")
+        self.lemmatization.setToolTip("Lemmatization means to get the original form of words."\
+            + " For example, 'books' will be converted to 'book' during lookup if this option is set.")
         self.target_language = QComboBox()
         self.deck_name = QComboBox()
         self.tags = QLineEdit()
