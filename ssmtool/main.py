@@ -6,9 +6,11 @@ from os import path
 import functools
 import platform
 import json
+from collections import deque
 
 from .config import *
 from .tools import *
+from .db import *
 from . import __version__
 
 
@@ -48,22 +50,28 @@ class DictionaryWindow(QMainWindow):
         self.resize(400, 600)
         self.widget = QWidget()
         self.settings = QSettings("FreeLanguageTools", "SimpleSentenceMining")
+        self.rec = Record()
         self.setCentralWidget(self.widget)
-
+        self.previousWord = ""
         self.initWidgets()
         self.setupWidgets()
+
+        self.initTimer()
         self.updateAnkiButtonState()
         self.setupShortcuts()
+        self.prev_states = deque(maxlen=30)
 
         GlobalObject().addEventListener("double clicked", self.lookupClicked)
         QApplication.clipboard().dataChanged.connect(self.clipboardChanged)
 
+
     def initWidgets(self):
         self.namelabel = QLabel("Simple Sentence Mining v" + __version__)
         self.namelabel.setFont(QFont("Sans Serif", QApplication.font().pointSize() * 1.5))
+
         self.sentence = MyTextEdit()
         self.sentence.setMinimumHeight(30)
-        self.sentence.setMaximumHeight(120)
+        self.sentence.setMaximumHeight(150)
         self.word = QLineEdit()
         self.definition = MyTextEdit()
         self.definition.setMinimumHeight(70)
@@ -71,40 +79,60 @@ class DictionaryWindow(QMainWindow):
         self.tags = QLineEdit()
         self.label_sentence = QLabel("Sentence")
         self.label_sentence.setToolTip("You can look up any word in this box by double clicking it, or alternatively by selecting it, then press \"Get definition\".")
-        self.label_word = QLabel("Word")
-        self.label_def = QLabel("Definition")
-        self.lookup_button = QPushButton(f"Get definition ({MOD}-D)")
+
+        self.lookup_button = QPushButton(f"Define ({MOD}-D)")
+        self.lookup_exact_button = QPushButton("Define (Direct)")
+        self.lookup_exact_button.setToolTip("This will look up the word without lemmatization.")
         self.toanki_button = QPushButton(f"Add note ({MOD}-S)")
+        self.undo_button = QPushButton("Undo")
         self.config_button = QPushButton("Configure..")
         self.read_button = QPushButton("Read clipboard")
+        self.bar = QStatusBar()
+        self.setStatusBar(self.bar)
+        self.stats_label = QLabel()
     
         self.sentence.setReadOnly(not (self.settings.value("allow_editing", True, type=bool)))
         self.definition.setReadOnly(not (self.settings.value("allow_editing", True, type=bool)))
 
     def setupWidgets(self):
         self.layout = QGridLayout(self.widget)
-        self.layout.addWidget(self.namelabel, 0, 0, 1, 2)
-        self.layout.addWidget(QLabel("Anything copied to clipboard will appear here."), 1, 0, 1, 2)
+        self.layout.addWidget(self.namelabel, 0, 0, 1, 3)
+
+        self.layout.addWidget(QLabel("Anything copied to clipboard will appear here."), 1, 0, 1, 3)
+
         self.layout.addWidget(self.label_sentence, 2, 0)
-        self.layout.addWidget(self.read_button, 2, 1)
-        self.layout.addWidget(self.label_word, 4, 0)
-        self.layout.addWidget(self.lookup_button, 4, 1)
-        self.layout.addWidget(self.label_def, 6, 0, 1, 2)
-        self.layout.addWidget(QLabel("Additional tags"), 8, 0, 1, 2)
+        self.layout.addWidget(self.undo_button, 2, 1)
+        self.layout.addWidget(self.read_button, 2, 2)
 
-        self.layout.addWidget(self.sentence, 3, 0, 1, 2)
-        self.layout.addWidget(self.word, 5, 0, 1, 2)
-        self.layout.addWidget(self.definition, 7, 0, 1, 2)
-        self.layout.addWidget(self.tags, 9, 0, 1, 2)
+        self.layout.addWidget(QLabel("Word"), 4, 0)
 
-        self.layout.addWidget(self.toanki_button, 10, 0, 1, 2)
-        self.layout.addWidget(self.config_button, 11, 0, 1, 2)
+        if self.settings.value("lemmatization", True, type=bool):
+            self.layout.addWidget(self.lookup_button, 4, 1)
+            self.layout.addWidget(self.lookup_exact_button, 4, 2)
+        else:
+            self.layout.addWidget(self.lookup_button, 4, 1, 1, 2)
+        self.layout.addWidget(QLabel("Definition"), 6, 0, 1, 3)
+        self.layout.addWidget(QLabel("Additional tags"), 8, 0, 1, 3)
 
-        self.lookup_button.clicked.connect(self.lookupClicked)
+        self.layout.addWidget(self.sentence, 3, 0, 1, 3)
+        self.layout.addWidget(self.word, 5, 0, 1, 3)
+        self.layout.addWidget(self.definition, 7, 0, 1, 3)
+        self.layout.addWidget(self.tags, 9, 0, 1, 3)
+
+        self.layout.addWidget(self.toanki_button, 10, 0, 1, 3)
+        self.layout.addWidget(self.config_button, 11, 0, 1, 3)
+
+        self.lookup_button.clicked.connect(lambda _: self.lookupClicked(True))
+        self.lookup_exact_button.clicked.connect(lambda _: self.lookupClicked(False))
+
         self.config_button.clicked.connect(self.configure)
         self.toanki_button.clicked.connect(self.createNote)
         self.read_button.clicked.connect(lambda _: self.clipboardChanged(True))
+
         self.sentence.textChanged.connect(self.updateAnkiButtonState)
+        self.undo_button.clicked.connect(self.undo)
+
+        self.bar.addPermanentWidget(self.stats_label)
 
     def updateAnkiButtonState(self, forceDisable=False):
         if self.sentence.toPlainText() == "" or forceDisable:
@@ -123,34 +151,42 @@ class DictionaryWindow(QMainWindow):
         self.shortcut_getdef.activated.connect(self.lookupClicked)
 
     def getCurrentWord(self):
-        result = ""
         cursor = self.sentence.textCursor()
         selected = cursor.selectedText().lower()
         cursor2 = self.definition.textCursor()
         selected2 = cursor2.selectedText().lower()
-        target = str.strip(selected or selected2 or "")
+        target = str.strip(selected or selected2 
+                                    or self.previousWord 
+                                    or self.word.text() 
+                                    or "")
+        self.previousWord = target
 
         return target
 
-    def lookupClicked(self):
+    def lookupClicked(self, use_lemmatize=True):
         target = self.getCurrentWord()
+        print(use_lemmatize)
+        self.updateAnkiButtonState()
         if target == "":
             return
-        try:
-            result = self.lookup(target)
-        except Exception as e:
-            print(e)
-            result = {"word": target, 
-                "definition": failed_lookup(target, self.settings.value("target_language", "English"))}
-        print(result)
-        self.setState(result['word'], result['definition'])
+        result = self.lookup(target, use_lemmatize)
+        self.setState(result)
 
-    def setState(self, word, definition):
-        self.word.setText(word)
-        self.definition.setText(definition)
+    def setState(self, state):
+        self.word.setText(state['word'])
+        self.definition.setText(state['definition'])
         cursor = self.sentence.textCursor()
         cursor.clearSelection()
         self.sentence.setTextCursor(cursor)
+
+    def getState(self):
+        return {'word': self.word.text(), 'definition': self.definition.toPlainText().replace("\n", "<br>")}
+    
+    def undo(self):
+        try:
+            self.setState(self.prev_states.pop())
+        except IndexError:
+            self.setState({'word': "", 'definition': ""})
     
     def setSentence(self, content):
         self.sentence.setText(str.strip(content))
@@ -176,28 +212,33 @@ class DictionaryWindow(QMainWindow):
             self.setSentence(copyobj['sentence'])
             self.setWord(target)
             result = self.lookup(target)
-            self.setState(result['word'], result['definition'])
+            self.setState(result)
         elif is_oneword(text):
             self.setSentence(text)
             self.setWord(text)
             result = self.lookup(text)
-            self.setState(result['word'], result['definition'])
+            self.setState(result)
         else:
             self.setSentence(text)
             
-    def lookup(self, word):
+    def lookup(self, word, use_lemmatize=True):
         """
         Look up a word and return a dict with the lemmatized form (if enabled) 
         and definition
         """
-        lemmatize = self.settings.value("lemmatization", True, type=bool)
-        print("Looking up:", word, "in", self.settings.value("target_language", "English"), "Lemmatization is: ", str(lemmatize))
+        TL = self.settings.value("target_language", "English")
+        self.prev_states.append(self.getState())
+        lemmatize = use_lemmatize and self.settings.value("lemmatization", True, type=bool)
+        short_sign = "Y" if lemmatize else "N"
         language_code = code[self.settings.value("target_language", "English")]
+        self.status(f"L: '{word}' in '{language_code}', lemma: {short_sign}")
         try:
             item = wiktionary(removeAccents(word), language_code, lemmatize)
             item['definition'] = fmt_result(item['definition'])
+            self.rec.recordLookup(word, item['definition'], TL, lemmatize, 'wikt-en', True)
         except Exception as e:
-            print(e)
+            self.status("Lookup failed.")
+            self.rec.recordLookup(word, None, TL, lemmatize, 'wikt-en', False)
             self.updateAnkiButtonState(True)
             item = {
                 "word": word, 
@@ -220,15 +261,19 @@ class DictionaryWindow(QMainWindow):
             },
             "tags": tags
         }
-        print("Sending request with:\n", content)
-        
+        self.status("Adding note")
+        print(str(content))
         api = self.settings.value("anki_api")
         try:
             addNote(api, content)
+            self.rec.recordNote(str(content), True)
             self.sentence.clear()
             self.word.clear()
             self.definition.clear()
+            self.status(f"Note added: '{word}'")
         except Exception as e:
+            self.rec.recordNote(str(content), False)
+            self.status(f"Failed to add note: {word}")
             self.errorNoConnection(e)
             return
         
@@ -239,12 +284,29 @@ class DictionaryWindow(QMainWindow):
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Critical)
         msg.setText("Error")
-        msg.setInformativeText(str(error) + 
-            "\nHints:\
-            \nAnkiConnect must be running in order to add notes.\
-            \nIf you have AnkiConnect running at an alternative endpoint\
-            , be sure to change it in the configuration.")
+        msg.setInformativeText(str(error)
+            + "\n\nHints:"
+            + "\nAnkiConnect must be running in order to add notes."
+            + "\nIf you have AnkiConnect running at an alternative endpoint,"
+            + "\nbe sure to change it in the configuration.")
         msg.exec()
+
+    def initTimer(self):
+        self.showStats()
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.showStats)
+        self.timer.start(500)
+
+    def showStats(self):
+        lookups = self.rec.countLookupsToday()
+        notes = self.rec.countNotesToday()
+        self.stats_label.setText(f"L:{str(lookups)} N:{str(notes)}")
+
+    def time(self):
+        return QDateTime.currentDateTime().toString('[hh:mm:ss]')
+
+    def status(self, msg):
+        self.bar.showMessage(self.time() + " " + msg, 4000)
 
 class MyTextEdit(QTextEdit):
 
