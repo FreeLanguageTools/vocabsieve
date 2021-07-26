@@ -11,6 +11,7 @@ from collections import deque
 from .config import *
 from .tools import *
 from .db import *
+from .dictionary import *
 from . import __version__
 
 
@@ -230,11 +231,11 @@ class DictionaryWindow(QMainWindow):
         self.prev_states.append(self.getState())
         lemmatize = use_lemmatize and self.settings.value("lemmatization", True, type=bool)
         short_sign = "Y" if lemmatize else "N"
-        language_code = code[self.settings.value("target_language", "English")]
-        self.status(f"L: '{word}' in '{language_code}', lemma: {short_sign}")
+        language = code[self.settings.value("target_language", "English")]
+        dictname = self.settings.value("dict_source", "Wiktionary (English)")
+        self.status(f"L: '{word}' in '{language}', lemma: {short_sign}, from {dictionaries[dictname]}")
         try:
-            item = wiktionary(removeAccents(word), language_code, lemmatize)
-            item['definition'] = fmt_result(item['definition'])
+            item = lookupin(word, language, lemmatize, dictname)
             self.rec.recordLookup(word, item['definition'], TL, lemmatize, 'wikt-en', True)
         except Exception as e:
             self.status("Lookup failed.")
@@ -242,7 +243,7 @@ class DictionaryWindow(QMainWindow):
             self.updateAnkiButtonState(True)
             item = {
                 "word": word, 
-                "definition": failed_lookup(word, self.settings.value("target_language", "English"))
+                "definition": failed_lookup(word, self.settings)
                 }
         return item
 
