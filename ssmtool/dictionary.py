@@ -2,6 +2,7 @@ import json
 import urllib.request
 import unicodedata
 import pymorphy2
+from googletrans import Translator
 import requests
 from bs4 import BeautifulSoup
 
@@ -9,6 +10,8 @@ try:
     morph = pymorphy2.MorphAnalyzer(lang="ru")
 except ValueError:
     morph = pymorphy2.MorphAnalyzer(lang="ru-old")
+
+translator = Translator()
 
 code = {
     "English": "en",
@@ -35,7 +38,9 @@ code = {
 wikt_languages = code.keys()
 gdict_languages = ['en', 'hi', 'es', 'fr', 'ja', 'ru', 'de', 'it', 'ko', 'ar', 'tr', 'pt']
 
-dictionaries = {"Wiktionary (English)": "wikt-en", "Google dictionary (Monolingual)": "gdict"}
+dictionaries = {"Wiktionary (English)": "wikt-en", 
+                "Google dictionary (Monolingual)": "gdict",
+                "Google translate (To English)": "gtrans"}
 
 
 def removeAccents(word):
@@ -80,8 +85,6 @@ def fmt_result(definitions):
 def wiktionary(word, language, lemmatize=True):
     "Get definitions from Wiktionary"
     print("lemmatize is", lemmatize, "in wiktionary()")
-    if lemmatize and language == 'ru':
-        word = lem_word(word)
     try:
         res = requests.get('https://en.wiktionary.org/api/rest_v1/page/definition/' + word, timeout=4)
     except Exception as e:
@@ -140,9 +143,19 @@ def googledict(word, language, lemmatize=True):
         definitions.append(meaning_item)
     return {"word": word, "definition": definitions}
 
+def googletranslate(word, language):
+    "Google translation, through the googletrans python library"
+    print(translator.translate(word, src=language).text)
+    return {"word": word, "definition": translator.translate(word, src=language).text}
+
+
 def lookupin(word, language, lemmatize=True, dictionary="Wiktionary (English)"):
     print("Using", dictionary)
+    if lemmatize and language == 'ru':
+        word = lem_word(word)
     dictid = dictionaries[dictionary]
+    if dictid == "gtrans":
+        return googletranslate(removeAccents(word), language)
     if dictid == "wikt-en":
         item = wiktionary(removeAccents(word), language, lemmatize)
         print(item)
