@@ -1,5 +1,7 @@
 from PyQt5.QtWidgets import *
+from PyQt5.QtCore import Qt
 from .tools import *
+from .dictionary import *
 
 class SettingsDialog(QDialog):
     def __init__(self, parent):
@@ -7,61 +9,90 @@ class SettingsDialog(QDialog):
         self.settings = parent.settings
         self.parent = parent
         self.initWidgets()
+        self.initTabs()
         self.setupWidgets()
         self.loadSettings()
         self.setupAutosave()
 
     def initWidgets(self):
-        self.layout = QGridLayout(self)
-        self.resize(320, 350)
         self.allow_editing = QCheckBox("Allow directly editing (Requires restart to take effect)")
         self.lemmatization = QCheckBox("Use lemmatization (Restart needed)")
-        self.lemmatization.setToolTip("Lemmatization means to get the original form of words."\
-            + " For example, 'books' will be converted to 'book' during lookup if this option is set.")
+        self.lemmatization.setToolTip("Lemmatization means to get the original form of words."
+            + "\nFor example, 'books' will be converted to 'book' during lookup if this option is set.")
         self.target_language = QComboBox()
         self.deck_name = QComboBox()
         self.tags = QLineEdit()
+        self.dict_source = QComboBox()
         self.note_type = QComboBox()
         self.sentence_field = QComboBox()
         self.word_field = QComboBox()
         self.definition_field = QComboBox()
         self.anki_api = QLineEdit()
+        self.about = QLabel(
+            '''
+© 2021 FreeLanguageTools<br><br>
+Simple Sentence Mining (ssmtool) is free software available under the terms of \
+<a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GNU GPLv3</a><br><br>
+If you found a bug, or have enhancement ideas, \
+feel free to open an issue on the \
+Github <a href=https://github.com/FreeLanguageTools/ssmtool>repository</a>
+<br><br>
+This program is yours to keep. No data is sent to any server other than \
+the configured dictionary APIs. All statistics data are stored locally.
+            '''
+        )
+        self.about.setTextFormat(Qt.RichText)
+        self.about.setOpenExternalLinks(True)
+        self.about.setWordWrap(True)
+        self.about.setFixedWidth(350)
+    
+    def initTabs(self):
+        self.tabs = QTabWidget()
+        self.tab1 = QWidget()
+        self.tab1.layout = QFormLayout(self.tab1)
+        self.tab2 = QWidget()
+        self.tab2.layout = QFormLayout(self.tab2)
+        self.tab3 = QWidget()
+        self.tab3.layout = QFormLayout(self.tab3)
+        self.tab4 = QWidget()
+        self.tab4.layout = QVBoxLayout(self.tab4)
+
+        self.tabs.resize(250, 300)
+
+        self.layout = QVBoxLayout(self)
+        self.layout.addWidget(self.tabs)
+
+        self.tabs.addTab(self.tab1, "Dictionary")
+        self.tabs.addTab(self.tab2, "Anki")
+        self.tabs.addTab(self.tab3, "Miscellaneous")
+        self.tabs.addTab(self.tab4, "About")
 
     def setupWidgets(self):
-        languages = code.keys()
-        self.target_language.addItems(languages)
-        self.layout.addWidget(self.allow_editing, 0, 0, 1, 2)
-        self.layout.addWidget(self.lemmatization, 1, 0, 1, 2)
+        self.target_language.addItems(code.keys())
+        
+        self.tab1.layout.addRow(self.lemmatization)
+        self.tab1.layout.addRow(QLabel("Target language"), self.target_language)
+        self.tab1.layout.addRow(QLabel("Dictionary source"), self.dict_source)
+        self.tab2.layout.addRow(QLabel('AnkiConnect API'), self.anki_api)
+        self.tab2.layout.addRow(QLabel("Deck name"), self.deck_name)
+        self.tab2.layout.addRow(QLabel('Default tags'), self.tags)
+        self.tab2.layout.addRow(QLabel("Note type"), self.note_type)
+        self.tab2.layout.addRow(QLabel('Field name for "Sentence"'), self.sentence_field)
+        self.tab2.layout.addRow(QLabel('Field name for "Word"'), self.word_field)
+        self.tab2.layout.addRow(QLabel('Field name for "Definition"'), self.definition_field)
 
-        self.layout.addWidget(QLabel("Target language"), 2, 0)
-        self.layout.addWidget(self.target_language, 2, 1)
+        self.tab3.layout.addRow(self.allow_editing)
 
-        self.layout.addWidget(QLabel('AnkiConnect API'), 3, 0)
-        self.layout.addWidget(self.anki_api, 3,1)
-
-        self.layout.addWidget(QLabel("Deck name"), 4, 0)
-        self.layout.addWidget(self.deck_name, 4, 1)
-
-        self.layout.addWidget(QLabel('Default tags'), 5, 0)
-        self.layout.addWidget(self.tags, 5, 1)
-
-        self.layout.addWidget(QLabel("Note type"), 6, 0)
-        self.layout.addWidget(self.note_type, 6,1)
-
-        self.layout.addWidget(QLabel('Field name for "Sentence"'), 7, 0)
-        self.layout.addWidget(self.sentence_field, 7, 1)
-
-        self.layout.addWidget(QLabel('Field name for "Word"'), 8, 0)
-        self.layout.addWidget(self.word_field, 8, 1)
-
-        self.layout.addWidget(QLabel('Field name for "Definition"'), 9, 0)
-        self.layout.addWidget(self.definition_field, 9, 1)
+        self.tab4.layout.addWidget(self.about)
+        
 
 
         
     def setupAutosave(self):
         self.allow_editing.clicked.connect(self.syncSettings)
         self.lemmatization.clicked.connect(self.syncSettings)
+        self.dict_source.currentTextChanged.connect(self.syncSettings)
+        self.target_language.currentTextChanged.connect(self.loadDictionaries)
         self.target_language.currentTextChanged.connect(self.syncSettings)
         self.deck_name.currentTextChanged.connect(self.syncSettings)
         self.tags.editingFinished.connect(self.syncSettings)
@@ -73,14 +104,21 @@ class SettingsDialog(QDialog):
         self.anki_api.editingFinished.connect(self.syncSettings)
         self.anki_api.editingFinished.connect(self.loadSettings)
 
+    def loadDictionaries(self):
+        self.dict_source.clear()
+        self.dict_source.addItem("Wiktionary (English)")
+        if code[self.target_language.currentText()] in gdict_languages:
+            self.dict_source.addItem("Google dictionary (Monolingual)")
+
+
     def loadSettings(self):
-        print("loading, will also check api")
         self.allow_editing.setChecked(self.settings.value("allow_editing", True, type=bool))
         self.lemmatization.setChecked(self.settings.value("lemmatization", True, type=bool))
         self.target_language.setCurrentText(self.settings.value("target_language"))
+        self.dict_source.setCurrentText(self.settings.value("dict_source", "Wiktionary (English)"))
         self.anki_api.setText(self.settings.value("anki_api", "http://localhost:8765"))
         self.tags.setText(self.settings.value("tags", "ssmtool"))
-
+        self.loadDictionaries()
         api = self.anki_api.text()
 
         try:
@@ -134,6 +172,7 @@ class SettingsDialog(QDialog):
         self.settings.setValue("lemmatization", self.lemmatization.isChecked())
         self.settings.setValue("target_language", self.target_language.currentText())
         self.settings.setValue("deck_name", self.deck_name.currentText())
+        self.settings.setValue("dict_source", self.dict_source.currentText())
         self.settings.setValue("tags", self.tags.text())
         self.settings.setValue("note_type", self.note_type.currentText())
         self.settings.setValue("sentence_field", self.sentence_field.currentText())
