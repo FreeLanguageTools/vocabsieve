@@ -28,23 +28,32 @@ class SettingsDialog(QDialog):
         self.word_field = QComboBox()
         self.definition_field = QComboBox()
         self.anki_api = QLineEdit()
+        self.about_sa = QScrollArea()
+        #self.about_sa.setAlignment()
         self.about = QLabel(
             '''
 © 2021 FreeLanguageTools<br><br>
 Simple Sentence Mining (ssmtool) is free software available under the terms of \
-<a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GNU GPLv3</a><br><br>
+<a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GNU GPLv3</a>.<br><br>
 If you found a bug, or have enhancement ideas, \
 feel free to open an issue on the \
-Github <a href=https://github.com/FreeLanguageTools/ssmtool>repository</a>
+Github <a href=https://github.com/FreeLanguageTools/ssmtool>repository</a>.
 <br><br>
 This program is yours to keep. No data is sent to any server other than \
 the configured dictionary APIs. All statistics data are stored locally.
+<br><br>
+Credits: <br><a href="https://en.wiktionary.org/wiki/Wiktionary:Main_Page">Wiktionary API</a><br>
+<a href="https://dictionaryapi.dev/">Google Dictionary API</a><br>
+If you find this tool useful, you probably should donate to them, as I don't need any donations.
             '''
         )
         self.about.setTextFormat(Qt.RichText)
         self.about.setOpenExternalLinks(True)
+        self.about_sa.setWidget(self.about)
         self.about.setWordWrap(True)
-        self.about.setFixedWidth(350)
+        self.about.setMaximumWidth(400)
+        self.about.adjustSize()
+
     
     def initTabs(self):
         self.tabs = QTabWidget()
@@ -83,7 +92,7 @@ the configured dictionary APIs. All statistics data are stored locally.
 
         self.tab3.layout.addRow(self.allow_editing)
 
-        self.tab4.layout.addWidget(self.about)
+        self.tab4.layout.addWidget(self.about_sa)
         
 
 
@@ -107,6 +116,7 @@ the configured dictionary APIs. All statistics data are stored locally.
     def loadDictionaries(self):
         self.dict_source.clear()
         self.dict_source.addItem("Wiktionary (English)")
+        self.dict_source.addItem("Google translate (To English)")
         if code[self.target_language.currentText()] in gdict_languages:
             self.dict_source.addItem("Google dictionary (Monolingual)")
 
@@ -115,10 +125,10 @@ the configured dictionary APIs. All statistics data are stored locally.
         self.allow_editing.setChecked(self.settings.value("allow_editing", True, type=bool))
         self.lemmatization.setChecked(self.settings.value("lemmatization", True, type=bool))
         self.target_language.setCurrentText(self.settings.value("target_language"))
+        self.loadDictionaries()
         self.dict_source.setCurrentText(self.settings.value("dict_source", "Wiktionary (English)"))
         self.anki_api.setText(self.settings.value("anki_api", "http://localhost:8765"))
         self.tags.setText(self.settings.value("tags", "ssmtool"))
-        self.loadDictionaries()
         api = self.anki_api.text()
 
         try:
