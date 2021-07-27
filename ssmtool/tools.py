@@ -55,11 +55,11 @@ def is_json(myjson):
     return True
 
 def failed_lookup(word, setting):
-    return "<b>Definition for \"" + word + "\" not found.</b><br>Check the following:<br>" +\
-            "- Language setting (Current: " + setting.value("target_language") + ")<br>" +\
+    return "<b>Definition for \"" + str(word) + "\" not found.</b><br>Check the following:<br>" +\
+            "- Language setting (Current: " + setting.value("target_language", 'English') + ")<br>" +\
             "- Is the correct word being looked up?<br>" +\
             "- Are you connected to the Internet?<br>" +\
-            "Otherwise, then " + setting.value("dict_source") + " probably just does not have this word listed."
+            "Otherwise, then " + setting.value("dict_source", "Wiktionary (English)") + " probably just does not have this word listed."
 
 def is_oneword(s):
     return len(s.split()) == 1
