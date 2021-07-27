@@ -1,5 +1,5 @@
 build: off
-version: "0.1.13-{build}"
+version: "0.2.0-{build}"
 
 image:
   - macOS
