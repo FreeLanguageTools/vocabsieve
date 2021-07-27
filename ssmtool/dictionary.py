@@ -138,8 +138,6 @@ def googledict(word, language, lemmatize=True):
     lemmatization, so only Russian is supported through PyMorphy2."""
     if language not in gdict_languages:
         return {"word": word, "definition": "Error: Unsupported language"}
-    if lemmatize and language == 'ru':
-        word = lem_word(word)
     if language == "pt":
         # Patching this because it seems that Google dictionary only
         # offers the brasillian one.
