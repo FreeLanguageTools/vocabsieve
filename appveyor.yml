@@ -36,6 +36,7 @@ for:
       - "%PYTHON_WIN%\\python.exe -m pip install ."
       - "cd cx_freeze"
       - "%PYTHON_WIN%\\python.exe setup.py bdist_msi"
+      - ps: "mv \\dist\\*.msi \\dist\\ssmtool-%APPVEYOR_REPO_TAG_NAME%-windows.msi"
       - ps: "ls"
 
     artifacts:
@@ -61,7 +62,7 @@ for:
       - "npm i -g create-dmg"
       - "cd build"
       - "create-dmg ssmtool.app || true"
-      - "mv \"ssmtool undefined.dmg\" ssmtool-$APPVEYOR_REPO_TAG_NAME.dmg"
+      - "mv \"ssmtool undefined.dmg\" ssmtool-$APPVEYOR_REPO_TAG_NAME-macos.dmg"
       - "ls"
       - "cd ../../"
 
