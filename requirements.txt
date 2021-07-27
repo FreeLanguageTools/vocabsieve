@@ -2,5 +2,6 @@ PyQt5
 lxml
 beautifulsoup4
 requests
+unicodedata2
 googletrans==4.0.0rc1
 simplemma
