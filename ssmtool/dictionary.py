@@ -2,6 +2,7 @@ import json
 import urllib.request
 import unicodedata
 import pymorphy2
+import simplemma
 from googletrans import Translator
 import requests
 from bs4 import BeautifulSoup
@@ -12,6 +13,8 @@ except ValueError:
     morph = pymorphy2.MorphAnalyzer(lang="ru-old")
 
 translator = Translator()
+
+langdata = simplemma.load_data('en')
 
 code = {
     "English": "en",
@@ -37,7 +40,9 @@ code = {
 
 wikt_languages = code.keys()
 gdict_languages = ['en', 'hi', 'es', 'fr', 'ja', 'ru', 'de', 'it', 'ko', 'ar', 'tr', 'pt']
-
+simplemma_languages = ['bg', 'ca', 'cy', 'da', 'de', 'en', 'es', 'et', 'fa', 'fi', 'fr',
+                       'ga', 'gd', 'gl', 'gv', 'hu', 'id', 'it', 'ka', 'la', 'lb', 'lt', 
+                       'lv', 'nl', 'pt', 'ro', 'ru', 'sk', 'sl', 'sv', 'tr', 'uk', 'ur']
 dictionaries = {"Wiktionary (English)": "wikt-en", 
                 "Google dictionary (Monolingual)": "gdict",
                 "Google translate (To English)": "gtrans"}
@@ -113,9 +118,20 @@ def wiktionary(word, language, lemmatize=True):
         definitions.append(meaning_item)
     return {"word": word, "definition": definitions}
 
-def lem_word(word):
+def lem_word(word, language):
+    """Lemmatize a word. If the language is supported by PyMorphy2,
+    We will use that, otherwise we will use simplemma, and if that
+    isn't supported either, we give up."""
+    if language in ['ru', 'uk']:
+        return morph.parse(word)[0].normal_form
+    elif language in simplemma_languages:
+        global langdata
+        if langdata[0][0] != language:
+            langdata = simplemma.load_data(language)
+            return lem_word(word, language)
+        else:
+            return simplemma.lemmatize(word, langdata)
 
-    return morph.parse(word)[0].normal_form
 
 def googledict(word, language, lemmatize=True):
     """Google dictionary lookup. Note Google dictionary cannot provide
@@ -125,6 +141,8 @@ def googledict(word, language, lemmatize=True):
     if lemmatize and language == 'ru':
         word = lem_word(word)
     if language == "pt":
+        # Patching this because it seems that Google dictionary only
+        # offers the brasillian one.
         language = "pt-BR"
     
     try:
@@ -151,8 +169,9 @@ def googletranslate(word, language):
 
 def lookupin(word, language, lemmatize=True, dictionary="Wiktionary (English)"):
     print("Using", dictionary)
-    if lemmatize and language == 'ru':
-        word = lem_word(word)
+    if lemmatize:
+        word = lem_word(word, language)
+    
     dictid = dictionaries[dictionary]
     if dictid == "gtrans":
         return googletranslate(removeAccents(word), language)

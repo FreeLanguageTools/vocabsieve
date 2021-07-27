@@ -15,8 +15,8 @@ class SettingsDialog(QDialog):
         self.setupAutosave()
 
     def initWidgets(self):
-        self.allow_editing = QCheckBox("Allow directly editing (Requires restart to take effect)")
-        self.lemmatization = QCheckBox("Use lemmatization (Restart needed)")
+        self.allow_editing = QCheckBox("Allow directly editing of text fields (Requires restart to take effect)")
+        self.lemmatization = QCheckBox("Use lemmatization (Requires restart to take effect)")
         self.lemmatization.setToolTip("Lemmatization means to get the original form of words."
             + "\nFor example, 'books' will be converted to 'book' during lookup if this option is set.")
         self.target_language = QComboBox()
@@ -39,19 +39,19 @@ If you found a bug, or have enhancement ideas, \
 feel free to open an issue on the \
 Github <a href=https://github.com/FreeLanguageTools/ssmtool>repository</a>.
 <br><br>
-This program is yours to keep. No data is sent to any server other than \
-the configured dictionary APIs. All statistics data are stored locally.
+This program is yours to keep. There is no EULA you need to agree to. \
+No data is sent to any server other than the configured dictionary APIs. \
+Statistics data are stored locally.
 <br><br>
 Credits: <br><a href="https://en.wiktionary.org/wiki/Wiktionary:Main_Page">Wiktionary API</a><br>
 <a href="https://dictionaryapi.dev/">Google Dictionary API</a><br>
-If you find this tool useful, you probably should donate to them, as I don't need any donations.
+If you find this tool useful, you probably should donate to these projects.
             '''
         )
         self.about.setTextFormat(Qt.RichText)
         self.about.setOpenExternalLinks(True)
         self.about_sa.setWidget(self.about)
         self.about.setWordWrap(True)
-        self.about.setMaximumWidth(400)
         self.about.adjustSize()
 
     
