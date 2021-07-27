@@ -79,5 +79,4 @@ deploy:
   artifact: Windows App, Mac App
   draft: true
   on:
-    branch: master
     APPVEYOR_REPO_TAG: true
