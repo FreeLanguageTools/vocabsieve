@@ -32,11 +32,10 @@ for:
       - "powershell gl-ci-helpers/appveyor/install_opengl.ps1"
       - "SET PYVISTA_OFF_SCREEN=True"
       - "%PYTHON_WIN%\\python.exe -m pip install -r requirements.txt"
-      - "%PYTHON_WIN%\\python.exe -m pip install cx_freeze pymorphy2_dicts"
+      - "%PYTHON_WIN%\\python.exe -m pip install cx_freeze"
       - "%PYTHON_WIN%\\python.exe -m pip install ."
       - "cd cx_freeze"
       - "%PYTHON_WIN%\\python.exe setup.py bdist_msi"
-      - ps: "mv .\\dist\\*.msi .\\dist\\ssmtool-${APPVEYOR_REPO_TAG_NAME}-windows.msi"
       - ps: "ls"
 
     artifacts:
@@ -55,7 +54,7 @@ for:
     
     install:
       - "$HOME/$PYTHON_MAC/bin/python -m pip install -r requirements.txt"
-      - "$HOME/$PYTHON_MAC/bin/python -m pip install cx_freeze pymorphy2_dicts"
+      - "$HOME/$PYTHON_MAC/bin/python -m pip install cx_freeze"
       - "$HOME/$PYTHON_MAC/bin/python -m pip install ."
       - "cd cx_freeze"
       - "$HOME/$PYTHON_MAC/bin/python setup.py bdist_mac --iconfile icon.icns --bundle-name=ssmtool --custom-info-plist Info.plist -q"

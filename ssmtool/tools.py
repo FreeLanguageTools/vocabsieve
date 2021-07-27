@@ -1,7 +1,6 @@
 import json
 import urllib.request
-import unicodedata
-import pymorphy2
+import unicodedata2
 import requests
 from bs4 import BeautifulSoup
 
