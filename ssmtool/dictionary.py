@@ -34,15 +34,15 @@ code = {
 wikt_languages = code.keys()
 gdict_languages = ['en', 'hi', 'es', 'fr', 'ja', 'ru', 'de', 'it', 'ko', 'ar', 'tr', 'pt']
 simplemma_languages = ['bg', 'ca', 'cy', 'da', 'de', 'en', 'es', 'et', 'fa', 'fi', 'fr',
-                       'ga', 'gd', 'gl', 'gv', 'hu', 'id', 'it', 'ka', 'la', 'lb', 'lt', 
+                       'ga', 'gd', 'gl', 'gv', 'hu', 'id', 'it', 'ka', 'la', 'lb', 'lt',
                        'lv', 'nl', 'pt', 'ro', 'ru', 'sk', 'sl', 'sv', 'tr', 'uk', 'ur']
-dictionaries = {"Wiktionary (English)": "wikt-en", 
+dictionaries = {"Wiktionary (English)": "wikt-en",
                 "Google dictionary (Monolingual)": "gdict",
                 "Google translate (To English)": "gtrans"}
 
 
 def removeAccents(word):
-    print("Removing accent marks from query ", word)
+    #print("Removing accent marks from query ", word)
     ACCENT_MAPPING = {
         '́': '',
         '̀': '',
@@ -68,7 +68,7 @@ def removeAccents(word):
     word = unicodedata.normalize('NFKC', word)
     for old, new in ACCENT_MAPPING.items():
         word = word.replace(old, new)
-    print("Remaining: ", word)
+    #print("Remaining: ", word)
     return word
 
 def fmt_result(definitions):
@@ -82,7 +82,6 @@ def fmt_result(definitions):
 
 def wiktionary(word, language, lemmatize=True):
     "Get definitions from Wiktionary"
-    print("lemmatize is", lemmatize, "in wiktionary()")
     try:
         res = requests.get('https://en.wiktionary.org/api/rest_v1/page/definition/' + word, timeout=4)
     except Exception as e:
@@ -102,11 +101,11 @@ def wiktionary(word, language, lemmatize=True):
             else:
                 next_target = parsed_meaning.select_one("span.form-of-definition-link")\
                     .select_one("a")['title']
-                print(next_target)
+                #print(next_target)
                 return wiktionary(next_target, language, lemmatize=False)
-            
+
             meanings.append(meaning)
-            
+
         meaning_item = {"pos": item['partOfSpeech'], "meaning": meanings}
         definitions.append(meaning_item)
     return {"word": word, "definition": definitions}
@@ -126,14 +125,13 @@ def lem_word(word, language):
 def googledict(word, language, lemmatize=True):
     """Google dictionary lookup. Note Google dictionary cannot provide
     lemmatization, so only Russian is supported through PyMorphy2."""
-    print("google dict is looking up", word)
     if language not in gdict_languages:
         return {"word": word, "definition": "Error: Unsupported language"}
     if language == "pt":
         # Patching this because it seems that Google dictionary only
         # offers the brasillian one.
         language = "pt-BR"
-    
+
     try:
         res = requests.get('https://api.dictionaryapi.dev/api/v2/entries/' + language + "/" + word, timeout=4)
     except Exception as e:
@@ -152,24 +150,25 @@ def googledict(word, language, lemmatize=True):
 
 def googletranslate(word, language):
     "Google translation, through the googletrans python library"
-    print(translator.translate(word, src=language).text)
+    #print(translator.translate(word, src=language).text)
     return {"word": word, "definition": translator.translate(word, src=language).text}
 
 
 def lookupin(word, language, lemmatize=True, dictionary="Wiktionary (English)"):
     print("Using", dictionary)
+    word = word
     if lemmatize:
         word = lem_word(word, language)
-    
+
     dictid = dictionaries[dictionary]
     if dictid == "gtrans":
-        return googletranslate(removeAccents(word), language)
+        return googletranslate(word, language)
     if dictid == "wikt-en":
-        item = wiktionary(removeAccents(word), language, lemmatize)
-        print(item)
+        item = wiktionary(word, language, lemmatize)
+        #print(item)
     elif dictid == "gdict":
-        item = googledict(removeAccents(word), language, lemmatize)
-        print(item)
+        item = googledict(word, language, lemmatize)
+        #print(item)
     item['definition'] = fmt_result(item['definition'])
-    print(item)
+    #print(item)
     return item
