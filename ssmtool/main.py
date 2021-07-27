@@ -236,10 +236,10 @@ class DictionaryWindow(QMainWindow):
         self.status(f"L: '{word}' in '{language}', lemma: {short_sign}, from {dictionaries[dictname]}")
         try:
             item = lookupin(word, language, lemmatize, dictname)
-            self.rec.recordLookup(word, item['definition'], TL, lemmatize, 'wikt-en', True)
+            self.rec.recordLookup(word, item['definition'], TL, lemmatize, dictionaries[dictname], True)
         except Exception as e:
             self.status("Lookup failed.")
-            self.rec.recordLookup(word, None, TL, lemmatize, 'wikt-en', False)
+            self.rec.recordLookup(word, None, TL, lemmatize, dictionaries[dictname], False)
             self.updateAnkiButtonState(True)
             item = {
                 "word": word, 

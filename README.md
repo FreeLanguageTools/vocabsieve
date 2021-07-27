@@ -61,9 +61,6 @@ First, you need to configure it by pressing the "Configure.." button at the bott
 This program is still at an early stage. More features will be added soon.
 
 Current plans include:
-- Undo
-- Usage statistics
-- Other dictionaries
 - Auto-selecting the most difficult words
 
 ## Credits
