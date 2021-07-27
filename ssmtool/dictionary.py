@@ -122,7 +122,7 @@ def lem_word(word, language):
     """Lemmatize a word. If the language is supported by PyMorphy2,
     We will use that, otherwise we will use simplemma, and if that
     isn't supported either, we give up."""
-    if language in ['ru', 'uk']:
+    if language == 'ru':
         return morph.parse(word)[0].normal_form
     elif language in simplemma_languages:
         global langdata
@@ -136,6 +136,7 @@ def lem_word(word, language):
 def googledict(word, language, lemmatize=True):
     """Google dictionary lookup. Note Google dictionary cannot provide
     lemmatization, so only Russian is supported through PyMorphy2."""
+    print("google dict is looking up", word)
     if language not in gdict_languages:
         return {"word": word, "definition": "Error: Unsupported language"}
     if language == "pt":
