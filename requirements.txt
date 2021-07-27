@@ -1,7 +1,5 @@
 PyQt5
 lxml
-pymorphy2
-pymorphy2-dicts-ru
 beautifulsoup4
 requests
 googletrans==4.0.0rc1

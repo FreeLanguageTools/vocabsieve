@@ -1,17 +1,10 @@
 import json
 import urllib.request
 import unicodedata
-import pymorphy2
 import simplemma
 from googletrans import Translator
 import requests
 from bs4 import BeautifulSoup
-
-try:
-    morph = pymorphy2.MorphAnalyzer(lang="ru")
-except ValueError:
-    morph = pymorphy2.MorphAnalyzer(lang="ru-old")
-
 translator = Translator()
 
 langdata = simplemma.load_data('en')
@@ -119,12 +112,9 @@ def wiktionary(word, language, lemmatize=True):
     return {"word": word, "definition": definitions}
 
 def lem_word(word, language):
-    """Lemmatize a word. If the language is supported by PyMorphy2,
-    We will use that, otherwise we will use simplemma, and if that
+    """Lemmatize a word. We will use simplemma, and if that
     isn't supported either, we give up."""
-    if language == 'ru':
-        return morph.parse(word)[0].normal_form
-    elif language in simplemma_languages:
+    if language in simplemma_languages:
         global langdata
         if langdata[0][0] != language:
             langdata = simplemma.load_data(language)
