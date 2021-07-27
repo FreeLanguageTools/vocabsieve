@@ -263,7 +263,6 @@ class DictionaryWindow(QMainWindow):
             "tags": tags
         }
         self.status("Adding note")
-        print(str(content))
         api = self.settings.value("anki_api")
         try:
             addNote(api, content)
