@@ -36,7 +36,7 @@ for:
       - "%PYTHON_WIN%\\python.exe -m pip install ."
       - "cd cx_freeze"
       - "%PYTHON_WIN%\\python.exe setup.py bdist_msi"
-      - ps: "mv \\dist\\*.msi \\dist\\ssmtool-%APPVEYOR_REPO_TAG_NAME%-windows.msi"
+      - ps: "mv .\\dist\\*.msi .\\dist\\ssmtool-%APPVEYOR_REPO_TAG_NAME%-windows.msi"
       - ps: "ls"
 
     artifacts:
@@ -67,7 +67,7 @@ for:
       - "cd ../../"
 
     artifacts:
-      path: cx_freeze/build/ssmtool-$(APPVEYOR_REPO_TAG_NAME).dmg
+      path: cx_freeze/build/*.dmg
       name: Mac App
 
 
