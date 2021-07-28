@@ -14,14 +14,14 @@ This program monitors your clipboard at all times and when a change is detected,
 
 ## Installation
 ### Linux
-Install with pip: `pip install ssmtool`
+Install with pip: `pip3 install ssmtool`
 
 Packages on Gentoo GURU and Arch Linux AUR will be soon available.
 
 ### Windows, macOS
 Standalone version available in the [Releases](https://github.com/FreeLanguageTools/ssmtool/releases) tab.
 
-Alternatively, you can also install with pip: `pip install ssmtool`
+Alternatively, you can also install with pip: `pip333 install ssmtool`
 
 ([Instructions on setting up PIP on Windows](https://nitratine.net/blog/post/how-to-setup-pythons-pip/))
 
@@ -32,7 +32,7 @@ Alternatively, you can also install with pip: `pip install ssmtool`
 ## How to use
 First, you need to configure it by pressing the "Configure.." button at the bottom. You only need to do it once.
 
-### With Click-Copy-Sentence
+### With Click-Copy-Sentence Browser extension
 1. Open any website
 2. Click on a word
 3. Check if the definition makes sense, if not, double-click on one of the words in the Sentence field.
@@ -40,7 +40,7 @@ First, you need to configure it by pressing the "Configure.." button at the bott
 
 ### General use
 1. Copy any text to clipboard
-2. Click on a word in the Sentence field
+2. Double-click on a word in the Sentence field
 3. Check if the definition makes sense. You can also look up any word in the Definition field.
 4. Click on the "Add note" button.
 
@@ -62,6 +62,8 @@ This program is still at an early stage. More features will be added soon.
 
 Current plans include:
 - Auto-selecting the most difficult words
+- Local dictionaries
+- Usage graphs
 
 ## Credits
 All the definitions provided by the program come from the English Wiktionary, without which this program would never have been created.

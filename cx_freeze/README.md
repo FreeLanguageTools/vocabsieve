@@ -4,12 +4,6 @@ We are using `cx_Freeze` to build our distributable binaries.
 
 `app.py` is a copy of `ssmtool.py` in the root directory, renamed to avoid naming conflicts.
 
-Because of a bug in either cx_Freeze or `pymorphy2`, you **must manually patch** the `analyzer.py` module in `pymorphy2`. 
-
-Please replace the module in your own pymorphy2 installation with the `analyzer.py` in the directory. (You can find this path by running `pip install pymorphy2`) This is not necessary when you run the script from source, nor is it necessary in Linux packages.
-
-This patch uses an alternative way to get the path to data in the module `pymorphy2_dicts_ru` without `pkg_resources`, and assumes that the module is installed.
-
 ## Windows
 First, install `cx_Freeze` from `pip`.
 Then, install `ssmtool` package too.
