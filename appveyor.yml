@@ -11,7 +11,7 @@ platform:
 environment:
   matrix:
     - TOXENV: py39
-      PYTHON_WIN: "C:\\Python39"
+      PYTHON_WIN: "C:\\Python39-x64"
       PYTHON_MAC: "venv3.9.1"
       PYTHON_UBU: "venv3.9/bin/python"
       PYTHON_VERSION: "3.9.1"
