@@ -1,6 +1,5 @@
 import json
 import urllib.request
-import unicodedata2
 import requests
 from bs4 import BeautifulSoup
 
