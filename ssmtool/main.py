@@ -91,7 +91,7 @@ class DictionaryWindow(QMainWindow):
         self.bar = QStatusBar()
         self.setStatusBar(self.bar)
         self.stats_label = QLabel()
-    
+
         self.sentence.setReadOnly(not (self.settings.value("allow_editing", True, type=bool)))
         self.definition.setReadOnly(not (self.settings.value("allow_editing", True, type=bool)))
 
@@ -156,9 +156,9 @@ class DictionaryWindow(QMainWindow):
         selected = cursor.selectedText().lower()
         cursor2 = self.definition.textCursor()
         selected2 = cursor2.selectedText().lower()
-        target = str.strip(selected or selected2 
-                                    or self.previousWord 
-                                    or self.word.text() 
+        target = str.strip(selected or selected2
+                                    or self.previousWord
+                                    or self.word.text()
                                     or "")
         self.previousWord = target
 
@@ -182,16 +182,16 @@ class DictionaryWindow(QMainWindow):
 
     def getState(self):
         return {'word': self.word.text(), 'definition': self.definition.toPlainText().replace("\n", "<br>")}
-    
+
     def undo(self):
         try:
             self.setState(self.prev_states.pop())
         except IndexError:
             self.setState({'word': "", 'definition': ""})
-    
+
     def setSentence(self, content):
         self.sentence.setText(str.strip(content))
-    
+
     def setWord(self, content):
         self.word.setText(content)
 
@@ -221,10 +221,10 @@ class DictionaryWindow(QMainWindow):
             self.setState(result)
         else:
             self.setSentence(text)
-            
+
     def lookup(self, word, use_lemmatize=True):
         """
-        Look up a word and return a dict with the lemmatized form (if enabled) 
+        Look up a word and return a dict with the lemmatized form (if enabled)
         and definition
         """
         TL = self.settings.value("target_language", "English")
@@ -238,11 +238,11 @@ class DictionaryWindow(QMainWindow):
             item = lookupin(word, language, lemmatize, dictname)
             self.rec.recordLookup(word, item['definition'], TL, lemmatize, dictionaries[dictname], True)
         except Exception as e:
-            self.status("Lookup failed.")
+            self.status(str(e))
             self.rec.recordLookup(word, None, TL, lemmatize, dictionaries[dictname], False)
             self.updateAnkiButtonState(True)
             item = {
-                "word": word, 
+                "word": word,
                 "definition": failed_lookup(word, self.settings)
                 }
         return item
@@ -263,7 +263,6 @@ class DictionaryWindow(QMainWindow):
             "tags": tags
         }
         self.status("Adding note")
-        print(str(content))
         api = self.settings.value("anki_api")
         try:
             addNote(api, content)
@@ -277,7 +276,7 @@ class DictionaryWindow(QMainWindow):
             self.status(f"Failed to add note: {word}")
             self.errorNoConnection(e)
             return
-        
+
     def errorNoConnection(self, error):
         """
         Dialog window sent when something goes wrong in configuration step
@@ -317,11 +316,10 @@ class MyTextEdit(QTextEdit):
         GlobalObject().dispatchEvent("double clicked")
         print("Event sent")
         self.textCursor().clearSelection()
-    
+
 def main():
     app = QApplication(sys.argv)
     w = DictionaryWindow()
-    
+
     w.show()
     sys.exit(app.exec())
-
