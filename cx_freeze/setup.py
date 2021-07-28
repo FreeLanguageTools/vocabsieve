@@ -15,7 +15,7 @@ if sys.platform == "win32":
 
 setup(
     name = "ssmtool",
-    version = "v" + __version__,
+    version = __version__,
     description = "Simple Sentence Mining",
     options = {"build_exe": build_exe_options},
     executables = [Executable("app.py",
