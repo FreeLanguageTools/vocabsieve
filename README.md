@@ -35,8 +35,10 @@ Alternatively, you can also install with pip: `pip333 install ssmtool`
 
 ([Instructions on setting up PIP on macOS](https://www.geeksforgeeks.org/how-to-install-pip-in-macos/))
 
-**Important**: On macOS it is important to have Anki open on the foreground, otherwise the API will respond very slowly, causing lags in the application.
+**Important**: 
+On **macOS** it is important to have Anki open on the foreground, otherwise the API will respond very slowly, causing lags in the application.
 
+On **Windows** you need the [Microsoft Visual C++ Redistributable Package](https://aka.ms/vs/16/release/vc_redist.x64.exe). Only 64-bit Windows is supported.
 ## How to use
 First, you need to configure it by pressing the "Configure.." button at the bottom. You only need to do it once.
 
