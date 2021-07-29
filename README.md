@@ -16,7 +16,13 @@ This program monitors your clipboard at all times and when a change is detected,
 ### Linux
 Install with pip: `pip3 install ssmtool`
 
-Packages on Gentoo GURU and Arch Linux AUR will be soon available.
+#### Distro packages
+| Distro | Package Name |
+-------- | ------------
+| Gentoo | `app-misc/ssmtool` (GURU overlay)|
+| Arch Linux | Coming soon |
+
+
 
 ### Windows, macOS
 Standalone version available in the [Releases](https://github.com/FreeLanguageTools/ssmtool/releases) tab.
