@@ -63,7 +63,7 @@ First, you need to configure it by pressing the "Configure.." button at the bott
 | Youtube  | [youtube-dl](https://github.com/ytdl-org/youtube-dl) | Download videos from youtube (videos can be played locally with subtitles, which are then copy-able with mpv). |
 | mpv | [mpvacious](https://github.com/Ajatt-Tools/mpvacious) | Automatically copies subtitles to clipboard (which will show up on this tool) |
 | Anki | [AwesomeTTS](https://ankiweb.net/shared/info/814349176) | Automatically generates TTS for cards generated from this tool. You can configure it to produce TTS on demand for the note type used by `ssmtool`, complementing your flashcards.
-| Browser | Click Copy Sentence ([Firefox](https://addons.mozilla.org/en-GB/firefox/addon/click-copy-sentence/), Chrome version coming soon.) | Companion browser extension for ssmtool. Enables single-click note creation. | 
+| Browser | Click Copy Sentence ([Firefox](https://addons.mozilla.org/en-GB/firefox/addon/click-copy-sentence/), [Chrome](https://chrome.google.com/webstore/detail/click-copy-sentence/klhlkoabjmofmjkhbmelmfnhkbjaohdj)) | Companion browser extension for ssmtool. Enables single-click note creation. | 
 
 
 
