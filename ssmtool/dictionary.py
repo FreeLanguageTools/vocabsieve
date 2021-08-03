@@ -80,6 +80,17 @@ def fmt_result(definitions):
         lines.extend([str(item[0]+1) + ". " + item[1] for item in list(enumerate(definitions[0]['meaning']))])
     return "<br>".join(lines)
 
+def lem_word(word, language):
+    """Lemmatize a word. We will use simplemma, and if that
+    isn't supported either, we give up."""
+    if language in simplemma_languages:
+        global langdata
+        if langdata[0][0] != language:
+            langdata = simplemma.load_data(language)
+            return lem_word(word, language)
+        else:
+            return simplemma.lemmatize(word, langdata)
+
 def wiktionary(word, language, lemmatize=True):
     "Get definitions from Wiktionary"
     try:
@@ -109,17 +120,6 @@ def wiktionary(word, language, lemmatize=True):
         meaning_item = {"pos": item['partOfSpeech'], "meaning": meanings}
         definitions.append(meaning_item)
     return {"word": word, "definition": definitions}
-
-def lem_word(word, language):
-    """Lemmatize a word. We will use simplemma, and if that
-    isn't supported either, we give up."""
-    if language in simplemma_languages:
-        global langdata
-        if langdata[0][0] != language:
-            langdata = simplemma.load_data(language)
-            return lem_word(word, language)
-        else:
-            return simplemma.lemmatize(word, langdata)
 
 
 def googledict(word, language, lemmatize=True):
