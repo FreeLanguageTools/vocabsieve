@@ -23,13 +23,15 @@ class SettingsDialog(QDialog):
         self.deck_name = QComboBox()
         self.tags = QLineEdit()
         self.dict_source = QComboBox()
+        self.dict_source2 = QComboBox()
         self.note_type = QComboBox()
         self.sentence_field = QComboBox()
         self.word_field = QComboBox()
         self.definition_field = QComboBox()
         self.anki_api = QLineEdit()
         self.about_sa = QScrollArea()
-        #self.about_sa.setAlignment()
+        self.importdict = QPushButton('Import StarDict Dictionaries')
+
         self.about = QLabel(
             '''
 © 2021 FreeLanguageTools<br><br>
@@ -81,7 +83,9 @@ If you find this tool useful, you probably should donate to these projects.
         
         self.tab1.layout.addRow(self.lemmatization)
         self.tab1.layout.addRow(QLabel("Target language"), self.target_language)
-        self.tab1.layout.addRow(QLabel("Dictionary source"), self.dict_source)
+        self.tab1.layout.addRow(QLabel("Dictionary source 1"), self.dict_source)
+        self.tab1.layout.addRow(QLabel("Dictionary source 2"), self.dict_source2)
+        self.tab1.layout.addRow(self.importdict)
         self.tab2.layout.addRow(QLabel('AnkiConnect API'), self.anki_api)
         self.tab2.layout.addRow(QLabel("Deck name"), self.deck_name)
         self.tab2.layout.addRow(QLabel('Default tags'), self.tags)
@@ -101,6 +105,8 @@ If you find this tool useful, you probably should donate to these projects.
         self.allow_editing.clicked.connect(self.syncSettings)
         self.lemmatization.clicked.connect(self.syncSettings)
         self.dict_source.currentTextChanged.connect(self.syncSettings)
+        self.dict_source.currentTextChanged.connect(self.loadDict2Options)
+        self.dict_source2.currentTextChanged.connect(self.syncSettings)
         self.target_language.currentTextChanged.connect(self.loadDictionaries)
         self.target_language.currentTextChanged.connect(self.syncSettings)
         self.deck_name.currentTextChanged.connect(self.syncSettings)
@@ -119,7 +125,18 @@ If you find this tool useful, you probably should donate to these projects.
         self.dict_source.addItem("Google translate (To English)")
         if code[self.target_language.currentText()] in gdict_languages:
             self.dict_source.addItem("Google dictionary (Monolingual)")
-
+        self.loadDict2Options()
+        
+    def loadDict2Options(self):
+        self.dict_source2.clear()
+        self.dict_source2.addItem("Disabled")
+        if self.dict_source.currentText() != "Wiktionary (English)":
+            self.dict_source2.addItem("Wiktionary (English)")
+        if self.dict_source.currentText() != "Google translate (To English)":
+            self.dict_source2.addItem("Google translate (To English")
+        if (self.dict_source.currentText() != "Google dictionary (Monolingual)" and 
+            code[self.target_language.currentText()] in gdict_languages):
+            self.dict_source2.addItem("Google dictionary (Monolingual)")
 
     def loadSettings(self):
         self.allow_editing.setChecked(self.settings.value("allow_editing", True, type=bool))
@@ -183,6 +200,7 @@ If you find this tool useful, you probably should donate to these projects.
         self.settings.setValue("target_language", self.target_language.currentText())
         self.settings.setValue("deck_name", self.deck_name.currentText())
         self.settings.setValue("dict_source", self.dict_source.currentText())
+        self.settings.setValue("dict_source2", self.dict_source2.currentText())
         self.settings.setValue("tags", self.tags.text())
         self.settings.setValue("note_type", self.note_type.currentText())
         self.settings.setValue("sentence_field", self.sentence_field.currentText())
