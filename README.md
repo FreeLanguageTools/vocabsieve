@@ -7,75 +7,32 @@ This program monitors your clipboard at all times and when a change is detected,
 
 ![Demo](https://imgur.com/aF34qax.gif)
 
-## Prerequisites
+For a detailed list of features and language support data, please consult the [page](https://freelanguagetools.org/posts/ssmtool-full-tutorial/) on my blog
 
-| Name | Note |
------- | ------
-|Anki with AnkiConnect | Needed for exporting notes|
+## Tutorials
+[Video tutorial (Basic)](https://www.youtube.com/watch?v=y79_q08Zu8k&pp=sAQA)
 
-
-## Installation
-### Linux
-Install with pip: `pip3 install ssmtool`
-
-#### Distro packages
-| Distro | Package Name |
--------- | ------------
-| Gentoo | `app-misc/ssmtool` (GURU overlay)|
-| Arch Linux | Coming soon |
-
-
-
-### Windows, macOS
-Standalone version available in the [Releases](https://github.com/FreeLanguageTools/ssmtool/releases) tab.
-
-Alternatively, you can also install with pip: `pip333 install ssmtool`
-
-([Instructions on setting up PIP on Windows](https://nitratine.net/blog/post/how-to-setup-pythons-pip/))
-
-([Instructions on setting up PIP on macOS](https://www.geeksforgeeks.org/how-to-install-pip-in-macos/))
-
-**Important**: 
-On **macOS** it is important to have Anki open on the foreground, otherwise the API will respond very slowly, causing lags in the application.
-
-On **Windows** you need the [Microsoft Visual C++ Redistributable Package](https://aka.ms/vs/16/release/vc_redist.x64.exe). Only 64-bit Windows is supported.
-## How to use
-First, you need to configure it by pressing the "Configure.." button at the bottom. You only need to do it once.
-
-### With Click-Copy-Sentence Browser extension
-1. Open any website
-2. Click on a word
-3. Check if the definition makes sense, if not, double-click on one of the words in the Sentence field.
-4. Click on the "Add note" button.
-
-### General use
-1. Copy any text to clipboard
-2. Double-click on a word in the Sentence field
-3. Check if the definition makes sense. You can also look up any word in the Definition field.
-4. Click on the "Add note" button.
-
-
-## Recommended tools
-*Disclaimer: Except for the companion web extension, these projects are not affiliated with the author of `ssmtool`*
-| Service/Application | Plugin | Note |
---------- | ------ | ------
-| Netflix | Subadub ([Firefox](https://addons.mozilla.org/en-US/firefox/addon/subadub/), [Chrome](https://chrome.google.com/webstore/detail/subadub/jamiekdimmhnnemaaimmdahnahfmfdfk)) | Chrome extension to make subtitles selectable (also copy-able) |
-| Youtube  | [youtube-dl](https://github.com/ytdl-org/youtube-dl) | Download videos from youtube (videos can be played locally with subtitles, which are then copy-able with mpv). |
-| mpv | [mpvacious](https://github.com/Ajatt-Tools/mpvacious) | Automatically copies subtitles to clipboard (which will show up on this tool) |
-| Anki | [AwesomeTTS](https://ankiweb.net/shared/info/814349176) | Automatically generates TTS for cards generated from this tool. You can configure it to produce TTS on demand for the note type used by `ssmtool`, complementing your flashcards.
-| Browser | Click Copy Sentence ([Firefox](https://addons.mozilla.org/en-GB/firefox/addon/click-copy-sentence/), [Chrome](https://chrome.google.com/webstore/detail/click-copy-sentence/klhlkoabjmofmjkhbmelmfnhkbjaohdj)) | Companion browser extension for ssmtool. Enables single-click note creation. | 
-
+[Detailed text tutorial](https://freelanguagetools.org/posts/ssmtool-full-tutorial/)
+(The text originally on this document has since been moved there.)
 
 
 ## Future plans
 This program is still at an early stage. More features will be added soon.
 
 Current plans include:
+- Chinese word segmentation
 - Auto-selecting the most difficult words
 - Local dictionaries
 - Usage graphs
 
+## Feedback
+You are welcome to report bugs, suggest features/enhancements, or ask for clarifications by opening a GitHub issue.
+
 ## Credits
 All the definitions provided by the program come from the English Wiktionary, without which this program would never have been created.
+
+Google dictionary API comes from [here](https://dictionaryapi.dev/).
+
+Support for Google Translate without the use of an API key comes from the [py-googletrans project](https://github.com/ssut/py-googletrans)
 
 App icon is made from icons by Freepik available on Flaticon.
