@@ -147,9 +147,9 @@ class DictionaryWindow(QMainWindow):
 
     def setupShortcuts(self):
         self.shortcut_toanki = QShortcut(QKeySequence('Ctrl+S'), self)
-        self.shortcut_toanki.activated.connect(self.createNote)
+        self.shortcut_toanki.activated.connect(self.toanki_button.animateClick)
         self.shortcut_getdef = QShortcut(QKeySequence('Ctrl+D'), self)
-        self.shortcut_getdef.activated.connect(self.lookupClicked)
+        self.shortcut_getdef.activated.connect(self.lookup_button.animateClick)
 
     def getCurrentWord(self):
         cursor = self.sentence.textCursor()
