@@ -15,6 +15,7 @@ For a detailed list of features and language support data, please consult the [p
 [Detailed text tutorial](https://freelanguagetools.org/posts/ssmtool-full-tutorial/)
 (The text originally on this document has since been moved there.)
 
+**USERS**: If you want to install it, go to [Releases](https://github.com/FreeLanguageTools/ssmtool/releases/) and from the latest release, download the appropriate file for your operating system. 
 
 ## Future plans
 This program is still at an early stage. More features will be added soon.
