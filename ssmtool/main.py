@@ -48,7 +48,7 @@ class DictionaryWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Simple Sentence Mining")
-        self.resize(400, 600)
+        self.resize(400, 700)
         self.widget = QWidget()
         self.settings = QSettings("FreeLanguageTools", "SimpleSentenceMining")
         self.rec = Record()
@@ -72,11 +72,14 @@ class DictionaryWindow(QMainWindow):
 
         self.sentence = MyTextEdit()
         self.sentence.setMinimumHeight(30)
-        self.sentence.setMaximumHeight(150)
+        self.sentence.setMaximumHeight(130)
         self.word = QLineEdit()
         self.definition = MyTextEdit()
         self.definition.setMinimumHeight(70)
-        self.definition.setMaximumHeight(800)
+        self.definition.setMaximumHeight(1800)
+        self.definition2 = MyTextEdit()
+        self.definition2.setMinimumHeight(70)
+        self.definition2.setMaximumHeight(1800)
         self.tags = QLineEdit()
         self.label_sentence = QLabel("Sentence")
         self.label_sentence.setToolTip("You can look up any word in this box by double clicking it, or alternatively by selecting it, then press \"Get definition\".")
@@ -85,6 +88,7 @@ class DictionaryWindow(QMainWindow):
         self.lookup_exact_button = QPushButton("Define (Direct)")
         self.lookup_exact_button.setToolTip("This will look up the word without lemmatization.")
         self.toanki_button = QPushButton(f"Add note ({MOD}-S)")
+
         self.undo_button = QPushButton("Undo")
         self.config_button = QPushButton("Configure..")
         self.read_button = QPushButton("Read clipboard")
@@ -105,6 +109,7 @@ class DictionaryWindow(QMainWindow):
         self.layout.addWidget(self.undo_button, 2, 1)
         self.layout.addWidget(self.read_button, 2, 2)
 
+        self.layout.addWidget(self.sentence, 3, 0, 1, 3)
         self.layout.addWidget(QLabel("Word"), 4, 0)
 
         if self.settings.value("lemmatization", True, type=bool):
@@ -112,16 +117,25 @@ class DictionaryWindow(QMainWindow):
             self.layout.addWidget(self.lookup_exact_button, 4, 2)
         else:
             self.layout.addWidget(self.lookup_button, 4, 1, 1, 2)
+        
         self.layout.addWidget(QLabel("Definition"), 6, 0, 1, 3)
-        self.layout.addWidget(QLabel("Additional tags"), 8, 0, 1, 3)
-
-        self.layout.addWidget(self.sentence, 3, 0, 1, 3)
         self.layout.addWidget(self.word, 5, 0, 1, 3)
-        self.layout.addWidget(self.definition, 7, 0, 1, 3)
-        self.layout.addWidget(self.tags, 9, 0, 1, 3)
+        if self.settings.value("dict_source2", "Disabled") != "Disabled":
+            print(self.settings.value("dict_source2", "Disabled") != "Disabled")
+            self.layout.addWidget(self.definition, 7, 0, 2, 3)
+            self.layout.setRowStretch(7, 1)
+            self.layout.addWidget(self.definition2, 9, 0, 2, 3)
+            self.layout.setRowStretch(9, 1)
+        else:
+            self.layout.addWidget(self.definition, 7, 0, 4, 3)
+            self.layout.setRowStretch(7, 1)
+        
+        self.layout.addWidget(QLabel("Additional tags"), 11, 0, 1, 3)
 
-        self.layout.addWidget(self.toanki_button, 10, 0, 1, 3)
-        self.layout.addWidget(self.config_button, 11, 0, 1, 3)
+        self.layout.addWidget(self.tags, 12, 0, 1, 3)
+
+        self.layout.addWidget(self.toanki_button, 13, 0, 1, 3)
+        self.layout.addWidget(self.config_button, 14, 0, 1, 3)
 
         self.lookup_button.clicked.connect(lambda _: self.lookupClicked(True))
         self.lookup_exact_button.clicked.connect(lambda _: self.lookupClicked(False))
@@ -175,7 +189,9 @@ class DictionaryWindow(QMainWindow):
 
     def setState(self, state):
         self.word.setText(state['word'])
-        self.definition.setText(state['definition'])
+        self.definition.setText(state['definition'].strip())
+        if state.get('definition2') != None:
+            self.definition2.setText(state['definition2'].strip())
         cursor = self.sentence.textCursor()
         cursor.clearSelection()
         self.sentence.setTextCursor(cursor)
@@ -227,15 +243,16 @@ class DictionaryWindow(QMainWindow):
         Look up a word and return a dict with the lemmatized form (if enabled)
         and definition
         """
-        TL = self.settings.value("target_language", "English")
+        TL = self.settings.value("target_language", "English") #This is in two letter code
         self.prev_states.append(self.getState())
         lemmatize = use_lemmatize and self.settings.value("lemmatization", True, type=bool)
         short_sign = "Y" if lemmatize else "N"
-        language = code[self.settings.value("target_language", "English")]
+        language = code[TL]
+        gtrans_lang = self.settings.value("gtrans_lang", "English")
         dictname = self.settings.value("dict_source", "Wiktionary (English)")
         self.status(f"L: '{word}' in '{language}', lemma: {short_sign}, from {dictionaries[dictname]}")
         try:
-            item = lookupin(word, language, lemmatize, dictname)
+            item = lookupin(word, language, lemmatize, dictname, gtrans_lang)
             self.rec.recordLookup(word, item['definition'], TL, lemmatize, dictionaries[dictname], True)
         except Exception as e:
             self.status(str(e))
@@ -245,23 +262,47 @@ class DictionaryWindow(QMainWindow):
                 "word": word,
                 "definition": failed_lookup(word, self.settings)
                 }
-        return item
+            return item
+        dict2name = self.settings.value("dict_source2", "Disabled")
+        if dict2name == "Disabled":
+            return item
+        try:
+            item2 = lookupin(word, language, lemmatize, dict2name, gtrans_lang)
+            self.rec.recordLookup(word, item['definition'], TL, lemmatize, dictionaries[dict2name], True)
+        except Exception as e:
+            self.status("Dict-2 failed" + str(e))
+            self.rec.recordLookup(word, None, TL, lemmatize, dictionaries[dict2name], False)
+            self.updateAnkiButtonState(True)
+            return item
+        
+        return {"word": item['word'], 'definition': item['definition'], 'definition2': item2['definition']}
+
 
     def createNote(self):
         sentence = self.sentence.toPlainText().replace("\n", "<br>")
         tags = (self.settings.value("tags", "ssmtool").strip() + " " + self.tags.text().strip()).split(" ")
         word = self.word.text()
-        definition = self.definition.toPlainText().replace("\n", "<br>")
         content = {
             "deckName": self.settings.value("deck_name"),
             "modelName": self.settings.value("note_type"),
             "fields": {
                 self.settings.value("sentence_field"): sentence,
                 self.settings.value("word_field"): word,
-                self.settings.value("definition_field"): definition
             },
             "tags": tags
         }
+        definition = self.definition.toPlainText().replace("\n", "<br>")
+        content['fields'][self.settings.value('definition_field')] = definition
+        if self.settings.value("dict_source2", "Disabled") != 'Disabled':
+            try:
+                definition2 = self.definition2.toPlainText().replace("\n", "<br>")
+                if self.settings.value("definition2_field", "Disabled") == "Disabled":
+                    self.warn("Aborted.\nYou must have field for Definition#2 in order to use two dictionaries.")
+                    return
+                content['fields'][self.settings.value('definition2_field')] = definition2
+            except Exception as e:
+                return
+
         self.status("Adding note")
         api = self.settings.value("anki_api")
         try:
@@ -270,6 +311,7 @@ class DictionaryWindow(QMainWindow):
             self.sentence.clear()
             self.word.clear()
             self.definition.clear()
+            self.definition2.clear()
             self.status(f"Note added: '{word}'")
         except Exception as e:
             self.rec.recordNote(str(content), False)
@@ -307,6 +349,12 @@ class DictionaryWindow(QMainWindow):
 
     def status(self, msg):
         self.bar.showMessage(self.time() + " " + msg, 4000)
+
+    def warn(self, text):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Warning)
+        msg.setText(text)
+        msg.exec()
 
 class MyTextEdit(QTextEdit):
 

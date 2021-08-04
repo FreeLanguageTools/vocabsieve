@@ -38,7 +38,7 @@ simplemma_languages = ['bg', 'ca', 'cy', 'da', 'de', 'en', 'es', 'et', 'fa', 'fi
                        'lv', 'nl', 'pt', 'ro', 'ru', 'sk', 'sl', 'sv', 'tr', 'uk', 'ur']
 dictionaries = {"Wiktionary (English)": "wikt-en",
                 "Google dictionary (Monolingual)": "gdict",
-                "Google translate (To English)": "gtrans"}
+                "Google translate": "gtrans"}
 
 
 def removeAccents(word):
@@ -121,7 +121,6 @@ def wiktionary(word, language, lemmatize=True):
         definitions.append(meaning_item)
     return {"word": word, "definition": definitions}
 
-
 def googledict(word, language, lemmatize=True):
     """Google dictionary lookup. Note Google dictionary cannot provide
     lemmatization, so only Russian is supported through PyMorphy2."""
@@ -148,21 +147,19 @@ def googledict(word, language, lemmatize=True):
         definitions.append(meaning_item)
     return {"word": word, "definition": definitions}
 
-def googletranslate(word, language):
+def googletranslate(word, language, gtrans_lang):
     "Google translation, through the googletrans python library"
-    #print(translator.translate(word, src=language).text)
-    return {"word": word, "definition": translator.translate(word, src=language).text}
+    return {"word": word, "definition": translator.translate(word, src=language, dest=gtrans_lang).text}
 
 
-def lookupin(word, language, lemmatize=True, dictionary="Wiktionary (English)"):
-    print("Using", dictionary)
+def lookupin(word, language, lemmatize=True, dictionary="Wiktionary (English)", gtrans_lang="English"):
     word = word
     if lemmatize:
         word = lem_word(word, language)
 
     dictid = dictionaries[dictionary]
     if dictid == "gtrans":
-        return googletranslate(word, language)
+        return googletranslate(word, language, gtrans_lang)
     if dictid == "wikt-en":
         item = wiktionary(word, language, lemmatize)
         #print(item)
