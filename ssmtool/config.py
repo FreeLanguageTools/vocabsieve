@@ -24,13 +24,15 @@ class SettingsDialog(QDialog):
         self.tags = QLineEdit()
         self.dict_source = QComboBox()
         self.dict_source2 = QComboBox()
+        self.gtrans_lang = QComboBox()
         self.note_type = QComboBox()
         self.sentence_field = QComboBox()
         self.word_field = QComboBox()
         self.definition_field = QComboBox()
+        self.definition2_field = QComboBox()
         self.anki_api = QLineEdit()
         self.about_sa = QScrollArea()
-        self.importdict = QPushButton('Import StarDict Dictionaries')
+        self.importdict = QPushButton('Manage local dictionaries..')
 
         self.about = QLabel(
             '''
@@ -80,12 +82,16 @@ If you find this tool useful, you probably should donate to these projects.
 
     def setupWidgets(self):
         self.target_language.addItems(code.keys())
+        self.gtrans_lang.addItems(code.keys())
         
         self.tab1.layout.addRow(self.lemmatization)
         self.tab1.layout.addRow(QLabel("Target language"), self.target_language)
         self.tab1.layout.addRow(QLabel("Dictionary source 1"), self.dict_source)
         self.tab1.layout.addRow(QLabel("Dictionary source 2"), self.dict_source2)
+        self.tab1.layout.addRow(QLabel("Google translate: To"), self.gtrans_lang)
         self.tab1.layout.addRow(self.importdict)
+
+
         self.tab2.layout.addRow(QLabel('AnkiConnect API'), self.anki_api)
         self.tab2.layout.addRow(QLabel("Deck name"), self.deck_name)
         self.tab2.layout.addRow(QLabel('Default tags'), self.tags)
@@ -93,6 +99,7 @@ If you find this tool useful, you probably should donate to these projects.
         self.tab2.layout.addRow(QLabel('Field name for "Sentence"'), self.sentence_field)
         self.tab2.layout.addRow(QLabel('Field name for "Word"'), self.word_field)
         self.tab2.layout.addRow(QLabel('Field name for "Definition"'), self.definition_field)
+        self.tab2.layout.addRow(QLabel('Field name for "Definition#2"'), self.definition2_field)
 
         self.tab3.layout.addRow(self.allow_editing)
 
@@ -107,36 +114,46 @@ If you find this tool useful, you probably should donate to these projects.
         self.dict_source.currentTextChanged.connect(self.syncSettings)
         self.dict_source.currentTextChanged.connect(self.loadDict2Options)
         self.dict_source2.currentTextChanged.connect(self.syncSettings)
+        self.dict_source2.currentTextChanged.connect(self.warnRestart)
         self.target_language.currentTextChanged.connect(self.loadDictionaries)
         self.target_language.currentTextChanged.connect(self.syncSettings)
+        self.gtrans_lang.currentTextChanged.connect(self.syncSettings)
         self.deck_name.currentTextChanged.connect(self.syncSettings)
         self.tags.editingFinished.connect(self.syncSettings)
         self.note_type.currentTextChanged.connect(self.syncSettings)
         self.note_type.currentTextChanged.connect(self.loadFields)
         self.sentence_field.currentTextChanged.connect(self.syncSettings)
+        self.sentence_field.currentTextChanged.connect(self.checkCorrectness)
         self.word_field.currentTextChanged.connect(self.syncSettings)
+        self.word_field.currentTextChanged.connect(self.checkCorrectness)
         self.definition_field.currentTextChanged.connect(self.syncSettings)
+        self.definition_field.currentTextChanged.connect(self.checkCorrectness)
+        self.definition2_field.currentTextChanged.connect(self.syncSettings)
+        self.definition2_field.currentTextChanged.connect(self.checkCorrectness)
         self.anki_api.editingFinished.connect(self.syncSettings)
         self.anki_api.editingFinished.connect(self.loadSettings)
 
     def loadDictionaries(self):
         self.dict_source.clear()
         self.dict_source.addItem("Wiktionary (English)")
-        self.dict_source.addItem("Google translate (To English)")
+        self.dict_source.addItem("Google translate")
         if code[self.target_language.currentText()] in gdict_languages:
             self.dict_source.addItem("Google dictionary (Monolingual)")
-        self.loadDict2Options()
-        
+
     def loadDict2Options(self):
+        curtext = self.dict_source2.currentText()
         self.dict_source2.clear()
         self.dict_source2.addItem("Disabled")
         if self.dict_source.currentText() != "Wiktionary (English)":
             self.dict_source2.addItem("Wiktionary (English)")
-        if self.dict_source.currentText() != "Google translate (To English)":
-            self.dict_source2.addItem("Google translate (To English")
+        if self.dict_source.currentText() != "Google translate":
+            self.dict_source2.addItem("Google translate")
         if (self.dict_source.currentText() != "Google dictionary (Monolingual)" and 
             code[self.target_language.currentText()] in gdict_languages):
             self.dict_source2.addItem("Google dictionary (Monolingual)")
+        # Keep current choice if available
+        if self.dict_source2.findText(curtext) != -1:
+            self.dict_source2.setCurrentText(curtext)
 
     def loadSettings(self):
         self.allow_editing.setChecked(self.settings.value("allow_editing", True, type=bool))
@@ -144,6 +161,9 @@ If you find this tool useful, you probably should donate to these projects.
         self.target_language.setCurrentText(self.settings.value("target_language"))
         self.loadDictionaries()
         self.dict_source.setCurrentText(self.settings.value("dict_source", "Wiktionary (English)"))
+        self.loadDict2Options()
+        self.dict_source2.setCurrentText(self.settings.value("dict_source2", "Wiktionary (English)"))
+        self.gtrans_lang.setCurrentText(self.settings.value("gtrans_lang", "English"))
         self.anki_api.setText(self.settings.value("anki_api", "http://localhost:8765"))
         self.tags.setText(self.settings.value("tags", "ssmtool"))
         api = self.anki_api.text()
@@ -180,18 +200,47 @@ If you find this tool useful, you probably should donate to these projects.
             return
 
         fields = getFields(api, current_type)
+        if "Disabled" in fields:
+            self.warn("You must not have a field named 'Disabled'. You *will* encounter bugs.")
+        # Temporary store fields 
+        sent = self.sentence_field.currentText()
+        word = self.word_field.currentText()
+        def1 = self.definition_field.currentText()
+        def2 = self.definition2_field.currentText()
+
+        # Block signals temporarily to avoid warning dialogs
+        self.sentence_field.blockSignals(True)
+        self.word_field.blockSignals(True)
+        self.definition_field.blockSignals(True)
+        self.definition2_field.blockSignals(True)
 
         self.sentence_field.clear()
         self.sentence_field.addItems(fields)
+
         self.word_field.clear()
         self.word_field.addItems(fields)
         self.definition_field.clear()
         self.definition_field.addItems(fields)
-        
+        self.definition2_field.clear()
+        self.definition2_field.addItem("Disabled")
+        self.definition2_field.addItems(fields)       
         self.sentence_field.setCurrentText(self.settings.value("sentence_field"))
         self.word_field.setCurrentText(self.settings.value("word_field"))
         self.definition_field.setCurrentText(self.settings.value("definition_field"))
 
+        if self.sentence_field.findText(sent) != -1:
+            self.sentence_field.setCurrentText(sent)
+        if self.word_field.findText(word) != -1:
+            self.word_field.setCurrentText(word)
+        if self.definition_field.findText(def1) != -1:
+            self.definition_field.setCurrentText(def1)
+        if self.definition2_field.findText(def2) != -1:
+            self.definition2_field.setCurrentText(def2)
+        
+        self.sentence_field.blockSignals(False)
+        self.word_field.blockSignals(False)
+        self.definition_field.blockSignals(False)
+        self.definition2_field.blockSignals(False)
 
     def syncSettings(self):
         print("syncing")
@@ -201,11 +250,13 @@ If you find this tool useful, you probably should donate to these projects.
         self.settings.setValue("deck_name", self.deck_name.currentText())
         self.settings.setValue("dict_source", self.dict_source.currentText())
         self.settings.setValue("dict_source2", self.dict_source2.currentText())
+        self.settings.setValue("gtrans_lang", self.gtrans_lang.currentText())
         self.settings.setValue("tags", self.tags.text())
         self.settings.setValue("note_type", self.note_type.currentText())
         self.settings.setValue("sentence_field", self.sentence_field.currentText())
         self.settings.setValue("word_field", self.word_field.currentText())
         self.settings.setValue("definition_field", self.definition_field.currentText())
+        self.settings.setValue("definition2_field", self.definition2_field.currentText())
         self.settings.setValue("anki_api", self.anki_api.text())
         self.settings.sync()
     
@@ -216,3 +267,24 @@ If you find this tool useful, you probably should donate to these projects.
         msg.setInformativeText(str(error) + 
             "\nAnkiConnect must be running to use the configuration tool.")
         msg.exec()
+
+
+    def warn(self, text):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Warning)
+        msg.setText(text)
+        msg.exec()
+
+    def warnRestart(self):
+        if self.dict_source2.currentText() and self.dict_source2.currentText() != "Disabled":
+            self.warn("You must restart for this tool to work properly after changing Dictionary source #2."
+            + "\nIf you have just enabled it, you must also configure a definition 2 field in the Anki tab, or otherwise you will not be able to add notes.")
+    
+    def checkCorrectness(self):
+        # No two fields should be the same
+        set_fields = [self.sentence_field.currentText(), self.word_field.currentText(),
+            self.definition_field.currentText(), self.definition2_field.currentText()]
+
+        print(set_fields)
+        if len(set(set_fields)) != len(set_fields):
+            self.warn("All fields must be set to different note fields.\nYou *will* encounter bugs.")
