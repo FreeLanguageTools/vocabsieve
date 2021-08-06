@@ -2,12 +2,14 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 from .tools import *
 from .dictionary import *
+from .dictmanager import *
 
 class SettingsDialog(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
         self.settings = parent.settings
         self.parent = parent
+        self.setWindowTitle("Configure ssmtool")
         self.initWidgets()
         self.initTabs()
         self.setupWidgets()
@@ -57,7 +59,11 @@ If you find this tool useful, you probably should donate to these projects.
         self.about_sa.setWidget(self.about)
         self.about.setWordWrap(True)
         self.about.adjustSize()
+        self.importdict.clicked.connect(self.dictmanager)
 
+    def dictmanager(self):
+        importer = DictManager(self)
+        importer.exec()
     
     def initTabs(self):
         self.tabs = QTabWidget()
@@ -135,25 +141,23 @@ If you find this tool useful, you probably should donate to these projects.
 
     def loadDictionaries(self):
         self.dict_source.clear()
-        self.dict_source.addItem("Wiktionary (English)")
-        self.dict_source.addItem("Google translate")
-        if code[self.target_language.currentText()] in gdict_languages:
-            self.dict_source.addItem("Google dictionary (Monolingual)")
+        dicts = getDictsForLang(code[self.target_language.currentText()])
+        self.dict_source.addItems(dicts)
 
     def loadDict2Options(self):
         curtext = self.dict_source2.currentText()
+        self.dict_source2.blockSignals(True)
         self.dict_source2.clear()
+        dicts = getDictsForLang(code[self.target_language.currentText()])
         self.dict_source2.addItem("Disabled")
-        if self.dict_source.currentText() != "Wiktionary (English)":
-            self.dict_source2.addItem("Wiktionary (English)")
-        if self.dict_source.currentText() != "Google translate":
-            self.dict_source2.addItem("Google translate")
-        if (self.dict_source.currentText() != "Google dictionary (Monolingual)" and 
-            code[self.target_language.currentText()] in gdict_languages):
-            self.dict_source2.addItem("Google dictionary (Monolingual)")
+        for item in dicts:
+            if self.dict_source.currentText() != item:
+                self.dict_source2.addItem(item)
         # Keep current choice if available
         if self.dict_source2.findText(curtext) != -1:
             self.dict_source2.setCurrentText(curtext)
+        self.dict_source2.blockSignals(False)
+
 
     def loadSettings(self):
         self.allow_editing.setChecked(self.settings.value("allow_editing", True, type=bool))
@@ -194,7 +198,7 @@ If you find this tool useful, you probably should donate to these projects.
             self.errorNoConnection(e)
             return
         current_type = self.note_type.currentText()
-        print("Current note type is:", current_type) 
+
 
         if current_type == "":
             return
@@ -285,6 +289,5 @@ If you find this tool useful, you probably should donate to these projects.
         set_fields = [self.sentence_field.currentText(), self.word_field.currentText(),
             self.definition_field.currentText(), self.definition2_field.currentText()]
 
-        print(set_fields)
         if len(set(set_fields)) != len(set_fields):
             self.warn("All fields must be set to different note fields.\nYou *will* encounter bugs.")

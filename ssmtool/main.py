@@ -161,7 +161,7 @@ class DictionaryWindow(QMainWindow):
 
     def configure(self):
         self.settings_dialog = SettingsDialog(self)
-        self.settings_dialog.show()
+        self.settings_dialog.exec()
 
     def setupShortcuts(self):
         self.shortcut_toanki = QShortcut(QKeySequence('Ctrl+S'), self)
@@ -254,13 +254,13 @@ class DictionaryWindow(QMainWindow):
         language = code[TL]
         gtrans_lang = self.settings.value("gtrans_lang", "English")
         dictname = self.settings.value("dict_source", "Wiktionary (English)")
-        self.status(f"L: '{word}' in '{language}', lemma: {short_sign}, from {dictionaries[dictname]}")
+        self.status(f"L: '{word}' in '{language}', lemma: {short_sign}, from {dictionaries.get(dictname, dictname)}")
         try:
             item = lookupin(word, language, lemmatize, dictname, gtrans_lang)
-            self.rec.recordLookup(word, item['definition'], TL, lemmatize, dictionaries[dictname], True)
+            self.rec.recordLookup(word, item['definition'], TL, lemmatize, dictionaries.get(dictname, dictname), True)
         except Exception as e:
             self.status(str(e))
-            self.rec.recordLookup(word, None, TL, lemmatize, dictionaries[dictname], False)
+            self.rec.recordLookup(word, None, TL, lemmatize, dictionaries.get(dictname, dictname), False)
             self.updateAnkiButtonState(True)
             item = {
                 "word": word,
@@ -272,13 +272,14 @@ class DictionaryWindow(QMainWindow):
             return item
         try:
             item2 = lookupin(word, language, lemmatize, dict2name, gtrans_lang)
-            self.rec.recordLookup(word, item['definition'], TL, lemmatize, dictionaries[dict2name], True)
+            self.rec.recordLookup(word, item['definition'], TL, lemmatize, dictionaries.get(dict2name, dict2name), True)
         except Exception as e:
             self.status("Dict-2 failed" + str(e))
-            self.rec.recordLookup(word, None, TL, lemmatize, dictionaries[dict2name], False)
+            self.rec.recordLookup(word, None, TL, lemmatize, dictionaries.get(dict2name, dict2name), False)
             self.updateAnkiButtonState(True)
             return item
         
+        print ({"word": item['word'], 'definition': item['definition'], 'definition2': item2['definition']})
         return {"word": item['word'], 'definition': item['definition'], 'definition2': item2['definition']}
 
 

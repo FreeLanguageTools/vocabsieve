@@ -1,9 +1,11 @@
 import json
 import urllib.request
 import requests
+import os
 from bs4 import BeautifulSoup
-
-
+from .db import *
+from pystardict import Dictionary
+from .dictionary import *
 
 def request(action, **params):
     return {'action': action, 'params': params, 'version': 6}
@@ -63,3 +65,46 @@ def failed_lookup(word, setting):
 def is_oneword(s):
     return len(s.split()) == 1
 
+def dictinfo(path):
+    "Get information about dictionary from file path"
+    basename, ext = os.path.splitext(path)
+    basename = os.path.basename(basename)
+    if ext not in [".json", ".ifo"]:
+        return "Unsupported format"
+    elif ext == ".json":
+        with open(path) as f:
+            try:
+                d = json.load(f)
+                if type(d) == list:
+                    return {"type": "migaku", "basename": basename, "path": path}
+                elif type(d) == dict:
+                    return {"type": "json", "basename": basename, "path": path}
+            except Exception:
+                return "Unsupported format"
+    elif ext == ".ifo":
+        return {"type": "stardict", "basename": basename, "path": path}
+
+def dictimport(path, dicttype, lang, name):
+    "Import dictionary from file to database"
+    if dicttype == "stardict":
+        stardict = Dictionary(os.path.splitext(path)[0])
+        dictdb.importdict(dict(stardict), lang, name)
+    elif dicttype == "json":
+        with open(path) as f:
+            data = json.load(f)
+            dictdb.importdict(data, lang, name)
+    elif dicttype == "migaku":
+        with open(path) as f:
+            data = json.load(f)
+            d = {}
+            for item in data:
+                d[item['term']] = item['definition']
+            dictdb.importdict(d, lang, name)
+    else:
+        print("Error:", str(dicttype), "is not supported.")
+        raise NotImplementedError
+
+def dictrebuild(dicts):
+    dictdb.purge()
+    for item in dicts:
+        dictimport(item['path'], item['type'], item['lang'], item['name'])
