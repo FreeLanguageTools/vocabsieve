@@ -5,11 +5,13 @@ import simplemma
 from googletrans import Translator
 import requests
 from bs4 import BeautifulSoup
+from bidict import bidict
+from .db import *
 translator = Translator()
-
+dictdb = LocalDictionary()
 langdata = simplemma.load_data('en')
 
-code = {
+code = bidict({
     "English": "en",
     "Chinese": "zh",
     "Italian": "it",
@@ -29,7 +31,7 @@ code = {
     "Korean": "ko",
     "Arabic": "ar",
     "Turkish": "tr",
-}
+})
 
 wikt_languages = code.keys()
 gdict_languages = ['en', 'hi', 'es', 'fr', 'ja', 'ru', 'de', 'it', 'ko', 'ar', 'tr', 'pt']
@@ -73,7 +75,6 @@ def removeAccents(word):
 
 def fmt_result(definitions):
     "Format the result of dictionary lookup"
-    print("fmt result called")
     lines = []
     for defn in definitions:
         lines.append("<i>" + defn['pos'] + "</i>")
@@ -153,19 +154,29 @@ def googletranslate(word, language, gtrans_lang):
 
 
 def lookupin(word, language, lemmatize=True, dictionary="Wiktionary (English)", gtrans_lang="English"):
-    word = word
     if lemmatize:
         word = lem_word(word, language)
 
-    dictid = dictionaries[dictionary]
-    if dictid == "gtrans":
-        return googletranslate(word, language, gtrans_lang)
+    dictid = dictionaries.get(dictionary)
     if dictid == "wikt-en":
         item = wiktionary(word, language, lemmatize)
+        item['definition'] = fmt_result(item['definition'])
         #print(item)
     elif dictid == "gdict":
         item = googledict(word, language, lemmatize)
-        #print(item)
-    item['definition'] = fmt_result(item['definition'])
+        item['definition'] = fmt_result(item['definition'])
+    elif dictid == "gtrans":
+        return googletranslate(word, language, gtrans_lang)
+    else:
+        return {"word": word, "definition": dictdb.define(word, language, dictionary)}
+
     #print(item)
     return item
+
+def getDictsForLang(lang: str):
+    "Get the list of dictionaries for a given language"
+    results = ["Wiktionary (English)", "Google translate"]
+    if lang in gdict_languages:
+        results.append("Google dictionary (Monolingual)")
+    results.extend(dictdb.getNamesForLang(lang))
+    return results

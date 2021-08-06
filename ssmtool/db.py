@@ -12,7 +12,7 @@ Path(datapath).mkdir(parents=True, exist_ok=True)
 
 class Record():
     def __init__(self):
-        print(path.join(datapath, "records.db"))
+        #print(path.join(datapath, "records.db"))
         self.conn = sqlite3.connect(path.join(datapath, "records.db"))
         self.c = self.conn.cursor()
         self.createTables()
@@ -83,12 +83,83 @@ class Record():
                           AND success = 1 """, (start, end))
         return len(self.c.fetchall())
         
+    def purge(self):
+        self.c.execute("""
+        DROP TABLE IF EXISTS lookups,notes
+        """)
+        self.createTables()
 
+class LocalDictionary():
+    def __init__(self):
+        #print(path.join(datapath, "dict.db"))
+        self.conn = sqlite3.connect(path.join(datapath, "dict.db"))
+        self.c = self.conn.cursor()
+        self.createTables()
+
+    def createTables(self):
+        self.c.execute("""
+        CREATE TABLE IF NOT EXISTS dictionary (
+            word TEXT,
+            definition TEXT,
+            language TEXT,
+            dictname TEXT
+        )
+        """)
+        self.conn.commit()
+    
+    def importdict(self, data: dict, lang: str, name: str):
+        for item in data.items():
+            self.c.execute("""
+            INSERT INTO dictionary(word, definition, language, dictname)
+            VALUES(?, ?, ?, ?)
+            """, (item[0], item[1], lang, name))
+        self.conn.commit()
+
+    def define(self, word: str, lang: str, name: str) -> str:
+        self.c.execute("""
+        SELECT definition FROM dictionary
+        WHERE word=?
+        AND language=?
+        AND dictname=?
+        """,(word, lang, name))
+        return self.c.fetchone()[0]
+
+    def countEntries(self) -> int:
+        self.c.execute("""
+        SELECT COUNT(*) FROM dictionary
+        """)
+        return self.c.fetchone()[0]
+
+    def countDicts(self) -> int:
+        self.c.execute("""
+        SELECT COUNT(DISTINCT dictname) FROM dictionary
+        """)
+        return self.c.fetchone()[0]
+
+    def getNamesForLang(self, lang: str):
+        self.c.row_factory = lambda cursor, row: row[0]
+        self.c.execute("""
+        SELECT DISTINCT dictname FROM dictionary
+        WHERE language=?
+        """,(lang,))
+        res = self.c.fetchall()
+        self.c.row_factory = None
+        return res
+
+    def purge(self):
+        self.c.execute("""
+        DROP TABLE IF EXISTS dictionary
+        """)
+        self.createTables()
         
-
 if __name__ == "__main__":
     db = Record()
     #db.recordLookup("word", "sample-def", True, "wikt-en")
     print("\n".join([str(item) for item in db.getAll()]))
     print("Lookups today:", db.countLookupsToday())
     print("Lookups yesterday:", db.countLookupsDay(datetime.now() - timedelta(days=1)))
+    di = LocalDictionary()
+    #print(di.define("test", "en", "testdict"))
+    print("Names", di.getNamesForLang("ru"))
+    print(di.define("test", "en", "Oxford Dictionary of English - No Examples"))
+    print(di.countEntries())
