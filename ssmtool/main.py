@@ -48,6 +48,7 @@ class DictionaryWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Simple Sentence Mining")
+        self.setFocusPolicy(Qt.StrongFocus)
         self.resize(400, 700)
         self.widget = QWidget()
         self.settings = QSettings("FreeLanguageTools", "SimpleSentenceMining")
@@ -65,6 +66,9 @@ class DictionaryWindow(QMainWindow):
         GlobalObject().addEventListener("double clicked", self.lookupClicked)
         QApplication.clipboard().dataChanged.connect(self.clipboardChanged)
 
+    def focusInEvent(self, event):
+        self.clipboardChanged(evenWhenFocused=True)
+        super().focusInEvent(event)
 
     def initWidgets(self):
         self.namelabel = QLabel("Simple Sentence Mining v" + __version__)
