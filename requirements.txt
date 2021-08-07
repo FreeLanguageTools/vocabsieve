@@ -6,3 +6,4 @@ googletrans==4.0.0rc1
 simplemma
 bidict
 pystardict
+flask
