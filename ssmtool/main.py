@@ -12,6 +12,7 @@ from .config import *
 from .tools import *
 from .db import *
 from .dictionary import *
+from .api import LanguageServer
 from . import __version__
 
 
@@ -57,7 +58,7 @@ class DictionaryWindow(QMainWindow):
         self.previousWord = ""
         self.initWidgets()
         self.setupWidgets()
-
+        self.startServer()
         self.initTimer()
         self.updateAnkiButtonState()
         self.setupShortcuts()
@@ -247,11 +248,11 @@ class DictionaryWindow(QMainWindow):
         Look up a word and return a dict with the lemmatized form (if enabled)
         and definition
         """
-        TL = self.settings.value("target_language", "English") #This is in two letter code
+        TL = self.settings.value("target_language", "English") 
         self.prev_states.append(self.getState())
         lemmatize = use_lemmatize and self.settings.value("lemmatization", True, type=bool)
         short_sign = "Y" if lemmatize else "N"
-        language = code[TL]
+        language = code[TL] #This is in two letter code
         gtrans_lang = self.settings.value("gtrans_lang", "English")
         dictname = self.settings.value("dict_source", "Wiktionary (English)")
         self.status(f"L: '{word}' in '{language}', lemma: {short_sign}, from {dictionaries.get(dictname, dictname)}")
@@ -278,10 +279,7 @@ class DictionaryWindow(QMainWindow):
             self.rec.recordLookup(word, None, TL, lemmatize, dictionaries.get(dict2name, dict2name), False)
             self.updateAnkiButtonState(True)
             return item
-        
-        print ({"word": item['word'], 'definition': item['definition'], 'definition2': item2['definition']})
         return {"word": item['word'], 'definition': item['definition'], 'definition2': item2['definition']}
-
 
     def createNote(self):
         sentence = self.sentence.toPlainText().replace("\n", "<br>")
@@ -360,6 +358,26 @@ class DictionaryWindow(QMainWindow):
         msg.setIcon(QMessageBox.Warning)
         msg.setText(text)
         msg.exec()
+
+    def startServer(self):
+        try:
+            self.thread = QThread()
+            port = self.settings.value("port", 39284, type=int)
+            host = self.settings.value("host", "127.0.0.1")
+            self.worker = LanguageServer(self, host, port)
+            self.worker.moveToThread(self.thread)
+            self.thread.started.connect(self.worker.start_api)
+            self.worker.note_signal.connect(self.onNoteSignal)
+            self.thread.start()
+        except Exception:
+            self.status("Failed to start server")
+    
+    def onNoteSignal(self, sentence: str, word: str, definition: str, tags: list):
+        self.setSentence(sentence)
+        self.setWord(word)
+        self.definition.setText(definition)
+        self.tags.setText(" ".join(tags))
+        self.createNote()
 
 class MyTextEdit(QTextEdit):
 

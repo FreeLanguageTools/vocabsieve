@@ -34,6 +34,10 @@ class SettingsDialog(QDialog):
         self.definition2_field = QComboBox()
         self.anki_api = QLineEdit()
         self.about_sa = QScrollArea()
+        self.host = QLineEdit()
+        self.port = QSpinBox()
+        self.port.setMinimum(1024)
+        self.port.setMaximum(49151)
         self.importdict = QPushButton('Manage local dictionaries..')
 
         self.about = QLabel(
@@ -74,7 +78,9 @@ If you find this tool useful, you probably should donate to these projects.
         self.tab3 = QWidget()
         self.tab3.layout = QFormLayout(self.tab3)
         self.tab4 = QWidget()
-        self.tab4.layout = QVBoxLayout(self.tab4)
+        self.tab4.layout = QFormLayout(self.tab4)
+        self.tab5 = QWidget()
+        self.tab5.layout = QVBoxLayout(self.tab5)
 
         self.tabs.resize(250, 300)
 
@@ -83,8 +89,9 @@ If you find this tool useful, you probably should donate to these projects.
 
         self.tabs.addTab(self.tab1, "Dictionary")
         self.tabs.addTab(self.tab2, "Anki")
-        self.tabs.addTab(self.tab3, "Miscellaneous")
-        self.tabs.addTab(self.tab4, "About")
+        self.tabs.addTab(self.tab3, "API")
+        self.tabs.addTab(self.tab4, "Miscellaneous")
+        self.tabs.addTab(self.tab5, "About")
 
     def setupWidgets(self):
         self.target_language.addItems(code.keys())
@@ -107,9 +114,13 @@ If you find this tool useful, you probably should donate to these projects.
         self.tab2.layout.addRow(QLabel('Field name for "Definition"'), self.definition_field)
         self.tab2.layout.addRow(QLabel('Field name for "Definition#2"'), self.definition2_field)
 
-        self.tab3.layout.addRow(self.allow_editing)
+        self.tab3.layout.addRow(QLabel('<i>Most users should not need to change these settings.</i>'))
+        self.tab3.layout.addRow(QLabel("API host"), self.host)
+        self.tab3.layout.addRow(QLabel("API port"), self.port)
 
-        self.tab4.layout.addWidget(self.about_sa)
+        self.tab4.layout.addRow(self.allow_editing)
+
+        self.tab5.layout.addWidget(self.about_sa)
         
 
 
@@ -138,6 +149,8 @@ If you find this tool useful, you probably should donate to these projects.
         self.definition2_field.currentTextChanged.connect(self.checkCorrectness)
         self.anki_api.editingFinished.connect(self.syncSettings)
         self.anki_api.editingFinished.connect(self.loadSettings)
+        self.host.textChanged.connect(self.syncSettings)
+        self.port.valueChanged.connect(self.syncSettings)
 
     def loadDictionaries(self):
         self.dict_source.clear()
@@ -188,6 +201,9 @@ If you find this tool useful, you probably should donate to these projects.
         self.note_type.addItems(note_types)
         self.note_type.setCurrentText(self.settings.value("note_type"))
         self.loadFields()
+
+        self.host.setText(self.settings.value("host", "127.0.0.1"))
+        self.port.setValue(self.settings.value("port", 39284, type=int))
 
     def loadFields(self):
         print("loading fields")
@@ -262,6 +278,8 @@ If you find this tool useful, you probably should donate to these projects.
         self.settings.setValue("definition_field", self.definition_field.currentText())
         self.settings.setValue("definition2_field", self.definition2_field.currentText())
         self.settings.setValue("anki_api", self.anki_api.text())
+        self.settings.setValue("host", self.host.text())
+        self.settings.setValue("port", self.port.value())
         self.settings.sync()
     
     def errorNoConnection(self, error):
