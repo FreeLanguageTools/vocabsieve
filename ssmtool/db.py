@@ -13,7 +13,7 @@ Path(datapath).mkdir(parents=True, exist_ok=True)
 class Record():
     def __init__(self):
         #print(path.join(datapath, "records.db"))
-        self.conn = sqlite3.connect(path.join(datapath, "records.db"))
+        self.conn = sqlite3.connect(path.join(datapath, "records.db"), check_same_thread=False)
         self.c = self.conn.cursor()
         self.createTables()
 
@@ -39,11 +39,14 @@ class Record():
         self.conn.commit()
 
     def recordLookup(self, word, definition, language, lemmatization, source, success):
-        timestamp = time.time()
-        sql = """INSERT INTO lookups(timestamp, word, definition, language, lemmatization, source, success)
-                VALUES(?,?,?,?,?,?,?)"""
-        self.c.execute(sql, (timestamp, word, definition, language, lemmatization, source, success))
-        self.conn.commit()
+        try:
+            timestamp = time.time()
+            sql = """INSERT INTO lookups(timestamp, word, definition, language, lemmatization, source, success)
+                    VALUES(?,?,?,?,?,?,?)"""
+            self.c.execute(sql, (timestamp, word, definition, language, lemmatization, source, success))
+            self.conn.commit()
+        except sqlite3.ProgrammingError:
+            return
 
     def recordNote(self, data, success):
         timestamp = time.time()
@@ -66,23 +69,28 @@ class Record():
     def countLookupsDay(self, day):
         start = day.replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
         end = day.replace(hour=23, minute=59, second=59, microsecond=999999).timestamp()
-        self.c.execute("""SELECT timestamp 
-                          FROM lookups 
-                          WHERE timestamp 
-                          BETWEEN ? AND ?
-                          AND success = 1 """, (start, end))
-        return len(self.c.fetchall())
-
+        try:
+            self.c.execute("""SELECT timestamp 
+                            FROM lookups 
+                            WHERE timestamp 
+                            BETWEEN ? AND ?
+                            AND success = 1 """, (start, end))
+            return len(self.c.fetchall())
+        except sqlite3.ProgrammingError:
+            return
     def countNotesDay(self, day):
         start = day.replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
         end = day.replace(hour=23, minute=59, second=59, microsecond=999999).timestamp()
-        self.c.execute("""SELECT timestamp 
-                          FROM notes 
-                          WHERE timestamp 
-                          BETWEEN ? AND ?
-                          AND success = 1 """, (start, end))
-        return len(self.c.fetchall())
-        
+        try:
+            self.c.execute("""SELECT timestamp 
+                            FROM notes 
+                            WHERE timestamp 
+                            BETWEEN ? AND ?
+                            AND success = 1 """, (start, end))
+            return len(self.c.fetchall())
+        except sqlite3.ProgrammingError:
+            return
+
     def purge(self):
         self.c.execute("""
         DROP TABLE IF EXISTS lookups,notes
@@ -92,7 +100,7 @@ class Record():
 class LocalDictionary():
     def __init__(self):
         #print(path.join(datapath, "dict.db"))
-        self.conn = sqlite3.connect(path.join(datapath, "dict.db"))
+        self.conn = sqlite3.connect(path.join(datapath, "dict.db"), check_same_thread=False)
         self.c = self.conn.cursor()
         self.createTables()
 

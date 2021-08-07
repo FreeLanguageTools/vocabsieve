@@ -91,6 +91,8 @@ def lem_word(word, language):
             return lem_word(word, language)
         else:
             return simplemma.lemmatize(word, langdata)
+    else:
+        return word
 
 def wiktionary(word, language, lemmatize=True):
     "Get definitions from Wiktionary"

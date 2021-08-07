@@ -17,6 +17,9 @@ For a detailed list of features and language support data, please consult the [p
 
 **USERS**: If you want to install it, go to [Releases](https://github.com/FreeLanguageTools/ssmtool/releases/) and from the latest release, download the appropriate file for your operating system. 
 
+## API documentation
+If you want to leverage ssmtool to build your own plugins, you can refer to the [API Documentation](api.md)
+
 ## Future plans
 This program is still at an early stage. More features will be added soon.
 
