@@ -277,7 +277,7 @@ class DictionaryWindow(QMainWindow):
         except Exception as e:
             self.status("Dict-2 failed" + str(e))
             self.rec.recordLookup(word, None, TL, lemmatize, dictionaries.get(dict2name, dict2name), False)
-            self.updateAnkiButtonState(True)
+            self.definition2.clear()
             return item
         return {"word": item['word'], 'definition': item['definition'], 'definition2': item2['definition']}
 

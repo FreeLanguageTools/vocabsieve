@@ -33,6 +33,15 @@ class LanguageServer(QObject):
             use_lemmatize = str2bool(request.args.get("lemmatize", "True")) 
             return self.parent.lookup(word, use_lemmatize)
             
+        @self.app.route("/translate", methods=["POST"])
+        def translate():
+            lang = request.args.get("src") or code[self.settings.value("target_language")]
+            gtrans_lang = request.args.get("dst") or code[self.settings.value("gtrans_lang")]
+            return {
+                    "translation": googletranslate(request.json.get("text"), lang, gtrans_lang)['definition'], 
+                    "src": lang, 
+                    "dst": gtrans_lang}
+
         @self.app.route("/createNote", methods=["POST"])
         def createNote():
             data = request.json
@@ -52,6 +61,7 @@ class LanguageServer(QObject):
         def logs():
             rec = Record()
             return "\n".join([" ".join([str(i) for i in item]) for item in rec.getAll()][::-1])
+
 
         self.app.run(debug=False, use_reloader=False, host=self.host, port=self.port)
 
