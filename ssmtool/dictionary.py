@@ -157,25 +157,22 @@ def googletranslate(word, language, gtrans_lang):
 
 
 def lookupin(word, language, lemmatize=True, dictionary="Wiktionary (English)", gtrans_lang="English"):
-    try:
-        if lemmatize:
-            word = lem_word(word, language)
+    if lemmatize:
+        word = lem_word(word, language)
 
-        dictid = dictionaries.get(dictionary)
-        if dictid == "wikt-en":
-            item = wiktionary(word, language, lemmatize)
-            item['definition'] = fmt_result(item['definition'])
-            #print(item)
-        elif dictid == "gdict":
-            item = googledict(word, language, lemmatize)
-            item['definition'] = fmt_result(item['definition'])
-        elif dictid == "gtrans":
-            return googletranslate(word, language, gtrans_lang)
-        else:
-            return {"word": word, "definition": dictdb.define(word, language, dictionary)}
-        return item
-    except Exception as e:
-        print(e)
+    dictid = dictionaries.get(dictionary)
+    if dictid == "wikt-en":
+        item = wiktionary(word, language, lemmatize)
+        item['definition'] = fmt_result(item['definition'])
+        #print(item)
+    elif dictid == "gdict":
+        item = googledict(word, language, lemmatize)
+        item['definition'] = fmt_result(item['definition'])
+    elif dictid == "gtrans":
+        return googletranslate(word, language, gtrans_lang)
+    else:
+        return {"word": word, "definition": dictdb.define(word, language, dictionary)}
+    return item
     #print(item)
 
 def getDictsForLang(lang: str):
