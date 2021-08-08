@@ -77,7 +77,8 @@ def fmt_result(definitions):
     "Format the result of dictionary lookup"
     lines = []
     for defn in definitions:
-        lines.append("<i>" + defn['pos'] + "</i>")
+        if defn['pos'] != "":
+            lines.append("<i>" + defn['pos'] + "</i>")
         lines.extend([str(item[0]+1) + ". " + item[1] for item in list(enumerate(definitions[0]['meaning']))])
     return "<br>".join(lines)
 
@@ -146,7 +147,7 @@ def googledict(word, language, lemmatize=True):
         meanings = []
         for d in item['definitions']:
             meanings.append(d['definition'])
-        meaning_item = {"pos": item['partOfSpeech'], "meaning": meanings}
+        meaning_item = {"pos": item.get('partOfSpeech', ""), "meaning": meanings}
         definitions.append(meaning_item)
     return {"word": word, "definition": definitions}
 
@@ -156,24 +157,26 @@ def googletranslate(word, language, gtrans_lang):
 
 
 def lookupin(word, language, lemmatize=True, dictionary="Wiktionary (English)", gtrans_lang="English"):
-    if lemmatize:
-        word = lem_word(word, language)
+    try:
+        if lemmatize:
+            word = lem_word(word, language)
 
-    dictid = dictionaries.get(dictionary)
-    if dictid == "wikt-en":
-        item = wiktionary(word, language, lemmatize)
-        item['definition'] = fmt_result(item['definition'])
-        #print(item)
-    elif dictid == "gdict":
-        item = googledict(word, language, lemmatize)
-        item['definition'] = fmt_result(item['definition'])
-    elif dictid == "gtrans":
-        return googletranslate(word, language, gtrans_lang)
-    else:
-        return {"word": word, "definition": dictdb.define(word, language, dictionary)}
-
+        dictid = dictionaries.get(dictionary)
+        if dictid == "wikt-en":
+            item = wiktionary(word, language, lemmatize)
+            item['definition'] = fmt_result(item['definition'])
+            #print(item)
+        elif dictid == "gdict":
+            item = googledict(word, language, lemmatize)
+            item['definition'] = fmt_result(item['definition'])
+        elif dictid == "gtrans":
+            return googletranslate(word, language, gtrans_lang)
+        else:
+            return {"word": word, "definition": dictdb.define(word, language, dictionary)}
+        return item
+    except Exception as e:
+        print(e)
     #print(item)
-    return item
 
 def getDictsForLang(lang: str):
     "Get the list of dictionaries for a given language"
