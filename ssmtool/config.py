@@ -21,6 +21,7 @@ class SettingsDialog(QDialog):
         self.lemmatization = QCheckBox("Use lemmatization (Requires restart to take effect)")
         self.lemmatization.setToolTip("Lemmatization means to get the original form of words."
             + "\nFor example, 'books' will be converted to 'book' during lookup if this option is set.")
+        self.remove_spaces = QCheckBox("Remove generated spaces when exporting to Anki (Japanese, Chinese)")
         self.target_language = QComboBox()
         self.deck_name = QComboBox()
         self.tags = QLineEdit()
@@ -102,6 +103,7 @@ If you find this tool useful, you probably should donate to these projects.
         self.tab1.layout.addRow(QLabel("Dictionary source 1"), self.dict_source)
         self.tab1.layout.addRow(QLabel("Dictionary source 2"), self.dict_source2)
         self.tab1.layout.addRow(QLabel("Google translate: To"), self.gtrans_lang)
+        self.tab1.layout.addRow(self.remove_spaces)
         self.tab1.layout.addRow(self.importdict)
 
 
@@ -128,6 +130,7 @@ If you find this tool useful, you probably should donate to these projects.
     def setupAutosave(self):
         self.allow_editing.clicked.connect(self.syncSettings)
         self.lemmatization.clicked.connect(self.syncSettings)
+        self.remove_spaces.clicked.connect(self.syncSettings)
         self.dict_source.currentTextChanged.connect(self.syncSettings)
         self.dict_source.currentTextChanged.connect(self.loadDict2Options)
         self.dict_source2.currentTextChanged.connect(self.syncSettings)
@@ -157,6 +160,11 @@ If you find this tool useful, you probably should donate to these projects.
         dicts = getDictsForLang(code[self.target_language.currentText()])
         self.dict_source.addItems(dicts)
 
+        if code[self.target_language.currentText()] in ["ja", "zh"]:
+            self.remove_spaces.setCheckable(True)
+        else:
+            self.remove_spaces.setCheckable(False)
+
     def loadDict2Options(self):
         curtext = self.dict_source2.currentText()
         self.dict_source2.blockSignals(True)
@@ -175,6 +183,7 @@ If you find this tool useful, you probably should donate to these projects.
     def loadSettings(self):
         self.allow_editing.setChecked(self.settings.value("allow_editing", True, type=bool))
         self.lemmatization.setChecked(self.settings.value("lemmatization", True, type=bool))
+        self.remove_spaces.setChecked(self.settings.value("remove_spaces", True, type=bool))
         self.target_language.setCurrentText(self.settings.value("target_language"))
         self.loadDictionaries()
         self.dict_source.setCurrentText(self.settings.value("dict_source", "Wiktionary (English)"))
@@ -270,6 +279,7 @@ If you find this tool useful, you probably should donate to these projects.
         self.settings.setValue("deck_name", self.deck_name.currentText())
         self.settings.setValue("dict_source", self.dict_source.currentText())
         self.settings.setValue("dict_source2", self.dict_source2.currentText())
+        self.settings.setValue("remove_spaces", self.remove_spaces.isChecked())
         self.settings.setValue("gtrans_lang", self.gtrans_lang.currentText())
         self.settings.setValue("tags", self.tags.text())
         self.settings.setValue("note_type", self.note_type.currentText())
