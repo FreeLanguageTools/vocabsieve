@@ -10,6 +10,15 @@ from .db import *
 translator = Translator()
 dictdb = LocalDictionary()
 langdata = simplemma.load_data('en')
+tagger = None
+JAPANESE_SUPPORT = False
+try:
+    import MeCab, unidic_lite
+    JAPANESE_SUPPORT = True
+    tagger = MeCab.Tagger("-Owakati")
+except ImportError:
+    pass
+
 
 code = bidict({
     "English": "en",
@@ -42,6 +51,34 @@ dictionaries = {"Wiktionary (English)": "wikt-en",
                 "Google dictionary (Monolingual)": "gdict",
                 "Google translate": "gtrans"}
 
+
+def preprocess_clipboard(s: str, lang: str) -> str:
+    """
+    Pre-process string from clipboard before showing it
+    """
+    if lang == "ja":
+        return wsplit_ja(s)
+    elif lang == "zh":
+        return wsplit_zh(s)
+    else:
+        return s
+
+def wsplit_ja(sentence: str) -> str:
+    """
+    Split a Japanese sentence into words.
+    If option remove_spaces is true, zero width spaces with be used
+    so that the spaces are not shown in the card.
+    """
+    print("wsplit_ja reached")
+    print("JAPANESE SUPPORT IS", JAPANESE_SUPPORT)
+    if not JAPANESE_SUPPORT:
+        return sentence
+    words = tagger.parse(sentence).split()
+    return " ".join(words)
+
+    
+def wsplit_zh(sentence: str, remove_spaces: bool) -> str:
+    return sentence
 
 def removeAccents(word):
     #print("Removing accent marks from query ", word)

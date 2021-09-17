@@ -7,6 +7,7 @@ import functools
 import platform
 import json
 from collections import deque
+import re
 
 from .config import *
 from .tools import *
@@ -226,22 +227,25 @@ class DictionaryWindow(QMainWindow):
         mistakes, unless it is used from the button.
         """
         text = QApplication.clipboard().text()
+        remove_spaces = self.settings.value("remove_spaces")
+        lang = code[self.settings.value("target_language")]
         if self.isActiveWindow() and not evenWhenFocused:
             return
         if is_json(text):
             copyobj = json.loads(text)
             target = copyobj['word']
-            self.setSentence(copyobj['sentence'])
+            sentence = preprocess_clipboard(copyobj['sentence'], lang)
+            self.setSentence(sentence)
             self.setWord(target)
             result = self.lookup(target)
             self.setState(result)
-        elif is_oneword(text):
-            self.setSentence(text)
-            self.setWord(text)
+        elif is_oneword(preprocess_clipboard(text, lang)):
+            self.setSentence(word:=preprocess_clipboard(text, lang))
+            self.setWord(word)
             result = self.lookup(text)
             self.setState(result)
         else:
-            self.setSentence(text)
+            self.setSentence(preprocess_clipboard(text, lang))
 
     def lookup(self, word, use_lemmatize=True):
         """
@@ -283,6 +287,8 @@ class DictionaryWindow(QMainWindow):
 
     def createNote(self):
         sentence = self.sentence.toPlainText().replace("\n", "<br>")
+        if self.settings.value("remove_spaces", type=bool) == True:
+            sentence = re.sub("\s", "", sentence)
         tags = (self.settings.value("tags", "ssmtool").strip() + " " + self.tags.text().strip()).split(" ")
         word = self.word.text()
         content = {
@@ -385,7 +391,6 @@ class MyTextEdit(QTextEdit):
     def mouseDoubleClickEvent(self, e):
         super().mouseDoubleClickEvent(e)
         GlobalObject().dispatchEvent("double clicked")
-        print("Event sent")
         self.textCursor().clearSelection()
 
 def main():
