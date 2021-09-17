@@ -24,6 +24,11 @@ For a detailed list of features and language support data, please consult the [p
 ## Linux distro packages
 [![Packaging status](https://repology.org/badge/vertical-allrepos/ssmtool.svg)](https://repology.org/project/ssmtool/versions)
 
+## Development
+To run from source, simply use `pip3 -r requirements.txt` and then `python3 ssmtool.py`.
+
+Alternatively, you can also install a live version to your python package library with `pip3 install .`
+
 ## API documentation
 If you want to leverage ssmtool to build your own plugins, you can refer to the [API Documentation](API.md)
 
