@@ -1,9 +1,11 @@
-PyQt5
 lxml
-beautifulsoup4
+PyQt5
 requests
+beautifulsoup4
 googletrans==4.0.0rc1
 simplemma
-bidict
 pystardict
+bidict
 flask
+mecab-python3
+unidic_lite
