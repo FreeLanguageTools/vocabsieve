@@ -3,7 +3,7 @@
 ![https://img.shields.io/pypi/v/ssmtool.svg](https://img.shields.io/pypi/v/ssmtool.svg)
 [![Downloads](https://pepy.tech/badge/ssmtool)](https://pepy.tech/project/ssmtool)
 
-[Join our chat on Matrix](https://matrix.to/#/#flt:midov.pl)
+[Join our chat on Matrix](https://webchat.kde.org/#/room/#flt:midov.pl)
 
 Simple Sentence Mining (`ssmtool`) is a program for sentence mining, in which sentences with target vocabulary words are collected and added into a spaced repetition system (SRS) for language learning.
 
