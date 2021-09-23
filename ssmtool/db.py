@@ -5,8 +5,6 @@ from pathlib import Path
 import time
 from datetime import datetime, timedelta
 
-QCoreApplication.setApplicationName("ssmtool")
-QCoreApplication.setOrganizationName("FreeLanguageTools")
 datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
 Path(datapath).mkdir(parents=True, exist_ok=True)
 

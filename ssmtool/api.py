@@ -19,7 +19,7 @@ class LanguageServer(QObject):
     def start_api(self):
         """ Main server application """
         self.app = Flask(__name__)
-        self.settings = QSettings("FreeLanguageTools", "SimpleSentenceMining")
+        self.settings = QSettings()
         @self.app.route("/healthcheck")
         def healthcheck():
             return "Hello, World!"
