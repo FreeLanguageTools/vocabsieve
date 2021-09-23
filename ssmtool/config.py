@@ -44,7 +44,9 @@ class SettingsDialog(QDialog):
         self.about = QLabel(
             '''
 © 2021 FreeLanguageTools<br><br>
-Simple Sentence Mining (ssmtool) is free software available under the terms of \
+Visit <a href="https://freelanguagetools.org">FreeLanguageTools.org</a> for more info on how to use this tool.<br><br>
+
+Simple Sentence Mining (SSM, ssmtool) is free software available under the terms of \
 <a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GNU GPLv3</a>.<br><br>
 If you found a bug, or have enhancement ideas, \
 feel free to open an issue on the \
@@ -56,7 +58,7 @@ Statistics data are stored locally.
 <br><br>
 Credits: <br><a href="https://en.wiktionary.org/wiki/Wiktionary:Main_Page">Wiktionary API</a><br>
 <a href="https://dictionaryapi.dev/">Google Dictionary API</a><br>
-If you find this tool useful, you probably should donate to these projects.
+If you find this tool useful, you can donate to these projects.
             '''
         )
         self.about.setTextFormat(Qt.RichText)
@@ -194,6 +196,9 @@ If you find this tool useful, you probably should donate to these projects.
         self.tags.setText(self.settings.value("tags", "ssmtool"))
         api = self.anki_api.text()
 
+        self.host.setText(self.settings.value("host", "127.0.0.1"))
+        self.port.setValue(self.settings.value("port", 39284, type=int))
+
         try:
             print("API version is: ", getVersion(api))
         except Exception as e:
@@ -210,9 +215,6 @@ If you find this tool useful, you probably should donate to these projects.
         self.note_type.addItems(note_types)
         self.note_type.setCurrentText(self.settings.value("note_type"))
         self.loadFields()
-
-        self.host.setText(self.settings.value("host", "127.0.0.1"))
-        self.port.setValue(self.settings.value("port", 39284, type=int))
 
     def loadFields(self):
         print("loading fields")
