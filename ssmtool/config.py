@@ -9,7 +9,7 @@ class SettingsDialog(QDialog):
         super().__init__(parent)
         self.settings = parent.settings
         self.parent = parent
-        self.setWindowTitle("Configure ssmtool")
+        self.setWindowTitle("Configure SSM")
         self.initWidgets()
         self.initTabs()
         self.setupWidgets()
@@ -274,24 +274,28 @@ If you find this tool useful, you can donate to these projects.
         self.definition2_field.blockSignals(False)
 
     def syncSettings(self):
-        print("syncing")
         self.settings.setValue("allow_editing", self.allow_editing.isChecked())
         self.settings.setValue("lemmatization", self.lemmatization.isChecked())
         self.settings.setValue("target_language", self.target_language.currentText())
-        self.settings.setValue("deck_name", self.deck_name.currentText())
         self.settings.setValue("dict_source", self.dict_source.currentText())
         self.settings.setValue("dict_source2", self.dict_source2.currentText())
         self.settings.setValue("remove_spaces", self.remove_spaces.isChecked())
         self.settings.setValue("gtrans_lang", self.gtrans_lang.currentText())
-        self.settings.setValue("tags", self.tags.text())
-        self.settings.setValue("note_type", self.note_type.currentText())
-        self.settings.setValue("sentence_field", self.sentence_field.currentText())
-        self.settings.setValue("word_field", self.word_field.currentText())
-        self.settings.setValue("definition_field", self.definition_field.currentText())
-        self.settings.setValue("definition2_field", self.definition2_field.currentText())
         self.settings.setValue("anki_api", self.anki_api.text())
         self.settings.setValue("host", self.host.text())
         self.settings.setValue("port", self.port.value())
+        try:
+            api = self.anki_api.text()
+            getVersion(api)
+            self.settings.setValue("deck_name", self.deck_name.currentText())
+            self.settings.setValue("note_type", self.note_type.currentText())
+            self.settings.setValue("tags", self.tags.text())
+            self.settings.setValue("sentence_field", self.sentence_field.currentText())
+            self.settings.setValue("word_field", self.word_field.currentText())
+            self.settings.setValue("definition_field", self.definition_field.currentText())
+            self.settings.setValue("definition2_field", self.definition2_field.currentText())
+        except Exception as e:
+            pass
         self.settings.sync()
     
     def errorNoConnection(self, error):
