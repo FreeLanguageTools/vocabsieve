@@ -17,7 +17,7 @@ class SettingsDialog(QDialog):
         self.setupAutosave()
 
     def initWidgets(self):
-        self.allow_editing = QCheckBox("Allow directly editing of text fields (Requires restart to take effect)")
+        self.allow_editing = QCheckBox("Allow directly editing of text fields")
         self.lemmatization = QCheckBox("Use lemmatization (Requires restart to take effect)")
         self.lemmatization.setToolTip("Lemmatization means to get the original form of words."
             + "\nFor example, 'books' will be converted to 'book' during lookup if this option is set.")
@@ -33,6 +33,28 @@ class SettingsDialog(QDialog):
         self.word_field = QComboBox()
         self.definition_field = QComboBox()
         self.definition2_field = QComboBox()
+
+        self.orientation = QComboBox()
+        self.text_scale = QSlider(Qt.Horizontal)
+
+        self.text_scale.setTickPosition(QSlider.TicksBelow)
+        self.text_scale.setTickInterval(10)
+        self.text_scale.setSingleStep(5)
+        self.text_scale.setValue(100)
+        self.text_scale.setMinimum(50)
+        self.text_scale.setMaximum(250)
+        self.text_scale_label = QLabel("1.00x")        
+        self.text_scale_box = QWidget()
+        self.text_scale_box_layout = QHBoxLayout()
+        self.text_scale_box.setLayout(self.text_scale_box_layout)
+        self.text_scale_box_layout.addWidget(self.text_scale)
+        self.text_scale_box_layout.addWidget(self.text_scale_label)
+
+        self.orientation.addItems([
+            "Vertical", 
+            "Horizontal", 
+            ])
+
         self.anki_api = QLineEdit()
         self.about_sa = QScrollArea()
         self.host = QLineEdit()
@@ -93,7 +115,7 @@ If you find this tool useful, you can donate to these projects.
         self.tabs.addTab(self.tab1, "Dictionary")
         self.tabs.addTab(self.tab2, "Anki")
         self.tabs.addTab(self.tab3, "API")
-        self.tabs.addTab(self.tab4, "Miscellaneous")
+        self.tabs.addTab(self.tab4, "Interface")
         self.tabs.addTab(self.tab5, "About")
 
     def setupWidgets(self):
@@ -122,11 +144,16 @@ If you find this tool useful, you can donate to these projects.
         self.tab3.layout.addRow(QLabel("API host"), self.host)
         self.tab3.layout.addRow(QLabel("API port"), self.port)
 
+        self.tab4.layout.addRow(QLabel("<b>All settings on this tab requires restart to take effect.</b>"))
         self.tab4.layout.addRow(self.allow_editing)
+        self.tab4.layout.addRow(QLabel("Interface layout"), self.orientation)
+        self.tab4.layout.addRow(QLabel("Text scale"), self.text_scale_box)
 
         self.tab5.layout.addWidget(self.about_sa)
         
-
+        self.text_scale.valueChanged.connect(
+            lambda _: self.text_scale_label.setText(format(self.text_scale.value()/100, "1.2f") + "x")
+            )
 
         
     def setupAutosave(self):
@@ -156,6 +183,8 @@ If you find this tool useful, you can donate to these projects.
         self.anki_api.editingFinished.connect(self.loadSettings)
         self.host.textChanged.connect(self.syncSettings)
         self.port.valueChanged.connect(self.syncSettings)
+        self.text_scale.valueChanged.connect(self.syncSettings)
+        self.orientation.currentTextChanged.connect(self.syncSettings)
 
     def loadDictionaries(self):
         self.dict_source.clear()
@@ -185,7 +214,9 @@ If you find this tool useful, you can donate to these projects.
     def loadSettings(self):
         self.allow_editing.setChecked(self.settings.value("allow_editing", True, type=bool))
         self.lemmatization.setChecked(self.settings.value("lemmatization", True, type=bool))
+        self.orientation.setCurrentText(self.settings.value("orientation", "Vertical"))
         self.remove_spaces.setChecked(self.settings.value("remove_spaces", True, type=bool))
+        self.text_scale.setValue(self.settings.value("text_scale", 100, type=int))
         self.target_language.setCurrentText(self.settings.value("target_language"))
         self.loadDictionaries()
         self.dict_source.setCurrentText(self.settings.value("dict_source", "Wiktionary (English)"))
@@ -276,6 +307,7 @@ If you find this tool useful, you can donate to these projects.
     def syncSettings(self):
         self.settings.setValue("allow_editing", self.allow_editing.isChecked())
         self.settings.setValue("lemmatization", self.lemmatization.isChecked())
+        self.settings.setValue("orientation", self.orientation.currentText())
         self.settings.setValue("target_language", self.target_language.currentText())
         self.settings.setValue("dict_source", self.dict_source.currentText())
         self.settings.setValue("dict_source2", self.dict_source2.currentText())
@@ -284,6 +316,7 @@ If you find this tool useful, you can donate to these projects.
         self.settings.setValue("anki_api", self.anki_api.text())
         self.settings.setValue("host", self.host.text())
         self.settings.setValue("port", self.port.value())
+        self.settings.setValue("text_scale", self.text_scale.value())
         try:
             api = self.anki_api.text()
             getVersion(api)
