@@ -57,8 +57,12 @@ class DictionaryWindow(QMainWindow):
         self.rec = Record()
         self.setCentralWidget(self.widget)
         self.previousWord = ""
+        self.scaleFont()
         self.initWidgets()
-        self.setupWidgets()
+        if self.settings.value("orientation", "Vertical") == "Vertical":
+            self.setupWidgetsV()
+        else:
+            self.setupWidgetsH()
         self.startServer()
         self.initTimer()
         self.updateAnkiButtonState()
@@ -67,6 +71,11 @@ class DictionaryWindow(QMainWindow):
 
         GlobalObject().addEventListener("double clicked", self.lookupClicked)
         QApplication.clipboard().dataChanged.connect(self.clipboardChanged)
+
+    def scaleFont(self):
+        font = QApplication.font()
+        font.setPointSize(font.pointSize() * self.settings.value("text_scale", type=int)/100)
+        self.setFont(font)
 
     def focusInEvent(self, event):
         self.clipboardChanged(evenWhenFocused=True)
@@ -105,7 +114,7 @@ class DictionaryWindow(QMainWindow):
         self.sentence.setReadOnly(not (self.settings.value("allow_editing", True, type=bool)))
         self.definition.setReadOnly(not (self.settings.value("allow_editing", True, type=bool)))
 
-    def setupWidgets(self):
+    def setupWidgetsV(self):
         self.layout = QGridLayout(self.widget)
         self.layout.addWidget(self.namelabel, 0, 0, 1, 3)
 
@@ -155,6 +164,62 @@ class DictionaryWindow(QMainWindow):
 
         self.bar.addPermanentWidget(self.stats_label)
 
+    def setupWidgetsH(self):
+        self.layout = QGridLayout(self.widget)
+        self.sentence.setMaximumHeight(1300)
+        self.layout.addWidget(self.namelabel, 0, 0, 1, 3)
+        self.layout.setRowStretch(2, 1)
+        self.layout.setRowStretch(3, 1)
+        self.layout.setRowStretch(4, 1)
+        self.layout.setRowStretch(5, 1)
+        self.layout.setColumnStretch(0, 5)
+        self.layout.setColumnStretch(1, 5)
+        self.layout.setColumnStretch(2, 4)
+        self.layout.setColumnStretch(3, 5)
+        self.layout.setColumnStretch(4, 5)
+
+        self.layout.addWidget(self.label_sentence, 1, 0)
+        self.layout.addWidget(self.undo_button, 6, 0)
+        self.layout.addWidget(self.read_button, 6, 1)
+
+        self.layout.addWidget(self.sentence, 2, 0, 4, 2)
+        self.layout.addWidget(QLabel("Word"), 1, 2)
+
+        if self.settings.value("lemmatization", True, type=bool):
+            self.layout.addWidget(self.lookup_button, 3, 2)
+            self.layout.addWidget(self.lookup_exact_button, 4, 2)
+        else:
+            self.layout.addWidget(self.lookup_button, 1, 4, 2, 1)
+        
+        self.layout.addWidget(QLabel("Definition"), 1, 3)
+        self.layout.addWidget(self.word, 2, 2, 1, 1)
+        if self.settings.value("dict_source2", "Disabled") != "Disabled":
+            print(self.settings.value("dict_source2", "Disabled") != "Disabled")
+            self.layout.addWidget(self.definition, 2, 3, 2, 2)
+            self.layout.addWidget(self.definition2, 4, 3, 2, 2)
+        else:
+            self.layout.addWidget(self.definition, 2, 3, 4, 2)
+
+        
+        self.layout.addWidget(QLabel("Additional tags"), 5, 2, 1, 1)
+
+        self.layout.addWidget(self.tags, 6, 2)
+
+        self.layout.addWidget(self.toanki_button, 6, 3, 1, 1)
+        self.layout.addWidget(self.config_button, 6, 4, 1, 1)
+
+        self.lookup_button.clicked.connect(lambda _: self.lookupClicked(True))
+        self.lookup_exact_button.clicked.connect(lambda _: self.lookupClicked(False))
+
+        self.config_button.clicked.connect(self.configure)
+        self.toanki_button.clicked.connect(self.createNote)
+        self.read_button.clicked.connect(lambda _: self.clipboardChanged(True))
+
+        self.sentence.textChanged.connect(self.updateAnkiButtonState)
+        self.undo_button.clicked.connect(self.undo)
+
+        self.bar.addPermanentWidget(self.stats_label)
+   
     def updateAnkiButtonState(self, forceDisable=False):
         if self.sentence.toPlainText() == "" or forceDisable:
             self.toanki_button.setEnabled(False)
