@@ -9,3 +9,4 @@ bidict
 flask
 mecab-python3
 unidic_lite
+pymorphy2
