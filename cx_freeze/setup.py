@@ -6,7 +6,7 @@ from cx_Freeze import setup, Executable
 # "packages": ["os"] is used as example only
 build_exe_options = {"packages": ["ssmtool", "setuptools", "PyQt5",
                                   "bs4", "lxml", "simplemma", "googletrans",
-                                  "bidict", "pystardict", "flask"],
+                                  "bidict", "pystardict", "flask", "mecab-python3", "unidic_lite"],
                      "excludes": ["tkinter"]}
 
 # base="Win32GUI" should be used only for Windows GUI app
