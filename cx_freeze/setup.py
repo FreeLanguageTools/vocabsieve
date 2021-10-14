@@ -7,7 +7,7 @@ from cx_Freeze import setup, Executable
 build_exe_options = {"packages": ["ssmtool", "setuptools", "PyQt5",
                                   "bs4", "lxml", "simplemma", "googletrans",
                                   "bidict", "pystardict", "flask", "MeCab", 
-                                  "unidic_lite", "pymorphy2"],
+                                  "unidic_lite", "pymorphy2", "pymorphy2_dicts"],
                      "excludes": ["tkinter"],
                      "include_msvcr": True}
 
