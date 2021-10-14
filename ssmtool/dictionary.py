@@ -6,6 +6,7 @@ from googletrans import Translator
 import requests
 from bs4 import BeautifulSoup
 from bidict import bidict
+import pymorphy2
 from .db import *
 translator = Translator()
 dictdb = LocalDictionary()
@@ -50,6 +51,15 @@ simplemma_languages = ['bg', 'ca', 'cy', 'da', 'de', 'en', 'es', 'et', 'fa', 'fi
 dictionaries = {"Wiktionary (English)": "wikt-en",
                 "Google dictionary (Monolingual)": "gdict",
                 "Google translate": "gtrans"}
+
+
+
+try:
+    morph = pymorphy2.MorphAnalyzer(lang="ru")
+    print("RU")
+except ValueError:
+    morph = pymorphy2.MorphAnalyzer(lang="ru-old")
+
 
 
 def preprocess_clipboard(s: str, lang: str) -> str:
@@ -120,9 +130,11 @@ def fmt_result(definitions):
     return "<br>".join(lines)
 
 def lem_word(word, language):
-    """Lemmatize a word. We will use simplemma, and if that
-    isn't supported either, we give up."""
-    if language in simplemma_languages:
+    """Lemmatize a word. We will use PyMorphy for RU, simplemma for others, 
+    and if that isn't supported , we give up."""
+    if language == 'ru':
+        return morph.parse(word)[0].normal_form
+    elif language in simplemma_languages:
         global langdata
         if langdata[0][0] != language:
             langdata = simplemma.load_data(language)
