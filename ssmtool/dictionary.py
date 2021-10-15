@@ -2,6 +2,7 @@ import json
 import urllib.request
 import unicodedata
 import simplemma
+import re
 from googletrans import Translator
 import requests
 from bs4 import BeautifulSoup
@@ -122,11 +123,12 @@ def removeAccents(word):
 
 def fmt_result(definitions):
     "Format the result of dictionary lookup"
+    print(definitions)
     lines = []
     for defn in definitions:
         if defn['pos'] != "":
             lines.append("<i>" + defn['pos'] + "</i>")
-        lines.extend([str(item[0]+1) + ". " + item[1] for item in list(enumerate(definitions[0]['meaning']))])
+        lines.extend([str(item[0]+1) + ". " + item[1] for item in list(enumerate(defn['meaning']))])
     return "<br>".join(lines)
 
 def lem_word(word, language):
@@ -159,16 +161,7 @@ def wiktionary(word, language, lemmatize=True):
         meanings = []
         for defn in item['definitions']:
             parsed_meaning = BeautifulSoup(defn['definition'], features="lxml")
-            uninflected_forms_count = len(parsed_meaning.select("span.form-of-definition-link"))
-            if uninflected_forms_count == 0 or not lemmatize:
-                meaning = parsed_meaning.text
-            else:
-                next_target = parsed_meaning.select_one("span.form-of-definition-link")\
-                    .select_one("a")['title']
-                #print(next_target)
-                return wiktionary(next_target, language, lemmatize=False)
-
-            meanings.append(meaning)
+            meanings.append(parsed_meaning.text)
 
         meaning_item = {"pos": item['partOfSpeech'], "meaning": meanings}
         definitions.append(meaning_item)
@@ -206,9 +199,12 @@ def googletranslate(word, language, gtrans_lang):
 
 
 def lookupin(word, language, lemmatize=True, dictionary="Wiktionary (English)", gtrans_lang="English"):
+    # Remove any punctuation other than a hyphen
+    print(word)
+    word = re.sub('[«»…()\[\]]*', "", word)
+    print(word)
     if lemmatize:
         word = lem_word(word, language)
-
     dictid = dictionaries.get(dictionary)
     if dictid == "wikt-en":
         item = wiktionary(word, language, lemmatize)
