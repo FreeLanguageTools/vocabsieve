@@ -13,8 +13,8 @@ build_exe_options = {"packages": ["ssmtool", "setuptools", "PyQt5",
 
 # base="Win32GUI" should be used only for Windows GUI app
 base = None
-if sys.platform == "win32":
-    base = "Win32GUI"
+#if sys.platform == "win32":
+#    base = "Win32GUI"
 
 setup(
     name = "ssmtool",
