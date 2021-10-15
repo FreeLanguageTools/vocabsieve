@@ -238,9 +238,9 @@ class DictionaryWindow(QMainWindow):
 
     def getCurrentWord(self):
         cursor = self.sentence.textCursor()
-        selected = cursor.selectedText().lower()
+        selected = cursor.selectedText()
         cursor2 = self.definition.textCursor()
-        selected2 = cursor2.selectedText().lower()
+        selected2 = cursor2.selectedText()
         target = str.strip(selected or selected2
                                     or self.previousWord
                                     or self.word.text()
