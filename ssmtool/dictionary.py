@@ -58,7 +58,6 @@ dictionaries = {"Wiktionary (English)": "wikt-en",
 
 try:
     morph = pymorphy2.MorphAnalyzer(lang="ru")
-    print("RU")
 except ValueError:
     morph = pymorphy2.MorphAnalyzer(lang="ru-old")
 
@@ -124,7 +123,6 @@ def removeAccents(word):
 
 def fmt_result(definitions):
     "Format the result of dictionary lookup"
-    print(definitions)
     lines = []
     for defn in definitions:
         if defn['pos'] != "":

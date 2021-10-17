@@ -33,6 +33,7 @@ class SettingsDialog(QDialog):
         self.word_field = QComboBox()
         self.definition_field = QComboBox()
         self.definition2_field = QComboBox()
+        self.pronunciation_field = QComboBox()
         self.forvo = QCheckBox("Play Forvo pronunciation upon word selection")
 
         self.orientation = QComboBox()
@@ -143,6 +144,7 @@ If you find this tool useful, you can donate to these projects.
         self.tab2.layout.addRow(QLabel('Field name for "Word"'), self.word_field)
         self.tab2.layout.addRow(QLabel('Field name for "Definition"'), self.definition_field)
         self.tab2.layout.addRow(QLabel('Field name for "Definition#2"'), self.definition2_field)
+        self.tab2.layout.addRow(QLabel('Field name for "Pronunciation"'), self.pronunciation_field)
 
         self.tab3.layout.addRow(QLabel('<i>Most users should not need to change these settings.</i>'))
         self.tab3.layout.addRow(QLabel("API host"), self.host)
@@ -184,6 +186,8 @@ If you find this tool useful, you can donate to these projects.
         self.definition_field.currentTextChanged.connect(self.checkCorrectness)
         self.definition2_field.currentTextChanged.connect(self.syncSettings)
         self.definition2_field.currentTextChanged.connect(self.checkCorrectness)
+        self.pronunciation_field.currentTextChanged.connect(self.syncSettings)
+        self.pronunciation_field.currentTextChanged.connect(self.checkCorrectness)
         self.anki_api.editingFinished.connect(self.syncSettings)
         self.anki_api.editingFinished.connect(self.loadSettings)
         self.host.textChanged.connect(self.syncSettings)
@@ -275,26 +279,36 @@ If you find this tool useful, you can donate to these projects.
         word = self.word_field.currentText()
         def1 = self.definition_field.currentText()
         def2 = self.definition2_field.currentText()
+        pron = self.pronunciation_field.currentText()
 
         # Block signals temporarily to avoid warning dialogs
         self.sentence_field.blockSignals(True)
         self.word_field.blockSignals(True)
         self.definition_field.blockSignals(True)
         self.definition2_field.blockSignals(True)
+        self.pronunciation_field.blockSignals(True)
 
         self.sentence_field.clear()
         self.sentence_field.addItems(fields)
 
         self.word_field.clear()
         self.word_field.addItems(fields)
+
         self.definition_field.clear()
         self.definition_field.addItems(fields)
+
         self.definition2_field.clear()
         self.definition2_field.addItem("Disabled")
-        self.definition2_field.addItems(fields)       
+        self.definition2_field.addItems(fields)     
+
+        self.pronunciation_field.clear()
+        self.pronunciation_field.addItem("Disabled")
+        self.pronunciation_field.addItems(fields)   
+
         self.sentence_field.setCurrentText(self.settings.value("sentence_field"))
         self.word_field.setCurrentText(self.settings.value("word_field"))
         self.definition_field.setCurrentText(self.settings.value("definition_field"))
+        self.pronunciation_field.setCurrentText(self.settings.value("pronunciation_field"))
 
         if self.sentence_field.findText(sent) != -1:
             self.sentence_field.setCurrentText(sent)
@@ -304,11 +318,14 @@ If you find this tool useful, you can donate to these projects.
             self.definition_field.setCurrentText(def1)
         if self.definition2_field.findText(def2) != -1:
             self.definition2_field.setCurrentText(def2)
+        if self.pronunciation_field.findText(def2) != -1:
+            self.pronunciation_field.setCurrentText(def2)
         
         self.sentence_field.blockSignals(False)
         self.word_field.blockSignals(False)
         self.definition_field.blockSignals(False)
         self.definition2_field.blockSignals(False)
+        self.pronunciation_field.blockSignals(False)
 
     def syncSettings(self):
         self.settings.setValue("forvo", self.forvo.isChecked())
@@ -334,6 +351,7 @@ If you find this tool useful, you can donate to these projects.
             self.settings.setValue("word_field", self.word_field.currentText())
             self.settings.setValue("definition_field", self.definition_field.currentText())
             self.settings.setValue("definition2_field", self.definition2_field.currentText())
+            self.settings.setValue("pronunciation_field", self.pronunciation_field.currentText())
         except Exception as e:
             pass
         self.settings.sync()

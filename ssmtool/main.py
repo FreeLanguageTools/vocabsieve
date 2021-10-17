@@ -59,6 +59,7 @@ class DictionaryWindow(QMainWindow):
         self.rec = Record()
         self.setCentralWidget(self.widget)
         self.previousWord = ""
+        self.audio_path = ""
         self.scaleFont()
         self.initWidgets()
         if self.settings.value("orientation", "Vertical") == "Vertical":
@@ -253,7 +254,6 @@ class DictionaryWindow(QMainWindow):
 
     def lookupClicked(self, use_lemmatize=True):
         target = self.getCurrentWord()
-        print(use_lemmatize)
         self.updateAnkiButtonState()
         if target == "":
             return
@@ -327,11 +327,10 @@ class DictionaryWindow(QMainWindow):
         gtrans_lang = self.settings.value("gtrans_lang", "English")
         dictname = self.settings.value("dict_source", "Wiktionary (English)")
         word = re.sub('[«»…()\[\]]*', "", word)
-        audio_path = None
-        if self.settings.value("forvo", False):
-            audio_path = play_forvo(word, language)
-        print(audio_path)
+        self.audio_path = None
         self.status(f"L: '{word}' in '{language}', lemma: {short_sign}, from {dictionaries.get(dictname, dictname)}")
+        if self.settings.value("forvo", False):
+            self.audio_path = play_forvo(word, language)
         try:
             item = lookupin(word, language, lemmatize, dictname, gtrans_lang)
             self.rec.recordLookup(word, item['definition'], TL, lemmatize, dictionaries.get(dictname, dictname), True)
@@ -383,6 +382,15 @@ class DictionaryWindow(QMainWindow):
                 content['fields'][self.settings.value('definition2_field')] = definition2
             except Exception as e:
                 return
+
+        if self.settings.value("pronunciation_field", "Disabled") != 'Disabled' and self.audio_path:
+            content['audio'] = {
+                "path": self.audio_path,
+                "filename": path.basename(self.audio_path),
+                "fields": [
+                    self.settings.value("pronunciation_field")
+                ]
+            }
 
         self.status("Adding note")
         api = self.settings.value("anki_api")
