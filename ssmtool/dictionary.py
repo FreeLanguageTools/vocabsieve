@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from bidict import bidict
 import pymorphy2
 from .db import *
+from .forvo import *
 translator = Translator()
 dictdb = LocalDictionary()
 langdata = simplemma.load_data('en')
@@ -200,9 +201,6 @@ def googletranslate(word, language, gtrans_lang):
 
 def lookupin(word, language, lemmatize=True, dictionary="Wiktionary (English)", gtrans_lang="English"):
     # Remove any punctuation other than a hyphen
-    print(word)
-    word = re.sub('[«»…()\[\]]*', "", word)
-    print(word)
     if lemmatize:
         word = lem_word(word, language)
     dictid = dictionaries.get(dictionary)

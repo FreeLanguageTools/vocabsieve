@@ -8,8 +8,10 @@ import platform
 import json
 from collections import deque
 import re
-
+QCoreApplication.setApplicationName("ssmtool")
+QCoreApplication.setOrganizationName("FreeLanguageTools")
 from .config import *
+from .forvo import *
 from .tools import *
 from .db import *
 from .dictionary import *
@@ -324,6 +326,11 @@ class DictionaryWindow(QMainWindow):
         language = code[TL] #This is in two letter code
         gtrans_lang = self.settings.value("gtrans_lang", "English")
         dictname = self.settings.value("dict_source", "Wiktionary (English)")
+        word = re.sub('[«»…()\[\]]*', "", word)
+        audio_path = None
+        if self.settings.value("forvo", False):
+            audio_path = play_forvo(word, language)
+        print(audio_path)
         self.status(f"L: '{word}' in '{language}', lemma: {short_sign}, from {dictionaries.get(dictname, dictname)}")
         try:
             item = lookupin(word, language, lemmatize, dictname, gtrans_lang)
@@ -460,6 +467,8 @@ class MyTextEdit(QTextEdit):
 
 def main():
     app = QApplication(sys.argv)
+    app.setApplicationName("ssmtool")
+    app.setOrganizationName("FreeLanguageTools")
     w = DictionaryWindow()
 
     w.show()

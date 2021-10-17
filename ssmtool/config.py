@@ -33,6 +33,7 @@ class SettingsDialog(QDialog):
         self.word_field = QComboBox()
         self.definition_field = QComboBox()
         self.definition2_field = QComboBox()
+        self.forvo = QCheckBox("Play Forvo pronunciation upon word selection")
 
         self.orientation = QComboBox()
         self.text_scale = QSlider(Qt.Horizontal)
@@ -66,20 +67,22 @@ class SettingsDialog(QDialog):
         self.about = QLabel(
             '''
 © 2021 FreeLanguageTools<br><br>
-Visit <a href="https://freelanguagetools.org">FreeLanguageTools.org</a> for more info on how to use this tool.<br><br>
+Visit <a href="https://freelanguagetools.org">FreeLanguageTools.org</a> for more info on how to use this tool.<br>
+You can also talk to us on <a href="https://webchat.kde.org/#/room/#flt:midov.pl">Matrix</a>
+or <a href="https://t.me/fltchat">Telegram</a> for support.<br><br>
 
-Simple Sentence Mining (SSM, ssmtool) is free software available under the terms of \
+Simple Sentence Mining (SSM, ssmtool) is free software available under the terms of
 <a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GNU GPLv3</a>.<br><br>
-If you found a bug, or have enhancement ideas, \
-feel free to open an issue on the \
-Github <a href=https://github.com/FreeLanguageTools/ssmtool>repository</a>.
-<br><br>
-This program is yours to keep. There is no EULA you need to agree to. \
-No data is sent to any server other than the configured dictionary APIs. \
+If you found a bug, or have enhancement ideas, 
+feel free to open an issue on the 
+Github <a href=https://github.com/FreeLanguageTools/ssmtool>repository</a>.<br><br>
+
+
+This program is yours to keep. There is no EULA you need to agree to.
+No data is sent to any server other than the configured dictionary APIs.
 Statistics data are stored locally.
 <br><br>
 Credits: <br><a href="https://en.wiktionary.org/wiki/Wiktionary:Main_Page">Wiktionary API</a><br>
-<a href="https://dictionaryapi.dev/">Google Dictionary API</a><br>
 If you find this tool useful, you can donate to these projects.
             '''
         )
@@ -123,6 +126,7 @@ If you find this tool useful, you can donate to these projects.
         self.gtrans_lang.addItems(code.keys())
         
         self.tab1.layout.addRow(self.lemmatization)
+        self.tab1.layout.addRow(self.forvo)
         self.tab1.layout.addRow(QLabel("Target language"), self.target_language)
         self.tab1.layout.addRow(QLabel("Dictionary source 1"), self.dict_source)
         self.tab1.layout.addRow(QLabel("Dictionary source 2"), self.dict_source2)
@@ -160,6 +164,7 @@ If you find this tool useful, you can donate to these projects.
         self.allow_editing.clicked.connect(self.syncSettings)
         self.lemmatization.clicked.connect(self.syncSettings)
         self.remove_spaces.clicked.connect(self.syncSettings)
+        self.forvo.clicked.connect(self.syncSettings)
         self.dict_source.currentTextChanged.connect(self.syncSettings)
         self.dict_source.currentTextChanged.connect(self.loadDict2Options)
         self.dict_source2.currentTextChanged.connect(self.syncSettings)
@@ -212,6 +217,7 @@ If you find this tool useful, you can donate to these projects.
 
 
     def loadSettings(self):
+        self.forvo.setChecked(self.settings.value("forvo", False, type=bool))
         self.allow_editing.setChecked(self.settings.value("allow_editing", True, type=bool))
         self.lemmatization.setChecked(self.settings.value("lemmatization", True, type=bool))
         self.orientation.setCurrentText(self.settings.value("orientation", "Vertical"))
@@ -305,6 +311,7 @@ If you find this tool useful, you can donate to these projects.
         self.definition2_field.blockSignals(False)
 
     def syncSettings(self):
+        self.settings.setValue("forvo", self.forvo.isChecked())
         self.settings.setValue("allow_editing", self.allow_editing.isChecked())
         self.settings.setValue("lemmatization", self.lemmatization.isChecked())
         self.settings.setValue("orientation", self.orientation.currentText())

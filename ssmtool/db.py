@@ -4,10 +4,9 @@ from os import path
 from pathlib import Path
 import time
 from datetime import datetime, timedelta
-
 datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
 Path(datapath).mkdir(parents=True, exist_ok=True)
-
+print(datapath)
 class Record():
     def __init__(self):
         #print(path.join(datapath, "records.db"))
