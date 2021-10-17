@@ -12,3 +12,4 @@ unidic_lite
 pymorphy2
 pymorphy2-dicts
 pymorphy2-dicts-ru
+playsound
