@@ -13,7 +13,7 @@ Path(path.join(datapath, "forvo")).mkdir(parents=True, exist_ok=True)
 
 def get_forvo_url(word, lang):
     url = "https://forvo.com/word/%s/" % word
-    html = bs4.BeautifulSoup(requests.get(url, headers=HEADERS, timeout=3).text)
+    html = bs4.BeautifulSoup(requests.get(url, headers=HEADERS, timeout=3).text, "lxml")
     available_langs_el = html.find_all(id=re.compile(r"language-container-\w{2,4}"))
     available_langs = [re.findall(r"language-container-(\w{2,4})", el.attrs["id"])[0] for el in available_langs_el]
     lang_container = [l for l in available_langs_el if
