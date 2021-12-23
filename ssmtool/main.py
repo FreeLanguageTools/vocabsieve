@@ -61,6 +61,7 @@ class DictionaryWindow(QMainWindow):
         self.previousWord = ""
         self.audio_path = ""
         self.scaleFont()
+        self.forvo_scraping = ""
         self.initWidgets()
         if self.settings.value("orientation", "Vertical") == "Vertical":
             self.setupWidgetsV()
@@ -140,7 +141,6 @@ class DictionaryWindow(QMainWindow):
         self.layout.addWidget(QLabel("Definition"), 6, 0, 1, 3)
         self.layout.addWidget(self.word, 5, 0, 1, 3)
         if self.settings.value("dict_source2", "Disabled") != "Disabled":
-            print(self.settings.value("dict_source2", "Disabled") != "Disabled")
             self.layout.addWidget(self.definition, 7, 0, 2, 3)
             self.layout.setRowStretch(7, 1)
             self.layout.addWidget(self.definition2, 9, 0, 2, 3)
@@ -254,6 +254,8 @@ class DictionaryWindow(QMainWindow):
         return target
 
     def lookupClicked(self, use_lemmatize=True):
+        if self.forvo_scraping:
+            return
         target = self.getCurrentWord()
         self.updateAnkiButtonState()
         if target == "":
@@ -302,6 +304,7 @@ class DictionaryWindow(QMainWindow):
         if is_json(text):
             copyobj = json.loads(text)
             target = copyobj['word']
+            target = re.sub('[\?\.!«»…()\[\]]*', "", target)
             self.previousWord = target
             sentence = preprocess_clipboard(copyobj['sentence'], lang)
             self.setSentence(sentence)
@@ -331,8 +334,10 @@ class DictionaryWindow(QMainWindow):
         word = re.sub('[«»…()\[\]]*', "", word)
         self.audio_path = None
         self.status(f"L: '{word}' in '{language}', lemma: {short_sign}, from {dictionaries.get(dictname, dictname)}")
-        if self.settings.value("forvo", False, type=bool):
+        if self.settings.value("forvo", False, type=bool) and not self.forvo_scraping:
+            self.forvo_scraping = True
             self.audio_path = play_forvo(word, language)
+            self.forvo_scraping = False
         try:
             item = lookupin(word, language, lemmatize, dictname, gtrans_lang)
             self.rec.recordLookup(word, item['definition'], TL, lemmatize, dictionaries.get(dictname, dictname), True)
