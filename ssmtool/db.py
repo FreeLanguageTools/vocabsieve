@@ -67,24 +67,24 @@ class Record():
         start = day.replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
         end = day.replace(hour=23, minute=59, second=59, microsecond=999999).timestamp()
         try:
-            self.c.execute("""SELECT timestamp 
+            self.c.execute("""SELECT COUNT (DISTINCT word) 
                             FROM lookups 
                             WHERE timestamp 
                             BETWEEN ? AND ?
                             AND success = 1 """, (start, end))
-            return len(self.c.fetchall())
+            return self.c.fetchall()[0][0]
         except sqlite3.ProgrammingError:
             return
     def countNotesDay(self, day):
         start = day.replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
         end = day.replace(hour=23, minute=59, second=59, microsecond=999999).timestamp()
         try:
-            self.c.execute("""SELECT timestamp 
+            self.c.execute("""SELECT COUNT (timestamp) 
                             FROM notes 
                             WHERE timestamp 
                             BETWEEN ? AND ?
                             AND success = 1 """, (start, end))
-            return len(self.c.fetchall())
+            return self.c.fetchall()[0][0]
         except sqlite3.ProgrammingError:
             return
 
