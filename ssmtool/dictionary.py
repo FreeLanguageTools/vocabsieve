@@ -13,14 +13,6 @@ from .forvo import *
 translator = Translator()
 dictdb = LocalDictionary()
 langdata = simplemma.load_data('en')
-tagger = None
-JAPANESE_SUPPORT = False
-try:
-    import MeCab, unidic_lite
-    JAPANESE_SUPPORT = True
-    tagger = MeCab.Tagger("-Owakati")
-except ImportError:
-    pass
 
 
 code = bidict({
@@ -66,31 +58,13 @@ except ValueError:
 def preprocess_clipboard(s: str, lang: str) -> str:
     """
     Pre-process string from clipboard before showing it
+    NOTE: originally intended for parsing JA and ZH, but 
+    that feature has been removed for the time being due
+    to maintainence and dependency concerns.
     """
-    if lang == "ja":
-        return wsplit_ja(s)
-    elif lang == "zh":
-        return wsplit_zh(s)
-    else:
-        return s
-
-def wsplit_ja(sentence: str) -> str:
-    """
-    Split a Japanese sentence into words.
-    If option remove_spaces is true, zero width spaces with be used
-    so that the spaces are not shown in the card.
-    """
-    print("wsplit_ja reached")
-    print("JAPANESE SUPPORT IS", JAPANESE_SUPPORT)
-    if not JAPANESE_SUPPORT:
-        return sentence
-    words = tagger.parse(sentence).split()
-    return " ".join(words)
+    return s
 
     
-def wsplit_zh(sentence: str, remove_spaces: bool) -> str:
-    return sentence
-
 def removeAccents(word):
     #print("Removing accent marks from query ", word)
     ACCENT_MAPPING = {
@@ -118,7 +92,6 @@ def removeAccents(word):
     word = unicodedata.normalize('NFKC', word)
     for old, new in ACCENT_MAPPING.items():
         word = word.replace(old, new)
-    #print("Remaining: ", word)
     return word
 
 def fmt_result(definitions):
@@ -199,6 +172,9 @@ def googletranslate(word, language, gtrans_lang):
 
 def lookupin(word, language, lemmatize=True, dictionary="Wiktionary (English)", gtrans_lang="English"):
     # Remove any punctuation other than a hyphen
+    # language is 
+    if language == 'ru':
+        word = removeAccents(word)
     if lemmatize:
         word = lem_word(word, language)
     dictid = dictionaries.get(dictionary)
