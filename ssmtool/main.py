@@ -331,7 +331,7 @@ class DictionaryWindow(QMainWindow):
         word = re.sub('[«»…()\[\]]*', "", word)
         self.audio_path = None
         self.status(f"L: '{word}' in '{language}', lemma: {short_sign}, from {dictionaries.get(dictname, dictname)}")
-        if self.settings.value("forvo", False):
+        if self.settings.value("forvo", False, type=bool):
             self.audio_path = play_forvo(word, language)
         try:
             item = lookupin(word, language, lemmatize, dictname, gtrans_lang)
