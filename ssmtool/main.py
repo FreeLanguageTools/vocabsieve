@@ -301,6 +301,7 @@ class DictionaryWindow(QMainWindow):
         if is_json(text):
             copyobj = json.loads(text)
             target = copyobj['word']
+            self.previousWord = target
             sentence = preprocess_clipboard(copyobj['sentence'], lang)
             self.setSentence(sentence)
             self.setWord(target)
