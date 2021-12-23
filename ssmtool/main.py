@@ -81,7 +81,8 @@ class DictionaryWindow(QMainWindow):
         self.setFont(font)
 
     def focusInEvent(self, event):
-        self.clipboardChanged(evenWhenFocused=True)
+        if platform.system() == "Darwin":
+            self.clipboardChanged(evenWhenFocused=True)
         super().focusInEvent(event)
 
     def initWidgets(self):
