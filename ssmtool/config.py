@@ -21,11 +21,16 @@ class SettingsDialog(QDialog):
         self.lemmatization = QCheckBox("Use lemmatization (Requires restart to take effect)")
         self.lemmatization.setToolTip("Lemmatization means to get the original form of words."
             + "\nFor example, 'books' will be converted to 'book' during lookup if this option is set.")
+        self.lemfreq = QCheckBox("Lemmatize before looking up frequency")
+        self.lemfreq.setToolTip("Lemmatize words before trying to find them in the frequency list."
+            + "\nUse this for frequency lists displayed on FLT.org, but do not use it "
+            + "\nfor frequency lists from Migaku. ")
         self.target_language = QComboBox()
         self.deck_name = QComboBox()
         self.tags = QLineEdit()
         self.dict_source = QComboBox()
         self.dict_source2 = QComboBox()
+        self.freq_source = QComboBox()
         self.gtrans_lang = QComboBox()
         self.note_type = QComboBox()
         self.sentence_field = QComboBox()
@@ -126,10 +131,12 @@ If you find this tool useful, you can donate to these projects.
         self.gtrans_lang.addItems(code.keys())
         
         self.tab1.layout.addRow(self.lemmatization)
+        self.tab1.layout.addRow(self.lemfreq)
         self.tab1.layout.addRow(self.forvo)
         self.tab1.layout.addRow(QLabel("Target language"), self.target_language)
         self.tab1.layout.addRow(QLabel("Dictionary source 1"), self.dict_source)
         self.tab1.layout.addRow(QLabel("Dictionary source 2"), self.dict_source2)
+        self.tab1.layout.addRow(QLabel("Frequency list"), self.freq_source)
         self.tab1.layout.addRow(QLabel("Google translate: To"), self.gtrans_lang)
         self.tab1.layout.addRow(self.importdict)
 
@@ -163,7 +170,9 @@ If you find this tool useful, you can donate to these projects.
     def setupAutosave(self):
         self.allow_editing.clicked.connect(self.syncSettings)
         self.lemmatization.clicked.connect(self.syncSettings)
+        self.lemfreq.clicked.connect(self.syncSettings)
         self.forvo.clicked.connect(self.syncSettings)
+        self.freq_source.currentTextChanged.connect(self.syncSettings)
         self.dict_source.currentTextChanged.connect(self.syncSettings)
         self.dict_source.currentTextChanged.connect(self.loadDict2Options)
         self.dict_source2.currentTextChanged.connect(self.syncSettings)
@@ -193,15 +202,17 @@ If you find this tool useful, you can donate to these projects.
         self.orientation.currentTextChanged.connect(self.syncSettings)
 
     def loadDictionaries(self):
+        custom_dicts = self.settings.value("custom_dicts", [], type=list)
         self.dict_source.clear()
-        dicts = getDictsForLang(code[self.target_language.currentText()])
+        dicts = getDictsForLang(code[self.target_language.currentText()], custom_dicts)
         self.dict_source.addItems(dicts)
 
     def loadDict2Options(self):
+        custom_dicts = self.settings.value("custom_dicts", [], type=list)
         curtext = self.dict_source2.currentText()
         self.dict_source2.blockSignals(True)
         self.dict_source2.clear()
-        dicts = getDictsForLang(code[self.target_language.currentText()])
+        dicts = getDictsForLang(code[self.target_language.currentText()], custom_dicts)
         self.dict_source2.addItem("Disabled")
         for item in dicts:
             if self.dict_source.currentText() != item:
@@ -211,11 +222,20 @@ If you find this tool useful, you can donate to these projects.
             self.dict_source2.setCurrentText(curtext)
         self.dict_source2.blockSignals(False)
 
+    def loadFreqSources(self):
+        custom_dicts = self.settings.value("custom_dicts", [], type=list)
+        sources = getFreqlistsForLang(code[self.target_language.currentText()], custom_dicts)
+        self.freq_source.clear()
+        self.freq_source.addItem("Disabled")
+        for item in sources:
+            self.freq_source.addItem(item)
+
 
     def loadSettings(self):
         self.forvo.setChecked(self.settings.value("forvo", False, type=bool))
         self.allow_editing.setChecked(self.settings.value("allow_editing", True, type=bool))
         self.lemmatization.setChecked(self.settings.value("lemmatization", True, type=bool))
+        self.lemfreq.setChecked(self.settings.value("lemfreq", False, type=bool))
         self.orientation.setCurrentText(self.settings.value("orientation", "Vertical"))
         self.text_scale.setValue(self.settings.value("text_scale", 100, type=int))
         self.target_language.setCurrentText(self.settings.value("target_language"))
@@ -223,6 +243,8 @@ If you find this tool useful, you can donate to these projects.
         self.dict_source.setCurrentText(self.settings.value("dict_source", "Wiktionary (English)"))
         self.loadDict2Options()
         self.dict_source2.setCurrentText(self.settings.value("dict_source2", "Wiktionary (English)"))
+        self.loadFreqSources()
+        self.freq_source.setCurrentText(self.settings.value("freq_source", "Disabled"))
         self.gtrans_lang.setCurrentText(self.settings.value("gtrans_lang", "English"))
         self.anki_api.setText(self.settings.value("anki_api", "http://localhost:8765"))
         self.tags.setText(self.settings.value("tags", "ssmtool"))
@@ -232,7 +254,7 @@ If you find this tool useful, you can donate to these projects.
         self.port.setValue(self.settings.value("port", 39284, type=int))
 
         try:
-            print("API version is: ", getVersion(api))
+            _ = getVersion(api)
         except Exception as e:
             self.errorNoConnection(e)
             return
@@ -249,10 +271,9 @@ If you find this tool useful, you can donate to these projects.
         self.loadFields()
 
     def loadFields(self):
-        print("loading fields")
         api = self.anki_api.text()
         try:
-            print("API version is: ", getVersion(api))
+            _ = getVersion(api)
         except Exception as e:
             self.errorNoConnection(e)
             return
@@ -322,10 +343,12 @@ If you find this tool useful, you can donate to these projects.
         self.settings.setValue("forvo", self.forvo.isChecked())
         self.settings.setValue("allow_editing", self.allow_editing.isChecked())
         self.settings.setValue("lemmatization", self.lemmatization.isChecked())
+        self.settings.setValue("lemfreq", self.lemfreq.isChecked())
         self.settings.setValue("orientation", self.orientation.currentText())
         self.settings.setValue("target_language", self.target_language.currentText())
         self.settings.setValue("dict_source", self.dict_source.currentText())
         self.settings.setValue("dict_source2", self.dict_source2.currentText())
+        self.settings.setValue("freq_source", self.freq_source.currentText())
         self.settings.setValue("gtrans_lang", self.gtrans_lang.currentText())
         self.settings.setValue("anki_api", self.anki_api.text())
         self.settings.setValue("host", self.host.text())

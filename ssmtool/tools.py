@@ -76,6 +76,8 @@ def dictinfo(path):
             try:
                 d = json.load(f)
                 if type(d) == list:
+                    if type(d[0]) == str:
+                        return {"type": "freq", "basename": basename, "path": path}
                     return {"type": "migaku", "basename": basename, "path": path}
                 elif type(d) == dict:
                     return {"type": "json", "basename": basename, "path": path}
@@ -99,6 +101,13 @@ def dictimport(path, dicttype, lang, name):
             d = {}
             for item in data:
                 d[item['term']] = item['definition']
+            dictdb.importdict(d, lang, name)
+    elif dicttype == "freq":
+        with open(path) as f:
+            data = json.load(f)
+            d = {}
+            for i, word in enumerate(data):
+                d[word] = i+1
             dictdb.importdict(d, lang, name)
     else:
         print("Error:", str(dicttype), "is not supported.")

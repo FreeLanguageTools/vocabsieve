@@ -116,6 +116,11 @@ class DictionaryWindow(QMainWindow):
         self.setStatusBar(self.bar)
         self.stats_label = QLabel()
 
+        self.web_button = QPushButton("Open webpage")
+        self.freq_display = QLCDNumber()
+        self.freq_display.setSegmentStyle(QLCDNumber.Flat)
+        self.freq_display.display(12345)
+
         self.sentence.setReadOnly(not (self.settings.value("allow_editing", True, type=bool)))
         self.definition.setReadOnly(not (self.settings.value("allow_editing", True, type=bool)))
 
@@ -138,7 +143,9 @@ class DictionaryWindow(QMainWindow):
         else:
             self.layout.addWidget(self.lookup_button, 4, 1, 1, 2)
         
-        self.layout.addWidget(QLabel("Definition"), 6, 0, 1, 3)
+        self.layout.addWidget(QLabel("Definition"), 6, 0)
+        self.layout.addWidget(self.freq_display, 6, 1)
+        self.layout.addWidget(self.web_button, 6, 2)
         self.layout.addWidget(self.word, 5, 0, 1, 3)
         if self.settings.value("dict_source2", "Disabled") != "Disabled":
             self.layout.addWidget(self.definition, 7, 0, 2, 3)
@@ -327,11 +334,19 @@ class DictionaryWindow(QMainWindow):
         TL = self.settings.value("target_language", "English") 
         self.prev_states.append(self.getState())
         lemmatize = use_lemmatize and self.settings.value("lemmatization", True, type=bool)
+        lemfreq = self.settings.value("lemfreq", True, type=bool)
         short_sign = "Y" if lemmatize else "N"
         language = code[TL] #This is in two letter code
         gtrans_lang = self.settings.value("gtrans_lang", "English")
         dictname = self.settings.value("dict_source", "Wiktionary (English)")
+        freqname = self.settings.value("freq_source", "Disabled")
         word = re.sub('[«»…()\[\]]*', "", word)
+        if freqname != "Disabled":
+            try:
+                freq = getFreq(word, language, lemfreq, freqname)
+            except TypeError:
+                freq = -1
+            self.freq_display.display(freq)
         self.audio_path = None
         self.status(f"L: '{word}' in '{language}', lemma: {short_sign}, from {dictionaries.get(dictname, dictname)}")
         if self.settings.value("forvo", False, type=bool) and not self.forvo_scraping:
