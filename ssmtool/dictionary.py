@@ -190,12 +190,19 @@ def lookupin(word, language, lemmatize=True, dictionary="Wiktionary (English)", 
     else:
         return {"word": word, "definition": dictdb.define(word, language, dictionary)}
     return item
-    #print(item)
 
-def getDictsForLang(lang: str):
+def getFreq(word, language, lemfreq, dictionary):
+    if lemfreq:
+        word = lem_word(word, language)
+    return int(dictdb.define(word.lower(), language, dictionary))
+
+def getDictsForLang(lang: str, dicts: list):
     "Get the list of dictionaries for a given language"
     results = ["Wiktionary (English)", "Google translate"]
     if lang in gdict_languages:
         results.append("Google dictionary (Monolingual)")
-    results.extend(dictdb.getNamesForLang(lang))
+    results.extend([item['name'] for item in dicts if item['lang'] == lang and item['type'] != "freq"])
     return results
+
+def getFreqlistsForLang(lang: str, dicts: list):
+    return [item['name'] for item in dicts if item['lang'] == lang and item['type'] == "freq"]

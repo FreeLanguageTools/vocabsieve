@@ -5,7 +5,7 @@ from .dictionary import *
 from .tools import *
 from bidict import bidict
 
-supported_dict_formats = bidict({"stardict": "StarDict", "json": "Simple JSON", "migaku": "Migaku Dictionary"})
+supported_dict_formats = bidict({"stardict": "StarDict", "json": "Simple JSON", "migaku": "Migaku Dictionary", "freq": "Frequency list"})
 
 class DictManager(QDialog):
     def __init__(self, parent):
@@ -33,7 +33,7 @@ class DictManager(QDialog):
         self.rebuild.setToolTip("""\
 This will regenerate the database containing dictionary entries.
 This program store all dictionary entries into a single database in order to
-improve performance during lookups. The files be in their original location
+improve performance during lookups. The files must be in their original location
 to be reimported, otherwise this operation will fail.\
         """)
         self.rebuild.clicked.connect(self.rebuildDB)
@@ -92,6 +92,7 @@ to be reimported, otherwise this operation will fail.\
     def closeEvent(self, event):
         self.parent.loadDictionaries()
         self.parent.loadDict2Options()
+        self.parent.loadFreqSources()
         event.accept()
 
     def initTimer(self):
