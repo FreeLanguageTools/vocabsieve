@@ -2,6 +2,7 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
+from PyQt5.Qt import QDesktopServices, QUrl
 from os import path
 import functools
 import platform
@@ -67,6 +68,7 @@ class DictionaryWindow(QMainWindow):
             self.setupWidgetsV()
         else:
             self.setupWidgetsH()
+        self.setupButtons()
         self.startServer()
         self.initTimer()
         self.updateAnkiButtonState()
@@ -119,7 +121,7 @@ class DictionaryWindow(QMainWindow):
         self.web_button = QPushButton("Open webpage")
         self.freq_display = QLCDNumber()
         self.freq_display.setSegmentStyle(QLCDNumber.Flat)
-        self.freq_display.display(12345)
+        self.freq_display.display(0)
 
         self.sentence.setReadOnly(not (self.settings.value("allow_editing", True, type=bool)))
         self.definition.setReadOnly(not (self.settings.value("allow_editing", True, type=bool)))
@@ -163,8 +165,11 @@ class DictionaryWindow(QMainWindow):
         self.layout.addWidget(self.toanki_button, 13, 0, 1, 3)
         self.layout.addWidget(self.config_button, 14, 0, 1, 3)
 
+    def setupButtons(self):
         self.lookup_button.clicked.connect(lambda _: self.lookupClicked(True))
         self.lookup_exact_button.clicked.connect(lambda _: self.lookupClicked(False))
+
+        self.web_button.clicked.connect(self.onWebButton)
 
         self.config_button.clicked.connect(self.configure)
         self.toanki_button.clicked.connect(self.createNote)
@@ -190,6 +195,7 @@ class DictionaryWindow(QMainWindow):
         self.layout.setColumnStretch(4, 5)
 
         self.layout.addWidget(self.label_sentence, 1, 0)
+        self.layout.addWidget(self.freq_display, 1, 1)
         self.layout.addWidget(self.undo_button, 6, 0)
         self.layout.addWidget(self.read_button, 6, 1)
 
@@ -203,6 +209,7 @@ class DictionaryWindow(QMainWindow):
             self.layout.addWidget(self.lookup_button, 1, 4, 2, 1)
         
         self.layout.addWidget(QLabel("Definition"), 1, 3)
+        self.layout.addWidget(self.web_button, 1, 4)
         self.layout.addWidget(self.word, 2, 2, 1, 1)
         if self.settings.value("dict_source2", "Disabled") != "Disabled":
             print(self.settings.value("dict_source2", "Disabled") != "Disabled")
@@ -218,18 +225,6 @@ class DictionaryWindow(QMainWindow):
 
         self.layout.addWidget(self.toanki_button, 6, 3, 1, 1)
         self.layout.addWidget(self.config_button, 6, 4, 1, 1)
-
-        self.lookup_button.clicked.connect(lambda _: self.lookupClicked(True))
-        self.lookup_exact_button.clicked.connect(lambda _: self.lookupClicked(False))
-
-        self.config_button.clicked.connect(self.configure)
-        self.toanki_button.clicked.connect(self.createNote)
-        self.read_button.clicked.connect(lambda _: self.clipboardChanged(True))
-
-        self.sentence.textChanged.connect(self.updateAnkiButtonState)
-        self.undo_button.clicked.connect(self.undo)
-
-        self.bar.addPermanentWidget(self.stats_label)
    
     def updateAnkiButtonState(self, forceDisable=False):
         if self.sentence.toPlainText() == "" or forceDisable:
@@ -259,6 +254,10 @@ class DictionaryWindow(QMainWindow):
         self.previousWord = target
 
         return target
+
+    def onWebButton(self):
+        url = self.settings.value("custom_url").replace("@@@@", self.word.text())
+        QDesktopServices.openUrl(QUrl(url))
 
     def lookupClicked(self, use_lemmatize=True):
         if self.forvo_scraping:
