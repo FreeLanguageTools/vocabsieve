@@ -72,7 +72,7 @@ def dictinfo(path):
     if ext not in [".json", ".ifo"]:
         return "Unsupported format"
     elif ext == ".json":
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             try:
                 d = json.load(f)
                 if type(d) == list:
@@ -92,18 +92,18 @@ def dictimport(path, dicttype, lang, name):
         stardict = Dictionary(os.path.splitext(path)[0])
         dictdb.importdict(dict(stardict), lang, name)
     elif dicttype == "json":
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             data = json.load(f)
             dictdb.importdict(data, lang, name)
     elif dicttype == "migaku":
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             data = json.load(f)
             d = {}
             for item in data:
                 d[item['term']] = item['definition']
             dictdb.importdict(d, lang, name)
     elif dicttype == "freq":
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             data = json.load(f)
             d = {}
             for i, word in enumerate(data):
