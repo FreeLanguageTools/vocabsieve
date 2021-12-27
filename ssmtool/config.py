@@ -40,6 +40,11 @@ class SettingsDialog(QDialog):
         self.pronunciation_field = QComboBox()
         self.forvo = QCheckBox("Play Forvo pronunciation upon word selection")
 
+        self.web_preset = QComboBox()
+        self.custom_url = QLineEdit()
+        self.custom_url.setText("https://example.com/@@@@")
+        self.custom_url.setEnabled(False)
+
         self.orientation = QComboBox()
         self.text_scale = QSlider(Qt.Horizontal)
 
@@ -56,10 +61,7 @@ class SettingsDialog(QDialog):
         self.text_scale_box_layout.addWidget(self.text_scale)
         self.text_scale_box_layout.addWidget(self.text_scale_label)
 
-        self.orientation.addItems([
-            "Vertical", 
-            "Horizontal", 
-            ])
+        self.orientation.addItems(["Vertical", "Horizontal"])
 
         self.anki_api = QLineEdit()
         self.about_sa = QScrollArea()
@@ -128,6 +130,13 @@ If you find this tool useful, you can donate to these projects.
 
     def setupWidgets(self):
         self.target_language.addItems(code.keys())
+        self.web_preset.addItems([
+            "English Wiktionary",
+            "Monolingual Wiktionary",
+            "Reverso Context",
+            "Tatoeba",
+            "Custom (Enter below)"
+            ])
         self.gtrans_lang.addItems(code.keys())
         
         self.tab1.layout.addRow(self.lemmatization)
@@ -138,6 +147,8 @@ If you find this tool useful, you can donate to these projects.
         self.tab1.layout.addRow(QLabel("Dictionary source 2"), self.dict_source2)
         self.tab1.layout.addRow(QLabel("Frequency list"), self.freq_source)
         self.tab1.layout.addRow(QLabel("Google translate: To"), self.gtrans_lang)
+        self.tab1.layout.addRow(QLabel("Web lookup preset"), self.web_preset)
+        self.tab1.layout.addRow(QLabel("Custom URL pattern"), self.custom_url)
         self.tab1.layout.addRow(self.importdict)
 
 
@@ -178,7 +189,13 @@ If you find this tool useful, you can donate to these projects.
         self.dict_source2.currentTextChanged.connect(self.syncSettings)
         self.dict_source2.currentTextChanged.connect(self.warnRestart)
         self.target_language.currentTextChanged.connect(self.loadDictionaries)
+        self.target_language.currentTextChanged.connect(self.loadFreqSources)
+        self.target_language.currentTextChanged.connect(self.loadUrl)
         self.target_language.currentTextChanged.connect(self.syncSettings)
+        self.web_preset.currentTextChanged.connect(self.loadUrl)
+        self.web_preset.currentTextChanged.connect(self.syncSettings)
+        self.custom_url.textChanged.connect(self.syncSettings)
+        self.gtrans_lang.currentTextChanged.connect(self.loadUrl)
         self.gtrans_lang.currentTextChanged.connect(self.syncSettings)
         self.deck_name.currentTextChanged.connect(self.syncSettings)
         self.tags.editingFinished.connect(self.syncSettings)
@@ -230,6 +247,24 @@ If you find this tool useful, you can donate to these projects.
         for item in sources:
             self.freq_source.addItem(item)
 
+    def loadUrl(self):
+        langfull = self.settings.value("target_language", "English")
+        tolangfull = self.settings.value("gtrans_lang", "English")
+        lang = code[langfull]
+        tolang = code[tolangfull]
+        self.presets = bidict({
+            "English Wiktionary": "https://en.wiktionary.org/wiki/@@@@#" + langfull, 
+            "Monolingual Wiktionary": f"https://{lang}.wiktionary.org/wiki/@@@@",
+            "Reverso Context": f"https://context.reverso.net/translation/{langfull.lower()}-{tolangfull.lower()}/@@@@",
+            "Tatoeba": "https://tatoeba.org/en/sentences/search?query=@@@@"
+            })
+
+        if self.web_preset.currentText() == "Custom (Enter below)":
+            self.custom_url.setEnabled(True)
+            self.custom_url.setText(self.settings.value("custom_url"))
+        else:
+            self.custom_url.setEnabled(False)
+            self.custom_url.setText(self.presets[self.web_preset.currentText()])
 
     def loadSettings(self):
         self.forvo.setChecked(self.settings.value("forvo", False, type=bool))
@@ -244,11 +279,14 @@ If you find this tool useful, you can donate to these projects.
         self.loadDict2Options()
         self.dict_source2.setCurrentText(self.settings.value("dict_source2", "Wiktionary (English)"))
         self.loadFreqSources()
+        self.web_preset.setCurrentText(self.settings.value("web_preset", "English Wiktionary"))
+        self.loadUrl()
         self.freq_source.setCurrentText(self.settings.value("freq_source", "Disabled"))
         self.gtrans_lang.setCurrentText(self.settings.value("gtrans_lang", "English"))
         self.anki_api.setText(self.settings.value("anki_api", "http://localhost:8765"))
         self.tags.setText(self.settings.value("tags", "ssmtool"))
         api = self.anki_api.text()
+        self.web_preset.setCurrentText(self.settings.value("web_preset"))
 
         self.host.setText(self.settings.value("host", "127.0.0.1"))
         self.port.setValue(self.settings.value("port", 39284, type=int))
@@ -354,6 +392,8 @@ If you find this tool useful, you can donate to these projects.
         self.settings.setValue("host", self.host.text())
         self.settings.setValue("port", self.port.value())
         self.settings.setValue("text_scale", self.text_scale.value())
+        self.settings.setValue("web_preset", self.web_preset.currentText())
+        self.settings.setValue("custom_url", self.custom_url.text())
         try:
             api = self.anki_api.text()
             getVersion(api)
