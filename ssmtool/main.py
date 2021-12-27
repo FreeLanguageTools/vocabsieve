@@ -266,8 +266,8 @@ class DictionaryWindow(QMainWindow):
         self.updateAnkiButtonState()
         if target == "":
             return
-        result = self.lookup(target, use_lemmatize)
-        self.setState(result)
+        self.lookupSet(target, use_lemmatize)
+
 
     def setState(self, state):
         self.word.setText(state['word'])
@@ -315,15 +315,23 @@ class DictionaryWindow(QMainWindow):
             sentence = preprocess_clipboard(copyobj['sentence'], lang)
             self.setSentence(sentence)
             self.setWord(target)
-            result = self.lookup(target)
-            self.setState(result)
+            self.lookupSet(target)
         elif is_oneword(preprocess_clipboard(text, lang)):
             self.setSentence(word:=preprocess_clipboard(text, lang))
             self.setWord(word)
-            result = self.lookup(text)
-            self.setState(result)
+            self.lookupSet(text)
         else:
             self.setSentence(preprocess_clipboard(text, lang))
+
+    def lookupSet(self, word, use_lemmatize=True):
+        result = self.lookup(word, use_lemmatize)
+        self.setState(result)
+        QCoreApplication.processEvents()
+        self.audio_path = None
+        if self.settings.value("forvo", False, type=bool) and not self.forvo_scraping:
+            self.forvo_scraping = True
+            self.audio_path = play_forvo(word, code[self.settings.value("target_language")])
+            self.forvo_scraping = False
 
     def lookup(self, word, use_lemmatize=True):
         """
@@ -346,12 +354,7 @@ class DictionaryWindow(QMainWindow):
             except TypeError:
                 freq = -1
             self.freq_display.display(freq)
-        self.audio_path = None
         self.status(f"L: '{word}' in '{language}', lemma: {short_sign}, from {dictionaries.get(dictname, dictname)}")
-        if self.settings.value("forvo", False, type=bool) and not self.forvo_scraping:
-            self.forvo_scraping = True
-            self.audio_path = play_forvo(word, language)
-            self.forvo_scraping = False
         try:
             item = lookupin(word, language, lemmatize, dictname, gtrans_lang)
             self.rec.recordLookup(word, item['definition'], TL, lemmatize, dictionaries.get(dictname, dictname), True)
@@ -376,6 +379,7 @@ class DictionaryWindow(QMainWindow):
             self.definition2.clear()
             return item
         return {"word": item['word'], 'definition': item['definition'], 'definition2': item2['definition']}
+        
 
     def createNote(self):
         sentence = self.sentence.toPlainText().replace("\n", "<br>")
