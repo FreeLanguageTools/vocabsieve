@@ -78,19 +78,20 @@ Visit <a href="https://freelanguagetools.org">FreeLanguageTools.org</a> for more
 You can also talk to us on <a href="https://webchat.kde.org/#/room/#flt:midov.pl">Matrix</a>
 or <a href="https://t.me/fltchat">Telegram</a> for support.<br><br>
 
-Simple Sentence Mining (SSM, ssmtool) is free software available under the terms of
-<a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GNU GPLv3</a>.<br><br>
-If you found a bug, or have enhancement ideas, 
-feel free to open an issue on the 
-Github <a href=https://github.com/FreeLanguageTools/ssmtool>repository</a>.<br><br>
+Consult <a href="https://freelanguagetools.org/2021/08/dictionaries-and-frequency-lists-for-ssm/">this link</a> 
+to find compatible dictionaries. <br><br>
 
+Simple Sentence Mining (SSM, ssmtool) is free software available to you under the terms of
+<a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GNU GPLv3</a>.
+If you found a bug, or have enhancement ideas, please open an issue on the 
+Github <a href=https://github.com/FreeLanguageTools/ssmtool>repository</a>.<br><br>
 
 This program is yours to keep. There is no EULA you need to agree to.
 No data is sent to any server other than the configured dictionary APIs.
 Statistics data are stored locally.
 <br><br>
 Credits: <br><a href="https://en.wiktionary.org/wiki/Wiktionary:Main_Page">Wiktionary API</a><br>
-If you find this tool useful, you can donate to these projects.
+If you find this tool useful, you can give it a star on Github and tell others about it. Any suggestions will also be appreciated.
             '''
         )
         self.about.setTextFormat(Qt.RichText)
@@ -103,6 +104,9 @@ If you find this tool useful, you can donate to these projects.
     def dictmanager(self):
         importer = DictManager(self)
         importer.exec()
+        self.loadDictionaries()
+        self.loadDict2Options()
+        self.loadFreqSources()
     
     def initTabs(self):
         self.tabs = QTabWidget()
@@ -220,9 +224,11 @@ If you find this tool useful, you can donate to these projects.
 
     def loadDictionaries(self):
         custom_dicts = self.settings.value("custom_dicts", [], type=list)
+        self.dict_source.blockSignals(True)
         self.dict_source.clear()
         dicts = getDictsForLang(code[self.target_language.currentText()], custom_dicts)
         self.dict_source.addItems(dicts)
+        self.dict_source.blockSignals(False)
 
     def loadDict2Options(self):
         custom_dicts = self.settings.value("custom_dicts", [], type=list)
@@ -242,10 +248,13 @@ If you find this tool useful, you can donate to these projects.
     def loadFreqSources(self):
         custom_dicts = self.settings.value("custom_dicts", [], type=list)
         sources = getFreqlistsForLang(code[self.target_language.currentText()], custom_dicts)
+        self.freq_source.blockSignals(True)
         self.freq_source.clear()
         self.freq_source.addItem("Disabled")
         for item in sources:
             self.freq_source.addItem(item)
+        self.freq_source.setCurrentText(self.settings.value("freq_source", "Disabled"))
+        self.freq_source.blockSignals(False)
 
     def loadUrl(self):
         langfull = self.settings.value("target_language", "English")
@@ -281,7 +290,6 @@ If you find this tool useful, you can donate to these projects.
         self.loadFreqSources()
         self.web_preset.setCurrentText(self.settings.value("web_preset", "English Wiktionary"))
         self.loadUrl()
-        self.freq_source.setCurrentText(self.settings.value("freq_source", "Disabled"))
         self.gtrans_lang.setCurrentText(self.settings.value("gtrans_lang", "English"))
         self.anki_api.setText(self.settings.value("anki_api", "http://localhost:8765"))
         self.tags.setText(self.settings.value("tags", "ssmtool"))
@@ -298,17 +306,22 @@ If you find this tool useful, you can donate to these projects.
             return
 
         decks = getDeckList(api)
+        self.deck_name.blockSignals(True)
         self.deck_name.clear()
         self.deck_name.addItems(decks)
         self.deck_name.setCurrentText(self.settings.value("deck_name"))
+        self.deck_name.blockSignals(False)
 
         note_types = getNoteTypes(api)
+        self.note_type.blockSignals(True)
         self.note_type.clear()
         self.note_type.addItems(note_types)
         self.note_type.setCurrentText(self.settings.value("note_type"))
+        self.note_type.blockSignals(False)
         self.loadFields()
 
     def loadFields(self):
+        print("loading fields")
         api = self.anki_api.text()
         try:
             _ = getVersion(api)
@@ -358,6 +371,7 @@ If you find this tool useful, you can donate to these projects.
         self.sentence_field.setCurrentText(self.settings.value("sentence_field"))
         self.word_field.setCurrentText(self.settings.value("word_field"))
         self.definition_field.setCurrentText(self.settings.value("definition_field"))
+        self.definition2_field.setCurrentText(self.settings.value("definition2_field"))
         self.pronunciation_field.setCurrentText(self.settings.value("pronunciation_field"))
 
         if self.sentence_field.findText(sent) != -1:
@@ -368,8 +382,8 @@ If you find this tool useful, you can donate to these projects.
             self.definition_field.setCurrentText(def1)
         if self.definition2_field.findText(def2) != -1:
             self.definition2_field.setCurrentText(def2)
-        if self.pronunciation_field.findText(def2) != -1:
-            self.pronunciation_field.setCurrentText(def2)
+        if self.pronunciation_field.findText(pron) != -1:
+            self.pronunciation_field.setCurrentText(pron)
         
         self.sentence_field.blockSignals(False)
         self.word_field.blockSignals(False)
@@ -378,6 +392,7 @@ If you find this tool useful, you can donate to these projects.
         self.pronunciation_field.blockSignals(False)
 
     def syncSettings(self):
+        print("syncing")
         self.settings.setValue("forvo", self.forvo.isChecked())
         self.settings.setValue("allow_editing", self.allow_editing.isChecked())
         self.settings.setValue("lemmatization", self.lemmatization.isChecked())
