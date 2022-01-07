@@ -16,10 +16,10 @@ This program monitors your clipboard at all times and when a change is detected,
 For a detailed list of features and language support data, please consult the [page](https://freelanguagetools.org/posts/ssmtool-full-tutorial/) on my blog
 
 ## Tutorials
-[Video tutorial (Basic)](https://www.youtube.com/watch?v=y79_q08Zu8k&pp=sAQA)
-
-[Detailed text tutorial](https://freelanguagetools.org/posts/ssmtool-full-tutorial/)
+[Text tutorial](https://freelanguagetools.org/posts/simple-sentence-mining-ssmtool-full-tutorial/)
 (The text originally on this document has since been moved there.)
+
+[Video tutorial (Basic, a bit outdated)](https://www.youtube.com/watch?v=y79_q08Zu8k&pp=sAQA)
 
 **USERS**: If you want to install it, go to [Releases](https://github.com/FreeLanguageTools/ssmtool/releases/) and from the latest release, download the appropriate file for your operating system. 
 
@@ -33,14 +33,6 @@ Alternatively, you can also install a live version to your python package librar
 
 ## API documentation
 If you want to leverage ssmtool to build your own plugins, you can refer to the [API Documentation](API.md)
-
-## Future plans
-This program is still at an early stage. More features will be added soon.
-
-Current plans include:
-- Chinese word segmentation
-- Auto-selecting the most difficult words
-- Usage graphs
 
 ## Feedback
 You are welcome to report bugs, suggest features/enhancements, or ask for clarifications by opening a GitHub issue.
