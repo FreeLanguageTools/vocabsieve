@@ -13,7 +13,7 @@ This program monitors your clipboard at all times and when a change is detected,
 
 ![Demo](https://imgur.com/rUlVWwe.gif)
 
-For a detailed list of features and language support data, please consult the [page](https://freelanguagetools.org/posts/ssmtool-full-tutorial/) on my blog
+For a detailed list of features and language support data, please consult the [page](https://freelanguagetools.org/posts/simple-sentence-mining-ssmtool-full-tutorial/) on my blog
 
 ## Tutorials
 [Text tutorial](https://freelanguagetools.org/posts/simple-sentence-mining-ssmtool-full-tutorial/)
