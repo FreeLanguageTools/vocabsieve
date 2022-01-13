@@ -480,7 +480,7 @@ class DictionaryWindow(QMainWindow):
             self.thread.started.connect(self.worker.start_api)
             self.worker.note_signal.connect(self.onNoteSignal)
             self.thread.start()
-        except Exception:
+        except:
             self.status("Failed to start server")
     
     def onNoteSignal(self, sentence: str, word: str, definition: str, tags: list):

@@ -62,8 +62,10 @@ class LanguageServer(QObject):
             rec = Record()
             return "\n".join([" ".join([str(i) for i in item]) for item in rec.getAll()][::-1])
 
-
-        self.app.run(debug=False, use_reloader=False, host=self.host, port=self.port)
+        try:
+            self.app.run(debug=False, use_reloader=False, host=self.host, port=self.port)
+        except OSError:
+            return
 
 if __name__ == "__main__":
     server = LanguageServer()
