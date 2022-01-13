@@ -2,6 +2,7 @@ import json
 import urllib.request
 import requests
 import os
+import re
 from bs4 import BeautifulSoup
 from .db import *
 from pystardict import Dictionary
@@ -90,7 +91,10 @@ def dictimport(path, dicttype, lang, name):
     "Import dictionary from file to database"
     if dicttype == "stardict":
         stardict = Dictionary(os.path.splitext(path)[0])
-        dictdb.importdict(dict(stardict), lang, name)
+        newdict = {}
+        for key in stardict.idx.keys():
+            newdict[key] = re.sub('<[^>]*>', '', stardict.dict[key])
+        dictdb.importdict(newdict, lang, name)
     elif dicttype == "json":
         with open(path, encoding="utf-8") as f:
             data = json.load(f)
@@ -116,4 +120,7 @@ def dictimport(path, dicttype, lang, name):
 def dictrebuild(dicts):
     dictdb.purge()
     for item in dicts:
-        dictimport(item['path'], item['type'], item['lang'], item['name'])
+        try:
+            dictimport(item['path'], item['type'], item['lang'], item['name'])
+        except Exception as e:
+            print(e)

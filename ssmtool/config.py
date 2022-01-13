@@ -107,6 +107,7 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.loadDictionaries()
         self.loadDict2Options()
         self.loadFreqSources()
+        self.syncSettings()
     
     def initTabs(self):
         self.tabs = QTabWidget()
