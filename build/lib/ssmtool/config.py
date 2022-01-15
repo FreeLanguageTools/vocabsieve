@@ -17,7 +17,6 @@ class SettingsDialog(QDialog):
         self.setupAutosave()
 
     def initWidgets(self):
-        self.bar = QStatusBar()
         self.allow_editing = QCheckBox("Allow directly editing of text fields")
         self.lemmatization = QCheckBox("Use lemmatization (Requires restart to take effect)")
         self.lemmatization.setToolTip("Lemmatization means to get the original form of words."
@@ -63,21 +62,13 @@ class SettingsDialog(QDialog):
         self.text_scale_box_layout.addWidget(self.text_scale_label)
 
         self.orientation.addItems(["Vertical", "Horizontal"])
+
         self.anki_api = QLineEdit()
         self.about_sa = QScrollArea()
-
-        self.api_enabled = QCheckBox("Enable SSM local API")
-        self.api_host = QLineEdit()
-        self.api_port = QSpinBox()
-        self.api_port.setMinimum(1024)
-        self.api_port.setMaximum(49151)
-
-        self.reader_enabled = QCheckBox("Enable SSM Web Reader")
-        self.reader_host = QLineEdit()
-        self.reader_port = QSpinBox()
-        self.reader_port.setMinimum(1024)
-        self.reader_port.setMaximum(49151)
-
+        self.host = QLineEdit()
+        self.port = QSpinBox()
+        self.port.setMinimum(1024)
+        self.port.setMaximum(49151)
         self.importdict = QPushButton('Manage local dictionaries..')
 
         self.about = QLabel(
@@ -108,7 +99,6 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.about_sa.setWidget(self.about)
         self.about.setWordWrap(True)
         self.about.adjustSize()
-        
         self.importdict.clicked.connect(self.dictmanager)
 
     def dictmanager(self):
@@ -136,11 +126,10 @@ If you find this tool useful, you can give it a star on Github and tell others a
 
         self.layout = QVBoxLayout(self)
         self.layout.addWidget(self.tabs)
-        self.layout.addWidget(self.bar)
 
         self.tabs.addTab(self.tab1, "Dictionary")
         self.tabs.addTab(self.tab2, "Anki")
-        self.tabs.addTab(self.tab3, "Network")
+        self.tabs.addTab(self.tab3, "API")
         self.tabs.addTab(self.tab4, "Interface")
         self.tabs.addTab(self.tab5, "About")
 
@@ -179,12 +168,8 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.tab2.layout.addRow(QLabel('Field name for "Pronunciation"'), self.pronunciation_field)
 
         self.tab3.layout.addRow(QLabel('<i>Most users should not need to change these settings.</i>'))
-        self.tab3.layout.addRow(self.api_enabled)
-        self.tab3.layout.addRow(QLabel("API host"), self.api_host)
-        self.tab3.layout.addRow(QLabel("API port"), self.api_port)
-        self.tab3.layout.addRow(self.reader_enabled)
-        self.tab3.layout.addRow(QLabel("Web reader host"), self.reader_host)
-        self.tab3.layout.addRow(QLabel("Web reader port"), self.reader_port)
+        self.tab3.layout.addRow(QLabel("API host"), self.host)
+        self.tab3.layout.addRow(QLabel("API port"), self.port)
 
         self.tab4.layout.addRow(QLabel("<b>All settings on this tab requires restart to take effect.</b>"))
         self.tab4.layout.addRow(self.allow_editing)
@@ -233,22 +218,10 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.pronunciation_field.currentTextChanged.connect(self.checkCorrectness)
         self.anki_api.editingFinished.connect(self.syncSettings)
         self.anki_api.editingFinished.connect(self.loadSettings)
-        self.api_enabled.clicked.connect(self.setAvailable)
-        self.api_enabled.clicked.connect(self.syncSettings)
-        self.api_host.editingFinished.connect(self.syncSettings)
-        self.api_port.valueChanged.connect(self.syncSettings)
-        self.reader_enabled.clicked.connect(self.setAvailable)
-        self.reader_enabled.clicked.connect(self.syncSettings)
-        self.reader_host.editingFinished.connect(self.syncSettings)
-        self.reader_port.valueChanged.connect(self.syncSettings)
+        self.host.textChanged.connect(self.syncSettings)
+        self.port.valueChanged.connect(self.syncSettings)
         self.text_scale.valueChanged.connect(self.syncSettings)
         self.orientation.currentTextChanged.connect(self.syncSettings)
-
-    def setAvailable(self):
-        self.api_host.setEnabled(self.api_enabled.isChecked())
-        self.api_port.setEnabled(self.api_enabled.isChecked())
-        self.reader_host.setEnabled(self.reader_enabled.isChecked())
-        self.reader_port.setEnabled(self.reader_enabled.isChecked())
 
     def loadDictionaries(self):
         custom_dicts = self.settings.value("custom_dicts", [], type=list)
@@ -324,12 +297,8 @@ If you find this tool useful, you can give it a star on Github and tell others a
         api = self.anki_api.text()
         self.web_preset.setCurrentText(self.settings.value("web_preset"))
 
-        self.api_enabled.setChecked(self.settings.value("api_enabled", True, type=bool))
-        self.api_host.setText(self.settings.value("host", "127.0.0.1"))
-        self.api_port.setValue(self.settings.value("port", 39284, type=int))
-        self.reader_enabled.setChecked(self.settings.value("reader_enabled", True, type=bool))
-        self.reader_host.setText(self.settings.value("reader_host", "127.0.0.1"))
-        self.reader_port.setValue(self.settings.value("reader_port", 39285, type=int))
+        self.host.setText(self.settings.value("host", "127.0.0.1"))
+        self.port.setValue(self.settings.value("port", 39284, type=int))
 
         try:
             _ = getVersion(api)
@@ -353,7 +322,7 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.loadFields()
 
     def loadFields(self):
-        self.status("Loading fields")
+        print("loading fields")
         api = self.anki_api.text()
         try:
             _ = getVersion(api)
@@ -422,10 +391,9 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.definition_field.blockSignals(False)
         self.definition2_field.blockSignals(False)
         self.pronunciation_field.blockSignals(False)
-        self.status("Done")
 
     def syncSettings(self):
-        self.status("Syncing")
+        print("syncing")
         self.settings.setValue("forvo", self.forvo.isChecked())
         self.settings.setValue("allow_editing", self.allow_editing.isChecked())
         self.settings.setValue("lemmatization", self.lemmatization.isChecked())
@@ -437,12 +405,8 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.settings.setValue("freq_source", self.freq_source.currentText())
         self.settings.setValue("gtrans_lang", self.gtrans_lang.currentText())
         self.settings.setValue("anki_api", self.anki_api.text())
-        self.settings.setValue("api_enabled", self.api_enabled.isChecked())
-        self.settings.setValue("host", self.api_host.text())
-        self.settings.setValue("port", self.api_port.value())
-        self.settings.setValue("reader_enabled", self.reader_enabled.isChecked())
-        self.settings.setValue("reader_host", self.reader_host.text())
-        self.settings.setValue("reader_port", self.reader_port.value())
+        self.settings.setValue("host", self.host.text())
+        self.settings.setValue("port", self.port.value())
         self.settings.setValue("text_scale", self.text_scale.value())
         self.settings.setValue("web_preset", self.web_preset.currentText())
         self.settings.setValue("custom_url", self.custom_url.text())
@@ -460,7 +424,6 @@ If you find this tool useful, you can give it a star on Github and tell others a
         except Exception as e:
             pass
         self.settings.sync()
-        self.status("Settings saved")
     
     def errorNoConnection(self, error):
         msg = QMessageBox()
@@ -489,6 +452,3 @@ If you find this tool useful, you can give it a star on Github and tell others a
 
         if len(set(set_fields)) != len(set_fields):
             self.warn("All fields must be set to different note fields.\nYou *will* encounter bugs.")
-
-    def status(self, msg):
-        self.bar.showMessage(self.parent.time() + " " + msg, 4000)

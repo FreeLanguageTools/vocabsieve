@@ -68,7 +68,6 @@ class DictionaryWindow(QMainWindow):
             self.setupWidgetsV()
         else:
             self.setupWidgetsH()
-        self.setupMenu()
         self.setupButtons()
         self.startServer()
         self.initTimer()
@@ -92,7 +91,7 @@ class DictionaryWindow(QMainWindow):
     def initWidgets(self):
         self.namelabel = QLabel("Simple Sentence Mining v" + __version__)
         self.namelabel.setFont(QFont("Sans Serif", QApplication.font().pointSize() * 1.5))
-        self.menu = QMenuBar(self)
+
         self.sentence = MyTextEdit()
         self.sentence.setMinimumHeight(30)
         self.sentence.setMaximumHeight(130)
@@ -180,18 +179,6 @@ class DictionaryWindow(QMainWindow):
         self.undo_button.clicked.connect(self.undo)
 
         self.bar.addPermanentWidget(self.stats_label)
-
-    def setupMenu(self):
-        readermenu = self.menu.addMenu("&Reader")
-        importmenu = self.menu.addMenu("&Import")
-        helpmenu = self.menu.addMenu("&Help")
-        self.open_reader_action = QAction("&Open Web Reader")
-        readermenu.addActions([self.open_reader_action])
-        self.import_csv_action = QAction("Import &CSV file")
-        self.import_kindle_action = QAction("Import &Kindle notes")
-        importmenu.addActions([self.import_csv_action, self.import_kindle_action])
-
-        self.setMenuBar(self.menu)
 
     def setupWidgetsH(self):
         self.layout = QGridLayout(self.widget)

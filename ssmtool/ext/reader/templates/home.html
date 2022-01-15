@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+{% block content %}
+      <div class="block level is-mobile">
+        <div class="level-left">
+          <h1 class="title is-1">Texts</h1>
+        </div>
+        <div class="level-right">
+          <button id="edit" class="button is-primary is-medium is-rounded">Edit</button>
+        </div>
+      </div>
+    {% for text in texts %}
+            <div class="box">
+              <a class="boxlink" href="/read/{{text.id}}">
+                  <div class="title is-3 bookname"><i class="fas fa-book"></i>{{text.title}}</div>
+              </a>
+              <h6 class="subtitle is-6 mb-2">{{"%.2f"|format(text.progress/10000)}}% - {{(text.progress/1000000*text.length)|round|int}}/{{text.length}} words</h6>
+              <progress class="progress is-small mb-0" value="{{text.progress/1000000}}">{{text.progress/10000}}%</progress>
+              <div class="button-box buttons mb-0">
+                <button id="delete-{{text.id}}" class="button is-danger">Delete</button>
+              </div>
+              <script>
+                $("button#delete-{{text.id}}").click(() => {
+                  console.log("deleting item with ID " + {{text.id}})
+                  if(confirm("Are you sure you want to delete {{text.title}}?")){
+                    console.log("deleteing")
+                    $.ajax({
+                      url: "{{ url_for('delete', id=text.id) }}",
+                      type: 'DELETE',
+                      success: ()=>{
+                        window.location.reload();
+                      }
+                    })
+                  }
+                })
+              </script>
+            </div>
+    {% endfor %}
+    <script>
+      $("button#edit").click(() => {
+        $(".button-box").toggle();
+        $(".box").toggleClass("pb-1")
+        $(".box progress.progress").toggleClass("mb-0")
+        $(".box progress.progress").toggleClass("mb-3")
+      })
+    </script>
+{% endblock %}
