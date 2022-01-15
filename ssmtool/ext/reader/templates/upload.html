@@ -1,0 +1,15 @@
+<!doctype html>
+<title>Upload text</title>
+<h2>Upload an ebook</h2>
+<p>Supported formats: .epub .fb2</p>
+<form method=post enctype=multipart/form-data>
+  <input type=file name=file>
+  <input type=submit value=Upload>
+</form>
+<br>
+<h2>Paste text</h2>
+<form id="pastetext" method=post enctype=multipart/form-data>
+    <p>Title</p><input type=text name=title><br>
+    <p>Text</p><textarea form="pastetext" name="text" rows="24" cols="80"></textarea>
+    <input type=submit value=Upload>
+</form>

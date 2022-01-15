@@ -1,0 +1,101 @@
+<html class="has-navbar-fixed-top">
+    <head>
+        <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='bulma.min.css') }}"/>
+        <script src="{{ url_for('static', filename='jquery-3.6.0.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='lodash.min.js') }}"></script>
+        <style>
+            html {
+                background-color: {% block bgcolor %} #add {% endblock %};
+            }
+            .boxlink {
+                display: block;
+            }
+            #master {
+                padding-top: 3%;
+                padding-left: 5%;
+                padding-right: 5%;
+            }
+            .button-box {
+              display: None;
+            }
+            #progress-bar {
+                --scrollAmount: 0%;
+                background-color: #6b7;
+                width: var(--scrollAmount);
+                height: 8px;
+                position: fixed;
+                top: 3.25rem;
+            }
+        </style>
+        <script>
+          function fallbackCopyTextToClipboard(text) {
+              var textArea = document.createElement("textarea");
+              textArea.value = text;
+  
+              // Avoid scrolling to bottom
+              textArea.style.top = "0";
+              textArea.style.left = "0";
+              textArea.style.position = "fixed";
+  
+              document.body.appendChild(textArea);
+              textArea.focus();
+              textArea.select();
+  
+              try {
+                  var successful = document.execCommand('copy');
+                  var msg = successful ? 'successful' : 'unsuccessful';
+                  console.log('Fallback: Copying text command was ' + msg);
+              } catch (err) {
+                  console.error('Fallback: Oops, unable to copy', err);
+              }
+  
+              document.body.removeChild(textArea);
+          }
+          function copyTextToClipboard(text) {
+              if (!navigator.clipboard) {
+                  fallbackCopyTextToClipboard(text);
+                  return;
+              }
+              navigator.clipboard.writeText(text).then(function () {
+                  console.log('Async: Copying to clipboard was successful!');
+              }, function (err) {
+                  console.error('Async: Could not copy text: ', err);
+              });
+          }
+          let scrollToFraction = (frac) => {
+              let docElem = document.documentElement,
+              docBody = document.body,
+              scrollBottom = (docElem['scrollHeight'] || docBody['scrollHeight']) - window.innerHeight;
+              docElem['scrollTop'] = frac * scrollBottom;
+              docBody['scrollTop'] = frac * scrollBottom;
+          }
+  
+      </script>
+    </head>
+  <body>
+    <nav class="navbar is-fixed-top" role="navigation" aria-label="main navigation">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="/">
+          <h5 class="title is-5">SSM Web Reader</h5>
+        </a>
+        {% block navitem %}
+        <a class="navbar-item" href="/upload">Upload text</a>
+        {% endblock %}
+      </div>
+      <div class="navbar-menu">
+      </div>
+    </nav>
+    {% block precontent %} {% endblock %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="notification is-primary">{{message}}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    <div id="master" class="container">
+        {% block content %} {% endblock %}
+    </div>
+    {% block script %} {% endblock %}
+  </body>
+</html>

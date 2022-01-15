@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+{% block bgcolor %}#fff{% endblock %}
+{% block navitem %}
+<script>
+    window.onload = () => {scrollToFraction({{ text.progress/1000000 }})}
+</script>
+<a id="progress-indicator" class="navbar-item" href="/">
+    <p>{{text.progress/10_000}}%</p>
+</a>
+{% endblock %}
+
+{% block precontent %}
+    <div id="progress-bar"></div>
+{% endblock %}
+
+{% block content %}
+<h1 class="title is-1">{{text.title}}</h1>
+{% for paragraph in text.content.split("######")[1:] %}
+<h4 class="title is-4 mb-1">{{paragraph.splitlines()[0]}}</h2>
+    <p>{{"\n".join(paragraph.splitlines()[1:]).replace("\n"," <br>")}}</p>
+{% endfor %}
+{% endblock %}
+
+{% block script %}
+<script>
+    var currentScroll;
+    let getScrollAmount = () => {
+        let docElem = document.documentElement,
+            docBody = document.body,
+            scrollTop = docElem['scrollTop'] || docBody['scrollTop'],
+            scrollBottom = (docElem['scrollHeight'] || docBody['scrollHeight']) - window.innerHeight
+        return scrollTop / scrollBottom
+    }
+    let updateProgress = () => {
+        currentScroll = getScrollAmount()
+        $.post("{{ url_for('update_progress', id=text.id) }}", 
+        {progress: currentScroll * 1_000_000})
+        console.log("Progress set to " + currentScroll * 1_000_000)
+    }
+    debounced_updateProgress = _.debounce(updateProgress, 200)
+    
+    
+    document.addEventListener("scroll", () => {
+        document.getElementById("progress-bar").style.setProperty("--scrollAmount", getScrollAmount() * 100 + "%");
+        $("#progress-indicator").text((getScrollAmount() * 100).toFixed(2) + "%")
+        debounced_updateProgress()
+    });
+
+    window.addEventListener("resize", () => {
+        scrollToFraction(currentScroll);
+        console.log(currentScroll)
+    })
+    $('p').each(function () {
+        $(this).html($(this).text()
+            .split(/(?<=[\.\?!…] )/)
+            .map(v => { return ' <span class="sentence">' + v.trimRight() + '</span> ' }));
+    });
+
+    $('span.sentence').click(obj => {
+        let selection = window.getSelection();
+        selection.modify('extend', 'backward', 'word');
+        let a = selection.toString();
+
+        selection.modify('extend', 'forward', 'word');
+        while (selection.toString().slice(-1) == "-") {
+            selection.modify('extend', 'forward', 'word');
+        }
+        let b = selection.toString();
+
+        selection.modify('move', 'forward', 'character');
+        word = (a + b).replace(/[.,\/#!$%\^&\*;:{}=\_…`~()]/g, "");
+        console.log(word);
+        console.log(obj)
+        copyobj = {
+            "sentence": obj.target.textContent.trim(),
+            "word": word.trim()
+        };
+        console.log(copyobj)
+        copyTextToClipboard(JSON.stringify(copyobj));
+    });
+
+    $("span.sentence").hover(function () {
+        $(this).css("text-decoration", "underline #6b7 solid 3px");
+        $(this).css("text-decoration-skip-ink", "none");
+    },
+        function () {
+            $(this).css("text-decoration", "");
+        });
+</script>
+{% endblock %}
