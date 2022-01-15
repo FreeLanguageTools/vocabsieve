@@ -18,7 +18,7 @@ from .db import *
 from .dictionary import *
 from .api import LanguageServer
 from . import __version__
-
+from .ext.reader import ReaderServer
 
 # If on macOS, display the modifier key as "Cmd", else display it as "Ctrl"
 if platform.system() == "Darwin":
@@ -68,6 +68,7 @@ class DictionaryWindow(QMainWindow):
             self.setupWidgetsV()
         else:
             self.setupWidgetsH()
+        self.setupMenu()
         self.setupButtons()
         self.startServer()
         self.initTimer()
@@ -91,7 +92,7 @@ class DictionaryWindow(QMainWindow):
     def initWidgets(self):
         self.namelabel = QLabel("Simple Sentence Mining v" + __version__)
         self.namelabel.setFont(QFont("Sans Serif", QApplication.font().pointSize() * 1.5))
-
+        self.menu = QMenuBar(self)
         self.sentence = MyTextEdit()
         self.sentence.setMinimumHeight(30)
         self.sentence.setMaximumHeight(130)
@@ -179,6 +180,11 @@ class DictionaryWindow(QMainWindow):
         self.undo_button.clicked.connect(self.undo)
 
         self.bar.addPermanentWidget(self.stats_label)
+
+    def setupMenu(self):
+        self.menu.addMenu("&Reader")
+        self.menu.addMenu("&Import")
+        self.setMenuBar(self.menu)
 
     def setupWidgetsH(self):
         self.layout = QGridLayout(self.widget)
@@ -482,6 +488,12 @@ class DictionaryWindow(QMainWindow):
             self.thread.start()
         except:
             self.status("Failed to start server")
+        self.thread2 = QThread()
+        self.worker2 = ReaderServer(self, '127.0.0.1', 5000)
+        self.worker2.moveToThread(self.thread2)
+        self.thread2.started.connect(self.worker2.start_api)
+        self.thread2.start()
+
     
     def onNoteSignal(self, sentence: str, word: str, definition: str, tags: list):
         self.setSentence(sentence)

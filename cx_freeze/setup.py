@@ -4,10 +4,16 @@ from cx_Freeze import setup, Executable
 
 # Dependencies are automatically detected, but it might need fine tuning.
 # "packages": ["os"] is used as example only
-build_exe_options = {"packages": ["ssmtool", "setuptools", "PyQt5",
+include_files = [('../ssmtool/ext/reader/templates/', 'lib/ssmtool/ext/reader/templates/'),
+                 ('../ssmtool/ext/reader/static/', 'lib/ssmtool/ext/reader/static/')]
+build_exe_options = {"includes": ["ssmtool", "setuptools", "PyQt5",
                                   "bs4", "lxml", "simplemma", "googletrans",
                                   "bidict", "pystardict", "flask", "pymorphy2",
-                                  "pymorphy2_dicts", "playsound"],
+                                  "pymorphy2_dicts", "playsound", "flask_sqlalchemy", 
+                                  "jinja2.ext", "sqlalchemy",
+                                  "sqlite3", "sqlalchemy.sql.default_comparator",
+                                  "sqlalchemy.dialects.sqlite"],
+                     "include_files": include_files,
                      "excludes": ["tkinter"],
                      "include_msvcr": True}
 
