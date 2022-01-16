@@ -186,9 +186,11 @@ class DictionaryWindow(QMainWindow):
         importmenu = self.menu.addMenu("&Import")
         helpmenu = self.menu.addMenu("&Help")
         self.open_reader_action = QAction("&Open Web Reader")
+        self.open_reader_action.triggered.connect(self.onReaderOpen)
         readermenu.addActions([self.open_reader_action])
-        self.import_csv_action = QAction("Import &CSV file")
-        self.import_kindle_action = QAction("Import &Kindle notes")
+        self.import_csv_action = QAction("Import &CSV")
+        
+        self.import_kindle_action = QAction("Import &Kindle")
         importmenu.addActions([self.import_csv_action, self.import_kindle_action])
 
         self.setMenuBar(self.menu)
@@ -270,6 +272,11 @@ class DictionaryWindow(QMainWindow):
 
     def onWebButton(self):
         url = self.settings.value("custom_url").replace("@@@@", self.word.text())
+        QDesktopServices.openUrl(QUrl(url))
+
+    def onReaderOpen(self):
+        url = f"http://{self.settings.value('reader_host', type=str)}:{self.settings.value('reader_port', type=str)}"
+        print(url)
         QDesktopServices.openUrl(QUrl(url))
 
     def lookupClicked(self, use_lemmatize=True):
@@ -484,22 +491,32 @@ class DictionaryWindow(QMainWindow):
         msg.exec()
 
     def startServer(self):
-        try:
-            self.thread = QThread()
-            port = self.settings.value("port", 39284, type=int)
-            host = self.settings.value("host", "127.0.0.1")
-            self.worker = LanguageServer(self, host, port)
-            self.worker.moveToThread(self.thread)
-            self.thread.started.connect(self.worker.start_api)
-            self.worker.note_signal.connect(self.onNoteSignal)
-            self.thread.start()
-        except:
-            self.status("Failed to start server")
-        self.thread2 = QThread()
-        self.worker2 = ReaderServer(self, '127.0.0.1', 5000)
-        self.worker2.moveToThread(self.thread2)
-        self.thread2.started.connect(self.worker2.start_api)
-        self.thread2.start()
+        if self.settings.value("api_enabled", True, type=bool):
+            try:
+                self.thread = QThread()
+                port = self.settings.value("port", 39284, type=int)
+                host = self.settings.value("host", "127.0.0.1")
+                self.worker = LanguageServer(self, host, port)
+                self.worker.moveToThread(self.thread)
+                self.thread.started.connect(self.worker.start_api)
+                self.worker.note_signal.connect(self.onNoteSignal)
+                self.thread.start()
+            except Exception as e:
+                print(e)
+                self.status("Failed to start API server")
+        if self.settings.value("reader_enabled", True, type=bool):
+            try:
+                self.thread2 = QThread()
+                port = self.settings.value("reader_port", 39285, type=int)
+                host = self.settings.value("reader_host", "127.0.0.1")
+                self.worker2 = ReaderServer(self, host, port)
+                self.worker2.moveToThread(self.thread2)
+                self.thread2.started.connect(self.worker2.start_api)
+                self.thread2.start()
+            except Exception as e:
+                print(e)
+                self.status("Failed to start reader server")
+            
 
     
     def onNoteSignal(self, sentence: str, word: str, definition: str, tags: list):
