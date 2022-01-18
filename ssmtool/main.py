@@ -253,17 +253,21 @@ class DictionaryWindow(QMainWindow):
         self.settings_dialog.exec()
 
     def importkindle(self):
-        fdialog = QFileDialog()
-        fdialog.setFileMode(QFileDialog.ExistingFile)
-        fdialog.setAcceptMode(QFileDialog.AcceptOpen)
-        fdialog.setNameFilter("Kindle clippings files (*.txt)")
-        fdialog.exec()
-        if fdialog.selectedFiles() == []:
+        #fdialog = QFileDialog()
+        #fdialog.setFileMode(QFileDialog.ExistingFile)
+        #fdialog.setAcceptMode(QFileDialog.AcceptOpen)
+        #fdialog.setNameFilter("Kindle clippings files (*.txt)")
+        #fdialog.exec()
+        fname = QFileDialog.getOpenFileName(
+            parent=self,
+            caption="Select a file",
+            filter='Kindle clippings files (*.txt)',
+            )[0]
+        if not fname:
             return
         else:
-            fname = fdialog.selectedFiles()[0]
-        self.import_kindle = KindleImporter(self, fname)
-        self.import_kindle.exec()
+            self.import_kindle = KindleImporter(self, fname)
+            self.import_kindle.exec()
 
     def setupShortcuts(self):
         self.shortcut_toanki = QShortcut(QKeySequence('Ctrl+S'), self)

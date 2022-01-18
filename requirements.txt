@@ -8,6 +8,8 @@ pystardict
 bidict
 flask
 flask-sqlalchemy
+mobi
+sentence_splitter
 pymorphy2
 pymorphy2_dicts
 pymorphy2-dicts-ru
