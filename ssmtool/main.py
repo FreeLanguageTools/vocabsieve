@@ -182,12 +182,11 @@ class DictionaryWindow(QMainWindow):
         self.bar.addPermanentWidget(self.stats_label)
 
     def setupMenu(self):
-        readermenu = self.menu.addMenu("&Reader")
+        self.open_reader_action = QAction("&Reader")
+        self.menu.addAction(self.open_reader_action)
         importmenu = self.menu.addMenu("&Import")
         helpmenu = self.menu.addMenu("&Help")
-        self.open_reader_action = QAction("&Open Web Reader")
         self.open_reader_action.triggered.connect(self.onReaderOpen)
-        readermenu.addActions([self.open_reader_action])
         self.import_csv_action = QAction("Import &CSV")
         
         self.import_kindle_action = QAction("Import &Kindle")
@@ -276,7 +275,6 @@ class DictionaryWindow(QMainWindow):
 
     def onReaderOpen(self):
         url = f"http://{self.settings.value('reader_host', type=str)}:{self.settings.value('reader_port', type=str)}"
-        print(url)
         QDesktopServices.openUrl(QUrl(url))
 
     def lookupClicked(self, use_lemmatize=True):
@@ -344,6 +342,11 @@ class DictionaryWindow(QMainWindow):
             self.setSentence(preprocess_clipboard(text, lang))
 
     def lookupSet(self, word, use_lemmatize=True):
+        sentence_text = self.sentence.toPlainText()
+        if self.settings.value("bold_word", type=bool) == True:
+            sentence_text = sentence_text.replace("_","").replace(word, f"__{word}__")
+        self.sentence.setText(sentence_text)
+        QCoreApplication.processEvents()
         result = self.lookup(word, use_lemmatize)
         self.setState(result)
         QCoreApplication.processEvents()
@@ -358,7 +361,7 @@ class DictionaryWindow(QMainWindow):
         Look up a word and return a dict with the lemmatized form (if enabled)
         and definition
         """
-        TL = self.settings.value("target_language", "English") 
+        TL = self.settings.value("target_language", "English")
         self.prev_states.append(self.getState())
         lemmatize = use_lemmatize and self.settings.value("lemmatization", True, type=bool)
         lemfreq = self.settings.value("lemfreq", True, type=bool)
@@ -403,6 +406,8 @@ class DictionaryWindow(QMainWindow):
 
     def createNote(self):
         sentence = self.sentence.toPlainText().replace("\n", "<br>")
+        if self.settings.value("bold_word", type=bool) == True:
+            sentence = re.sub(r"__([ \w]+)__", r"<strong>\1</strong>", sentence)
         if self.settings.value("remove_spaces", type=bool) == True:
             sentence = re.sub("\s", "", sentence)
         tags = (self.settings.value("tags", "ssmtool").strip() + " " + self.tags.text().strip()).split(" ")
