@@ -19,6 +19,7 @@ from .dictionary import *
 from .api import LanguageServer
 from . import __version__
 from .ext.reader import ReaderServer
+from .ext.importer import KindleImporter
 
 # If on macOS, display the modifier key as "Cmd", else display it as "Ctrl"
 if platform.system() == "Darwin":
@@ -190,6 +191,7 @@ class DictionaryWindow(QMainWindow):
         self.import_csv_action = QAction("Import &CSV")
         
         self.import_kindle_action = QAction("Import &Kindle")
+        self.import_kindle_action.triggered.connect(self.importkindle)
         importmenu.addActions([self.import_csv_action, self.import_kindle_action])
 
         self.setMenuBar(self.menu)
@@ -249,6 +251,19 @@ class DictionaryWindow(QMainWindow):
     def configure(self):
         self.settings_dialog = SettingsDialog(self)
         self.settings_dialog.exec()
+
+    def importkindle(self):
+        fdialog = QFileDialog()
+        fdialog.setFileMode(QFileDialog.ExistingFile)
+        fdialog.setAcceptMode(QFileDialog.AcceptOpen)
+        fdialog.setNameFilter("Kindle clippings files (*.txt)")
+        fdialog.exec()
+        if fdialog.selectedFiles() == []:
+            return
+        else:
+            fname = fdialog.selectedFiles()[0]
+        self.import_kindle = KindleImporter(self, fname)
+        self.import_kindle.exec()
 
     def setupShortcuts(self):
         self.shortcut_toanki = QShortcut(QKeySequence('Ctrl+S'), self)
@@ -356,7 +371,7 @@ class DictionaryWindow(QMainWindow):
             self.audio_path = play_forvo(word, code[self.settings.value("target_language")])
             self.forvo_scraping = False
 
-    def lookup(self, word, use_lemmatize=True):
+    def lookup(self, word, use_lemmatize=True, record=True):
         """
         Look up a word and return a dict with the lemmatized form (if enabled)
         and definition
@@ -380,10 +395,12 @@ class DictionaryWindow(QMainWindow):
         self.status(f"L: '{word}' in '{language}', lemma: {short_sign}, from {dictionaries.get(dictname, dictname)}")
         try:
             item = lookupin(word, language, lemmatize, dictname, gtrans_lang)
-            self.rec.recordLookup(word, item['definition'], TL, lemmatize, dictionaries.get(dictname, dictname), True)
+            if record:
+                self.rec.recordLookup(word, item['definition'], TL, lemmatize, dictionaries.get(dictname, dictname), True)
         except Exception as e:
             self.status(str(e))
-            self.rec.recordLookup(word, None, TL, lemmatize, dictionaries.get(dictname, dictname), False)
+            if record:
+                self.rec.recordLookup(word, None, TL, lemmatize, dictionaries.get(dictname, dictname), False)
             self.updateAnkiButtonState(True)
             item = {
                 "word": word,
@@ -398,7 +415,8 @@ class DictionaryWindow(QMainWindow):
             self.rec.recordLookup(word, item['definition'], TL, lemmatize, dictionaries.get(dict2name, dict2name), True)
         except Exception as e:
             self.status("Dict-2 failed" + str(e))
-            self.rec.recordLookup(word, None, TL, lemmatize, dictionaries.get(dict2name, dict2name), False)
+            if record:
+                self.rec.recordLookup(word, None, TL, lemmatize, dictionaries.get(dict2name, dict2name), False)
             self.definition2.clear()
             return item
         return {"word": item['word'], 'definition': item['definition'], 'definition2': item2['definition']}

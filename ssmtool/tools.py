@@ -40,6 +40,10 @@ def addNote(server, content):
     result = invoke('addNote', server, note=content)
     return result
 
+def addNotes(server, content):
+    result = invoke('addNotes', server, notes=content)
+    return result
+
 def getVersion(server):
     result = invoke('version', server)
     return result
