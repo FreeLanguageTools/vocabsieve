@@ -61,7 +61,6 @@ class ReaderServer(QObject):
 
         @app.route("/update/<int:id>", methods=['POST'])
         def update_progress(id):
-            print(request.form)
             if request.form and request.form.get('progress'):
                 # keep values between 0 and 1 million
                 prog = min(int(float(request.form.get('progress'))), 1_000_000)

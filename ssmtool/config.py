@@ -40,6 +40,7 @@ class SettingsDialog(QDialog):
         self.definition2_field = QComboBox()
         self.pronunciation_field = QComboBox()
         self.forvo = QCheckBox("Play Forvo pronunciation upon word selection")
+        self.bold_word = QCheckBox("Bold word in sentence on lookup")
 
         self.web_preset = QComboBox()
         self.custom_url = QLineEdit()
@@ -157,6 +158,7 @@ If you find this tool useful, you can give it a star on Github and tell others a
         
         self.tab1.layout.addRow(self.lemmatization)
         self.tab1.layout.addRow(self.lemfreq)
+        self.tab1.layout.addRow(self.bold_word)
         self.tab1.layout.addRow(self.forvo)
         self.tab1.layout.addRow(QLabel("Target language"), self.target_language)
         self.tab1.layout.addRow(QLabel("Dictionary source 1"), self.dict_source)
@@ -178,7 +180,7 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.tab2.layout.addRow(QLabel('Field name for "Definition#2"'), self.definition2_field)
         self.tab2.layout.addRow(QLabel('Field name for "Pronunciation"'), self.pronunciation_field)
 
-        self.tab3.layout.addRow(QLabel('<i>Most users should not need to change these settings.</i>'))
+        self.tab3.layout.addRow(QLabel('<i>Most users should not need to change these settings.</i><br><b>All settings on this tab requires restart to take effect.</b>'))
         self.tab3.layout.addRow(self.api_enabled)
         self.tab3.layout.addRow(QLabel("API host"), self.api_host)
         self.tab3.layout.addRow(QLabel("API port"), self.api_port)
@@ -203,6 +205,7 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.lemmatization.clicked.connect(self.syncSettings)
         self.lemfreq.clicked.connect(self.syncSettings)
         self.forvo.clicked.connect(self.syncSettings)
+        self.bold_word.clicked.connect(self.syncSettings)
         self.freq_source.currentTextChanged.connect(self.syncSettings)
         self.dict_source.currentTextChanged.connect(self.syncSettings)
         self.dict_source.currentTextChanged.connect(self.loadDict2Options)
@@ -305,6 +308,7 @@ If you find this tool useful, you can give it a star on Github and tell others a
 
     def loadSettings(self):
         self.forvo.setChecked(self.settings.value("forvo", False, type=bool))
+        self.bold_word.setChecked(self.settings.value("bold_word", True, type=bool))
         self.allow_editing.setChecked(self.settings.value("allow_editing", True, type=bool))
         self.lemmatization.setChecked(self.settings.value("lemmatization", True, type=bool))
         self.lemfreq.setChecked(self.settings.value("lemfreq", False, type=bool))
@@ -430,6 +434,7 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.settings.setValue("allow_editing", self.allow_editing.isChecked())
         self.settings.setValue("lemmatization", self.lemmatization.isChecked())
         self.settings.setValue("lemfreq", self.lemfreq.isChecked())
+        self.settings.setValue("bold_word", self.bold_word.isChecked())
         self.settings.setValue("orientation", self.orientation.currentText())
         self.settings.setValue("target_language", self.target_language.currentText())
         self.settings.setValue("dict_source", self.dict_source.currentText())
