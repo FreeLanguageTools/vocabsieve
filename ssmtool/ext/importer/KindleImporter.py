@@ -7,6 +7,7 @@ from pathlib import Path
 from difflib import SequenceMatcher
 from sentence_splitter import split_text_into_sentences
 from ssmtool.tools import addNotes
+from ssmtool.dictionary import code, lookupin
 import time
 
 
@@ -15,21 +16,20 @@ def get_section(bdata: bytes, loc_start, loc_end):
     start = max((loc_start-10)*150, 0)
     end = min((11+loc_end)*150, len(bdata))+1
     return bdata[start:end].decode('utf8', 'ignore')
-def extract_sentence(s: str, word: str):
+def extract_sentence(s: str, word: str, lang: str):
     s = re.sub('<[^>]*>', ' ', s)
     s = re.sub('<.*$', ' ', s)
     s = re.sub('^.*>', ' ', s)
     word = re.sub('[\?\.!«»…,()\[\]]*', "", word)
-    sents = split_text_into_sentences(s, 'es')
+    sents = split_text_into_sentences(s, lang)
     for sent in sents:
         if word in sent:
             return sent
+    return None
 def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
 def get_uniques(l: list):
-    return list(set(l))
-def remove_punctuations(word):
-    return re.sub('[;:\?\.!,«»…()\[\]]*', "", word)
+    return list(set(l) - set([""]))
 
 
 class KindleImporter(QDialog):
@@ -69,6 +69,7 @@ class KindleImporter(QDialog):
             self.comboboxes[-1].addItem("<Ignore>")
             self.layout.addRow(QLabel(title), self.comboboxes[-1])
     def get_sents(self):
+        self.find_context.setEnabled(False)
         locs = self.notes[1::5]
         titles = self.notes[0::5]
         self.highlights = self.notes[3::5]
@@ -79,53 +80,81 @@ class KindleImporter(QDialog):
         ends = list(map(lambda x: int(x.split("|")[0].split()[-1].split("-")[-1]), locs))
         book2file = {}
         for i in range(len(self.comboboxes)):
-            book2file[self.titles[i]] = self.bookfiles[self.comboboxes[i].currentText()]
+            if self.comboboxes[i].currentText() != "<Ignore>":
+                book2file[self.titles[i]] = self.bookfiles[self.comboboxes[i].currentText()]
+            else:
+                book2file[self.titles[i]] = "<Ignore>"
         bdata = {}
         for bookname in book2file.keys():
             print(str(book2file[bookname]))
-            try:
-                tempdir, filepath = mobi.extract(str(book2file[bookname]))
-                with open(filepath) as f:
-                    d = f.read()
-                bdata[bookname] = bytes(d, encoding="utf8")
-            except AttributeError:
+            if book2file[bookname] and book2file[bookname] != "<Ignore>":
+                try:
+
+                    tempdir, filepath = mobi.extract(str(book2file[bookname]))
+                    with open(filepath) as f:
+                        d = f.read()
+                    bdata[bookname] = bytes(d, encoding="utf8")
+                except AttributeError:
+                    bdata[bookname] = bytes("", encoding="utf8")
+                    print(bookname, "failed to read")
+                    continue
+                except mobi.kindleunpack.unpackException as e:
+                    bdata[bookname] = bytes("", encoding="utf8")
+                    print(bookname, "failed to read", e)
+                    continue
+            else:
                 bdata[bookname] = bytes("", encoding="utf8")
-                print(bookname, "failed to read")
-                continue
-            except mobi.kindleunpack.unpackException as e:
-                bdata[bookname] = bytes("", encoding="utf8")
-                print(bookname, "failed to read", e)
-                continue
-        
+        self.sents_count_label = QLabel("0 sentences found")
+        self.lookup_button = QPushButton("Look up")
+        self.lookup_button.setEnabled(False)
+        self.lookup_button.clicked.connect(self.define_words)
+        self.layout.addRow(self.sents_count_label, self.lookup_button)
+        count = 0
         self.sents = []
+
         for i in range(maxlen):
             sec = get_section(bdata[titles[i]], starts[i], ends[i])
-            self.sents.append(extract_sentence(sec, self.highlights[i]))
-        self.lookup_button = QPushButton("Look up")
-        self.lookup_button.clicked.connect(self.define_words)
-        self.layout.addRow(QLabel(str(len([sent for sent in self.sents if sent != None]))+" sentences found"), self.lookup_button)
+            sent = extract_sentence(sec, self.highlights[i], code[self.parent.settings.value("target_language")])
+            if sent:
+                count += 1
+                self.sents_count_label.setText(str(count) + " sentences found")
+                QApplication.processEvents()
+            self.sents.append(sent)
+        self.lookup_button.setEnabled(True)
     
     def define_words(self):
+        self.lookup_button.setEnabled(False)
         self.words = []
         self.definitions = []
         self.definition2s = []
-        start = time.time()
-        for word in self.highlights:
-            print(remove_punctuations(word))
-            item = self.parent.lookup(remove_punctuations(word), record=False)
-            if not item['definition'].startswith("<b>Definition for"):
-                self.words.append(item['word'])
-                self.definitions.append(item['definition'])
-            else:
-                self.words.append(word)
-                self.definitions.append("")
-            self.definition2s.append(item.get('definition2', ""))
+        self.definition_count_label = QLabel("0 definitions found")
         self.anki_button = QPushButton("Add notes to Anki")
+        self.anki_button.setEnabled(False)
         self.anki_button.clicked.connect(self.to_anki)
-        self.layout.addRow(QLabel(str(len([item for item in self.definitions if item != ""]))+" definitions found"),
-            self.anki_button)
-        end = time.time()
-        print(end - start)
+        self.layout.addRow(self.definition_count_label, self.anki_button)
+
+        count = 0
+        for i in range(len(self.highlights)):
+            word = self.highlights[i]
+            if self.sents[i]:
+                item = self.parent.lookup(word, record=False)
+                if not item['definition'].startswith("<b>Definition for"):
+                    count += 1
+                    self.words.append(item['word'])
+                    self.definitions.append(item['definition'])
+                    self.definition_count_label.setText(str(count) + " definitions found")
+                    QApplication.processEvents()
+                else:
+                    self.words.append(word)
+                    self.definitions.append("")
+                self.definition2s.append(item.get('definition2', ""))
+            else: 
+                self.definitions.append("")
+                self.words.append("")
+                self.definition2s.append("")
+        
+        self.anki_button.setEnabled(True)
+
     
     def to_anki(self):
         notes = []
@@ -150,9 +179,8 @@ class KindleImporter(QDialog):
                     except Exception as e:
                         return
                 notes.append(content)
-        print(notes)
-        print(len(notes))
-        addNotes(self.parent.settings.value("anki_api"), notes)
+        res = addNotes(self.parent.settings.value("anki_api"), notes)
+        self.layout.addRow(QLabel(str(len(notes)) + " notes have been exported, of which " + str(len([i for i in res if i]))+ " were successfully added to your collection."))
         
 
 
