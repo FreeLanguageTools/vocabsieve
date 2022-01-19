@@ -7,6 +7,9 @@ from pathlib import Path
 from difflib import SequenceMatcher
 from sentence_splitter import split_text_into_sentences
 from ssmtool.tools import addNotes
+import time
+
+
 
 def get_section(bdata: bytes, loc_start, loc_end):
     start = max((loc_start-10)*150, 0)
@@ -106,6 +109,7 @@ class KindleImporter(QDialog):
         self.words = []
         self.definitions = []
         self.definition2s = []
+        start = time.time()
         for word in self.highlights:
             print(remove_punctuations(word))
             item = self.parent.lookup(remove_punctuations(word), record=False)
@@ -120,29 +124,32 @@ class KindleImporter(QDialog):
         self.anki_button.clicked.connect(self.to_anki)
         self.layout.addRow(QLabel(str(len([item for item in self.definitions if item != ""]))+" definitions found"),
             self.anki_button)
+        end = time.time()
+        print(end - start)
     
     def to_anki(self):
         notes = []
         for word, sentence, definition, definition2 in zip(self.words, self.sents, self.definitions, self.definition2s):
-            tags = self.parent.settings.value("tags", "ssmtool").strip() + " kindle"
-            content = {
-                "deckName": self.parent.settings.value("deck_name"),
-                "modelName": self.parent.settings.value("note_type"),
-                "fields": {
-                    self.parent.settings.value("sentence_field"): sentence,
-                    self.parent.settings.value("word_field"): word,
-                },
-                "tags": tags.split(" ")
-            }
-            definition = definition.replace("\n", "<br>")
-            content['fields'][self.parent.settings.value('definition_field')] = definition
-            if self.settings.value("dict_source2", "Disabled") != 'Disabled':
-                try:
-                    definition2 = definition2.replace("\n", "<br>")
-                    content['fields'][self.parent.settings.value('definition2_field')] = definition2
-                except Exception as e:
-                    return
-            notes.append(content)
+            if word and sentence and definition:
+                tags = self.parent.settings.value("tags", "ssmtool").strip() + " kindle"
+                content = {
+                    "deckName": self.parent.settings.value("deck_name"),
+                    "modelName": self.parent.settings.value("note_type"),
+                    "fields": {
+                        self.parent.settings.value("sentence_field"): sentence,
+                        self.parent.settings.value("word_field"): word,
+                    },
+                    "tags": tags.split(" ")
+                }
+                definition = definition.replace("\n", "<br>")
+                content['fields'][self.parent.settings.value('definition_field')] = definition
+                if self.settings.value("dict_source2", "Disabled") != 'Disabled':
+                    try:
+                        definition2 = definition2.replace("\n", "<br>")
+                        content['fields'][self.parent.settings.value('definition2_field')] = definition2
+                    except Exception as e:
+                        return
+                notes.append(content)
         print(notes)
         print(len(notes))
         addNotes(self.parent.settings.value("anki_api"), notes)

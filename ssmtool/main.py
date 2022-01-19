@@ -389,23 +389,24 @@ class DictionaryWindow(QMainWindow):
         gtrans_lang = self.settings.value("gtrans_lang", "English")
         dictname = self.settings.value("dict_source", "Wiktionary (English)")
         freqname = self.settings.value("freq_source", "Disabled")
-        word = re.sub('[«»…()\[\]]*', "", word)
+        word = re.sub('[«»…,()\[\]]*', "", word)
         if freqname != "Disabled":
             try:
                 freq = getFreq(word, language, lemfreq, freqname)
             except TypeError:
                 freq = -1
             self.freq_display.display(freq)
-        self.status(f"L: '{word}' in '{language}', lemma: {short_sign}, from {dictionaries.get(dictname, dictname)}")
+        if record:
+            self.status(f"L: '{word}' in '{language}', lemma: {short_sign}, from {dictionaries.get(dictname, dictname)}")
         try:
             item = lookupin(word, language, lemmatize, dictname, gtrans_lang)
             if record:
                 self.rec.recordLookup(word, item['definition'], TL, lemmatize, dictionaries.get(dictname, dictname), True)
         except Exception as e:
-            self.status(str(e))
             if record:
+                self.status(str(e))
                 self.rec.recordLookup(word, None, TL, lemmatize, dictionaries.get(dictname, dictname), False)
-            self.updateAnkiButtonState(True)
+                self.updateAnkiButtonState(True)
             item = {
                 "word": word,
                 "definition": failed_lookup(word, self.settings)
@@ -416,7 +417,8 @@ class DictionaryWindow(QMainWindow):
             return item
         try:
             item2 = lookupin(word, language, lemmatize, dict2name, gtrans_lang)
-            self.rec.recordLookup(word, item['definition'], TL, lemmatize, dictionaries.get(dict2name, dict2name), True)
+            if record:
+                self.rec.recordLookup(word, item['definition'], TL, lemmatize, dictionaries.get(dict2name, dict2name), True)
         except Exception as e:
             self.status("Dict-2 failed" + str(e))
             if record:
