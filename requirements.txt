@@ -8,6 +8,8 @@ pystardict
 bidict
 flask
 flask-sqlalchemy
+charset-normalizer
+slpp
 mobi
 sentence_splitter
 pymorphy2
