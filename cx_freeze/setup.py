@@ -12,15 +12,15 @@ build_exe_options = {"includes": ["ssmtool", "setuptools", "PyQt5",
                                   "pymorphy2_dicts", "playsound", "flask_sqlalchemy", 
                                   "jinja2.ext", "sqlalchemy",
                                   "sqlite3", "sqlalchemy.sql.default_comparator",
-                                  "sqlalchemy.dialects.sqlite"],
+                                  "sqlalchemy.dialects.sqlite", "charset-normalizer", "slpp"],
                      "include_files": include_files,
                      "excludes": ["tkinter"],
                      "include_msvcr": True}
 
 # base="Win32GUI" should be used only for Windows GUI app
 base = None
-#if sys.platform == "win32":
-#    base = "Win32GUI"
+if sys.platform == "win32":
+    base = "Win32GUI"
 
 setup(
     name = "ssmtool",
