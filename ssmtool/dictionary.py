@@ -181,7 +181,6 @@ def lookupin(word, language, lemmatize=True, dictionary="Wiktionary (English)", 
     if dictid == "wikt-en":
         item = wiktionary(word, language, lemmatize)
         item['definition'] = fmt_result(item['definition'])
-        #print(item)
     elif dictid == "gdict":
         item = googledict(word, language, lemmatize)
         item['definition'] = fmt_result(item['definition'])
