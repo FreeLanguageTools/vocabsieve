@@ -12,7 +12,7 @@ build_exe_options = {"includes": ["ssmtool", "setuptools", "PyQt5",
                                   "pymorphy2_dicts", "playsound", "flask_sqlalchemy", 
                                   "jinja2.ext", "sqlalchemy",
                                   "sqlite3", "sqlalchemy.sql.default_comparator",
-                                  "sqlalchemy.dialects.sqlite", "charset-normalizer", "slpp"],
+                                  "sqlalchemy.dialects.sqlite", "charset_normalizer", "slpp"],
                      "include_files": include_files,
                      "excludes": ["tkinter"],
                      "include_msvcr": True}
