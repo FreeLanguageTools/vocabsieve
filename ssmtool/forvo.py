@@ -60,7 +60,7 @@ def dl_file(url, fname):
 def play_forvo(word, lang):
     file = path.join(datapath, "forvo", f"{lang}_{word}.mp3")
     try:
-        playsound(file)
+        playsound(file, False)
         return file
     except PlaysoundException:
         try:
