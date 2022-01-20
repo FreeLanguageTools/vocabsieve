@@ -9,14 +9,20 @@
 
 Simple Sentence Mining (`ssmtool`) is a program for sentence mining, in which sentences with target vocabulary words are collected and added into a spaced repetition system (SRS) for language learning.
 
-This program monitors your clipboard at all times and when a change is detected, the contents gets copied onto the "Sentence" field. From there, you can double click any word, and the program will send a query to Wiktionary, and display the result on the "Definition" field, while simultaneously filling in the "word" field for you. You may also double click from words in the "Definition" field to get definition, because Wiktionary sometimes simply lists the base forms of inflected words.
-
 ![Demo](https://imgur.com/rUlVWwe.gif)
 
-For a detailed list of features and language support data, please consult the [page](https://freelanguagetools.org/posts/simple-sentence-mining-ssmtool-full-tutorial/) on my blog
+## Features
+- Double-click lookups from sentences and even faster lookups from integrated applications
+- Lemmatization of words on lookup
+- Online and local dictionaries in multiple formats
+- Frequency lists and pronunciations
+- Web reader (epub, fb2, plaintext) allowing one-click lookup
+- Kindle highlights to Anki sentence cards (KOReader support is planned too)
+
+For a detailed list of features and language support data, please consult the [blog post](https://freelanguagetools.org/2021/07/simple-sentence-mining-ssmtool-full-tutorial/) on my blog
 
 ## Tutorials
-[Text tutorial](https://freelanguagetools.org/posts/simple-sentence-mining-ssmtool-full-tutorial/)
+[Text tutorial](https://freelanguagetools.org/2021/07/simple-sentence-mining-ssmtool-full-tutorial/)
 (The text originally on this document has since been moved there.)
 
 [Video tutorial (Basic, a bit outdated)](https://www.youtube.com/watch?v=y79_q08Zu8k&pp=sAQA)
@@ -38,9 +44,7 @@ If you want to leverage ssmtool to build your own plugins, you can refer to the 
 You are welcome to report bugs, suggest features/enhancements, or ask for clarifications by opening a GitHub issue.
 
 ## Credits
-All the definitions provided by the program come from the English Wiktionary, without which this program would never have been created.
-
-Google dictionary API comes from [here](https://dictionaryapi.dev/).
+The definitions provided by the program by default come from English Wiktionary, without which this program would never have been created.
 
 Support for Google Translate without the use of an API key comes from the [py-googletrans project](https://github.com/ssut/py-googletrans)
 
