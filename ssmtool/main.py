@@ -185,16 +185,27 @@ class DictionaryWindow(QMainWindow):
     def setupMenu(self):
         self.open_reader_action = QAction("&Reader")
         self.menu.addAction(self.open_reader_action)
+        if not self.settings.value("reader_enabled", True, type=bool):
+            self.open_reader_action.setEnabled(False)
         importmenu = self.menu.addMenu("&Import")
-        helpmenu = self.menu.addMenu("&Help")
-        self.open_reader_action.triggered.connect(self.onReaderOpen)
-        self.import_csv_action = QAction("Import &CSV")
-        
+        self.help_action = QAction("Help")
+        self.menu.addAction(self.help_action)
+    
+        self.import_koreader_action = QAction("Import K&OReader")
+        self.import_koreader_action.setEnabled(False)
         self.import_kindle_action = QAction("Import &Kindle")
+
+        self.help_action.triggered.connect(self.onHelp)
+        self.open_reader_action.triggered.connect(self.onReaderOpen)
         self.import_kindle_action.triggered.connect(self.importkindle)
-        importmenu.addActions([self.import_csv_action, self.import_kindle_action])
+        
+        importmenu.addActions([self.import_koreader_action, self.import_kindle_action])
 
         self.setMenuBar(self.menu)
+
+    def onHelp(self):
+        url = f"https://freelanguagetools.org/2021/07/simple-sentence-mining-ssmtool-full-tutorial/"
+        QDesktopServices.openUrl(QUrl(url))
 
     def setupWidgetsH(self):
         self.layout = QGridLayout(self.widget)
