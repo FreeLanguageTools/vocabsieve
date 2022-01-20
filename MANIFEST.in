@@ -2,3 +2,4 @@ graft ssmtool/
 prune ssmtool/__pycache__/
 prune ssmtool/ext/__pycache__/
 prune ssmtool/ext/reader/__pycache__/
+prune ssmtool/ext/importer/__pycache__/

@@ -41,6 +41,10 @@ class SettingsDialog(QDialog):
         self.pronunciation_field = QComboBox()
         self.forvo = QCheckBox("Play Forvo pronunciation upon word selection")
         self.bold_word = QCheckBox("Bold word in sentence on lookup")
+        self.note_type_url = QLabel("For a suitable note type, \
+            download <a href=\"https://freelanguagetools.org/sample.apkg\">this file</a> \
+                and import it to your Anki collection.")
+        self.note_type_url.setOpenExternalLinks(True)
 
         self.web_preset = QComboBox()
         self.custom_url = QLineEdit()
@@ -179,6 +183,7 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.tab2.layout.addRow(QLabel('Field name for "Definition"'), self.definition_field)
         self.tab2.layout.addRow(QLabel('Field name for "Definition#2"'), self.definition2_field)
         self.tab2.layout.addRow(QLabel('Field name for "Pronunciation"'), self.pronunciation_field)
+        self.tab2.layout.addRow(self.note_type_url)
 
         self.tab3.layout.addRow(QLabel('<i>Most users should not need to change these settings.</i><br><b>All settings on this tab requires restart to take effect.</b>'))
         self.tab3.layout.addRow(self.api_enabled)
