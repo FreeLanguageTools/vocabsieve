@@ -41,7 +41,7 @@ class KindleImporter(QDialog):
         self.resize(700, 500)
         self.layout = QFormLayout(self)
         self.layout.addRow(QLabel("<strong>Select the correct book files for each title:</strong><br>"))
-        with open(fpath, mode='r') as f:
+        with open(fpath, mode='r', encoding="utf-8-sig") as f:
             self.notes = f.read()
             self.notes = self.notes.replace(u"\ufeff","")
             self.notes = self.notes.splitlines()
@@ -91,9 +91,9 @@ class KindleImporter(QDialog):
                 try:
 
                     tempdir, filepath = mobi.extract(str(book2file[bookname]))
-                    with open(filepath) as f:
+                    with open(filepath, "rb") as f:
                         d = f.read()
-                    bdata[bookname] = bytes(d, encoding="utf8")
+                    bdata[bookname] = d
                 except AttributeError:
                     bdata[bookname] = bytes("", encoding="utf8")
                     print(bookname, "failed to read")
