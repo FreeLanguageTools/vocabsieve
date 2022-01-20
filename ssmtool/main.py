@@ -82,7 +82,7 @@ class DictionaryWindow(QMainWindow):
 
     def scaleFont(self):
         font = QApplication.font()
-        font.setPointSize(font.pointSize() * self.settings.value("text_scale", type=int)/100)
+        font.setPointSize(int(font.pointSize() * self.settings.value("text_scale", type=int)/100))
         self.setFont(font)
 
     def focusInEvent(self, event):
@@ -92,7 +92,7 @@ class DictionaryWindow(QMainWindow):
 
     def initWidgets(self):
         self.namelabel = QLabel("Simple Sentence Mining v" + __version__)
-        self.namelabel.setFont(QFont("Sans Serif", QApplication.font().pointSize() * 1.5))
+        self.namelabel.setFont(QFont("Sans Serif", int(QApplication.font().pointSize() * 1.5)))
         self.menu = QMenuBar(self)
         self.sentence = MyTextEdit()
         self.sentence.setMinimumHeight(30)
