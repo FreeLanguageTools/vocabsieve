@@ -352,7 +352,7 @@ class DictionaryWindow(QMainWindow):
         """
         text = QApplication.clipboard().text()
         remove_spaces = self.settings.value("remove_spaces")
-        lang = code[self.settings.value("target_language")]
+        lang = code[self.settings.value("target_language", "English")]
         if self.isActiveWindow() and not evenWhenFocused:
             return
         if is_json(text):
