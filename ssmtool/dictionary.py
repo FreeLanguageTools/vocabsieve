@@ -198,8 +198,8 @@ def getFreq(word, language, lemfreq, dictionary):
 def getDictsForLang(lang: str, dicts: list):
     "Get the list of dictionaries for a given language"
     results = ["Wiktionary (English)", "Google translate"]
-    if lang in gdict_languages:
-        results.append("Google dictionary (Monolingual)")
+    #if lang in gdict_languages:
+    #    results.append("Google dictionary (Monolingual)")
     results.extend([item['name'] for item in dicts if item['lang'] == lang and item['type'] != "freq"])
     return results
 
