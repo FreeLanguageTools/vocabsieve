@@ -12,7 +12,6 @@ import re
 QCoreApplication.setApplicationName("ssmtool")
 QCoreApplication.setOrganizationName("FreeLanguageTools")
 from .config import *
-from .forvo import *
 from .tools import *
 from .db import *
 from .dictionary import *
@@ -21,7 +20,9 @@ from . import __version__
 from .ext.reader import ReaderServer
 from .ext.importer import KindleImporter
 
-# If on macOS, display the modifier key as "Cmd", else display it as "Ctrl"
+# If on macOS, display the modifier key as "Cmd", else display it as "Ctrl".
+# For whatever reason, Qt automatically uses Cmd key when Ctrl is specified on Mac
+# so there is no need to change the keybind, only the display text
 if platform.system() == "Darwin":
     MOD = "Cmd"
 else:
@@ -63,7 +64,6 @@ class DictionaryWindow(QMainWindow):
         self.previousWord = ""
         self.audio_path = ""
         self.scaleFont()
-        self.forvo_scraping = ""
         self.initWidgets()
         if self.settings.value("orientation", "Vertical") == "Vertical":
             self.setupWidgetsV()
@@ -110,10 +110,10 @@ class DictionaryWindow(QMainWindow):
         self.label_sentence = QLabel("Sentence")
         self.label_sentence.setToolTip("You can look up any word in this box by double clicking it, or alternatively by selecting it, then press \"Get definition\".")
 
-        self.lookup_button = QPushButton(f"Define ({MOD}-D)")
+        self.lookup_button = QPushButton(f"Define [{MOD}-D]")
         self.lookup_exact_button = QPushButton("Define (Direct)")
         self.lookup_exact_button.setToolTip("This will look up the word without lemmatization.")
-        self.toanki_button = QPushButton(f"Add note ({MOD}-S)")
+        self.toanki_button = QPushButton(f"Add note [{MOD}-S]")
 
         self.undo_button = QPushButton("Undo")
         self.config_button = QPushButton("Configure..")
@@ -247,7 +247,6 @@ class DictionaryWindow(QMainWindow):
         self.layout.addWidget(self.web_button, 1, 4)
         self.layout.addWidget(self.word, 2, 2, 1, 1)
         if self.settings.value("dict_source2", "Disabled") != "Disabled":
-            print(self.settings.value("dict_source2", "Disabled") != "Disabled")
             self.layout.addWidget(self.definition, 2, 3, 2, 2)
             self.layout.addWidget(self.definition2, 4, 3, 2, 2)
         else:
@@ -316,8 +315,6 @@ class DictionaryWindow(QMainWindow):
         QDesktopServices.openUrl(QUrl(url))
 
     def lookupClicked(self, use_lemmatize=True):
-        if self.forvo_scraping:
-            return
         target = self.getCurrentWord()
         self.updateAnkiButtonState()
         if target == "":
@@ -389,10 +386,8 @@ class DictionaryWindow(QMainWindow):
         self.setState(result)
         QCoreApplication.processEvents()
         self.audio_path = None
-        if self.settings.value("forvo", False, type=bool) and not self.forvo_scraping:
-            self.forvo_scraping = True
-            self.audio_path = play_forvo(word, code[self.settings.value("target_language")])
-            self.forvo_scraping = False
+        if self.settings.value("audio_dict", "Disabled") != "Disabled":
+            self.audio_path = getAudio(word, code[self.settings.value("target_language")], dictionary=self.settings.value("audio_dict"))
 
     def lookup(self, word, use_lemmatize=True, record=True):
         """
@@ -418,7 +413,7 @@ class DictionaryWindow(QMainWindow):
         if record:
             self.status(f"L: '{word}' in '{language}', lemma: {short_sign}, from {dictionaries.get(dictname, dictname)}")
         try:
-            item = lookupin(word, language, lemmatize, dictname, gtrans_lang)
+            item = lookupin(word, language, lemmatize, dictname, gtrans_lang, self.settings.value("gtrans_api"))
             if record:
                 self.rec.recordLookup(word, item['definition'], TL, lemmatize, dictionaries.get(dictname, dictname), True)
         except Exception as e:

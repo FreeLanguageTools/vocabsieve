@@ -1,16 +1,14 @@
 import json
-import urllib.request
 import unicodedata
 import simplemma
 import re
-from googletrans import Translator
 import requests
+from urllib.parse import quote
 from bs4 import BeautifulSoup
 from bidict import bidict
 import pymorphy2
 from .db import *
 from .forvo import *
-translator = Translator()
 dictdb = LocalDictionary()
 langdata = simplemma.load_data('en')
 
@@ -42,10 +40,10 @@ gdict_languages = ['en', 'hi', 'es', 'fr', 'ja', 'ru', 'de', 'it', 'ko', 'ar', '
 simplemma_languages = ['bg', 'ca', 'cy', 'da', 'de', 'en', 'es', 'et', 'fa', 'fi', 'fr',
                        'ga', 'gd', 'gl', 'gv', 'hu', 'id', 'it', 'ka', 'la', 'lb', 'lt',
                        'lv', 'nl', 'pt', 'ro', 'ru', 'sk', 'sl', 'sv', 'tr', 'uk', 'ur']
-dictionaries = {"Wiktionary (English)": "wikt-en",
+dictionaries = bidict({"Wiktionary (English)": "wikt-en",
                 "Google dictionary (Monolingual)": "gdict",
-                "Google translate": "gtrans"}
-
+                "Google Translate": "gtrans"})
+pronunciation_sources = ["Forvo"]
 
 
 try:
@@ -165,14 +163,24 @@ def googledict(word, language, lemmatize=True):
         definitions.append(meaning_item)
     return {"word": word, "definition": definitions}
 
-def googletranslate(word, language, gtrans_lang):
+def googletranslate(word, language, gtrans_lang, gtrans_api):
     "Google translation, through the googletrans python library"
-    return {"word": word, "definition": translator.translate(word, src=language, dest=gtrans_lang).text}
+    url = f"{gtrans_api}/api/v1/{language}/{gtrans_lang}/{quote(word)}"
+    res = requests.get(url)
+    if res.status_code == 200:
+        return {"word": word, "definition": res.json()['translation']}
+    else:
+        return
 
+def getAudio(word, language, dictionary="Forvo"):
+    if dictionary == "Forvo":
+        return play_forvo(word, language)
+    return
 
-def lookupin(word, language, lemmatize=True, dictionary="Wiktionary (English)", gtrans_lang="English"):
+def lookupin(word, language, lemmatize=True, dictionary="Wiktionary (English)", gtrans_lang="English", gtrans_api="https://lingva.ml"):
     # Remove any punctuation other than a hyphen
-    # language is 
+    # @language is code
+    gtrans_lang = code[gtrans_lang]
     if language == 'ru':
         word = removeAccents(word)
     if lemmatize:
@@ -185,7 +193,7 @@ def lookupin(word, language, lemmatize=True, dictionary="Wiktionary (English)", 
         item = googledict(word, language, lemmatize)
         item['definition'] = fmt_result(item['definition'])
     elif dictid == "gtrans":
-        return googletranslate(word, language, gtrans_lang)
+        return googletranslate(word, language, gtrans_lang, gtrans_api)
     else:
         return {"word": word, "definition": dictdb.define(word, language, dictionary)}
     return item
@@ -195,12 +203,20 @@ def getFreq(word, language, lemfreq, dictionary):
         word = lem_word(word, language)
     return int(dictdb.define(word.lower(), language, dictionary))
 
+
 def getDictsForLang(lang: str, dicts: list):
     "Get the list of dictionaries for a given language"
-    results = ["Wiktionary (English)", "Google translate"]
+    results = ["Wiktionary (English)", "Google Translate"] # These are for all the languages
     #if lang in gdict_languages:
     #    results.append("Google dictionary (Monolingual)")
-    results.extend([item['name'] for item in dicts if item['lang'] == lang and item['type'] != "freq"])
+    results.extend([item['name'] for item in dicts if item['lang'] == lang and item['type'] != "freq" and item['type'] != 'audio'])
+    return results
+
+def getAudioDictsForLang(lang: str, dicts: list):
+    "Get the list of audio dictionaries for a given language"
+    results = ["Disabled"]
+    results.extend(pronunciation_sources)
+    results.extend([item['name'] for item in dicts if item['lang'] == lang and item['type'] == "audio"])
     return results
 
 def getFreqlistsForLang(lang: str, dicts: list):

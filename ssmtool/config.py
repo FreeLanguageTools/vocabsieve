@@ -39,7 +39,7 @@ class SettingsDialog(QDialog):
         self.definition_field = QComboBox()
         self.definition2_field = QComboBox()
         self.pronunciation_field = QComboBox()
-        self.forvo = QCheckBox("Play Forvo pronunciation upon word selection")
+        self.audio_dict = QComboBox()
         self.bold_word = QCheckBox("Bold word in sentence on lookup")
         self.note_type_url = QLabel("For a suitable note type, \
             download <a href=\"https://freelanguagetools.org/sample.apkg\">this file</a> \
@@ -68,6 +68,7 @@ class SettingsDialog(QDialog):
         self.text_scale_box_layout.addWidget(self.text_scale_label)
 
         self.orientation.addItems(["Vertical", "Horizontal"])
+        self.gtrans_api = QLineEdit()
         self.anki_api = QLineEdit()
         self.about_sa = QScrollArea()
 
@@ -163,10 +164,10 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.tab1.layout.addRow(self.lemmatization)
         self.tab1.layout.addRow(self.lemfreq)
         self.tab1.layout.addRow(self.bold_word)
-        self.tab1.layout.addRow(self.forvo)
         self.tab1.layout.addRow(QLabel("Target language"), self.target_language)
         self.tab1.layout.addRow(QLabel("Dictionary source 1"), self.dict_source)
         self.tab1.layout.addRow(QLabel("Dictionary source 2"), self.dict_source2)
+        self.tab1.layout.addRow(QLabel("Pronunciation source"), self.audio_dict)
         self.tab1.layout.addRow(QLabel("Frequency list"), self.freq_source)
         self.tab1.layout.addRow(QLabel("Google translate: To"), self.gtrans_lang)
         self.tab1.layout.addRow(QLabel("Web lookup preset"), self.web_preset)
@@ -192,6 +193,7 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.tab3.layout.addRow(self.reader_enabled)
         self.tab3.layout.addRow(QLabel("Web reader host"), self.reader_host)
         self.tab3.layout.addRow(QLabel("Web reader port"), self.reader_port)
+        self.tab3.layout.addRow(QLabel("Google Translate API"), self.gtrans_api)
 
         self.tab4.layout.addRow(QLabel("<b>All settings on this tab requires restart to take effect.</b>"))
         self.tab4.layout.addRow(self.allow_editing)
@@ -209,8 +211,8 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.allow_editing.clicked.connect(self.syncSettings)
         self.lemmatization.clicked.connect(self.syncSettings)
         self.lemfreq.clicked.connect(self.syncSettings)
-        self.forvo.clicked.connect(self.syncSettings)
         self.bold_word.clicked.connect(self.syncSettings)
+        self.audio_dict.currentTextChanged.connect(self.syncSettings)
         self.freq_source.currentTextChanged.connect(self.syncSettings)
         self.dict_source.currentTextChanged.connect(self.syncSettings)
         self.dict_source.currentTextChanged.connect(self.loadDict2Options)
@@ -251,12 +253,22 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.reader_port.valueChanged.connect(self.syncSettings)
         self.text_scale.valueChanged.connect(self.syncSettings)
         self.orientation.currentTextChanged.connect(self.syncSettings)
+        self.gtrans_api.editingFinished.connect(self.syncSettings)
 
     def setAvailable(self):
         self.api_host.setEnabled(self.api_enabled.isChecked())
         self.api_port.setEnabled(self.api_enabled.isChecked())
         self.reader_host.setEnabled(self.reader_enabled.isChecked())
         self.reader_port.setEnabled(self.reader_enabled.isChecked())
+
+    def loadAudioDictionaries(self):
+        custom_dicts = self.settings.value("custom_dicts", [], type=list)
+        self.audio_dict.blockSignals(True)
+        self.audio_dict.clear()
+        dicts = getAudioDictsForLang(code[self.target_language.currentText()], custom_dicts)
+        self.audio_dict.addItems(dicts)
+        self.audio_dict.blockSignals(False)
+
 
     def loadDictionaries(self):
         custom_dicts = self.settings.value("custom_dicts", [], type=list)
@@ -312,7 +324,6 @@ If you find this tool useful, you can give it a star on Github and tell others a
             self.custom_url.setText(self.presets[self.web_preset.currentText()])
 
     def loadSettings(self):
-        self.forvo.setChecked(self.settings.value("forvo", False, type=bool))
         self.bold_word.setChecked(self.settings.value("bold_word", True, type=bool))
         self.allow_editing.setChecked(self.settings.value("allow_editing", True, type=bool))
         self.lemmatization.setChecked(self.settings.value("lemmatization", True, type=bool))
@@ -321,10 +332,12 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.text_scale.setValue(self.settings.value("text_scale", 100, type=int))
         self.target_language.setCurrentText(self.settings.value("target_language"))
         self.loadDictionaries()
-        self.dict_source.setCurrentText(self.settings.value("dict_source", "Wiktionary (English)"))
         self.loadDict2Options()
-        self.dict_source2.setCurrentText(self.settings.value("dict_source2", "Wiktionary (English)"))
+        self.loadAudioDictionaries()
         self.loadFreqSources()
+        self.audio_dict.setCurrentText(self.settings.value("audio_dict", "Forvo"))
+        self.dict_source.setCurrentText(self.settings.value("dict_source", "Wiktionary (English)"))
+        self.dict_source2.setCurrentText(self.settings.value("dict_source2", "Wiktionary (English)"))
         self.web_preset.setCurrentText(self.settings.value("web_preset", "English Wiktionary"))
         self.loadUrl()
         self.gtrans_lang.setCurrentText(self.settings.value("gtrans_lang", "English"))
@@ -339,6 +352,7 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.reader_enabled.setChecked(self.settings.value("reader_enabled", True, type=bool))
         self.reader_host.setText(self.settings.value("reader_host", "127.0.0.1"))
         self.reader_port.setValue(self.settings.value("reader_port", 39285, type=int))
+        self.gtrans_api.setText(self.settings.value("gtrans_api", "https://lingva.ml"))
 
         try:
             _ = getVersion(api)
@@ -435,7 +449,7 @@ If you find this tool useful, you can give it a star on Github and tell others a
 
     def syncSettings(self):
         self.status("Syncing")
-        self.settings.setValue("forvo", self.forvo.isChecked())
+        self.settings.setValue("audio_dict", self.audio_dict.currentText())
         self.settings.setValue("allow_editing", self.allow_editing.isChecked())
         self.settings.setValue("lemmatization", self.lemmatization.isChecked())
         self.settings.setValue("lemfreq", self.lemfreq.isChecked())
@@ -456,6 +470,7 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.settings.setValue("text_scale", self.text_scale.value())
         self.settings.setValue("web_preset", self.web_preset.currentText())
         self.settings.setValue("custom_url", self.custom_url.text())
+        self.settings.setValue("gtrans_api", self.gtrans_api.text())
         try:
             api = self.anki_api.text()
             getVersion(api)
