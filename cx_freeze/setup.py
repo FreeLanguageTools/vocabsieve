@@ -7,7 +7,7 @@ from cx_Freeze import setup, Executable
 include_files = [('../ssmtool/ext/reader/templates/', 'lib/ssmtool/ext/reader/templates/'),
                  ('../ssmtool/ext/reader/static/', 'lib/ssmtool/ext/reader/static/')]
 build_exe_options = {"includes": ["ssmtool", "setuptools", "PyQt5",
-                                  "bs4", "lxml", "simplemma", "googletrans",
+                                  "bs4", "lxml", "simplemma",
                                   "bidict", "pystardict", "flask", "pymorphy2",
                                   "pymorphy2_dicts", "playsound", "flask_sqlalchemy", 
                                   "jinja2.ext", "sqlalchemy",
