@@ -2,6 +2,7 @@ __pycache__/
 dist/
 *.un~
 ssmtool.egg-info/
+build/
 .pytest_cache
 cx_freeze/build
 .coverage
