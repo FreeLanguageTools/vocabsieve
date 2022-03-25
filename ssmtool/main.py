@@ -95,6 +95,7 @@ class DictionaryWindow(QMainWindow):
         self.namelabel.setFont(QFont("Sans Serif", int(QApplication.font().pointSize() * 1.5)))
         self.menu = QMenuBar(self)
         self.sentence = MyTextEdit()
+        self.sentence.setPlaceholderText("Sentence copied to the clipboard will show up here.")
         self.sentence.setMinimumHeight(30)
         self.sentence.setMaximumHeight(130)
         self.word = QLineEdit()
@@ -105,6 +106,7 @@ class DictionaryWindow(QMainWindow):
         self.definition2.setMinimumHeight(70)
         self.definition2.setMaximumHeight(1800)
         self.tags = QLineEdit()
+        self.tags.setPlaceholderText("Type in a list of tags to be used, separated by spaces (same as in Anki).")
         self.label_sentence = QLabel("Sentence")
         self.label_sentence.setToolTip("You can look up any word in this box by double clicking it, or alternatively by selecting it, then press \"Get definition\".")
 
@@ -120,6 +122,11 @@ class DictionaryWindow(QMainWindow):
         self.setStatusBar(self.bar)
         self.stats_label = QLabel()
 
+        self.single_word = QCheckBox("Single word lookups")
+        self.single_word.setToolTip("If enabled, ssmtool will act as a quick dictionary and look up any single words copied to the clipboard.\n"\
+            "This can potentially send your clipboard contents over the network if an online dictionary service is used.\n"\
+            "This is INSECURE if you use password managers that copy passwords to the clipboard.")
+
         self.web_button = QPushButton("Open webpage")
         self.freq_display = QLCDNumber()
         self.freq_display.setSegmentStyle(QLCDNumber.Flat)
@@ -130,9 +137,9 @@ class DictionaryWindow(QMainWindow):
 
     def setupWidgetsV(self):
         self.layout = QGridLayout(self.widget)
-        self.layout.addWidget(self.namelabel, 0, 0, 1, 3)
+        self.layout.addWidget(self.namelabel, 0, 0, 1, 2)
 
-        self.layout.addWidget(QLabel("Anything copied to clipboard will appear here."), 1, 0, 1, 3)
+        self.layout.addWidget(self.single_word, 1, 0, 1, 3)
 
         self.layout.addWidget(self.label_sentence, 2, 0)
         self.layout.addWidget(self.undo_button, 2, 1)
@@ -209,8 +216,9 @@ class DictionaryWindow(QMainWindow):
 
     def setupWidgetsH(self):
         self.layout = QGridLayout(self.widget)
-        self.sentence.setMaximumHeight(1300)
+        self.sentence.setMaximumHeight(99999)
         self.layout.addWidget(self.namelabel, 0, 0, 1, 3)
+        self.layout.addWidget(self.single_word, 0, 3, 1, 2)
         self.layout.setRowStretch(2, 1)
         self.layout.setRowStretch(3, 1)
         self.layout.setRowStretch(4, 1)
@@ -364,7 +372,7 @@ class DictionaryWindow(QMainWindow):
             self.setSentence(sentence)
             self.setWord(target)
             self.lookupSet(target)
-        elif is_oneword(preprocess_clipboard(text, lang)):
+        elif self.single_word.isChecked() and is_oneword(preprocess_clipboard(text, lang)):
             self.setSentence(word:=preprocess_clipboard(text, lang))
             self.setWord(word)
             self.lookupSet(text)
