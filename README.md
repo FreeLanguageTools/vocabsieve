@@ -1,4 +1,4 @@
-# Simple Sentence Mining
+# VocabSieve - A simple sentence mining tool
 ![https://ci.appveyor.com/api/projects/status/32r7s2skrgm9ubva?svg=true](https://ci.appveyor.com/api/projects/status/32r7s2skrgm9ubva?svg=true)
 ![https://img.shields.io/pypi/v/ssmtool.svg](https://img.shields.io/pypi/v/ssmtool.svg)
 [![Downloads](https://pepy.tech/badge/ssmtool)](https://pepy.tech/project/ssmtool)
@@ -7,7 +7,7 @@
 
 [Join our chat on Telegram](https://t.me/fltchat)
 
-Simple Sentence Mining (`ssmtool`) is a program for sentence mining, in which sentences with target vocabulary words are collected and added into a spaced repetition system (SRS) for language learning.
+VocabSieve (formerly Simple Sentence Mining, `ssmtool`) is a program for sentence mining, in which sentences with target vocabulary words are collected and added into a spaced repetition system (SRS) for language learning.
 
 ![Demo](https://imgur.com/rUlVWwe.gif)
 
