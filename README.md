@@ -1,4 +1,4 @@
-# VocabSieve - A simple sentence mining tool
+# VocabSieve - a simple sentence mining tool
 ![https://ci.appveyor.com/api/projects/status/32r7s2skrgm9ubva?svg=true](https://ci.appveyor.com/api/projects/status/32r7s2skrgm9ubva?svg=true)
 ![https://img.shields.io/pypi/v/ssmtool.svg](https://img.shields.io/pypi/v/ssmtool.svg)
 [![Downloads](https://pepy.tech/badge/ssmtool)](https://pepy.tech/project/ssmtool)
@@ -35,19 +35,17 @@ For a detailed list of features and language support data, please consult the [b
 [![Packaging status](https://repology.org/badge/vertical-allrepos/ssmtool.svg)](https://repology.org/project/ssmtool/versions)
 
 ## Development
-To run from source, simply use `pip3 -r requirements.txt` and then `python3 ssmtool.py`.
+To run from source, simply use `pip3 -r requirements.txt` and then `python3 vocabsieve.py`.
 
-Alternatively, you can also install a live version to your python package library with `pip3 install .`
+Alternatively, you can also install a live version to your python package library with `pip3 install .` (Add --user if there is a permission error)
 
 ## API documentation
-If you want to leverage ssmtool to build your own plugins, you can refer to the [API Documentation](API.md)
+If you want to leverage VocabSieve to build your own plugins, you can refer to the [API Documentation](API.md)
 
 ## Feedback
 You are welcome to report bugs, suggest features/enhancements, or ask for clarifications by opening a GitHub issue.
 
 ## Credits
 The definitions provided by the program by default come from English Wiktionary, without which this program would never have been created.
-
-Support for Google Translate without the use of an API key comes from the [py-googletrans project](https://github.com/ssut/py-googletrans)
 
 App icon is made from icons by Freepik available on Flaticon.

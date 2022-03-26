@@ -2,11 +2,11 @@
 
 We are using `cx_Freeze` to build our distributable binaries.
 
-`app.py` is a copy of `ssmtool.py` in the root directory, renamed to avoid naming conflicts.
+`app.py` is a copy of `vocabsieve.py` in the root directory, renamed to avoid naming conflicts.
 
 ## Windows
 First, install `cx_Freeze` from `pip`.
-Then, install `ssmtool` package too.
+Then, install `vocabsieve` package too.
 
 Then, type `python setup.py bdist_msi` (creates installer)
 
@@ -18,7 +18,7 @@ There is currently no way to create a single file standalone executable with thi
 
 ## macOS
 First, install `cx_Freeze` from `pip`.
-Then, install `ssmtool` package too.
+Then, install `vocabsieve` package too.
 
 You also need `create-dmg` tool from NPM to run this script, but you can use an alternative instead after the .app is generated.
 

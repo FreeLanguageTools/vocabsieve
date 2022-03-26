@@ -15,11 +15,11 @@ sys.__stdout__ = dummyStream()
 sys.__stderr__ = dummyStream()
 sys.__stdin__ = dummyStream()
 
-from ssmtool.main import DictionaryWindow
+from vocabsieve.main import DictionaryWindow
 from PyQt5.QtWidgets import QApplication
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    app.setApplicationName("ssmtool")
+    app.setApplicationName("vocabsieve")
     app.setOrganizationName("FreeLanguageTools")
     w = DictionaryWindow()
 

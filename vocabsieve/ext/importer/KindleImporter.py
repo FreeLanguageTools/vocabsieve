@@ -6,8 +6,8 @@ import os, re
 from pathlib import Path
 from difflib import SequenceMatcher
 from sentence_splitter import split_text_into_sentences
-from ssmtool.tools import addNotes
-from ssmtool.dictionary import code, lookupin
+from vocabsieve.tools import addNotes
+from vocabsieve.dictionary import code, lookupin
 import time
 
 
@@ -160,7 +160,7 @@ class KindleImporter(QDialog):
         notes = []
         for word, sentence, definition, definition2 in zip(self.words, self.sents, self.definitions, self.definition2s):
             if word and sentence and definition:
-                tags = self.parent.settings.value("tags", "ssmtool").strip() + " kindle"
+                tags = self.parent.settings.value("tags", "vocabsieve").strip() + " kindle"
                 content = {
                     "deckName": self.parent.settings.value("deck_name"),
                     "modelName": self.parent.settings.value("note_type"),

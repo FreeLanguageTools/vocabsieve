@@ -2,9 +2,9 @@
 Type=Application
 Encoding=UTF-8
 Version=1.0
-Name=Simple Sentence Mining
+Name=VocabSieve
 GenericName=Sentence tool for Anki
 Comment=A simple helper tool for adding sentence-based cards into Anki
-Exec=ssmtool
-Icon=ssmtool
+Exec=vocabsieve
+Icon=vocabsieve
 Categories=Education;

@@ -1,7 +1,7 @@
 __pycache__/
 dist/
 *.un~
-ssmtool.egg-info/
+vocabsieve.egg-info/
 build/
 .pytest_cache
 cx_freeze/build

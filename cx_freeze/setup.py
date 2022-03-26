@@ -1,12 +1,12 @@
 import sys
-from ssmtool import __version__
+from vocabsieve import __version__
 from cx_Freeze import setup, Executable
 
 # Dependencies are automatically detected, but it might need fine tuning.
 # "packages": ["os"] is used as example only
-include_files = [('../ssmtool/ext/reader/templates/', 'lib/ssmtool/ext/reader/templates/'),
-                 ('../ssmtool/ext/reader/static/', 'lib/ssmtool/ext/reader/static/')]
-build_exe_options = {"includes": ["ssmtool", "setuptools", "PyQt5",
+include_files = [('../vocabsieve/ext/reader/templates/', 'lib/vocabsieve/ext/reader/templates/'),
+                 ('../vocabsieve/ext/reader/static/', 'lib/vocabsieve/ext/reader/static/')]
+build_exe_options = {"includes": ["vocabsieve", "setuptools", "PyQt5",
                                   "bs4", "lxml", "simplemma",
                                   "bidict", "pystardict", "flask", "pymorphy2",
                                   "pymorphy2_dicts", "playsound", "flask_sqlalchemy", 
@@ -24,13 +24,13 @@ if sys.platform == "win32":
     base = "Win32GUI"
 
 setup(
-    name = "ssmtool",
+    name = "VocabSieve",
     version = __version__,
-    description = "Simple Sentence Mining",
+    description = "A simple sentence mining tool",
     options = {"build_exe": build_exe_options},
     executables = [Executable("app.py",
                               base=base,
                               icon="icon.ico",
-                              shortcut_name="Simple Sentence Mining",
+                              shortcut_name="VocabSieve",
                               shortcut_dir="DesktopFolder")]
 )

@@ -1,4 +1,4 @@
-# Local API for ssmtool
+# Local API for vocabsieve
 The default API is at http://127.0.0.1:39284, but this can be changed by the user.
 
 ## Endpoints
@@ -40,7 +40,7 @@ or
     "tags": []
 }
 ```
-Please note that even with `tags` being an empty array, the default tags specified in ssmtool config will still be added.
+Please note that even with `tags` being an empty array, the default tags specified in vocabsieve config will still be added.
 
 Using two definitions is not yet supported, and neither are audio and image data, but they are expected to be added in the future as optional fields in base64 format or as file paths. 
 

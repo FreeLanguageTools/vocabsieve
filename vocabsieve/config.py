@@ -96,10 +96,10 @@ or <a href="https://t.me/fltchat">Telegram</a> for support.<br><br>
 Consult <a href="https://freelanguagetools.org/2021/08/dictionaries-and-frequency-lists-for-ssm/">this link</a> 
 to find compatible dictionaries. <br><br>
 
-Simple Sentence Mining (SSM, ssmtool) is free software available to you under the terms of
+VocabSieve (formerly SSM, ssmtool) is free software available to you under the terms of
 <a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GNU GPLv3</a>.
 If you found a bug, or have enhancement ideas, please open an issue on the 
-Github <a href=https://github.com/FreeLanguageTools/ssmtool>repository</a>.<br><br>
+Github <a href=https://github.com/FreeLanguageTools/vocabsieve>repository</a>.<br><br>
 
 This program is yours to keep. There is no EULA you need to agree to.
 No data is sent to any server other than the configured dictionary APIs.
@@ -342,7 +342,7 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.loadUrl()
         self.gtrans_lang.setCurrentText(self.settings.value("gtrans_lang", "English"))
         self.anki_api.setText(self.settings.value("anki_api", "http://localhost:8765"))
-        self.tags.setText(self.settings.value("tags", "ssmtool"))
+        self.tags.setText(self.settings.value("tags", "vocabsieve"))
         api = self.anki_api.text()
         self.web_preset.setCurrentText(self.settings.value("web_preset"))
 

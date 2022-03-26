@@ -5,13 +5,13 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleDisplayName</key>
-	<string>ssmtool</string>
+	<string>vocabsieve</string>
 	<key>CFBundleExecutable</key>
 	<string>app</string>
 	<key>CFBundleIconFile</key>
 	<string>icon.icns</string>
 	<key>CFBundleIdentifier</key>
-	<string>ssmtool</string>
+	<string>vocabsieve</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>NSHighResolutionCapable</key>

@@ -9,7 +9,7 @@ import platform
 import json
 from collections import deque
 import re
-QCoreApplication.setApplicationName("ssmtool")
+QCoreApplication.setApplicationName("VocabSieve")
 QCoreApplication.setOrganizationName("FreeLanguageTools")
 from .config import *
 from .tools import *
@@ -54,11 +54,11 @@ class GlobalObject(QObject):
 class DictionaryWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Simple Sentence Mining")
+        self.setWindowTitle("VocabSieve")
         self.setFocusPolicy(Qt.StrongFocus)
         self.resize(400, 700)
         self.widget = QWidget()
-        self.settings = QSettings("FreeLanguageTools", "SimpleSentenceMining")
+        self.settings = QSettings("FreeLanguageTools", "VocabSieve")
         self.rec = Record()
         self.setCentralWidget(self.widget)
         self.previousWord = ""
@@ -91,7 +91,7 @@ class DictionaryWindow(QMainWindow):
         super().focusInEvent(event)
 
     def initWidgets(self):
-        self.namelabel = QLabel("Simple Sentence Mining v" + __version__)
+        self.namelabel = QLabel("VocabSieve v" + __version__)
         self.namelabel.setFont(QFont("Sans Serif", int(QApplication.font().pointSize() * 1.5)))
         self.menu = QMenuBar(self)
         self.sentence = MyTextEdit()
@@ -123,7 +123,7 @@ class DictionaryWindow(QMainWindow):
         self.stats_label = QLabel()
 
         self.single_word = QCheckBox("Single word lookups")
-        self.single_word.setToolTip("If enabled, ssmtool will act as a quick dictionary and look up any single words copied to the clipboard.\n"\
+        self.single_word.setToolTip("If enabled, vocabsieve will act as a quick dictionary and look up any single words copied to the clipboard.\n"\
             "This can potentially send your clipboard contents over the network if an online dictionary service is used.\n"\
             "This is INSECURE if you use password managers that copy passwords to the clipboard.")
 
@@ -211,7 +211,7 @@ class DictionaryWindow(QMainWindow):
         self.setMenuBar(self.menu)
 
     def onHelp(self):
-        url = f"https://freelanguagetools.org/2021/07/simple-sentence-mining-ssmtool-full-tutorial/"
+        url = f"https://freelanguagetools.org/2021/07/simple-sentence-mining-vocabsieve-full-tutorial/"
         QDesktopServices.openUrl(QUrl(url))
 
     def setupWidgetsH(self):
@@ -448,7 +448,7 @@ class DictionaryWindow(QMainWindow):
             sentence = re.sub(r"__([ \w]+)__", r"<strong>\1</strong>", sentence)
         if self.settings.value("remove_spaces", type=bool) == True:
             sentence = re.sub("\s", "", sentence)
-        tags = (self.settings.value("tags", "ssmtool").strip() + " " + self.tags.text().strip()).split(" ")
+        tags = (self.settings.value("tags", "vocabsieve").strip() + " " + self.tags.text().strip()).split(" ")
         word = self.word.text()
         content = {
             "deckName": self.settings.value("deck_name"),
@@ -579,7 +579,7 @@ class MyTextEdit(QTextEdit):
 
 def main():
     app = QApplication(sys.argv)
-    app.setApplicationName("ssmtool")
+    app.setApplicationName("vocabsieve")
     app.setOrganizationName("FreeLanguageTools")
     w = DictionaryWindow()
 
