@@ -25,7 +25,9 @@ For a detailed list of features and language support data, please consult the [b
 [Text tutorial](https://freelanguagetools.org/2021/07/simple-sentence-mining-ssmtool-full-tutorial/)
 (The text originally on this document has since been moved there.)
 
-[Video tutorial (Basic, a bit outdated)](https://www.youtube.com/watch?v=y79_q08Zu8k&pp=sAQA)
+[New video tutorial](https://www.youtube.com/watch?v=EHW-kBLmuHU)
+
+[Old video tutorial (Basic, somewhat outdated)](https://www.youtube.com/watch?v=y79_q08Zu8k&pp=sAQA)
 
 **USERS**: If you want to install it, go to [Releases](https://github.com/FreeLanguageTools/ssmtool/releases/) and from the latest release, download the appropriate file for your operating system. 
 
