@@ -9,7 +9,6 @@ Path(datapath).mkdir(parents=True, exist_ok=True)
 print(datapath)
 class Record():
     def __init__(self):
-        #print(path.join(datapath, "records.db"))
         self.conn = sqlite3.connect(path.join(datapath, "records.db"), check_same_thread=False)
         self.c = self.conn.cursor()
         self.createTables()

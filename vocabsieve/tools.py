@@ -62,7 +62,7 @@ def is_json(myjson):
 
 def failed_lookup(word, setting):
     return "<b>Definition for \"" + str(word) + "\" not found.</b><br>Check the following:<br>" +\
-            "- Language setting (Current: " + setting.value("target_language", 'English') + ")<br>" +\
+            "- Language setting (Current: " + setting.value("target_language", 'en') + ")<br>" +\
             "- Is the correct word being looked up?<br>" +\
             "- Are you connected to the Internet?<br>" +\
             "Otherwise, then " + setting.value("dict_source", "Wiktionary (English)") + " probably just does not have this word listed."

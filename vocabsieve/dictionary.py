@@ -3,39 +3,43 @@ import unicodedata
 import simplemma
 import re
 import requests
+import pycountry
 from urllib.parse import quote
 from bs4 import BeautifulSoup
 from bidict import bidict
 import pymorphy2
 from .db import *
+from playsound import playsound
 from .forvo import *
 dictdb = LocalDictionary()
 langdata = simplemma.load_data('en')
 
 
-code = bidict({
-    "English": "en",
-    "Chinese": "zh",
-    "Italian": "it",
-    "Finnish": "fi",
-    "Japanese": "ja",
-    "Spanish": "es",
-    "French": "fr",
-    "German": "de",
-    "Latin": "la",
-    "Polish": "pl",
-    "Portuguese": "pt",
-    "Russian": "ru",
-    "Serbo-Croatian": "sh",
-    "Dutch": "nl",
-    "Romanian": "ro",
-    "Hindi": "hi",
-    "Korean": "ko",
-    "Arabic": "ar",
-    "Turkish": "tr",
-})
+# Currently, all languages with two letter codes can be set
+langcodes = bidict(dict(zip([l.alpha_2 for l in list(pycountry.languages) if getattr(l, 'alpha_2', None)],
+                     [l.name for l in list(pycountry.languages) if getattr(l, 'alpha_2', None)])))
+# Apply patches
+langcodes['el'] = "Greek"
+for item in langcodes:
+    langcodes[item] = re.sub(r'\s?\([^)]*\)$', '', langcodes[item])
+langcodes['zh_HANT'] = "Chinese (Traditional)"
+langcodes['haw'] = "Hawaiian"
+langcodes['ceb'] = "Cebuano"
+langcodes['hmn'] = "Hmong"
 
-wikt_languages = code.keys()
+
+gtrans_languages = ['af', 'sq', 'am', 'ar', 'hy', 'az', 'eu', 'be', 'bn',
+    'bs', 'bg', 'ca', 'ceb', 'ny', 'zh', 'zh_HANT', 'co', 'hr', 'cs', 'da', 'nl',
+    'en', 'eo', 'et', 'tl', 'fi', 'fr', 'fy', 'gl', 'ka', 'de', 'el', 'gu', 'ht',
+    'ha', 'haw', 'hi', 'hmn', 'hu', 'is', 'ig', 'id', 'ga', 'it', 'ja', 'kn', 'kk', 
+    'km', 'rw', 'ko', 'ku', 'ky', 'lo', 'la', 'lv', 'lt', 'lb',
+    'mk', 'mg', 'ms', 'ml', 'mt', 'mi', 'mr', 'mn', 'my', 'ne', 'no', 'or', 'ps',
+    'fa', 'pl', 'pt', 'pa', 'ro', 'ru', 'sm', 'gd', 'sr', 'st', 'sn', 'sd', 'si',
+    'sk', 'sl', 'so', 'es', 'su', 'sw', 'sv', 'tg', 'ta', 'tt', 'te', 'th', 'tr',
+    'tk', 'uk', 'ur', 'ug', 'uz', 'vi', 'cy', 'xh', 'yi', 'yo', 'zu']
+
+langs_supported = bidict(dict(zip(gtrans_languages, [langcodes[item] for item in gtrans_languages])))
+
 gdict_languages = ['en', 'hi', 'es', 'fr', 'ja', 'ru', 'de', 'it', 'ko', 'ar', 'tr', 'pt']
 simplemma_languages = ['bg', 'ca', 'cy', 'da', 'de', 'en', 'es', 'et', 'fa', 'fi', 'fr',
                        'ga', 'gd', 'gl', 'gv', 'hu', 'id', 'it', 'ka', 'la', 'lb', 'lt',
@@ -43,7 +47,7 @@ simplemma_languages = ['bg', 'ca', 'cy', 'da', 'de', 'en', 'es', 'et', 'fa', 'fi
 dictionaries = bidict({"Wiktionary (English)": "wikt-en",
                 "Google dictionary (Monolingual)": "gdict",
                 "Google Translate": "gtrans"})
-pronunciation_sources = ["Forvo"]
+pronunciation_sources = ["Forvo (all)", "Forvo (best)"]
 
 
 try:
@@ -172,15 +176,17 @@ def googletranslate(word, language, gtrans_lang, gtrans_api):
     else:
         return
 
-def getAudio(word, language, dictionary="Forvo"):
-    if dictionary == "Forvo":
-        return play_forvo(word, language)
+def getAudio(word, language, dictionary="Forvo (all)"):
+    # should return a list of audio paths
+    if dictionary == "Forvo (all)":
+        return fetch_audio_all(word, language)
+    elif dictionary == "Forvo (best)":
+        return fetch_audio_best(word, llanguageang)
     return
 
-def lookupin(word, language, lemmatize=True, dictionary="Wiktionary (English)", gtrans_lang="English", gtrans_api="https://lingva.ml"):
+def lookupin(word, language, lemmatize=True, dictionary="Wiktionary (English)", gtrans_lang="en", gtrans_api="https://lingva.ml"):
     # Remove any punctuation other than a hyphen
     # @language is code
-    gtrans_lang = code[gtrans_lang]
     if language == 'ru':
         word = removeAccents(word)
     if lemmatize:
@@ -214,10 +220,29 @@ def getDictsForLang(lang: str, dicts: list):
 
 def getAudioDictsForLang(lang: str, dicts: list):
     "Get the list of audio dictionaries for a given language"
-    results = ["Disabled"]
+    results = ["<disabled>"]
     results.extend(pronunciation_sources)
     results.extend([item['name'] for item in dicts if item['lang'] == lang and item['type'] == "audio"])
     return results
 
 def getFreqlistsForLang(lang: str, dicts: list):
     return [item['name'] for item in dicts if item['lang'] == lang and item['type'] == "freq"]
+
+forvopath = os.path.join(QStandardPaths.writableLocation(QStandardPaths.DataLocation), "forvo")
+print(datapath)
+def play_audio(name: str, data: dict, lang: str):
+    if data[name].startswith("https://"):
+        fpath = os.path.join(forvopath, lang, name) + data[name][-4:]
+        if not os.path.exists(fpath):
+            res = requests.get(data[name], headers=HEADERS)
+            print(data[name])
+            print(res)
+            if res.status_code == 200:
+                print(fpath)
+                os.makedirs(os.path.dirname(fpath), exist_ok=True)
+                with open(fpath, 'bw') as file:
+                    file.write(res.content)
+            else:
+                return
+        playsound(fpath)
+        return fpath

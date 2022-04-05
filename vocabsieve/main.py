@@ -4,12 +4,18 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.Qt import QDesktopServices, QUrl
 from os import path
+import os
 import functools
 import platform
 import json
 from collections import deque
 import re
-QCoreApplication.setApplicationName("VocabSieve")
+DEBUGGING = None
+if os.environ.get("VOCABSIEVE_DEBUG"):
+    DEBUGGING = True
+    QCoreApplication.setApplicationName("VocabSieve" + os.environ.get("VOCABSIEVE_DEBUG"))
+else:
+    QCoreApplication.setApplicationName("VocabSieve")
 QCoreApplication.setOrganizationName("FreeLanguageTools")
 from .config import *
 from .tools import *
@@ -58,7 +64,7 @@ class DictionaryWindow(QMainWindow):
         self.setFocusPolicy(Qt.StrongFocus)
         self.resize(400, 700)
         self.widget = QWidget()
-        self.settings = QSettings("FreeLanguageTools", "VocabSieve")
+        self.settings = QSettings()
         self.rec = Record()
         self.setCentralWidget(self.widget)
         self.previousWord = ""
@@ -91,14 +97,14 @@ class DictionaryWindow(QMainWindow):
         super().focusInEvent(event)
 
     def initWidgets(self):
-        self.namelabel = QLabel("VocabSieve v" + __version__)
-        self.namelabel.setFont(QFont("Sans Serif", int(QApplication.font().pointSize() * 1.5)))
+        self.namelabel = QLabel("<h2 style=\"font-weight: normal;\">VocabSieve v" + __version__ + "</h2>")
         self.menu = QMenuBar(self)
         self.sentence = MyTextEdit()
         self.sentence.setPlaceholderText("Sentence copied to the clipboard will show up here.")
         self.sentence.setMinimumHeight(30)
         self.sentence.setMaximumHeight(130)
         self.word = QLineEdit()
+        self.word.setPlaceholderText("Word will appear here when looked up.")
         self.definition = MyTextEdit()
         self.definition.setMinimumHeight(70)
         self.definition.setMaximumHeight(1800)
@@ -107,8 +113,7 @@ class DictionaryWindow(QMainWindow):
         self.definition2.setMaximumHeight(1800)
         self.tags = QLineEdit()
         self.tags.setPlaceholderText("Type in a list of tags to be used, separated by spaces (same as in Anki).")
-        self.label_sentence = QLabel("Sentence")
-        self.label_sentence.setToolTip("You can look up any word in this box by double clicking it, or alternatively by selecting it, then press \"Get definition\".")
+        self.sentence.setToolTip("You can look up any word in this box by double clicking it, or alternatively by selecting it, then press \"Get definition\".")
 
         self.lookup_button = QPushButton(f"Define [{MOD}-D]")
         self.lookup_exact_button = QPushButton("Define (Direct)")
@@ -132,8 +137,27 @@ class DictionaryWindow(QMainWindow):
         self.freq_display.setSegmentStyle(QLCDNumber.Flat)
         self.freq_display.display(0)
 
+        self.audio_selector = QListWidget()
+        self.audio_selector.setFlow(QListView.TopToBottom)
+        self.audio_selector.setResizeMode(QListView.Adjust)
+        self.audio_selector.setWrapping(True)
+
+        self.audio_selector.currentItemChanged.connect(lambda x: (
+            self.play_audio(x.text()[2:]) if x != None else None
+            ))
+
+
+
         self.sentence.setReadOnly(not (self.settings.value("allow_editing", True, type=bool)))
         self.definition.setReadOnly(not (self.settings.value("allow_editing", True, type=bool)))
+        self.definition.setPlaceholderText('You can look up any word in the "Sentence" box by double clicking it, or alternatively by selecting it, then press "Get definition".')
+
+    def play_audio(self, x):
+        QCoreApplication.processEvents()
+        if x != None:
+            self.audio_path = play_audio(x, self.audios, self.settings.value("target_language", "en"))
+
+         
 
     def setupWidgetsV(self):
         self.layout = QGridLayout(self.widget)
@@ -141,12 +165,12 @@ class DictionaryWindow(QMainWindow):
 
         self.layout.addWidget(self.single_word, 1, 0, 1, 3)
 
-        self.layout.addWidget(self.label_sentence, 2, 0)
+        self.layout.addWidget(QLabel("<h3 style=\"font-weight: normal;\">Sentence</h3>"), 2, 0)
         self.layout.addWidget(self.undo_button, 2, 1)
         self.layout.addWidget(self.read_button, 2, 2)
 
         self.layout.addWidget(self.sentence, 3, 0, 1, 3)
-        self.layout.addWidget(QLabel("Word"), 4, 0)
+        self.layout.addWidget(QLabel("<h3 style=\"font-weight: normal;\">Word</h3>"), 4, 0)
 
         if self.settings.value("lemmatization", True, type=bool):
             self.layout.addWidget(self.lookup_button, 4, 1)
@@ -154,11 +178,11 @@ class DictionaryWindow(QMainWindow):
         else:
             self.layout.addWidget(self.lookup_button, 4, 1, 1, 2)
         
-        self.layout.addWidget(QLabel("Definition"), 6, 0)
+        self.layout.addWidget(QLabel("<h3 style=\"font-weight: normal;\">Definition</h3>"), 6, 0)
         self.layout.addWidget(self.freq_display, 6, 1)
         self.layout.addWidget(self.web_button, 6, 2)
         self.layout.addWidget(self.word, 5, 0, 1, 3)
-        if self.settings.value("dict_source2", "Disabled") != "Disabled":
+        if self.settings.value("dict_source2", "<disabled>") != "<disabled>":
             self.layout.addWidget(self.definition, 7, 0, 2, 3)
             self.layout.setRowStretch(7, 1)
             self.layout.addWidget(self.definition2, 9, 0, 2, 3)
@@ -166,13 +190,16 @@ class DictionaryWindow(QMainWindow):
         else:
             self.layout.addWidget(self.definition, 7, 0, 4, 3)
             self.layout.setRowStretch(7, 1)
+
+        self.layout.addWidget(QLabel("<h3 style=\"font-weight: normal;\">Pronunciation</h3>"), 11, 0, 1, 3)
+        self.layout.addWidget(self.audio_selector, 12, 0, 1, 3)
         
-        self.layout.addWidget(QLabel("Additional tags"), 11, 0, 1, 3)
+        self.layout.addWidget(QLabel("<h3 style=\"font-weight: normal;\">Additional tags</h3>"), 13, 0, 1, 3)
 
-        self.layout.addWidget(self.tags, 12, 0, 1, 3)
+        self.layout.addWidget(self.tags, 14, 0, 1, 3)
 
-        self.layout.addWidget(self.toanki_button, 13, 0, 1, 3)
-        self.layout.addWidget(self.config_button, 14, 0, 1, 3)
+        self.layout.addWidget(self.toanki_button, 15, 0, 1, 3)
+        self.layout.addWidget(self.config_button, 16, 0, 1, 3)
 
     def setupButtons(self):
         self.lookup_button.clicked.connect(lambda _: self.lookupClicked(True))
@@ -237,16 +264,13 @@ class DictionaryWindow(QMainWindow):
         self.layout.addWidget(self.sentence, 2, 0, 4, 2)
         self.layout.addWidget(QLabel("Word"), 1, 2)
 
-        if self.settings.value("lemmatization", True, type=bool):
-            self.layout.addWidget(self.lookup_button, 3, 2)
-            self.layout.addWidget(self.lookup_exact_button, 4, 2)
-        else:
-            self.layout.addWidget(self.lookup_button, 1, 4, 2, 1)
+        self.layout.addWidget(self.lookup_button, 3, 2)
+        self.layout.addWidget(self.lookup_exact_button, 4, 2)
         
-        self.layout.addWidget(QLabel("Definition"), 1, 3)
+        self.layout.addWidget(QLabel("<b>Definition</b>"), 1, 3)
         self.layout.addWidget(self.web_button, 1, 4)
         self.layout.addWidget(self.word, 2, 2, 1, 1)
-        if self.settings.value("dict_source2", "Disabled") != "Disabled":
+        if self.settings.value("dict_source2", "<disabled>") != "<disabled>":
             self.layout.addWidget(self.definition, 2, 3, 2, 2)
             self.layout.addWidget(self.definition2, 4, 3, 2, 2)
         else:
@@ -311,7 +335,7 @@ class DictionaryWindow(QMainWindow):
         QDesktopServices.openUrl(QUrl(url))
 
     def onReaderOpen(self):
-        url = f"http://{self.settings.value('reader_host', type=str)}:{self.settings.value('reader_port', type=str)}"
+        url = f"http://{self.settings.value('reader_host', '127.0.0.1', type=str)}:{self.settings.value('reader_port', '39285', type=str)}"
         QDesktopServices.openUrl(QUrl(url))
 
     def lookupClicked(self, use_lemmatize=True):
@@ -357,7 +381,7 @@ class DictionaryWindow(QMainWindow):
         """
         text = QApplication.clipboard().text()
         remove_spaces = self.settings.value("remove_spaces")
-        lang = code[self.settings.value("target_language", "English")]
+        lang = self.settings.value("target_language", "en")
         if self.isActiveWindow() and not evenWhenFocused:
             return
         if is_json(text):
@@ -386,25 +410,36 @@ class DictionaryWindow(QMainWindow):
         self.setState(result)
         QCoreApplication.processEvents()
         self.audio_path = None
-        if self.settings.value("audio_dict", "Disabled") != "Disabled":
-            self.audio_path = getAudio(word, code[self.settings.value("target_language")], dictionary=self.settings.value("audio_dict"))
+        if self.settings.value("audio_dict", "<disabled>") != "<disabled>":
+            try:
+                self.audios = getAudio(word, self.settings.value("target_language"), dictionary=self.settings.value("audio_dict"))
+            except Exception:
+                self.audios = {}
+            self.audio_selector.clear()
+            if len(self.audios) > 0:
+                for item in self.audios:
+                    self.audio_selector.addItem("🔊 " + item)
+                self.audio_selector.setCurrentItem(
+                    self.audio_selector.item(0)
+                    )
+                #self.play_audio(list(self.audios.keys())[0])
 
     def lookup(self, word, use_lemmatize=True, record=True):
         """
         Look up a word and return a dict with the lemmatized form (if enabled)
         and definition
         """
-        TL = self.settings.value("target_language", "English")
+        TL = self.settings.value("target_language", "en")
         self.prev_states.append(self.getState())
         lemmatize = use_lemmatize and self.settings.value("lemmatization", True, type=bool)
         lemfreq = self.settings.value("lemfreq", True, type=bool)
         short_sign = "Y" if lemmatize else "N"
-        language = code[TL] #This is in two letter code
-        gtrans_lang = self.settings.value("gtrans_lang", "English")
+        language = TL #This is in two letter code
+        gtrans_lang = self.settings.value("gtrans_lang", "en")
         dictname = self.settings.value("dict_source", "Wiktionary (English)")
-        freqname = self.settings.value("freq_source", "Disabled")
+        freqname = self.settings.value("freq_source", "<disabled>")
         word = re.sub('[«»…,()\[\]]*', "", word)
-        if freqname != "Disabled":
+        if freqname != "<disabled>":
             try:
                 freq = getFreq(word, language, lemfreq, freqname)
             except TypeError:
@@ -426,8 +461,8 @@ class DictionaryWindow(QMainWindow):
                 "definition": failed_lookup(word, self.settings)
                 }
             return item
-        dict2name = self.settings.value("dict_source2", "Disabled")
-        if dict2name == "Disabled":
+        dict2name = self.settings.value("dict_source2", "<disabled>")
+        if dict2name == "<disabled>":
             return item
         try:
             item2 = lookupin(word, language, lemmatize, dict2name, gtrans_lang)
@@ -441,7 +476,6 @@ class DictionaryWindow(QMainWindow):
             return item
         return {"word": item['word'], 'definition': item['definition'], 'definition2': item2['definition']}
         
-
     def createNote(self):
         sentence = self.sentence.toPlainText().replace("\n", "<br>")
         if self.settings.value("bold_word", type=bool) == True:
@@ -461,17 +495,17 @@ class DictionaryWindow(QMainWindow):
         }
         definition = self.definition.toPlainText().replace("\n", "<br>")
         content['fields'][self.settings.value('definition_field')] = definition
-        if self.settings.value("dict_source2", "Disabled") != 'Disabled':
+        if self.settings.value("dict_source2", "<disabled>") != '<disabled>':
             try:
                 definition2 = self.definition2.toPlainText().replace("\n", "<br>")
-                if self.settings.value("definition2_field", "Disabled") == "Disabled":
+                if self.settings.value("definition2_field", "<disabled>") == "<disabled>":
                     self.warn("Aborted.\nYou must have field for Definition#2 in order to use two dictionaries.")
                     return
                 content['fields'][self.settings.value('definition2_field')] = definition2
             except Exception as e:
                 return
 
-        if self.settings.value("pronunciation_field", "Disabled") != 'Disabled' and self.audio_path:
+        if self.settings.value("pronunciation_field", "<disabled>") != '<disabled>' and self.audio_path:
             content['audio'] = {
                 "path": self.audio_path,
                 "filename": path.basename(self.audio_path),
@@ -559,8 +593,6 @@ class DictionaryWindow(QMainWindow):
             except Exception as e:
                 print(e)
                 self.status("Failed to start reader server")
-            
-
     
     def onNoteSignal(self, sentence: str, word: str, definition: str, tags: list):
         self.setSentence(sentence)
@@ -579,8 +611,6 @@ class MyTextEdit(QTextEdit):
 
 def main():
     app = QApplication(sys.argv)
-    app.setApplicationName("vocabsieve")
-    app.setOrganizationName("FreeLanguageTools")
     w = DictionaryWindow()
 
     w.show()

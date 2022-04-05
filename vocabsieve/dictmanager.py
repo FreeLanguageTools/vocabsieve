@@ -4,8 +4,15 @@ from PyQt5.QtGui import *
 from .dictionary import *
 from .tools import *
 from bidict import bidict
+import json
 
-supported_dict_formats = bidict({"stardict": "StarDict", "json": "Simple JSON", "migaku": "Migaku Dictionary", "freq": "Frequency list"})
+supported_dict_formats = bidict({
+        "stardict": "StarDict", 
+        "json": "Simple JSON", 
+        "migaku": "Migaku Dictionary", 
+        "freq": "Frequency list",
+        "audiolib": "Audio Library"
+        })
 
 class DictManager(QDialog):
     def __init__(self, parent):
@@ -25,8 +32,10 @@ class DictManager(QDialog):
         self.tview = QTreeWidget()
         self.tview.setColumnCount(3)
         self.tview.setHeaderLabels(["Name", "Type", "Language"])
-        self.add = QPushButton("Import..")
-        self.add.clicked.connect(self.onAdd)
+        self.add_dict = QPushButton("Import dictionary or frequency list..")
+        self.add_dict.clicked.connect(self.onAdd)
+        self.add_audio = QPushButton("Import GoldenDict audio library..")
+        self.add_audio.clicked.connect(self.onAddAudio)
         self.remove = QPushButton("Remove")
         self.remove.clicked.connect(self.onRemove)
         self.rebuild = QPushButton("Rebuild dictionary database")
@@ -42,14 +51,15 @@ to be reimported, otherwise this operation will fail.\
     def setupWidgets(self):
         self.layout = QVBoxLayout(self)
         self.layout.addWidget(self.tview)
-        self.layout.addWidget(self.add)
+        self.layout.addWidget(self.add_dict)
+        self.layout.addWidget(self.add_audio)
         self.layout.addWidget(self.remove)
         self.layout.addWidget(self.rebuild)
         self.layout.addWidget(self.bar)
 
     def rebuildDB(self):
         self.status("Rebuilding database..")
-        dictrebuild(self.settings.value("custom_dicts", [], type=list))
+        dictrebuild(json.loads(self.settings.value("custom_dicts", '[]')))
         self.status("Database rebuilt.")
 
     def onAdd(self):
@@ -65,21 +75,24 @@ to be reimported, otherwise this operation will fail.\
         dialog = AddDictDialog(self, fname)
         dialog.exec()
 
+    def onAddAudio(self):
+        pass
+
     def onRemove(self):
         index = self.tview.indexFromItem(self.tview.currentItem())
-        dicts = self.settings.value("custom_dicts", type=list)
+        dicts = json.loads(self.settings.value("custom_dicts", '[]'))
         if dicts == []:
             return
         del dicts[index.row()]
-        self.settings.setValue("custom_dicts", dicts)
+        self.settings.setValue("custom_dicts", json.dumps(dicts))
         self.refresh()
         self.rebuildDB()
     
     def refresh(self):
-        dicts = self.settings.value("custom_dicts", [], type=list)
+        dicts = json.loads(self.settings.value("custom_dicts", '[]'))
         self.tview.clear()
         for item in dicts:
-            treeitem = QTreeWidgetItem([item['name'], supported_dict_formats[item['type']], code.inverse[item['lang']]])
+            treeitem = QTreeWidgetItem([item['name'], supported_dict_formats[item['type']], langcodes[item['lang']]])
             self.tview.addTopLevelItem(treeitem)
         for i in range(3):
             self.tview.resizeColumnToContents(i)
@@ -91,8 +104,8 @@ to be reimported, otherwise this operation will fail.\
         return QDateTime.currentDateTime().toString('[hh:mm:ss]')
     def closeEvent(self, event):
         self.parent.loadDictionaries()
-        self.parent.loadDict2Options()
         self.parent.loadFreqSources()
+        self.parent.loadAudioDictionaries()
         event.accept()
 
     def initTimer(self):
@@ -128,8 +141,6 @@ class AddDictDialog(QDialog):
         self.basename = info['basename']
         self.initWidgets()
         self.setupWidgets()
-        #self.loadSettings()
-        #self.setupAutosave()
 
     def initWidgets(self):
         self.name = QLineEdit()
@@ -138,7 +149,8 @@ class AddDictDialog(QDialog):
         self.type.addItems(supported_dict_formats.inverse.keys())
         self.type.setCurrentText(supported_dict_formats[self.dicttype])
         self.lang = QComboBox()
-        self.lang.addItems(code.keys())
+        self.lang.addItems(langs_supported.values())
+        self.lang.setCurrentText(langcodes[self.settings.value("target_language")])
         self.commit_button = QPushButton("Add")
         self.commit_button.clicked.connect(self.commit)
 
@@ -155,14 +167,14 @@ class AddDictDialog(QDialog):
         dictimport(
             self.path, 
             supported_dict_formats.inverse[self.type.currentText()], 
-            code[self.lang.currentText()], 
+            langcodes.inverse[self.lang.currentText()], 
             self.name.text())
-        dicts = self.settings.value("custom_dicts", [], type=list)
+        dicts = json.loads(self.settings.value("custom_dicts", '[]'))
         dicts.append({"name": self.name.text(), 
                       "type": supported_dict_formats.inverse[self.type.currentText()], 
                       "path": self.path, 
-                      "lang": code[self.lang.currentText()]})
-        self.settings.setValue("custom_dicts", dicts)
+                      "lang": langcodes.inverse[self.lang.currentText()]})
+        self.settings.setValue("custom_dicts", json.dumps(dicts))
         self.parent.status(f"Importing {self.name.text()} to database..")
         self.parent.refresh()
         self.parent.status("Importing done.")

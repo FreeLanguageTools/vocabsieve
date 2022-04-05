@@ -9,17 +9,18 @@ class SettingsDialog(QDialog):
         super().__init__(parent)
         self.settings = parent.settings
         self.parent = parent
-        self.setWindowTitle("Configure SSM")
+        self.setWindowTitle("Configure VocabSieve")
         self.initWidgets()
         self.initTabs()
         self.setupWidgets()
-        self.loadSettings()
         self.setupAutosave()
+        self.twodictmode = self.settings.value("dict_source2", "<disabled>") != "<disabled>"
 
     def initWidgets(self):
         self.bar = QStatusBar()
         self.allow_editing = QCheckBox("Allow directly editing of text fields")
-        self.lemmatization = QCheckBox("Use lemmatization (Requires restart to take effect)")
+        self.register_config_handler(self.allow_editing, "allow_editing", True)
+        self.lemmatization = QCheckBox("Use lemmatization for dictionary lookups")
         self.lemmatization.setToolTip("Lemmatization means to get the original form of words."
             + "\nFor example, 'books' will be converted to 'book' during lookup if this option is set.")
         self.lemfreq = QCheckBox("Lemmatize before looking up frequency")
@@ -121,9 +122,8 @@ If you find this tool useful, you can give it a star on Github and tell others a
         importer = DictManager(self)
         importer.exec()
         self.loadDictionaries()
-        self.loadDict2Options()
         self.loadFreqSources()
-        self.syncSettings()
+        self.loadAudioDictionaries()
     
     def initTabs(self):
         self.tabs = QTabWidget()
@@ -151,7 +151,7 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.tabs.addTab(self.tab5, "About")
 
     def setupWidgets(self):
-        self.target_language.addItems(code.keys())
+        self.target_language.addItems(langs_supported.values())
         self.web_preset.addItems([
             "English Wiktionary",
             "Monolingual Wiktionary",
@@ -159,7 +159,7 @@ If you find this tool useful, you can give it a star on Github and tell others a
             "Tatoeba",
             "Custom (Enter below)"
             ])
-        self.gtrans_lang.addItems(code.keys())
+        self.gtrans_lang.addItems(langs_supported.values())
         
         self.tab1.layout.addRow(self.lemmatization)
         self.tab1.layout.addRow(self.lemfreq)
@@ -208,53 +208,59 @@ If you find this tool useful, you can give it a star on Github and tell others a
 
         
     def setupAutosave(self):
-        self.allow_editing.clicked.connect(self.syncSettings)
-        self.lemmatization.clicked.connect(self.syncSettings)
-        self.lemfreq.clicked.connect(self.syncSettings)
-        self.bold_word.clicked.connect(self.syncSettings)
-        self.audio_dict.currentTextChanged.connect(self.syncSettings)
-        self.freq_source.currentTextChanged.connect(self.syncSettings)
-        self.dict_source.currentTextChanged.connect(self.syncSettings)
-        self.dict_source.currentTextChanged.connect(self.loadDict2Options)
-        self.dict_source2.currentTextChanged.connect(self.syncSettings)
-        self.dict_source2.currentTextChanged.connect(self.warnRestart)
+        if self.settings.value("config_ver") == None:
+            # if old config is copied to new location, nuke it
+            self.settings.clear()
+        self.settings.setValue("config_ver", 1)
+        self.register_config_handler(self.anki_api, 'anki_api', 'http://localhost:8765')
+        self.loadDictionaries()
+        self.loadAudioDictionaries()
+        self.loadFreqSources()
+        self.loadDecks()
+        self.loadFields()
+        self.dict_source2.currentTextChanged.connect(self.changeMainLayout)
         self.target_language.currentTextChanged.connect(self.loadDictionaries)
         self.target_language.currentTextChanged.connect(self.loadFreqSources)
-        self.target_language.currentTextChanged.connect(self.loadUrl)
-        self.target_language.currentTextChanged.connect(self.syncSettings)
-        self.web_preset.currentTextChanged.connect(self.loadUrl)
-        self.web_preset.currentTextChanged.connect(self.syncSettings)
-        self.custom_url.textChanged.connect(self.syncSettings)
-        self.gtrans_lang.currentTextChanged.connect(self.loadUrl)
-        self.gtrans_lang.currentTextChanged.connect(self.syncSettings)
-        self.deck_name.currentTextChanged.connect(self.syncSettings)
-        self.tags.editingFinished.connect(self.syncSettings)
-        self.note_type.currentTextChanged.connect(self.syncSettings)
         self.note_type.currentTextChanged.connect(self.loadFields)
-        self.sentence_field.currentTextChanged.connect(self.syncSettings)
-        self.sentence_field.currentTextChanged.connect(self.checkCorrectness)
-        self.word_field.currentTextChanged.connect(self.syncSettings)
-        self.word_field.currentTextChanged.connect(self.checkCorrectness)
-        self.definition_field.currentTextChanged.connect(self.syncSettings)
-        self.definition_field.currentTextChanged.connect(self.checkCorrectness)
-        self.definition2_field.currentTextChanged.connect(self.syncSettings)
-        self.definition2_field.currentTextChanged.connect(self.checkCorrectness)
-        self.pronunciation_field.currentTextChanged.connect(self.syncSettings)
-        self.pronunciation_field.currentTextChanged.connect(self.checkCorrectness)
-        self.anki_api.editingFinished.connect(self.syncSettings)
-        self.anki_api.editingFinished.connect(self.loadSettings)
         self.api_enabled.clicked.connect(self.setAvailable)
-        self.api_enabled.clicked.connect(self.syncSettings)
-        self.api_host.editingFinished.connect(self.syncSettings)
-        self.api_port.valueChanged.connect(self.syncSettings)
         self.reader_enabled.clicked.connect(self.setAvailable)
-        self.reader_enabled.clicked.connect(self.syncSettings)
-        self.reader_host.editingFinished.connect(self.syncSettings)
-        self.reader_port.valueChanged.connect(self.syncSettings)
-        self.text_scale.valueChanged.connect(self.syncSettings)
-        self.orientation.currentTextChanged.connect(self.syncSettings)
-        self.gtrans_api.editingFinished.connect(self.syncSettings)
+        self.register_config_handler(self.lemmatization, 'lemmatization', True)
+        self.register_config_handler(self.lemfreq, 'lemfreq', True)
+        self.register_config_handler(self.bold_word, 'bold_word', True)
 
+        self.register_config_handler(self.target_language, 'target_language', 'en', code_translate=True)
+        self.register_config_handler(self.gtrans_lang, 'gtrans_lang', 'en', code_translate=True)
+        self.register_config_handler(self.dict_source, 'dict_source', 'Wiktionary (English)')
+        self.register_config_handler(self.dict_source2, 'dict_source2', '<disabled>')
+        self.register_config_handler(self.audio_dict, 'audio_dict', 'Forvo')
+        self.register_config_handler(self.freq_source, 'freq_source', '<disabled>')
+        self.register_config_handler(self.web_preset, 'web_preset', 'Wiktionary (English)')
+        self.register_config_handler(self.custom_url, 'custom_url', "")
+
+        self.register_config_handler(self.deck_name, 'deck_name', 'Default')
+        self.register_config_handler(self.tags, 'tags', 'ssmtool')
+        self.register_config_handler(self.note_type, 'note_type', 'Basic')
+        self.register_config_handler(self.sentence_field, 'sentence_field', 'Sentence')
+        self.register_config_handler(self.word_field, 'word_field', 'Word')
+        self.register_config_handler(self.definition_field, 'definition_field', 'Definition')
+        self.register_config_handler(self.definition2_field, 'definition2_field', '<disabled>')
+        self.register_config_handler(self.pronunciation_field, 'pronunciation_field', "<disabled>")
+     
+        self.register_config_handler(self.api_enabled, 'api_enabled', True)
+        self.register_config_handler(self.api_host, 'api_host', '127.0.0.1')
+        self.register_config_handler(self.api_port, 'api_port', 39284)
+        self.register_config_handler(self.reader_enabled, 'reader_enabled', True)
+        self.register_config_handler(self.reader_host, 'reader_host', '127.0.0.1')
+        self.register_config_handler(self.reader_port, 'reader_port', 39285)
+        self.register_config_handler(self.gtrans_api, 'gtrans_api', 'https://lingva.ml')
+
+        self.register_config_handler(self.allow_editing, 'allow_editing', True)
+        self.register_config_handler(self.orientation, 'orientation', 'Vertical')
+        self.register_config_handler(self.text_scale, 'text_scale', '100')
+
+        self.target_language.currentTextChanged.connect(self.loadUrl)
+        self.web_preset.currentTextChanged.connect(self.loadUrl)
+        self.gtrans_lang.currentTextChanged.connect(self.loadUrl)
     def setAvailable(self):
         self.api_host.setEnabled(self.api_enabled.isChecked())
         self.api_port.setEnabled(self.api_enabled.isChecked())
@@ -262,53 +268,43 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.reader_port.setEnabled(self.reader_enabled.isChecked())
 
     def loadAudioDictionaries(self):
-        custom_dicts = self.settings.value("custom_dicts", [], type=list)
+        custom_dicts = json.loads(self.settings.value("custom_dicts", '[]'))
         self.audio_dict.blockSignals(True)
         self.audio_dict.clear()
-        dicts = getAudioDictsForLang(code[self.target_language.currentText()], custom_dicts)
+        dicts = getAudioDictsForLang(self.target_language.currentText(), custom_dicts)
         self.audio_dict.addItems(dicts)
         self.audio_dict.blockSignals(False)
 
 
     def loadDictionaries(self):
-        custom_dicts = self.settings.value("custom_dicts", [], type=list)
+        custom_dicts = json.loads(self.settings.value("custom_dicts", '[]'))
         self.dict_source.blockSignals(True)
         self.dict_source.clear()
-        dicts = getDictsForLang(code[self.target_language.currentText()], custom_dicts)
-        self.dict_source.addItems(dicts)
-        self.dict_source.blockSignals(False)
-
-    def loadDict2Options(self):
-        custom_dicts = self.settings.value("custom_dicts", [], type=list)
-        curtext = self.dict_source2.currentText()
         self.dict_source2.blockSignals(True)
         self.dict_source2.clear()
-        dicts = getDictsForLang(code[self.target_language.currentText()], custom_dicts)
-        self.dict_source2.addItem("Disabled")
-        for item in dicts:
-            if self.dict_source.currentText() != item:
-                self.dict_source2.addItem(item)
-        # Keep current choice if available
-        if self.dict_source2.findText(curtext) != -1:
-            self.dict_source2.setCurrentText(curtext)
+        self.dict_source2.addItem("<disabled>")
+        dicts = getDictsForLang(self.target_language.currentText(), custom_dicts)
+        self.dict_source.addItems(dicts)
+        self.dict_source2.addItems(dicts)
+        self.dict_source.blockSignals(False)
         self.dict_source2.blockSignals(False)
 
     def loadFreqSources(self):
-        custom_dicts = self.settings.value("custom_dicts", [], type=list)
-        sources = getFreqlistsForLang(code[self.target_language.currentText()], custom_dicts)
+        custom_dicts = json.loads(self.settings.value("custom_dicts", '[]'))
+        sources = getFreqlistsForLang(self.target_language.currentText(), custom_dicts)
         self.freq_source.blockSignals(True)
         self.freq_source.clear()
-        self.freq_source.addItem("Disabled")
+        self.freq_source.addItem("<disabled>")
         for item in sources:
             self.freq_source.addItem(item)
-        self.freq_source.setCurrentText(self.settings.value("freq_source", "Disabled"))
+        self.freq_source.setCurrentText(self.settings.value("freq_source", "<disabled>"))
         self.freq_source.blockSignals(False)
 
     def loadUrl(self):
-        langfull = self.settings.value("target_language", "English")
-        tolangfull = self.settings.value("gtrans_lang", "English")
-        lang = code[langfull]
-        tolang = code[tolangfull]
+        lang = self.settings.value("target_language", "en")
+        tolang = self.settings.value("gtrans_lang", "en")
+        langfull = langcodes[lang]
+        tolangfull = langcodes[tolang]
         self.presets = bidict({
             "English Wiktionary": "https://en.wiktionary.org/wiki/@@@@#" + langfull, 
             "Monolingual Wiktionary": f"https://{lang}.wiktionary.org/wiki/@@@@",
@@ -323,43 +319,14 @@ If you find this tool useful, you can give it a star on Github and tell others a
             self.custom_url.setEnabled(False)
             self.custom_url.setText(self.presets[self.web_preset.currentText()])
 
-    def loadSettings(self):
-        self.bold_word.setChecked(self.settings.value("bold_word", True, type=bool))
-        self.allow_editing.setChecked(self.settings.value("allow_editing", True, type=bool))
-        self.lemmatization.setChecked(self.settings.value("lemmatization", True, type=bool))
-        self.lemfreq.setChecked(self.settings.value("lemfreq", False, type=bool))
-        self.orientation.setCurrentText(self.settings.value("orientation", "Vertical"))
-        self.text_scale.setValue(self.settings.value("text_scale", 100, type=int))
-        self.target_language.setCurrentText(self.settings.value("target_language"))
-        self.loadDictionaries()
-        self.loadDict2Options()
-        self.loadAudioDictionaries()
-        self.loadFreqSources()
-        self.audio_dict.setCurrentText(self.settings.value("audio_dict", "Forvo"))
-        self.dict_source.setCurrentText(self.settings.value("dict_source", "Wiktionary (English)"))
-        self.dict_source2.setCurrentText(self.settings.value("dict_source2", "Wiktionary (English)"))
-        self.web_preset.setCurrentText(self.settings.value("web_preset", "English Wiktionary"))
-        self.loadUrl()
-        self.gtrans_lang.setCurrentText(self.settings.value("gtrans_lang", "English"))
-        self.anki_api.setText(self.settings.value("anki_api", "http://localhost:8765"))
-        self.tags.setText(self.settings.value("tags", "vocabsieve"))
+    def loadDecks(self):
+        self.status("Loading decks")
         api = self.anki_api.text()
-        self.web_preset.setCurrentText(self.settings.value("web_preset"))
-
-        self.api_enabled.setChecked(self.settings.value("api_enabled", True, type=bool))
-        self.api_host.setText(self.settings.value("host", "127.0.0.1"))
-        self.api_port.setValue(self.settings.value("port", 39284, type=int))
-        self.reader_enabled.setChecked(self.settings.value("reader_enabled", True, type=bool))
-        self.reader_host.setText(self.settings.value("reader_host", "127.0.0.1"))
-        self.reader_port.setValue(self.settings.value("reader_port", 39285, type=int))
-        self.gtrans_api.setText(self.settings.value("gtrans_api", "https://lingva.ml"))
-
         try:
             _ = getVersion(api)
         except Exception as e:
             self.errorNoConnection(e)
             return
-
         decks = getDeckList(api)
         self.deck_name.blockSignals(True)
         self.deck_name.clear()
@@ -373,7 +340,6 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.note_type.addItems(note_types)
         self.note_type.setCurrentText(self.settings.value("note_type"))
         self.note_type.blockSignals(False)
-        self.loadFields()
 
     def loadFields(self):
         self.status("Loading fields")
@@ -383,15 +349,12 @@ If you find this tool useful, you can give it a star on Github and tell others a
         except Exception as e:
             self.errorNoConnection(e)
             return
+    
         current_type = self.note_type.currentText()
-
-
         if current_type == "":
             return
 
         fields = getFields(api, current_type)
-        if "Disabled" in fields:
-            self.warn("You must not have a field named 'Disabled'. You *will* encounter bugs.")
         # Temporary store fields 
         sent = self.sentence_field.currentText()
         word = self.word_field.currentText()
@@ -416,11 +379,11 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.definition_field.addItems(fields)
 
         self.definition2_field.clear()
-        self.definition2_field.addItem("Disabled")
+        self.definition2_field.addItem("<disabled>")
         self.definition2_field.addItems(fields)     
 
         self.pronunciation_field.clear()
-        self.pronunciation_field.addItem("Disabled")
+        self.pronunciation_field.addItem("<disabled>")
         self.pronunciation_field.addItems(fields)   
 
         self.sentence_field.setCurrentText(self.settings.value("sentence_field"))
@@ -446,46 +409,6 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.definition2_field.blockSignals(False)
         self.pronunciation_field.blockSignals(False)
         self.status("Done")
-
-    def syncSettings(self):
-        self.status("Syncing")
-        self.settings.setValue("audio_dict", self.audio_dict.currentText())
-        self.settings.setValue("allow_editing", self.allow_editing.isChecked())
-        self.settings.setValue("lemmatization", self.lemmatization.isChecked())
-        self.settings.setValue("lemfreq", self.lemfreq.isChecked())
-        self.settings.setValue("bold_word", self.bold_word.isChecked())
-        self.settings.setValue("orientation", self.orientation.currentText())
-        self.settings.setValue("target_language", self.target_language.currentText())
-        self.settings.setValue("dict_source", self.dict_source.currentText())
-        self.settings.setValue("dict_source2", self.dict_source2.currentText())
-        self.settings.setValue("freq_source", self.freq_source.currentText())
-        self.settings.setValue("gtrans_lang", self.gtrans_lang.currentText())
-        self.settings.setValue("anki_api", self.anki_api.text())
-        self.settings.setValue("api_enabled", self.api_enabled.isChecked())
-        self.settings.setValue("host", self.api_host.text())
-        self.settings.setValue("port", self.api_port.value())
-        self.settings.setValue("reader_enabled", self.reader_enabled.isChecked())
-        self.settings.setValue("reader_host", self.reader_host.text())
-        self.settings.setValue("reader_port", self.reader_port.value())
-        self.settings.setValue("text_scale", self.text_scale.value())
-        self.settings.setValue("web_preset", self.web_preset.currentText())
-        self.settings.setValue("custom_url", self.custom_url.text())
-        self.settings.setValue("gtrans_api", self.gtrans_api.text())
-        try:
-            api = self.anki_api.text()
-            getVersion(api)
-            self.settings.setValue("deck_name", self.deck_name.currentText())
-            self.settings.setValue("note_type", self.note_type.currentText())
-            self.settings.setValue("tags", self.tags.text())
-            self.settings.setValue("sentence_field", self.sentence_field.currentText())
-            self.settings.setValue("word_field", self.word_field.currentText())
-            self.settings.setValue("definition_field", self.definition_field.currentText())
-            self.settings.setValue("definition2_field", self.definition2_field.currentText())
-            self.settings.setValue("pronunciation_field", self.pronunciation_field.currentText())
-        except Exception as e:
-            pass
-        self.settings.sync()
-        self.status("Settings saved")
     
     def errorNoConnection(self, error):
         msg = QMessageBox()
@@ -496,24 +419,47 @@ If you find this tool useful, you can give it a star on Github and tell others a
         msg.exec()
 
 
-    def warn(self, text):
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Warning)
-        msg.setText(text)
-        msg.exec()
-
-    def warnRestart(self):
-        if self.dict_source2.currentText() and self.dict_source2.currentText() != "Disabled":
-            self.warn("You must restart for this tool to work properly after changing Dictionary source #2."
-            + "\nIf you have just enabled it, you must also configure a definition 2 field in the Anki tab, or otherwise you will not be able to add notes.")
-    
-    def checkCorrectness(self):
-        # No two fields should be the same
-        set_fields = [self.sentence_field.currentText(), self.word_field.currentText(),
-            self.definition_field.currentText(), self.definition2_field.currentText()]
-
-        if len(set(set_fields)) != len(set_fields):
-            self.warn("All fields must be set to different note fields.\nYou *will* encounter bugs.")
+    def changeMainLayout(self):
+        if self.dict_source2.currentText() != "<disabled>":
+            # This means user has changed from one source to two source mode, 
+            # need to redraw main window
+            self.parent.layout.removeWidget(self.parent.definition)
+            self.parent.layout.addWidget(self.parent.definition, 7, 0, 2, 3)
+            self.parent.layout.setRowStretch(7, 1)
+            self.parent.layout.addWidget(self.parent.definition2, 9, 0, 2, 3)
+            self.parent.definition2.setVisible(True)
+            self.parent.layout.setRowStretch(9, 1)
+        else:
+            self.parent.layout.removeWidget(self.parent.definition)
+            self.parent.layout.removeWidget(self.parent.definition2)
+            self.parent.definition2.setVisible(False)
+            self.parent.layout.addWidget(self.parent.definition, 7, 0, 4, 3)
 
     def status(self, msg):
         self.bar.showMessage(self.parent.time() + " " + msg, 4000)
+
+    def register_config_handler(self, widget, key, default, code_translate=False):
+        name = widget.objectName()
+        update = lambda v: self.settings.setValue(key, v)
+        update_map = lambda v: self.settings.setValue(key, langcodes.inverse[v])
+        if type(widget) == QCheckBox:
+            widget.setChecked(self.settings.value(key, default, type=bool))
+            widget.clicked.connect(update)
+            update(widget.isChecked())
+        if type(widget) == QLineEdit:
+            widget.setText(self.settings.value(key, default))
+            widget.textChanged.connect(update)
+            update(widget.text())
+        if type(widget) == QComboBox:
+            if code_translate:
+                widget.setCurrentText(langcodes[self.settings.value(key, default)])
+                widget.currentTextChanged.connect(update_map)
+                update_map(widget.currentText())
+            else:
+                widget.setCurrentText(self.settings.value(key, default))
+                widget.currentTextChanged.connect(update)
+                update(widget.currentText())
+        if type(widget) == QSlider or type(widget) == QSpinBox:
+            widget.setValue(self.settings.value(key, default, type=int))
+            widget.valueChanged.connect(update)
+            update(widget.value())

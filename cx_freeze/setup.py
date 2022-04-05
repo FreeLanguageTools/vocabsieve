@@ -13,7 +13,7 @@ build_exe_options = {"includes": ["vocabsieve", "setuptools", "PyQt5",
                                   "jinja2.ext", "sqlalchemy",
                                   "sqlite3", "sqlalchemy.sql.default_comparator",
                                   "sqlalchemy.dialects.sqlite", "charset_normalizer", "slpp",
-                                  "ebooklib"],
+                                  "ebooklib", "pycountry"],
                      "include_files": include_files,
                      "excludes": ["tkinter"],
                      "include_msvcr": True}

@@ -35,8 +35,8 @@ class LanguageServer(QObject):
             
         @self.app.route("/translate", methods=["POST"])
         def translate():
-            lang = request.args.get("src") or code[self.settings.value("target_language")]
-            gtrans_lang = request.args.get("dst") or code[self.settings.value("gtrans_lang")]
+            lang = request.args.get("src") or self.settings.value("target_language")
+            gtrans_lang = request.args.get("dst") or self.settings.value("gtrans_lang")
             return {
                     "translation": googletranslate(request.json.get("text"), lang, gtrans_lang)['definition'], 
                     "src": lang, 
@@ -55,7 +55,7 @@ class LanguageServer(QObject):
 
         @self.app.route("/lemmatize/<string:word>")
         def lemmatize(word):
-            return lem_word(word, code[self.settings.value("target_language")])
+            return lem_word(word, self.settings.value("target_language"))
 
         @self.app.route("/logs")
         def logs():

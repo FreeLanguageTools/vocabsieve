@@ -19,7 +19,7 @@ from vocabsieve.main import DictionaryWindow
 from PyQt5.QtWidgets import QApplication
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    app.setApplicationName("vocabsieve")
+    app.setApplicationName("VocabSieve")
     app.setOrganizationName("FreeLanguageTools")
     w = DictionaryWindow()
 

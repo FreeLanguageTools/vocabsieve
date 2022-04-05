@@ -7,7 +7,7 @@ from pathlib import Path
 from difflib import SequenceMatcher
 from sentence_splitter import split_text_into_sentences
 from vocabsieve.tools import addNotes
-from vocabsieve.dictionary import code, lookupin
+from vocabsieve.dictionary import lookupin
 import time
 
 
@@ -114,7 +114,7 @@ class KindleImporter(QDialog):
 
         for i in range(maxlen):
             sec = get_section(bdata[titles[i]], starts[i], ends[i])
-            sent = extract_sentence(sec, self.highlights[i], code[self.parent.settings.value("target_language")])
+            sent = extract_sentence(sec, self.highlights[i], self.parent.settings.value("target_language"))
             if sent:
                 count += 1
                 self.sents_count_label.setText(str(count) + " sentences found")
@@ -172,7 +172,7 @@ class KindleImporter(QDialog):
                 }
                 definition = definition.replace("\n", "<br>")
                 content['fields'][self.parent.settings.value('definition_field')] = definition
-                if self.settings.value("dict_source2", "Disabled") != 'Disabled':
+                if self.settings.value("dict_source2", "<disabled>") != '<disabled>':
                     try:
                         definition2 = definition2.replace("\n", "<br>")
                         content['fields'][self.parent.settings.value('definition2_field')] = definition2
