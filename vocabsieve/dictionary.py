@@ -176,12 +176,43 @@ def googletranslate(word, language, gtrans_lang, gtrans_api):
     else:
         return
 
-def getAudio(word, language, dictionary="Forvo (all)"):
-    # should return a list of audio paths
+def getAudio(word, language, dictionary="Forvo (all)", custom_dicts=[]):
+    # should return a dict of audio names and paths to audio
     if dictionary == "Forvo (all)":
         return fetch_audio_all(word, language)
     elif dictionary == "Forvo (best)":
-        return fetch_audio_best(word, llanguageang)
+        return fetch_audio_best(word, language)
+    elif dictionary == "<all>":
+        # We are using all the local dictionaries here.
+        result = {}
+        for d in custom_dicts:
+            if d['lang'] == language and d['type'] == 'audiolib':
+                try:
+                    data = lookupin(word.lower(), language, lemmatize=False, dictionary=d['name'])
+                    if data['definition']:
+                        data['definition'] = json.loads(data['definition'])
+                        rootpath = d['path']
+                        for item in data['definition']:
+                            qualified_name = d['name'] + ":" + os.path.splitext(item)[0]
+                            result[qualified_name] = os.path.join(rootpath, item)
+                except Exception:
+                    pass
+        return result
+    else:
+        # We are using a local dictionary here.
+        data = lookupin(word.lower(), language, lemmatize=False, dictionary=dictionary)
+        data['definition'] = json.loads(data['definition'])
+        for d in custom_dicts:
+            if d['name'] == dictionary and d['lang'] == language and d['type'] == 'audiolib':
+                rootpath = d['path']
+                break
+        print(rootpath)
+        result = {}
+        for item in data['definition']:
+            qualified_name = dictionary + ":" + os.path.splitext(item)[0]
+            result[qualified_name] = os.path.join(rootpath, item)
+        print(result)
+        return result
     return
 
 def lookupin(word, language, lemmatize=True, dictionary="Wiktionary (English)", gtrans_lang="en", gtrans_api="https://lingva.ml"):
@@ -215,21 +246,24 @@ def getDictsForLang(lang: str, dicts: list):
     results = ["Wiktionary (English)", "Google Translate"] # These are for all the languages
     #if lang in gdict_languages:
     #    results.append("Google dictionary (Monolingual)")
-    results.extend([item['name'] for item in dicts if item['lang'] == lang and item['type'] != "freq" and item['type'] != 'audio'])
+    results.extend([item['name'] for item in dicts if item['lang'] == lang and item['type'] != "freq" and item['type'] != 'audiolib'])
     return results
 
 def getAudioDictsForLang(lang: str, dicts: list):
     "Get the list of audio dictionaries for a given language"
+    print("lang is", lang)
     results = ["<disabled>"]
     results.extend(pronunciation_sources)
-    results.extend([item['name'] for item in dicts if item['lang'] == lang and item['type'] == "audio"])
+    audiolibs = [item['name'] for item in dicts if item['lang'] == lang and item['type'] == "audiolib"]
+    results.extend(audiolibs)
+    if len(audiolibs) > 1:
+        results.append("<all>")
     return results
 
 def getFreqlistsForLang(lang: str, dicts: list):
     return [item['name'] for item in dicts if item['lang'] == lang and item['type'] == "freq"]
 
 forvopath = os.path.join(QStandardPaths.writableLocation(QStandardPaths.DataLocation), "forvo")
-print(datapath)
 def play_audio(name: str, data: dict, lang: str):
     if data[name].startswith("https://"):
         fpath = os.path.join(forvopath, lang, name) + data[name][-4:]
@@ -246,3 +280,6 @@ def play_audio(name: str, data: dict, lang: str):
                 return
         playsound(fpath)
         return fpath
+    else:
+        playsound(data[name])
+        return data[name]

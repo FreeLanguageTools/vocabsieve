@@ -18,7 +18,7 @@ class SettingsDialog(QDialog):
 
     def initWidgets(self):
         self.bar = QStatusBar()
-        self.allow_editing = QCheckBox("Allow directly editing of text fields")
+        self.allow_editing = QCheckBox("Allow directly editing definition fields")
         self.register_config_handler(self.allow_editing, "allow_editing", True)
         self.lemmatization = QCheckBox("Use lemmatization for dictionary lookups")
         self.lemmatization.setToolTip("Lemmatization means to get the original form of words."
@@ -219,8 +219,6 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.loadDecks()
         self.loadFields()
         self.dict_source2.currentTextChanged.connect(self.changeMainLayout)
-        self.target_language.currentTextChanged.connect(self.loadDictionaries)
-        self.target_language.currentTextChanged.connect(self.loadFreqSources)
         self.note_type.currentTextChanged.connect(self.loadFields)
         self.api_enabled.clicked.connect(self.setAvailable)
         self.reader_enabled.clicked.connect(self.setAvailable)
@@ -258,6 +256,9 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.register_config_handler(self.orientation, 'orientation', 'Vertical')
         self.register_config_handler(self.text_scale, 'text_scale', '100')
 
+        self.target_language.currentTextChanged.connect(self.loadDictionaries)
+        self.target_language.currentTextChanged.connect(self.loadAudioDictionaries)
+        self.target_language.currentTextChanged.connect(self.loadFreqSources)
         self.target_language.currentTextChanged.connect(self.loadUrl)
         self.web_preset.currentTextChanged.connect(self.loadUrl)
         self.gtrans_lang.currentTextChanged.connect(self.loadUrl)
@@ -271,7 +272,7 @@ If you find this tool useful, you can give it a star on Github and tell others a
         custom_dicts = json.loads(self.settings.value("custom_dicts", '[]'))
         self.audio_dict.blockSignals(True)
         self.audio_dict.clear()
-        dicts = getAudioDictsForLang(self.target_language.currentText(), custom_dicts)
+        dicts = getAudioDictsForLang(self.settings.value("target_language", 'en'), custom_dicts)
         self.audio_dict.addItems(dicts)
         self.audio_dict.blockSignals(False)
 
@@ -283,7 +284,7 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.dict_source2.blockSignals(True)
         self.dict_source2.clear()
         self.dict_source2.addItem("<disabled>")
-        dicts = getDictsForLang(self.target_language.currentText(), custom_dicts)
+        dicts = getDictsForLang(self.settings.value("target_language", 'en'), custom_dicts)
         self.dict_source.addItems(dicts)
         self.dict_source2.addItems(dicts)
         self.dict_source.blockSignals(False)

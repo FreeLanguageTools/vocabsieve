@@ -62,7 +62,6 @@ class DictionaryWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("VocabSieve")
         self.setFocusPolicy(Qt.StrongFocus)
-        self.resize(400, 700)
         self.widget = QWidget()
         self.settings = QSettings()
         self.rec = Record()
@@ -72,8 +71,10 @@ class DictionaryWindow(QMainWindow):
         self.scaleFont()
         self.initWidgets()
         if self.settings.value("orientation", "Vertical") == "Vertical":
+            self.resize(400, 700)
             self.setupWidgetsV()
         else:
+            self.resize(1000, 300)
             self.setupWidgetsH()
         self.setupMenu()
         self.setupButtons()
@@ -146,11 +147,10 @@ class DictionaryWindow(QMainWindow):
             self.play_audio(x.text()[2:]) if x != None else None
             ))
 
-
-
-        self.sentence.setReadOnly(not (self.settings.value("allow_editing", True, type=bool)))
         self.definition.setReadOnly(not (self.settings.value("allow_editing", True, type=bool)))
+        self.definition2.setReadOnly(not (self.settings.value("allow_editing", True, type=bool)))
         self.definition.setPlaceholderText('You can look up any word in the "Sentence" box by double clicking it, or alternatively by selecting it, then press "Get definition".')
+
 
     def play_audio(self, x):
         QCoreApplication.processEvents()
@@ -184,16 +184,16 @@ class DictionaryWindow(QMainWindow):
         self.layout.addWidget(self.word, 5, 0, 1, 3)
         if self.settings.value("dict_source2", "<disabled>") != "<disabled>":
             self.layout.addWidget(self.definition, 7, 0, 2, 3)
-            self.layout.setRowStretch(7, 1)
+            self.layout.setRowStretch(7, 2)
             self.layout.addWidget(self.definition2, 9, 0, 2, 3)
-            self.layout.setRowStretch(9, 1)
+            self.layout.setRowStretch(9, 2)
         else:
             self.layout.addWidget(self.definition, 7, 0, 4, 3)
-            self.layout.setRowStretch(7, 1)
+            self.layout.setRowStretch(7, 2)
 
         self.layout.addWidget(QLabel("<h3 style=\"font-weight: normal;\">Pronunciation</h3>"), 11, 0, 1, 3)
         self.layout.addWidget(self.audio_selector, 12, 0, 1, 3)
-        
+        self.layout.setRowStretch(12, 1)
         self.layout.addWidget(QLabel("<h3 style=\"font-weight: normal;\">Additional tags</h3>"), 13, 0, 1, 3)
 
         self.layout.addWidget(self.tags, 14, 0, 1, 3)
@@ -256,18 +256,19 @@ class DictionaryWindow(QMainWindow):
         self.layout.setColumnStretch(3, 5)
         self.layout.setColumnStretch(4, 5)
 
-        self.layout.addWidget(self.label_sentence, 1, 0)
+        self.layout.addWidget(QLabel("<h3 style=\"font-weight: normal;\">Sentence</h3>"), 1, 0)
         self.layout.addWidget(self.freq_display, 1, 1)
         self.layout.addWidget(self.undo_button, 6, 0)
         self.layout.addWidget(self.read_button, 6, 1)
 
-        self.layout.addWidget(self.sentence, 2, 0, 4, 2)
-        self.layout.addWidget(QLabel("Word"), 1, 2)
+        self.layout.addWidget(self.sentence, 2, 0, 3, 2)
+        self.layout.addWidget(self.audio_selector, 5, 0, 1, 2)
+        self.layout.addWidget(QLabel("<h3 style=\"font-weight: normal;\">Word</h3>"), 1, 2)
 
         self.layout.addWidget(self.lookup_button, 3, 2)
         self.layout.addWidget(self.lookup_exact_button, 4, 2)
         
-        self.layout.addWidget(QLabel("<b>Definition</b>"), 1, 3)
+        self.layout.addWidget(QLabel("<h3 style=\"font-weight: normal;\">Definition</h3>"), 1, 3)
         self.layout.addWidget(self.web_button, 1, 4)
         self.layout.addWidget(self.word, 2, 2, 1, 1)
         if self.settings.value("dict_source2", "<disabled>") != "<disabled>":
@@ -412,7 +413,11 @@ class DictionaryWindow(QMainWindow):
         self.audio_path = None
         if self.settings.value("audio_dict", "<disabled>") != "<disabled>":
             try:
-                self.audios = getAudio(word, self.settings.value("target_language"), dictionary=self.settings.value("audio_dict"))
+                self.audios = getAudio(
+                    word, self.settings.value("target_language"), 
+                    dictionary=self.settings.value("audio_dict"),
+                    custom_dicts=json.loads(self.settings.value("custom_dicts"))
+                    )
             except Exception:
                 self.audios = {}
             self.audio_selector.clear()

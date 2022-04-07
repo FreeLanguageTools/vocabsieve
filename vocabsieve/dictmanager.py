@@ -5,6 +5,7 @@ from .dictionary import *
 from .tools import *
 from bidict import bidict
 import json
+import os
 
 supported_dict_formats = bidict({
         "stardict": "StarDict", 
@@ -13,6 +14,7 @@ supported_dict_formats = bidict({
         "freq": "Frequency list",
         "audiolib": "Audio Library"
         })
+
 
 class DictManager(QDialog):
     def __init__(self, parent):
@@ -34,7 +36,7 @@ class DictManager(QDialog):
         self.tview.setHeaderLabels(["Name", "Type", "Language"])
         self.add_dict = QPushButton("Import dictionary or frequency list..")
         self.add_dict.clicked.connect(self.onAdd)
-        self.add_audio = QPushButton("Import GoldenDict audio library..")
+        self.add_audio = QPushButton("Import GoldenDict/LinguaLibre audio library..")
         self.add_audio.clicked.connect(self.onAddAudio)
         self.remove = QPushButton("Remove")
         self.remove.clicked.connect(self.onRemove)
@@ -50,6 +52,12 @@ to be reimported, otherwise this operation will fail.\
 
     def setupWidgets(self):
         self.layout = QVBoxLayout(self)
+        self.layout.addWidget(QLabel(
+            "<strong>Note</strong>: "
+            "<strong>Do not</strong> delete any files after importing them!<br>"
+            "VocabSieve does not store a copy of these files; it only indexes them.<br>"
+            "If you delete the files, your dictionaries will disappear when the database is rebuilt."        
+            ))
         self.layout.addWidget(self.tview)
         self.layout.addWidget(self.add_dict)
         self.layout.addWidget(self.add_audio)
@@ -65,7 +73,6 @@ to be reimported, otherwise this operation will fail.\
     def onAdd(self):
         fdialog = QFileDialog()
         fdialog.setFileMode(QFileDialog.ExistingFile)
-        fdialog.setAcceptMode(QFileDialog.AcceptOpen)
         fdialog.setNameFilter("Dictionary files (*.json *.ifo)")
         fdialog.exec()
         if fdialog.selectedFiles() == []:
@@ -76,7 +83,15 @@ to be reimported, otherwise this operation will fail.\
         dialog.exec()
 
     def onAddAudio(self):
-        pass
+        folder = QFileDialog.getExistingDirectory(self, "Select sound library",
+            QStandardPaths.writableLocation(QStandardPaths.HomeLocation), QFileDialog.ShowDirsOnly)
+        if not folder:
+            print("No folder is chosen as sound library, aborting.")
+            return
+        dialog = AddDictDialog(self, folder, True)
+        dialog.exec()
+
+
 
     def onRemove(self):
         index = self.tview.indexFromItem(self.tview.currentItem())
@@ -122,17 +137,21 @@ to be reimported, otherwise this operation will fail.\
 
 
 class AddDictDialog(QDialog):
-    def __init__(self, parent, fname):
+    def __init__(self, parent, fname, audiolib=False):
         super().__init__(parent)
         self.settings = parent.settings
         self.parent = parent
-        self.setWindowTitle("Add Dictionary")
         self.resize(250, 150)
         self.fname = fname
+        self.audiolib = audiolib
+        if audiolib:
+            self.setWindowTitle("Add dictionary or frequency list")
+        else:
+            self.setWindowTitle("Add sound library")
+            if dictinfo(self.fname) == "Unsupported format":
+                self.warn("Unsupported format")
+                self.close()
 
-        if dictinfo(self.fname) == "Unsupported format":
-            self.warn("Unsupported format")
-            self.close()
         self.parent.status("Reading " + self.fname)
         info = dictinfo(self.fname)
         self.parent.status("Reading done.")

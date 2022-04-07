@@ -74,6 +74,8 @@ def dictinfo(path):
     "Get information about dictionary from file path"
     basename, ext = os.path.splitext(path)
     basename = os.path.basename(basename)
+    if os.path.isdir(path):
+        return {"type": "audiolib", "basename": basename, "path": path}
     if ext not in [".json", ".ifo"]:
         return "Unsupported format"
     elif ext == ".json":
@@ -117,6 +119,24 @@ def dictimport(path, dicttype, lang, name):
             for i, word in enumerate(data):
                 d[word] = i+1
             dictdb.importdict(d, lang, name)
+    elif dicttype == "audiolib":
+        # Audios will be stored as a serialized json list
+        filelist = []
+        d = {}
+        for root, dirs, files in os.walk(path):
+            for item in files:
+                filelist.append(os.path.relpath(os.path.join(root, item), path))
+        print(len(filelist), "audios selected.")
+        for item in filelist:
+            headword = os.path.basename(os.path.splitext(item)[0]).lower()
+            if not d.get(headword):
+                d[headword] = [item]
+            else:
+                d[headword].append(item)
+        for word in d.keys():
+            d[word] = json.dumps(d[word])
+        dictdb.importdict(d, lang, name)
+
     else:
         print("Error:", str(dicttype), "is not supported.")
         raise NotImplementedError
