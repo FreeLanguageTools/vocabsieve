@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
+import platform
 from .tools import *
 from .dictionary import *
 from .dictmanager import *
@@ -19,6 +20,7 @@ class SettingsDialog(QDialog):
     def initWidgets(self):
         self.bar = QStatusBar()
         self.allow_editing = QCheckBox("Allow directly editing definition fields")
+        self.primary = QCheckBox("Use primary selection")
         self.register_config_handler(self.allow_editing, "allow_editing", True)
         self.lemmatization = QCheckBox("Use lemmatization for dictionary lookups")
         self.lemmatization.setToolTip("Lemmatization means to get the original form of words."
@@ -196,6 +198,9 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.tab3.layout.addRow(QLabel("Google Translate API"), self.gtrans_api)
 
         self.tab4.layout.addRow(QLabel("<b>All settings on this tab requires restart to take effect.</b>"))
+        if platform.system() == "Linux":
+            # Primary selection is only available on Linux
+            self.tab4.layout.addRow(self.primary)
         self.tab4.layout.addRow(self.allow_editing)
         self.tab4.layout.addRow(QLabel("Interface layout"), self.orientation)
         self.tab4.layout.addRow(QLabel("Text scale"), self.text_scale_box)
@@ -253,6 +258,7 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.register_config_handler(self.gtrans_api, 'gtrans_api', 'https://lingva.ml')
 
         self.register_config_handler(self.allow_editing, 'allow_editing', True)
+        self.register_config_handler(self.primary, 'primary', False)
         self.register_config_handler(self.orientation, 'orientation', 'Vertical')
         self.register_config_handler(self.text_scale, 'text_scale', '100')
 

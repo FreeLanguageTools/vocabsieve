@@ -85,6 +85,9 @@ class DictionaryWindow(QMainWindow):
         self.prev_states = deque(maxlen=30)
 
         GlobalObject().addEventListener("double clicked", self.lookupClicked)
+        if self.settings.value("primary", False, type=bool)\
+            and QClipboard.supportsSelection(QApplication.clipboard()):
+            QApplication.clipboard().selectionChanged.connect(lambda: self.clipboardChanged(False, True))
         QApplication.clipboard().dataChanged.connect(self.clipboardChanged)
 
     def scaleFont(self):
@@ -371,7 +374,7 @@ class DictionaryWindow(QMainWindow):
     def setWord(self, content):
         self.word.setText(content)
 
-    def clipboardChanged(self, evenWhenFocused=False):
+    def clipboardChanged(self, evenWhenFocused=False, selection=False):
         """
         If the input is just a single word, we look it up right away.
         If it's a json and has the required fields, we use these fields to
@@ -380,7 +383,10 @@ class DictionaryWindow(QMainWindow):
         By default this is not activated when the window is in focus to prevent
         mistakes, unless it is used from the button.
         """
-        text = QApplication.clipboard().text()
+        if selection:
+            text = QApplication.clipboard().text(QClipboard.Selection)
+        else:
+            text = QApplication.clipboard().text()
         remove_spaces = self.settings.value("remove_spaces")
         lang = self.settings.value("target_language", "en")
         if self.isActiveWindow() and not evenWhenFocused:
