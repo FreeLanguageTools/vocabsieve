@@ -105,8 +105,8 @@ class DictionaryWindow(QMainWindow):
         self.menu = QMenuBar(self)
         self.sentence = MyTextEdit()
         self.sentence.setPlaceholderText("Sentence copied to the clipboard will show up here.")
-        self.sentence.setMinimumHeight(30)
-        self.sentence.setMaximumHeight(130)
+        self.sentence.setMinimumHeight(50)
+        self.sentence.setMaximumHeight(300)
         self.word = QLineEdit()
         self.word.setPlaceholderText("Word will appear here when looked up.")
         self.definition = MyTextEdit()
@@ -142,6 +142,7 @@ class DictionaryWindow(QMainWindow):
         self.freq_display.display(0)
 
         self.audio_selector = QListWidget()
+        self.audio_selector.setMinimumHeight(50)
         self.audio_selector.setFlow(QListView.TopToBottom)
         self.audio_selector.setResizeMode(QListView.Adjust)
         self.audio_selector.setWrapping(True)
@@ -205,14 +206,14 @@ class DictionaryWindow(QMainWindow):
         self.layout.addWidget(self.config_button, 16, 0, 1, 3)
 
     def setupButtons(self):
-        self.lookup_button.clicked.connect(lambda _: self.lookupClicked(True))
-        self.lookup_exact_button.clicked.connect(lambda _: self.lookupClicked(False))
+        self.lookup_button.clicked.connect(lambda: self.lookupClicked(True))
+        self.lookup_exact_button.clicked.connect(lambda: self.lookupClicked(False))
 
         self.web_button.clicked.connect(self.onWebButton)
 
         self.config_button.clicked.connect(self.configure)
         self.toanki_button.clicked.connect(self.createNote)
-        self.read_button.clicked.connect(lambda _: self.clipboardChanged(True))
+        self.read_button.clicked.connect(lambda: self.clipboardChanged(True))
 
         self.sentence.textChanged.connect(self.updateAnkiButtonState)
         self.undo_button.clicked.connect(self.undo)
@@ -246,16 +247,12 @@ class DictionaryWindow(QMainWindow):
 
     def setupWidgetsH(self):
         self.layout = QGridLayout(self.widget)
-        self.sentence.setMaximumHeight(99999)
+        #self.sentence.setMaximumHeight(99999)
         self.layout.addWidget(self.namelabel, 0, 0, 1, 3)
         self.layout.addWidget(self.single_word, 0, 3, 1, 2)
-        self.layout.setRowStretch(2, 1)
-        self.layout.setRowStretch(3, 1)
-        self.layout.setRowStretch(4, 1)
-        self.layout.setRowStretch(5, 1)
         self.layout.setColumnStretch(0, 5)
         self.layout.setColumnStretch(1, 5)
-        self.layout.setColumnStretch(2, 4)
+        self.layout.setColumnStretch(2, 5)
         self.layout.setColumnStretch(3, 5)
         self.layout.setColumnStretch(4, 5)
 

@@ -430,17 +430,24 @@ If you find this tool useful, you can give it a star on Github and tell others a
         if self.dict_source2.currentText() != "<disabled>":
             # This means user has changed from one source to two source mode, 
             # need to redraw main window
-            self.parent.layout.removeWidget(self.parent.definition)
-            self.parent.layout.addWidget(self.parent.definition, 7, 0, 2, 3)
-            self.parent.layout.setRowStretch(7, 1)
-            self.parent.layout.addWidget(self.parent.definition2, 9, 0, 2, 3)
-            self.parent.definition2.setVisible(True)
-            self.parent.layout.setRowStretch(9, 1)
+            if self.settings.value("orientation", "Vertical") == "Vertical":
+                self.parent.layout.removeWidget(self.parent.definition)
+                self.parent.layout.addWidget(self.parent.definition, 7, 0, 2, 3)
+                self.parent.layout.addWidget(self.parent.definition2, 9, 0, 2, 3)
+                self.parent.definition2.setVisible(True)
+            else:
+                self.parent.layout.removeWidget(self.parent.definition)
+                self.parent.layout.addWidget(self.parent.definition, 2, 3, 2, 2)
+                self.parent.layout.addWidget(self.parent.definition2, 4, 3, 2, 2)
+                self.parent.definition2.setVisible(True)
         else:
             self.parent.layout.removeWidget(self.parent.definition)
             self.parent.layout.removeWidget(self.parent.definition2)
             self.parent.definition2.setVisible(False)
-            self.parent.layout.addWidget(self.parent.definition, 7, 0, 4, 3)
+            if self.settings.value("orientation", "Vertical") == "Vertical":
+                self.parent.layout.addWidget(self.parent.definition, 7, 0, 4, 3)
+            else:
+                self.parent.layout.addWidget(self.parent.definition, 2, 3, 4, 2)
 
     def status(self, msg):
         self.bar.showMessage(self.parent.time() + " " + msg, 4000)
