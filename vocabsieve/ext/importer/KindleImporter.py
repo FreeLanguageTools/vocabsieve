@@ -9,17 +9,18 @@ from sentence_splitter import split_text_into_sentences
 from vocabsieve.tools import addNotes
 from vocabsieve.dictionary import lookupin
 import time
-
-
+from datetime import datetime
 
 def get_section(bdata: bytes, loc_start, loc_end):
-    start = max((loc_start-10)*150, 0)
-    end = min((11+loc_end)*150, len(bdata))+1
+    start = max((loc_start-15)*150, 0)
+    end = min((15+loc_end)*150, len(bdata))+1
     return bdata[start:end].decode('utf8', 'ignore')
 def extract_sentence(s: str, word: str, lang: str):
+    # First removing XML tags
     s = re.sub('<[^>]*>', ' ', s)
     s = re.sub('<.*$', ' ', s)
     s = re.sub('^.*>', ' ', s)
+    ## Second remove punctuation from the word
     word = re.sub('[\?\.!«»…,()\[\]]*', "", word)
     sents = split_text_into_sentences(s, lang)
     for sent in sents:
@@ -30,6 +31,8 @@ def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
 def get_uniques(l: list):
     return list(set(l) - set([""]))
+def uniq_preserve_order(l: list):
+    return sorted(set(l), key=lambda x: l.index(x))
 
 
 class KindleImporter(QDialog):
@@ -39,8 +42,14 @@ class KindleImporter(QDialog):
         self.setWindowTitle("Import Kindle notes")
         self.parent = parent
         self.resize(700, 500)
+        self.datewidget = QComboBox()
+        #self.datewidget.setDisplayFormat("yyyy-MM-dd")
+
         self.layout = QFormLayout(self)
-        self.layout.addRow(QLabel("<strong>Select the correct book files for each title:</strong><br>"))
+        self.layout.addRow(QLabel(
+            "<strong>Your Kindle must be set to English (US) for this feature to work. </strong>"
+        ))
+        self.layout.addRow(QLabel("<strong>Select the correct book files for each title:</strong>"))
         with open(fpath, mode='r', encoding="utf-8-sig") as f:
             self.notes = f.read()
             self.notes = self.notes.replace(u"\ufeff","")
@@ -53,7 +62,16 @@ class KindleImporter(QDialog):
         self.layout.addRow(QLabel("<br><strong>Start importing</strong><br>"))
         self.find_context = QPushButton("Get context")
         self.find_context.clicked.connect(self.get_sents)
+
+
+        dates = list(map(lambda x: datetime.strptime(" ".join(x.split("|")[1].split()[3:6]), "%B %d, %Y"), self.notes[1::5]))
+        #self.datewidget.setMinimumDate(min(dates))
+        #self.datewidget.setMaximumDate(max(dates))
+        self.layout.addRow(QLabel("Import sentences starting from (use scroll wheel)"), self.datewidget)
         self.layout.addRow(QLabel(str(len(self.notes[::5])) + " entries found in the file."), self.find_context)
+        
+        self.datewidget.addItems(uniq_preserve_order([date.strftime("%Y-%m-%d") for date in dates]))
+
 
     def get_titles(self):
         titles = get_uniques(self.notes[0::5])
@@ -66,7 +84,7 @@ class KindleImporter(QDialog):
         for title in self.titles:
             self.comboboxes.append(QComboBox())
             self.comboboxes[-1].addItems(sorted(list(bookfiles.keys()), key=lambda x: similar(x, title), reverse=True))
-            self.comboboxes[-1].addItem("<Ignore>")
+            self.comboboxes[-1].addItem("<ignore>")
             self.layout.addRow(QLabel(title), self.comboboxes[-1])
     def get_sents(self):
         self.find_context.setEnabled(False)
@@ -78,18 +96,26 @@ class KindleImporter(QDialog):
         locs = locs[:maxlen]
         starts = list(map(lambda x: int(x.split("|")[0].split()[-1].split("-")[0]), locs))
         ends = list(map(lambda x: int(x.split("|")[0].split()[-1].split("-")[-1]), locs))
+        dates = list(map(lambda x: datetime.strptime(" ".join(x.split("|")[1].split()[3:6]), "%B %d, %Y"), self.notes[1::5]))
+        start_at = datetime.strptime(self.datewidget.currentText(), "%Y-%m-%d")
+        start_at_index = 0
+        for index, date in enumerate(dates):
+            if date > start_at:
+                start_at_index = index
+                break
+
+        # Cut out items prior to the date
+
         book2file = {}
         for i in range(len(self.comboboxes)):
-            if self.comboboxes[i].currentText() != "<Ignore>":
+            if self.comboboxes[i].currentText() != "<ignore>":
                 book2file[self.titles[i]] = self.bookfiles[self.comboboxes[i].currentText()]
             else:
-                book2file[self.titles[i]] = "<Ignore>"
+                book2file[self.titles[i]] = "<ignore>"
         bdata = {}
         for bookname in book2file.keys():
-            print(str(book2file[bookname]))
-            if book2file[bookname] and book2file[bookname] != "<Ignore>":
+            if book2file[bookname] and book2file[bookname] != "<ignore>":
                 try:
-
                     tempdir, filepath = mobi.extract(str(book2file[bookname]))
                     with open(filepath, "rb") as f:
                         d = f.read()
@@ -113,6 +139,10 @@ class KindleImporter(QDialog):
         self.sents = []
 
         for i in range(maxlen):
+            if i < start_at_index:
+                # Skip the ones before the date, insert an empty string to keep the length
+                self.sents.append("")
+                continue
             sec = get_section(bdata[titles[i]], starts[i], ends[i])
             sent = extract_sentence(sec, self.highlights[i], self.parent.settings.value("target_language"))
             if sent:
@@ -135,8 +165,9 @@ class KindleImporter(QDialog):
 
         count = 0
         for i in range(len(self.highlights)):
-            word = self.highlights[i]
+            word = re.sub('[\?\.!«»…,()\[\]]*', "", self.highlights[i])
             if self.sents[i]:
+                
                 item = self.parent.lookup(word, record=False)
                 if not item['definition'].startswith("<b>Definition for"):
                     count += 1
