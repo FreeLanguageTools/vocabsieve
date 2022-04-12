@@ -226,24 +226,34 @@ class DictionaryWindow(QMainWindow):
         if not self.settings.value("reader_enabled", True, type=bool):
             self.open_reader_action.setEnabled(False)
         importmenu = self.menu.addMenu("&Import")
-        self.help_action = QAction("Help")
-        self.menu.addAction(self.help_action)
+        helpmenu = self.menu.addMenu("&Help")
+        self.help_action = QAction("&Help")
+        self.about_action = QAction("&About")
+        helpmenu.addAction(self.help_action)
+        helpmenu.addAction(self.about_action)
     
         self.import_koreader_action = QAction("Import K&OReader")
         self.import_koreader_action.setEnabled(False)
         self.import_kindle_action = QAction("Import &Kindle")
 
         self.help_action.triggered.connect(self.onHelp)
+        self.about_action.triggered.connect(self.onAbout)
         self.open_reader_action.triggered.connect(self.onReaderOpen)
         self.import_kindle_action.triggered.connect(self.importkindle)
+        
         
         importmenu.addActions([self.import_koreader_action, self.import_kindle_action])
 
         self.setMenuBar(self.menu)
 
     def onHelp(self):
-        url = f"https://freelanguagetools.org/2021/07/simple-sentence-mining-vocabsieve-full-tutorial/"
+        url = f"https://freelanguagetools.org/2021/07/simple-sentence-mining-ssmtool-full-tutorial/"
         QDesktopServices.openUrl(QUrl(url))
+
+    def onAbout(self):
+        self.about_dialog = AboutDialog()
+        self.about_dialog.exec_()
+
 
     def setupWidgetsH(self):
         self.layout = QGridLayout(self.widget)
@@ -617,9 +627,53 @@ class MyTextEdit(QTextEdit):
         GlobalObject().dispatchEvent("double clicked")
         self.textCursor().clearSelection()
 
+class AboutDialog(QDialog):
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("HELLO!")
+
+        QBtn = QDialogButtonBox.Ok
+
+        self.buttonBox = QDialogButtonBox(QBtn)
+        self.buttonBox.accepted.connect(self.accept)
+
+        self.layout = QVBoxLayout()
+        message = QLabel(
+            '''
+© 2022 FreeLanguageTools<br><br>
+Visit <a href="https://freelanguagetools.org">FreeLanguageTools.org</a> for more info on how to use this tool.<br>
+You can also talk to us on <a href="https://webchat.kde.org/#/room/#flt:midov.pl">Matrix</a>
+or <a href="https://t.me/fltchat">Telegram</a> for support.<br><br>
+
+Consult <a href="https://freelanguagetools.org/2021/08/dictionaries-and-frequency-lists-for-ssm/">this link</a> 
+to find compatible dictionaries. <br><br>
+
+VocabSieve (formerly SSM, ssmtool) is free software available to you under the terms of
+<a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GNU GPLv3</a>.
+If you found a bug, or have enhancement ideas, please open an issue on the 
+Github <a href=https://github.com/FreeLanguageTools/vocabsieve>repository</a>.<br><br>
+
+This program is yours to keep. There is no EULA you need to agree to.
+No data is sent to any server other than the configured dictionary APIs.
+Statistics data are stored locally.
+<br><br>
+Credits: <br><a href="https://en.wiktionary.org/wiki/Wiktionary:Main_Page">Wiktionary API</a><br>
+If you find this tool useful, you can give it a star on Github and tell others about it. Any suggestions will also be appreciated.
+            '''
+        )
+        message.setTextFormat(Qt.RichText)
+        message.setOpenExternalLinks(True)
+        message.setWordWrap(True)
+        message.adjustSize()
+        self.layout.addWidget(message)
+        self.layout.addWidget(self.buttonBox)
+        self.setLayout(self.layout)
+
 def main():
     app = QApplication(sys.argv)
     w = DictionaryWindow()
 
     w.show()
     sys.exit(app.exec())
+

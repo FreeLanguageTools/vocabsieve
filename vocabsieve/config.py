@@ -73,7 +73,7 @@ class SettingsDialog(QDialog):
         self.orientation.addItems(["Vertical", "Horizontal"])
         self.gtrans_api = QLineEdit()
         self.anki_api = QLineEdit()
-        self.about_sa = QScrollArea()
+
 
         self.api_enabled = QCheckBox("Enable SSM local API")
         self.api_host = QLineEdit()
@@ -89,34 +89,6 @@ class SettingsDialog(QDialog):
 
         self.importdict = QPushButton('Manage local dictionaries..')
 
-        self.about = QLabel(
-            '''
-© 2021 FreeLanguageTools<br><br>
-Visit <a href="https://freelanguagetools.org">FreeLanguageTools.org</a> for more info on how to use this tool.<br>
-You can also talk to us on <a href="https://webchat.kde.org/#/room/#flt:midov.pl">Matrix</a>
-or <a href="https://t.me/fltchat">Telegram</a> for support.<br><br>
-
-Consult <a href="https://freelanguagetools.org/2021/08/dictionaries-and-frequency-lists-for-ssm/">this link</a> 
-to find compatible dictionaries. <br><br>
-
-VocabSieve (formerly SSM, ssmtool) is free software available to you under the terms of
-<a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GNU GPLv3</a>.
-If you found a bug, or have enhancement ideas, please open an issue on the 
-Github <a href=https://github.com/FreeLanguageTools/vocabsieve>repository</a>.<br><br>
-
-This program is yours to keep. There is no EULA you need to agree to.
-No data is sent to any server other than the configured dictionary APIs.
-Statistics data are stored locally.
-<br><br>
-Credits: <br><a href="https://en.wiktionary.org/wiki/Wiktionary:Main_Page">Wiktionary API</a><br>
-If you find this tool useful, you can give it a star on Github and tell others about it. Any suggestions will also be appreciated.
-            '''
-        )
-        self.about.setTextFormat(Qt.RichText)
-        self.about.setOpenExternalLinks(True)
-        self.about_sa.setWidget(self.about)
-        self.about.setWordWrap(True)
-        self.about.adjustSize()
         
         self.importdict.clicked.connect(self.dictmanager)
 
@@ -150,7 +122,7 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.tabs.addTab(self.tab2, "Anki")
         self.tabs.addTab(self.tab3, "Network")
         self.tabs.addTab(self.tab4, "Interface")
-        self.tabs.addTab(self.tab5, "About")
+        self.tabs.addTab(self.tab5, "Reset")
 
     def setupWidgets(self):
         self.target_language.addItems(langs_supported.values())
@@ -205,7 +177,6 @@ If you find this tool useful, you can give it a star on Github and tell others a
         self.tab4.layout.addRow(QLabel("Interface layout"), self.orientation)
         self.tab4.layout.addRow(QLabel("Text scale"), self.text_scale_box)
 
-        self.tab5.layout.addWidget(self.about_sa)
         
         self.text_scale.valueChanged.connect(
             lambda _: self.text_scale_label.setText(format(self.text_scale.value()/100, "1.2f") + "x")
