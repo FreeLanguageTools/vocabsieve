@@ -206,12 +206,10 @@ def getAudio(word, language, dictionary="Forvo (all)", custom_dicts=[]):
             if d['name'] == dictionary and d['lang'] == language and d['type'] == 'audiolib':
                 rootpath = d['path']
                 break
-        print(rootpath)
         result = {}
         for item in data['definition']:
             qualified_name = dictionary + ":" + os.path.splitext(item)[0]
             result[qualified_name] = os.path.join(rootpath, item)
-        print(result)
         return result
     return
 
@@ -251,7 +249,6 @@ def getDictsForLang(lang: str, dicts: list):
 
 def getAudioDictsForLang(lang: str, dicts: list):
     "Get the list of audio dictionaries for a given language"
-    print("lang is", lang)
     results = ["<disabled>"]
     results.extend(pronunciation_sources)
     audiolibs = [item['name'] for item in dicts if item['lang'] == lang and item['type'] == "audiolib"]
@@ -269,10 +266,7 @@ def play_audio(name: str, data: dict, lang: str):
         fpath = os.path.join(forvopath, lang, name) + data[name][-4:]
         if not os.path.exists(fpath):
             res = requests.get(data[name], headers=HEADERS)
-            print(data[name])
-            print(res)
             if res.status_code == 200:
-                print(fpath)
                 os.makedirs(os.path.dirname(fpath), exist_ok=True)
                 with open(fpath, 'bw') as file:
                     file.write(res.content)

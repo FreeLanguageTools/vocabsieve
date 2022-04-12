@@ -109,8 +109,6 @@ class SettingsDialog(QDialog):
         self.tab3.layout = QFormLayout(self.tab3)
         self.tab4 = QWidget()
         self.tab4.layout = QFormLayout(self.tab4)
-        self.tab5 = QWidget()
-        self.tab5.layout = QVBoxLayout(self.tab5)
 
         self.tabs.resize(250, 300)
 
@@ -122,7 +120,6 @@ class SettingsDialog(QDialog):
         self.tabs.addTab(self.tab2, "Anki")
         self.tabs.addTab(self.tab3, "Network")
         self.tabs.addTab(self.tab4, "Interface")
-        self.tabs.addTab(self.tab5, "Reset")
 
     def setupWidgets(self):
         self.target_language.addItems(langs_supported.values())
@@ -177,7 +174,7 @@ class SettingsDialog(QDialog):
         self.tab4.layout.addRow(QLabel("Interface layout"), self.orientation)
         self.tab4.layout.addRow(QLabel("Text scale"), self.text_scale_box)
 
-        
+
         self.text_scale.valueChanged.connect(
             lambda _: self.text_scale_label.setText(format(self.text_scale.value()/100, "1.2f") + "x")
             )
@@ -212,7 +209,7 @@ class SettingsDialog(QDialog):
         self.register_config_handler(self.custom_url, 'custom_url', "")
 
         self.register_config_handler(self.deck_name, 'deck_name', 'Default')
-        self.register_config_handler(self.tags, 'tags', 'ssmtool')
+        self.register_config_handler(self.tags, 'tags', 'vocabsieve')
         self.register_config_handler(self.note_type, 'note_type', 'Basic')
         self.register_config_handler(self.sentence_field, 'sentence_field', 'Sentence')
         self.register_config_handler(self.word_field, 'word_field', 'Word')
