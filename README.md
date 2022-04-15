@@ -9,7 +9,7 @@
 
 VocabSieve (formerly Simple Sentence Mining, `ssmtool`) is a program for sentence mining, in which sentences with target vocabulary words are collected and added into a spaced repetition system (SRS) for language learning.
 
-![Demo](https://imgur.com/rUlVWwe.gif)
+![Demo](https://i.postimg.cc/vTc8dcZ0/out.gif)
 
 ## Features
 - Double-click lookups from sentences and even faster lookups from integrated applications
