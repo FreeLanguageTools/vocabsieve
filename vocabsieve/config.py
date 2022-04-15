@@ -186,6 +186,7 @@ class SettingsDialog(QDialog):
             self.settings.clear()
         self.settings.setValue("config_ver", 1)
         self.register_config_handler(self.anki_api, 'anki_api', 'http://localhost:8765')
+        self.register_config_handler(self.target_language, 'target_language', 'en', code_translate=True)
         self.loadDictionaries()
         self.loadAudioDictionaries()
         self.loadFreqSources()
@@ -199,7 +200,6 @@ class SettingsDialog(QDialog):
         self.register_config_handler(self.lemfreq, 'lemfreq', True)
         self.register_config_handler(self.bold_word, 'bold_word', True)
 
-        self.register_config_handler(self.target_language, 'target_language', 'en', code_translate=True)
         self.register_config_handler(self.gtrans_lang, 'gtrans_lang', 'en', code_translate=True)
         self.register_config_handler(self.dict_source, 'dict_source', 'Wiktionary (English)')
         self.register_config_handler(self.dict_source2, 'dict_source2', '<disabled>')
