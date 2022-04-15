@@ -28,12 +28,11 @@ For a detailed list of features and language support data, please consult the [b
 
 [New video tutorial](https://www.youtube.com/watch?v=EHW-kBLmuHU)
 
-[Old video tutorial (Basic, somewhat outdated)](https://www.youtube.com/watch?v=y79_q08Zu8k&pp=sAQA)
 
 **USERS**: If you want to install it, go to [Releases](https://github.com/FreeLanguageTools/vocabsieve/releases/) and from the latest release, download the appropriate file for your operating system. 
 
 ## Linux distro packages
-[![Packaging status](https://repology.org/badge/vertical-allrepos/ssmtool.svg)](https://repology.org/project/ssmtool/versions)
+[![Packaging status](https://repology.org/badge/vertical-allrepos/vocabsieve.svg)](https://repology.org/project/vocabsieve/versions)
 
 ## Development
 To run from source, simply use `pip3 -r requirements.txt` and then `python3 vocabsieve.py`.
