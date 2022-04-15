@@ -1,6 +1,6 @@
 # VocabSieve - a simple sentence mining tool
 ![https://ci.appveyor.com/api/projects/status/32r7s2skrgm9ubva?svg=true](https://ci.appveyor.com/api/projects/status/32r7s2skrgm9ubva?svg=true)
-![https://img.shields.io/pypi/v/ssmtool.svg](https://img.shields.io/pypi/v/ssmtool.svg)
+![https://img.shields.io/pypi/v/vocabsieve.svg](https://img.shields.io/pypi/v/vocabsieve.svg)
 [![Downloads](https://pepy.tech/badge/ssmtool)](https://pepy.tech/project/ssmtool)
 
 [Join our chat on Matrix](https://webchat.kde.org/#/room/#flt:midov.pl)
