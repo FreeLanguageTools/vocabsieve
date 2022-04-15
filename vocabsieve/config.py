@@ -246,7 +246,7 @@ class SettingsDialog(QDialog):
         custom_dicts = json.loads(self.settings.value("custom_dicts", '[]'))
         self.audio_dict.blockSignals(True)
         self.audio_dict.clear()
-        dicts = getAudioDictsForLang(self.settings.value("target_language", 'en'), custom_dicts)
+        dicts = getAudioDictsForLang(langcodes.inverse[self.target_language.currentText()], custom_dicts)
         self.audio_dict.addItems(dicts)
         self.audio_dict.blockSignals(False)
 
@@ -258,7 +258,7 @@ class SettingsDialog(QDialog):
         self.dict_source2.blockSignals(True)
         self.dict_source2.clear()
         self.dict_source2.addItem("<disabled>")
-        dicts = getDictsForLang(self.settings.value("target_language", 'en'), custom_dicts)
+        dicts = getDictsForLang(langcodes.inverse[self.target_language.currentText()], custom_dicts)
         self.dict_source.addItems(dicts)
         self.dict_source2.addItems(dicts)
         self.dict_source.blockSignals(False)
@@ -266,7 +266,7 @@ class SettingsDialog(QDialog):
 
     def loadFreqSources(self):
         custom_dicts = json.loads(self.settings.value("custom_dicts", '[]'))
-        sources = getFreqlistsForLang(self.target_language.currentText(), custom_dicts)
+        sources = getFreqlistsForLang(langcodes.inverse[self.target_language.currentText()], custom_dicts)
         self.freq_source.blockSignals(True)
         self.freq_source.clear()
         self.freq_source.addItem("<disabled>")
