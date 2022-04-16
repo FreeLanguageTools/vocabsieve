@@ -248,8 +248,8 @@ class SettingsDialog(QDialog):
         self.audio_dict.clear()
         dicts = getAudioDictsForLang(langcodes.inverse[self.target_language.currentText()], custom_dicts)
         self.audio_dict.addItems(dicts)
+        self.audio_dict.setCurrentText(self.settings.value('audio_dict', "Forvo (all)"))
         self.audio_dict.blockSignals(False)
-
 
     def loadDictionaries(self):
         custom_dicts = json.loads(self.settings.value("custom_dicts", '[]'))
@@ -259,8 +259,11 @@ class SettingsDialog(QDialog):
         self.dict_source2.clear()
         self.dict_source2.addItem("<disabled>")
         dicts = getDictsForLang(langcodes.inverse[self.target_language.currentText()], custom_dicts)
+    
         self.dict_source.addItems(dicts)
         self.dict_source2.addItems(dicts)
+        self.dict_source.setCurrentText(self.settings.value('dict_source'))
+        self.dict_source2.setCurrentText(self.settings.value('dict_source2'))
         self.dict_source.blockSignals(False)
         self.dict_source2.blockSignals(False)
 

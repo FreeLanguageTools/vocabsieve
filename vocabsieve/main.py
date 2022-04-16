@@ -174,6 +174,7 @@ class DictionaryWindow(QMainWindow):
         self.layout.addWidget(self.read_button, 2, 2)
 
         self.layout.addWidget(self.sentence, 3, 0, 1, 3)
+        self.layout.setRowStretch(3, 1)
         self.layout.addWidget(QLabel("<h3 style=\"font-weight: normal;\">Word</h3>"), 4, 0)
 
         if self.settings.value("lemmatization", True, type=bool):
