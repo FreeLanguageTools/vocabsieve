@@ -26,6 +26,27 @@ For a detailed list of features and language support data, please consult the [b
 
 [New video tutorial](https://www.youtube.com/watch?v=EHW-kBLmuHU)
 
+### Gentoo
+
+First, you need to add the ::guru overlay. Skip this section if you already had done so.
+```
+# eselect repository enable guru
+# emaint -r guru sync
+```
+Install the package:
+`# emerge -av app-misc/vocabsieve`
+
+### Arch
+
+Use your favorite AUR helper (or manually) to install the pacakge `vocabsieve`
+
+### Other distros
+
+At this time, there are no packages for other distributions. If you are able to create packages for them, please tell me!
+
+In the meantime, users should simply use `pip3` to install VocabSieve: `pip3 install --user vocabsieve`.
+
+This should install an executable and a desktop icon and behave like any other GUI application you may have.
 
 **USERS**: If you want to install it, go to [Releases](https://github.com/FreeLanguageTools/vocabsieve/releases/) and from the latest release, download the appropriate file for your operating system. 
 
