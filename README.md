@@ -3,22 +3,20 @@
 ![https://img.shields.io/pypi/v/vocabsieve.svg](https://img.shields.io/pypi/v/vocabsieve.svg)
 [![Downloads](https://pepy.tech/badge/ssmtool)](https://pepy.tech/project/ssmtool)
 
-[Join our chat on Matrix](https://webchat.kde.org/#/room/#flt:midov.pl)
+Join our chat on [Matrix](https://webchat.kde.org/#/room/#flt:midov.pl) or [Telegram](https://t.me/fltchat)
 
-[Join our chat on Telegram](https://t.me/fltchat)
-
-VocabSieve (formerly Simple Sentence Mining, `ssmtool`) is a program for sentence mining, in which sentences with target vocabulary words are collected and added into a spaced repetition system (SRS) for language learning.
+VocabSieve (formerly Simple Sentence Mining, `ssmtool`) is a program for sentence mining, in which sentences with target vocabulary words are collected and added into a spaced repetition system (SRS, e.g. Anki) for language learning.
 
 ![Demo](https://i.postimg.cc/vTc8dcZ0/out.gif)
 
 ## Features
-- Double-click lookups from sentences and even faster lookups from integrated applications
+- Double-click lookups from copied sentences and even faster lookups from integrated applications
 - Lemmatization of words on lookup
-- No internet is required if you use downloaded resources
-- Online and local dictionaries in multiple formats
+- No internet is required at all if you use downloaded resources
+- Online and local dictionaries in multiple formats (StarDict, Migaku, plain JSON)
 - Frequency lists and pronunciations
-- Web reader (epub, fb2, plaintext) allowing one-click lookup
-- Kindle highlights to Anki sentence cards (KOReader support is planned too)
+- Web reader for ebooks and long articles (epub, fb2, plaintext), allowing one-click lookup
+- Kindle highlights to Anki sentence cards (KOReader support is planned)
 
 For a detailed list of features and language support data, please consult the [blog post](https://freelanguagetools.org/2021/07/simple-sentence-mining-ssmtool-full-tutorial/) on my blog
 
