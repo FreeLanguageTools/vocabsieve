@@ -49,11 +49,14 @@ dictionaries = bidict({"Wiktionary (English)": "wikt-en",
                 "Google Translate": "gtrans"})
 pronunciation_sources = ["Forvo (all)", "Forvo (best)"]
 
-
+# On Windows frozen build, there is no pymorphy2 support for Russian due to an issue with cxfreeze
+PYMORPHY_SUPPORT = False
 try:
     morph = pymorphy2.MorphAnalyzer(lang="ru")
+    PYMORPHY_SUPPORT = True
 except ValueError:
-    morph = pymorphy2.MorphAnalyzer(lang="ru-old")
+    morph = None
+    pass
 
 
 
@@ -108,7 +111,7 @@ def fmt_result(definitions):
 def lem_word(word, language):
     """Lemmatize a word. We will use PyMorphy for RU, simplemma for others, 
     and if that isn't supported , we give up."""
-    if language == 'ru':
+    if language == 'ru' and PYMORPHY_SUPPORT:
         return morph.parse(word)[0].normal_form
     elif language in simplemma_languages:
         global langdata
@@ -262,10 +265,13 @@ def getFreqlistsForLang(lang: str, dicts: list):
 
 forvopath = os.path.join(QStandardPaths.writableLocation(QStandardPaths.DataLocation), "forvo")
 def play_audio(name: str, data: dict, lang: str):
-    if data[name].startswith("https://"):
-        fpath = os.path.join(forvopath, lang, name) + data[name][-4:]
+    audiopath = data.get(name)
+    if audiopath == None:
+        return
+    if audiopath.startswith("https://"):
+        fpath = os.path.join(forvopath, lang, name) + audiopath[-4:]
         if not os.path.exists(fpath):
-            res = requests.get(data[name], headers=HEADERS)
+            res = requests.get(audiopath, headers=HEADERS)
             if res.status_code == 200:
                 os.makedirs(os.path.dirname(fpath), exist_ok=True)
                 with open(fpath, 'bw') as file:
@@ -275,5 +281,5 @@ def play_audio(name: str, data: dict, lang: str):
         playsound(fpath)
         return fpath
     else:
-        playsound(data[name])
-        return data[name]
+        playsound(audiopath)
+        return audiopath

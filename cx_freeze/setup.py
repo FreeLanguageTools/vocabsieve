@@ -9,7 +9,7 @@ include_files = [('../vocabsieve/ext/reader/templates/', 'lib/vocabsieve/ext/rea
 build_exe_options = {"includes": ["vocabsieve", "setuptools", "PyQt5",
                                   "bs4", "lxml", "simplemma",
                                   "bidict", "pystardict", "flask", "pymorphy2",
-                                  "pymorphy2_dicts", "playsound", "flask_sqlalchemy", 
+                                  "playsound", "flask_sqlalchemy", 
                                   "jinja2.ext", "sqlalchemy",
                                   "sqlite3", "sqlalchemy.sql.default_comparator",
                                   "sqlalchemy.dialects.sqlite", "charset_normalizer", "slpp",

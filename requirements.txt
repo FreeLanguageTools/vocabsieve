@@ -12,7 +12,6 @@ slpp
 mobi
 sentence_splitter
 pymorphy2
-pymorphy2_dicts
 pymorphy2-dicts-ru
 playsound
 ebooklib
