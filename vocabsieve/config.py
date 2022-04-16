@@ -187,11 +187,27 @@ class SettingsDialog(QDialog):
         self.settings.setValue("config_ver", 1)
         self.register_config_handler(self.anki_api, 'anki_api', 'http://localhost:8765')
         self.register_config_handler(self.target_language, 'target_language', 'en', code_translate=True)
+
+        api = self.anki_api.text()
+        try:
+            _ = getVersion(api)
+            self.loadDecks()
+            self.loadFields()
+            self.register_config_handler(self.deck_name, 'deck_name', 'Default')
+            self.register_config_handler(self.tags, 'tags', 'vocabsieve')
+            self.register_config_handler(self.note_type, 'note_type', 'Basic')
+            self.register_config_handler(self.sentence_field, 'sentence_field', 'Sentence')
+            self.register_config_handler(self.word_field, 'word_field', 'Word')
+            self.register_config_handler(self.definition_field, 'definition_field', 'Definition')
+            self.register_config_handler(self.definition2_field, 'definition2_field', '<disabled>')
+            self.register_config_handler(self.pronunciation_field, 'pronunciation_field', "<disabled>")
+        except Exception as e:
+            self.errorNoConnection(e)
+
         self.loadDictionaries()
         self.loadAudioDictionaries()
         self.loadFreqSources()
-        self.loadDecks()
-        self.loadFields()
+
         self.dict_source2.currentTextChanged.connect(self.changeMainLayout)
         self.note_type.currentTextChanged.connect(self.loadFields)
         self.api_enabled.clicked.connect(self.setAvailable)
@@ -208,14 +224,6 @@ class SettingsDialog(QDialog):
         self.register_config_handler(self.web_preset, 'web_preset', 'English Wiktionary')
         self.register_config_handler(self.custom_url, 'custom_url', "")
 
-        self.register_config_handler(self.deck_name, 'deck_name', 'Default')
-        self.register_config_handler(self.tags, 'tags', 'vocabsieve')
-        self.register_config_handler(self.note_type, 'note_type', 'Basic')
-        self.register_config_handler(self.sentence_field, 'sentence_field', 'Sentence')
-        self.register_config_handler(self.word_field, 'word_field', 'Word')
-        self.register_config_handler(self.definition_field, 'definition_field', 'Definition')
-        self.register_config_handler(self.definition2_field, 'definition2_field', '<disabled>')
-        self.register_config_handler(self.pronunciation_field, 'pronunciation_field', "<disabled>")
      
         self.register_config_handler(self.api_enabled, 'api_enabled', True)
         self.register_config_handler(self.api_host, 'api_host', '127.0.0.1')
@@ -300,11 +308,6 @@ class SettingsDialog(QDialog):
     def loadDecks(self):
         self.status("Loading decks")
         api = self.anki_api.text()
-        try:
-            _ = getVersion(api)
-        except Exception as e:
-            self.errorNoConnection(e)
-            return
         decks = getDeckList(api)
         self.deck_name.blockSignals(True)
         self.deck_name.clear()
@@ -322,11 +325,6 @@ class SettingsDialog(QDialog):
     def loadFields(self):
         self.status("Loading fields")
         api = self.anki_api.text()
-        try:
-            _ = getVersion(api)
-        except Exception as e:
-            self.errorNoConnection(e)
-            return
     
         current_type = self.note_type.currentText()
         if current_type == "":
@@ -393,7 +391,7 @@ class SettingsDialog(QDialog):
         msg.setIcon(QMessageBox.Critical)
         msg.setText("Error")
         msg.setInformativeText(str(error) + 
-            "\nAnkiConnect must be running to use the configuration tool.")
+            "\nAnkiConnect must be running to set Anki-related options.")
         msg.exec()
 
 
