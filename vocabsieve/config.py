@@ -205,7 +205,7 @@ class SettingsDialog(QDialog):
         self.register_config_handler(self.dict_source2, 'dict_source2', '<disabled>')
         self.register_config_handler(self.audio_dict, 'audio_dict', 'Forvo')
         self.register_config_handler(self.freq_source, 'freq_source', '<disabled>')
-        self.register_config_handler(self.web_preset, 'web_preset', 'Wiktionary (English)')
+        self.register_config_handler(self.web_preset, 'web_preset', 'English Wiktionary')
         self.register_config_handler(self.custom_url, 'custom_url', "")
 
         self.register_config_handler(self.deck_name, 'deck_name', 'Default')
@@ -262,8 +262,8 @@ class SettingsDialog(QDialog):
     
         self.dict_source.addItems(dicts)
         self.dict_source2.addItems(dicts)
-        self.dict_source.setCurrentText(self.settings.value('dict_source'))
-        self.dict_source2.setCurrentText(self.settings.value('dict_source2'))
+        self.dict_source.setCurrentText(self.settings.value('dict_source', 'Wiktionary (English)'))
+        self.dict_source2.setCurrentText(self.settings.value('dict_source2', '<disabled>'))
         self.dict_source.blockSignals(False)
         self.dict_source2.blockSignals(False)
 
