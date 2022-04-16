@@ -25,6 +25,10 @@ For a detailed list of features and language support data, please consult the [b
 (The text originally on this document has since been moved there.)
 
 [New video tutorial](https://www.youtube.com/watch?v=EHW-kBLmuHU)
+
+**Windows and Mac users**: If you want to install this program, go to [Releases](https://github.com/FreeLanguageTools/vocabsieve/releases/) and from the latest release, download the appropriate file for your operating system. 
+
+
 ## Linux distro packages
 [![Packaging status](https://repology.org/badge/vertical-allrepos/vocabsieve.svg)](https://repology.org/project/vocabsieve/versions)
 
@@ -49,9 +53,6 @@ At this time, there are no packages for other distributions. If you are able to 
 In the meantime, users should simply use `pip3` to install VocabSieve: `pip3 install --user vocabsieve`.
 
 This should install an executable and a desktop icon and behave like any other GUI application you may have.
-
-**USERS**: If you want to install it, go to [Releases](https://github.com/FreeLanguageTools/vocabsieve/releases/) and from the latest release, download the appropriate file for your operating system. 
-
 
 ## Development
 To run from source, simply use `pip3 -r requirements.txt` and then `python3 vocabsieve.py`.
