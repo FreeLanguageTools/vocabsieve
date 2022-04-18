@@ -457,7 +457,7 @@ class DictionaryWindow(QMainWindow):
         gtrans_lang = self.settings.value("gtrans_lang", "en")
         dictname = self.settings.value("dict_source", "Wiktionary (English)")
         freqname = self.settings.value("freq_source", "<disabled>")
-        word = re.sub('[«»…,()\[\]]*', "", word)
+        word = re.sub('[«»…,()\[\]_]*', "", word)
         if freqname != "<disabled>":
             try:
                 freq = getFreq(word, language, lemfreq, freqname)
