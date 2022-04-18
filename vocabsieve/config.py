@@ -391,7 +391,9 @@ class SettingsDialog(QDialog):
         msg.setIcon(QMessageBox.Critical)
         msg.setText("Error")
         msg.setInformativeText(str(error) + 
-            "\nAnkiConnect must be running to set Anki-related options.")
+            "\nAnkiConnect must be running to set Anki-related options."
+            "\nIf you have AnkiConnect set up at a different endpoint, set that now "
+            "and reopen the config tool")
         msg.exec()
 
 
