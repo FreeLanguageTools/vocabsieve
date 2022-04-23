@@ -22,7 +22,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{datapath}/reader.db"
 db = SQLAlchemy(app)
 
 
-
 class Text(db.Model):
     added = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     last = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -37,17 +36,20 @@ class Text(db.Model):
     def __repr__(self):
         return f"Text(ID={self.id}, Title={self.title})"
 
+
 db.create_all()
+
+
 class ReaderServer(QObject):
     def __init__(self, parent, host, port):
         super(ReaderServer, self).__init__()
         self.host = host
         self.port = port
         self.parent = parent
-        
+
     def start_api(self):
         """ Main server application """
-        
+
         @app.route("/home")
         @app.route("/")
         def home():
@@ -77,9 +79,14 @@ class ReaderServer(QObject):
                 # check if the post request has the file part
                 if 'file' not in request.files:
                     if request.form.get('title') and request.form.get('text'):
-                        new_item = Text(title=request.form.get('title'),
-                                        content="######\n" + request.form.get('text'),
-                                        length=len(re.findall(r'\w+', request.form.get('text'))))
+                        new_item = Text(
+                            title=request.form.get('title'),
+                            content="######\n" +
+                            request.form.get('text'),
+                            length=len(
+                                re.findall(
+                                    r'\w+',
+                                    request.form.get('text'))))
                         db.session.add(new_item)
                         db.session.commit()
                         return redirect(url_for('home'))
@@ -94,7 +101,10 @@ class ReaderServer(QObject):
                     return redirect(request.url)
                 if file and allowed_file(file.filename):
                     filename = secure_filename(file.filename)
-                    file.save(fpath:=os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    file.save(
+                        fpath := os.path.join(
+                            app.config['UPLOAD_FOLDER'],
+                            filename))
                     add_book(parseBook(fpath))
                     return redirect(url_for('home'))
                 else:
@@ -107,13 +117,11 @@ class ReaderServer(QObject):
             db.session.commit()
             return ('', 204)
 
-        app.run(debug=False, use_reloader=False,host=self.host, port=self.port)
-
-
-
-
- 
-
+        app.run(
+            debug=False,
+            use_reloader=False,
+            host=self.host,
+            port=self.port)
 
 
 def add_book(book_obj):
@@ -124,6 +132,7 @@ def add_book(book_obj):
                     length=len(re.findall(r'\w+', chapters)))
     db.session.add(new_item)
     db.session.commit()
+
 
 if __name__ == '__main__':
     app.run(debug=True)

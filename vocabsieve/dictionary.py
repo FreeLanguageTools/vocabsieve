@@ -16,8 +16,8 @@ langdata = simplemma.load_data('en')
 
 
 # Currently, all languages with two letter codes can be set
-langcodes = bidict(dict(zip([l.alpha_2 for l in list(pycountry.languages) if getattr(l, 'alpha_2', None)],
-                     [l.name for l in list(pycountry.languages) if getattr(l, 'alpha_2', None)])))
+langcodes = bidict(dict(zip([l.alpha_2 for l in list(pycountry.languages) if getattr(
+    l, 'alpha_2', None)], [l.name for l in list(pycountry.languages) if getattr(l, 'alpha_2', None)])))
 # Apply patches
 langcodes['el'] = "Greek"
 for item in langcodes:
@@ -28,28 +28,172 @@ langcodes['ceb'] = "Cebuano"
 langcodes['hmn'] = "Hmong"
 
 
-gtrans_languages = ['af', 'sq', 'am', 'ar', 'hy', 'az', 'eu', 'be', 'bn',
-    'bs', 'bg', 'ca', 'ceb', 'ny', 'zh', 'zh_HANT', 'co', 'hr', 'cs', 'da', 'nl',
-    'en', 'eo', 'et', 'tl', 'fi', 'fr', 'fy', 'gl', 'ka', 'de', 'el', 'gu', 'ht',
-    'ha', 'haw', 'hi', 'hmn', 'hu', 'is', 'ig', 'id', 'ga', 'it', 'ja', 'kn', 'kk', 
-    'km', 'rw', 'ko', 'ku', 'ky', 'lo', 'la', 'lv', 'lt', 'lb',
-    'mk', 'mg', 'ms', 'ml', 'mt', 'mi', 'mr', 'mn', 'my', 'ne', 'no', 'or', 'ps',
-    'fa', 'pl', 'pt', 'pa', 'ro', 'ru', 'sm', 'gd', 'sr', 'st', 'sn', 'sd', 'si',
-    'sk', 'sl', 'so', 'es', 'su', 'sw', 'sv', 'tg', 'ta', 'tt', 'te', 'th', 'tr',
-    'tk', 'uk', 'ur', 'ug', 'uz', 'vi', 'cy', 'xh', 'yi', 'yo', 'zu']
+gtrans_languages = [
+    'af',
+    'sq',
+    'am',
+    'ar',
+    'hy',
+    'az',
+    'eu',
+    'be',
+    'bn',
+    'bs',
+    'bg',
+    'ca',
+    'ceb',
+    'ny',
+    'zh',
+    'zh_HANT',
+    'co',
+    'hr',
+    'cs',
+    'da',
+    'nl',
+    'en',
+    'eo',
+    'et',
+    'tl',
+    'fi',
+    'fr',
+    'fy',
+    'gl',
+    'ka',
+    'de',
+    'el',
+    'gu',
+    'ht',
+    'ha',
+    'haw',
+    'hi',
+    'hmn',
+    'hu',
+    'is',
+    'ig',
+    'id',
+    'ga',
+    'it',
+    'ja',
+    'kn',
+    'kk',
+    'km',
+    'rw',
+    'ko',
+    'ku',
+    'ky',
+    'lo',
+    'la',
+    'lv',
+    'lt',
+    'lb',
+    'mk',
+    'mg',
+    'ms',
+    'ml',
+    'mt',
+    'mi',
+    'mr',
+    'mn',
+    'my',
+    'ne',
+    'no',
+    'or',
+    'ps',
+    'fa',
+    'pl',
+    'pt',
+    'pa',
+    'ro',
+    'ru',
+    'sm',
+    'gd',
+    'sr',
+    'st',
+    'sn',
+    'sd',
+    'si',
+    'sk',
+    'sl',
+    'so',
+    'es',
+    'su',
+    'sw',
+    'sv',
+    'tg',
+    'ta',
+    'tt',
+    'te',
+    'th',
+    'tr',
+    'tk',
+    'uk',
+    'ur',
+    'ug',
+    'uz',
+    'vi',
+    'cy',
+    'xh',
+    'yi',
+    'yo',
+    'zu']
 
-langs_supported = bidict(dict(zip(gtrans_languages, [langcodes[item] for item in gtrans_languages])))
+langs_supported = bidict(
+    dict(zip(gtrans_languages, [langcodes[item] for item in gtrans_languages])))
 
-gdict_languages = ['en', 'hi', 'es', 'fr', 'ja', 'ru', 'de', 'it', 'ko', 'ar', 'tr', 'pt']
-simplemma_languages = ['bg', 'ca', 'cy', 'da', 'de', 'en', 'es', 'et', 'fa', 'fi', 'fr',
-                       'ga', 'gd', 'gl', 'gv', 'hu', 'id', 'it', 'ka', 'la', 'lb', 'lt',
-                       'lv', 'nl', 'pt', 'ro', 'ru', 'sk', 'sl', 'sv', 'tr', 'uk', 'ur']
+gdict_languages = [
+    'en',
+    'hi',
+    'es',
+    'fr',
+    'ja',
+    'ru',
+    'de',
+    'it',
+    'ko',
+    'ar',
+    'tr',
+    'pt']
+simplemma_languages = [
+    'bg',
+    'ca',
+    'cy',
+    'da',
+    'de',
+    'en',
+    'es',
+    'et',
+    'fa',
+    'fi',
+    'fr',
+    'ga',
+    'gd',
+    'gl',
+    'gv',
+    'hu',
+    'id',
+    'it',
+    'ka',
+    'la',
+    'lb',
+    'lt',
+    'lv',
+    'nl',
+    'pt',
+    'ro',
+    'ru',
+    'sk',
+    'sl',
+    'sv',
+    'tr',
+    'uk',
+    'ur']
 dictionaries = bidict({"Wiktionary (English)": "wikt-en",
-                "Google dictionary (Monolingual)": "gdict",
-                "Google Translate": "gtrans"})
+                       "Google dictionary (Monolingual)": "gdict",
+                       "Google Translate": "gtrans"})
 pronunciation_sources = ["Forvo (all)", "Forvo (best)"]
 
-# On Windows frozen build, there is no pymorphy2 support for Russian due to an issue with cxfreeze
+# On Windows frozen build, there is no pymorphy2 support for Russian due
+# to an issue with cxfreeze
 PYMORPHY_SUPPORT = False
 try:
     morph = pymorphy2.MorphAnalyzer(lang="ru")
@@ -59,17 +203,16 @@ except ValueError:
     pass
 
 
-
 def preprocess_clipboard(s: str, lang: str) -> str:
     """
     Pre-process string from clipboard before showing it
-    NOTE: originally intended for parsing JA and ZH, but 
+    NOTE: originally intended for parsing JA and ZH, but
     that feature has been removed for the time being due
     to maintainence and dependency concerns.
     """
     return s
 
-    
+
 def removeAccents(word):
     #print("Removing accent marks from query ", word)
     ACCENT_MAPPING = {
@@ -99,17 +242,20 @@ def removeAccents(word):
         word = word.replace(old, new)
     return word
 
+
 def fmt_result(definitions):
     "Format the result of dictionary lookup"
     lines = []
     for defn in definitions:
         if defn['pos'] != "":
             lines.append("<i>" + defn['pos'] + "</i>")
-        lines.extend([str(item[0]+1) + ". " + item[1] for item in list(enumerate(defn['meaning']))])
+        lines.extend([str(item[0] + 1) + ". " + item[1]
+                     for item in list(enumerate(defn['meaning']))])
     return "<br>".join(lines)
 
+
 def lem_word(word, language):
-    """Lemmatize a word. We will use PyMorphy for RU, simplemma for others, 
+    """Lemmatize a word. We will use PyMorphy for RU, simplemma for others,
     and if that isn't supported , we give up."""
     if language == 'ru' and PYMORPHY_SUPPORT:
         return morph.parse(word)[0].normal_form
@@ -123,10 +269,14 @@ def lem_word(word, language):
     else:
         return word
 
+
 def wiktionary(word, language, lemmatize=True):
     "Get definitions from Wiktionary"
     try:
-        res = requests.get('https://en.wiktionary.org/api/rest_v1/page/definition/' + word, timeout=4)
+        res = requests.get(
+            'https://en.wiktionary.org/api/rest_v1/page/definition/' +
+            word,
+            timeout=4)
     except Exception as e:
         print(e)
 
@@ -144,6 +294,7 @@ def wiktionary(word, language, lemmatize=True):
         definitions.append(meaning_item)
     return {"word": word, "definition": definitions}
 
+
 def googledict(word, language, lemmatize=True):
     """Google dictionary lookup. Note Google dictionary cannot provide
     lemmatization, so only Russian is supported through PyMorphy2."""
@@ -155,7 +306,12 @@ def googledict(word, language, lemmatize=True):
         language = "pt-BR"
 
     try:
-        res = requests.get('https://api.dictionaryapi.dev/api/v2/entries/' + language + "/" + word, timeout=4)
+        res = requests.get(
+            'https://api.dictionaryapi.dev/api/v2/entries/' +
+            language +
+            "/" +
+            word,
+            timeout=4)
     except Exception as e:
         print(e)
     if res.status_code != 200:
@@ -166,9 +322,14 @@ def googledict(word, language, lemmatize=True):
         meanings = []
         for d in item['definitions']:
             meanings.append(d['definition'])
-        meaning_item = {"pos": item.get('partOfSpeech', ""), "meaning": meanings}
+        meaning_item = {
+            "pos": item.get(
+                'partOfSpeech',
+                ""),
+            "meaning": meanings}
         definitions.append(meaning_item)
     return {"word": word, "definition": definitions}
+
 
 def googletranslate(word, language, gtrans_lang, gtrans_api):
     "Google translation, through the googletrans python library"
@@ -178,6 +339,7 @@ def googletranslate(word, language, gtrans_lang, gtrans_api):
         return {"word": word, "definition": res.json()['translation']}
     else:
         return
+
 
 def getAudio(word, language, dictionary="Forvo (all)", custom_dicts=[]):
     # should return a dict of audio names and paths to audio
@@ -191,19 +353,29 @@ def getAudio(word, language, dictionary="Forvo (all)", custom_dicts=[]):
         for d in custom_dicts:
             if d['lang'] == language and d['type'] == 'audiolib':
                 try:
-                    data = lookupin(word.lower(), language, lemmatize=False, dictionary=d['name'])
+                    data = lookupin(
+                        word.lower(),
+                        language,
+                        lemmatize=False,
+                        dictionary=d['name'])
                     if data['definition']:
                         data['definition'] = json.loads(data['definition'])
                         rootpath = d['path']
                         for item in data['definition']:
-                            qualified_name = d['name'] + ":" + os.path.splitext(item)[0]
-                            result[qualified_name] = os.path.join(rootpath, item)
+                            qualified_name = d['name'] + \
+                                ":" + os.path.splitext(item)[0]
+                            result[qualified_name] = os.path.join(
+                                rootpath, item)
                 except Exception:
                     pass
         return result
     else:
         # We are using a local dictionary here.
-        data = lookupin(word.lower(), language, lemmatize=False, dictionary=dictionary)
+        data = lookupin(
+            word.lower(),
+            language,
+            lemmatize=False,
+            dictionary=dictionary)
         data['definition'] = json.loads(data['definition'])
         for d in custom_dicts:
             if d['name'] == dictionary and d['lang'] == language and d['type'] == 'audiolib':
@@ -216,7 +388,14 @@ def getAudio(word, language, dictionary="Forvo (all)", custom_dicts=[]):
         return result
     return
 
-def lookupin(word, language, lemmatize=True, dictionary="Wiktionary (English)", gtrans_lang="en", gtrans_api="https://lingva.ml"):
+
+def lookupin(
+        word,
+        language,
+        lemmatize=True,
+        dictionary="Wiktionary (English)",
+        gtrans_lang="en",
+        gtrans_api="https://lingva.ml"):
     # Remove any punctuation other than a hyphen
     # @language is code
     if language == 'ru':
@@ -233,8 +412,14 @@ def lookupin(word, language, lemmatize=True, dictionary="Wiktionary (English)", 
     elif dictid == "gtrans":
         return googletranslate(word, language, gtrans_lang, gtrans_api)
     else:
-        return {"word": word, "definition": dictdb.define(word, language, dictionary)}
+        return {
+            "word": word,
+            "definition": dictdb.define(
+                word,
+                language,
+                dictionary)}
     return item
+
 
 def getFreq(word, language, lemfreq, dictionary):
     if lemfreq:
@@ -244,29 +429,40 @@ def getFreq(word, language, lemfreq, dictionary):
 
 def getDictsForLang(lang: str, dicts: list):
     "Get the list of dictionaries for a given language"
-    results = ["Wiktionary (English)", "Google Translate"] # These are for all the languages
-    #if lang in gdict_languages:
+    # These are for all the languages
+    results = ["Wiktionary (English)", "Google Translate"]
+    # if lang in gdict_languages:
     #    results.append("Google dictionary (Monolingual)")
-    results.extend([item['name'] for item in dicts if item['lang'] == lang and item['type'] != "freq" and item['type'] != 'audiolib'])
+    results.extend([item['name'] for item in dicts if item['lang'] ==
+                   lang and item['type'] != "freq" and item['type'] != 'audiolib'])
     return results
+
 
 def getAudioDictsForLang(lang: str, dicts: list):
     "Get the list of audio dictionaries for a given language"
     results = ["<disabled>"]
     results.extend(pronunciation_sources)
-    audiolibs = [item['name'] for item in dicts if item['lang'] == lang and item['type'] == "audiolib"]
+    audiolibs = [item['name'] for item in dicts if item['lang']
+                 == lang and item['type'] == "audiolib"]
     results.extend(audiolibs)
     if len(audiolibs) > 1:
         results.append("<all>")
     return results
 
-def getFreqlistsForLang(lang: str, dicts: list):
-    return [item['name'] for item in dicts if item['lang'] == lang and item['type'] == "freq"]
 
-forvopath = os.path.join(QStandardPaths.writableLocation(QStandardPaths.DataLocation), "forvo")
+def getFreqlistsForLang(lang: str, dicts: list):
+    return [item['name']
+            for item in dicts if item['lang'] == lang and item['type'] == "freq"]
+
+
+forvopath = os.path.join(
+    QStandardPaths.writableLocation(
+        QStandardPaths.DataLocation), "forvo")
+
+
 def play_audio(name: str, data: dict, lang: str):
     audiopath = data.get(name)
-    if audiopath == None:
+    if audiopath is None:
         return
     if audiopath.startswith("https://"):
         fpath = os.path.join(forvopath, lang, name) + audiopath[-4:]

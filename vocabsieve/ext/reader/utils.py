@@ -4,9 +4,23 @@ from charset_normalizer import from_bytes
 from lxml import etree
 import os
 
-remove_ns = lambda s: str(s).split("}")[-1]
-tostr = lambda s: str(from_bytes(etree.tostring(s, encoding='utf8', method='text')).best()).strip()
-tohtml = lambda s: str(from_bytes(etree.tostring(s, encoding='utf8')).best()).strip()
+
+def remove_ns(s): return str(s).split("}")[-1]
+
+
+def tostr(s): return str(
+    from_bytes(
+        etree.tostring(
+            s,
+            encoding='utf8',
+            method='text')).best()).strip()
+
+
+def tohtml(s): return str(
+    from_bytes(
+        etree.tostring(
+            s,
+            encoding='utf8')).best()).strip()
 
 
 def parseEpub(path):
@@ -22,14 +36,15 @@ def parseEpub(path):
             continue
         ch_name = data.splitlines()[0]
         content = "\n".join(data.splitlines()[1:])
-        chapters.append(f"######{ch_name}\n"+content)
+        chapters.append(f"######{ch_name}\n" + content)
     return {"title": title[0][0], "author": author[0][0], "chapters": chapters}
+
 
 def parseFb2(path):
     with open(path, 'rb') as f:
         data = bytes(f.read())
         tree = etree.fromstring(data)
-    chapters = [] 
+    chapters = []
     already_seen = False
     authors = []
     title = ""
@@ -40,7 +55,8 @@ def parseFb2(path):
                 if remove_ns(item.tag) == "title-info":
                     for subitem in item:
                         if remove_ns(subitem.tag) == "author":
-                            authors.append(" ".join(tostr(subitem).split("\n")))
+                            authors.append(
+                                " ".join(tostr(subitem).split("\n")))
                         if remove_ns(subitem.tag) == "book-title":
                             title = tostr(subitem)
         if tag_nons == "body" and not already_seen:
@@ -59,6 +75,7 @@ def parseFb2(path):
         "chapters": chapters
     }
 
+
 def parseBook(path):
     if os.path.splitext(path)[1] == ".epub":
         return parseEpub(path)
@@ -69,7 +86,9 @@ def parseBook(path):
     else:
         raise Exception("Filetype unknown")
 
+
 ALLOWED_EXTENSIONS = {'txt', 'epub', 'fb2'}
+
 
 def allowed_file(filename):
     return '.' in filename and \

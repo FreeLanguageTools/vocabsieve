@@ -7,9 +7,15 @@ from datetime import datetime, timedelta
 datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
 Path(datapath).mkdir(parents=True, exist_ok=True)
 print(datapath)
+
+
 class Record():
     def __init__(self):
-        self.conn = sqlite3.connect(path.join(datapath, "records.db"), check_same_thread=False)
+        self.conn = sqlite3.connect(
+            path.join(
+                datapath,
+                "records.db"),
+            check_same_thread=False)
         self.c = self.conn.cursor()
         self.createTables()
 
@@ -34,12 +40,27 @@ class Record():
         """)
         self.conn.commit()
 
-    def recordLookup(self, word, definition, language, lemmatization, source, success):
+    def recordLookup(
+            self,
+            word,
+            definition,
+            language,
+            lemmatization,
+            source,
+            success):
         try:
             timestamp = time.time()
             sql = """INSERT INTO lookups(timestamp, word, definition, language, lemmatization, source, success)
                     VALUES(?,?,?,?,?,?,?)"""
-            self.c.execute(sql, (timestamp, word, definition, language, lemmatization, source, success))
+            self.c.execute(
+                sql,
+                (timestamp,
+                 word,
+                 definition,
+                 language,
+                 lemmatization,
+                 source,
+                 success))
             self.conn.commit()
         except sqlite3.ProgrammingError:
             return
@@ -63,24 +84,35 @@ class Record():
         return self.countNotesDay(day)
 
     def countLookupsDay(self, day):
-        start = day.replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
-        end = day.replace(hour=23, minute=59, second=59, microsecond=999999).timestamp()
+        start = day.replace(
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0).timestamp()
+        end = day.replace(hour=23, minute=59, second=59,
+                          microsecond=999999).timestamp()
         try:
-            self.c.execute("""SELECT COUNT (DISTINCT word) 
-                            FROM lookups 
-                            WHERE timestamp 
+            self.c.execute("""SELECT COUNT (DISTINCT word)
+                            FROM lookups
+                            WHERE timestamp
                             BETWEEN ? AND ?
                             AND success = 1 """, (start, end))
             return self.c.fetchall()[0][0]
         except sqlite3.ProgrammingError:
             return
+
     def countNotesDay(self, day):
-        start = day.replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
-        end = day.replace(hour=23, minute=59, second=59, microsecond=999999).timestamp()
+        start = day.replace(
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0).timestamp()
+        end = day.replace(hour=23, minute=59, second=59,
+                          microsecond=999999).timestamp()
         try:
-            self.c.execute("""SELECT COUNT (timestamp) 
-                            FROM notes 
-                            WHERE timestamp 
+            self.c.execute("""SELECT COUNT (timestamp)
+                            FROM notes
+                            WHERE timestamp
                             BETWEEN ? AND ?
                             AND success = 1 """, (start, end))
             return self.c.fetchall()[0][0]
@@ -93,10 +125,15 @@ class Record():
         """)
         self.createTables()
 
+
 class LocalDictionary():
     def __init__(self):
         #print(path.join(datapath, "dict.db"))
-        self.conn = sqlite3.connect(path.join(datapath, "dict.db"), check_same_thread=False)
+        self.conn = sqlite3.connect(
+            path.join(
+                datapath,
+                "dict.db"),
+            check_same_thread=False)
         self.c = self.conn.cursor()
         self.createTables()
 
@@ -110,7 +147,7 @@ class LocalDictionary():
         )
         """)
         self.conn.commit()
-    
+
     def importdict(self, data: dict, lang: str, name: str):
         for item in data.items():
             self.c.execute("""
@@ -125,7 +162,7 @@ class LocalDictionary():
         WHERE word=?
         AND language=?
         AND dictname=?
-        """,(word, lang, name))
+        """, (word, lang, name))
         return self.c.fetchone()[0]
 
     def countEntries(self) -> int:
@@ -145,7 +182,7 @@ class LocalDictionary():
         self.c.execute("""
         SELECT DISTINCT dictname FROM dictionary
         WHERE language=?
-        """,(lang,))
+        """, (lang,))
         res = self.c.fetchall()
         self.c.row_factory = None
         return res
@@ -155,13 +192,19 @@ class LocalDictionary():
         DROP TABLE IF EXISTS dictionary
         """)
         self.createTables()
-        
+
+
 if __name__ == "__main__":
     db = Record()
     #db.recordLookup("word", "sample-def", True, "wikt-en")
     print("\n".join([str(item) for item in db.getAll()]))
     print("Lookups today:", db.countLookupsToday())
-    print("Lookups yesterday:", db.countLookupsDay(datetime.now() - timedelta(days=1)))
+    print(
+        "Lookups yesterday:",
+        db.countLookupsDay(
+            datetime.now() -
+            timedelta(
+                days=1)))
     di = LocalDictionary()
     #print(di.define("test", "en", "testdict"))
     print("Names", di.getNamesForLang("ru"))

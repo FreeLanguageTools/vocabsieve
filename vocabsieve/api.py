@@ -5,21 +5,26 @@ from .db import Record
 import logging
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
+
+
 def str2bool(v):
-  return str(v).lower() in ("yes", "true", "t", "1")
+    return str(v).lower() in ("yes", "true", "t", "1")
+
 
 class LanguageServer(QObject):
     note_signal = pyqtSignal(str, str, str, list)
+
     def __init__(self, parent, host, port):
         super(LanguageServer, self).__init__()
         self.host = host
         self.port = port
         self.parent = parent
-        
+
     def start_api(self):
         """ Main server application """
         self.app = Flask(__name__)
         self.settings = QSettings()
+
         @self.app.route("/healthcheck")
         def healthcheck():
             return "Hello, World!"
@@ -30,28 +35,38 @@ class LanguageServer(QObject):
 
         @self.app.route("/define/<string:word>")
         def lookup(word):
-            use_lemmatize = str2bool(request.args.get("lemmatize", "True")) 
+            use_lemmatize = str2bool(request.args.get("lemmatize", "True"))
             return self.parent.lookup(word, use_lemmatize)
-            
+
         @self.app.route("/translate", methods=["POST"])
         def translate():
-            lang = request.args.get("src") or self.settings.value("target_language")
-            gtrans_lang = request.args.get("dst") or self.settings.value("gtrans_lang")
+            lang = request.args.get(
+                "src") or self.settings.value("target_language")
+            gtrans_lang = request.args.get(
+                "dst") or self.settings.value("gtrans_lang")
             return {
-                    "translation": googletranslate(request.json.get("text"), lang, gtrans_lang)['definition'], 
-                    "src": lang, 
-                    "dst": gtrans_lang}
+                "translation": googletranslate(
+                    request.json.get("text"),
+                    lang,
+                    gtrans_lang)['definition'],
+                "src": lang,
+                "dst": gtrans_lang}
 
         @self.app.route("/createNote", methods=["POST"])
         def createNote():
             data = request.json
-            self.note_signal.emit(data['sentence'], data['word'], data['definition'], data['tags'])
+            self.note_signal.emit(
+                data['sentence'],
+                data['word'],
+                data['definition'],
+                data['tags'])
             return "success"
-        
+
         @self.app.route("/stats")
         def stats():
             rec = Record()
-            return str(f"Today: {rec.countLookupsToday()} lookups, {rec.countNotesToday()} notes")
+            return str(
+                f"Today: {rec.countLookupsToday()} lookups, {rec.countNotesToday()} notes")
 
         @self.app.route("/lemmatize/<string:word>")
         def lemmatize(word):
@@ -60,12 +75,18 @@ class LanguageServer(QObject):
         @self.app.route("/logs")
         def logs():
             rec = Record()
-            return "\n".join([" ".join([str(i) for i in item]) for item in rec.getAll()][::-1])
+            return "\n".join([" ".join([str(i) for i in item])
+                             for item in rec.getAll()][::-1])
 
         try:
-            self.app.run(debug=False, use_reloader=False, host=self.host, port=self.port)
+            self.app.run(
+                debug=False,
+                use_reloader=False,
+                host=self.host,
+                port=self.port)
         except OSError:
             return
+
 
 if __name__ == "__main__":
     server = LanguageServer()

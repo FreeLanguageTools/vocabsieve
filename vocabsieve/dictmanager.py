@@ -8,12 +8,12 @@ import json
 import os
 
 supported_dict_formats = bidict({
-        "stardict": "StarDict", 
-        "json": "Simple JSON", 
-        "migaku": "Migaku Dictionary", 
-        "freq": "Frequency list",
-        "audiolib": "Audio Library"
-        })
+    "stardict": "StarDict",
+    "json": "Simple JSON",
+    "migaku": "Migaku Dictionary",
+    "freq": "Frequency list",
+    "audiolib": "Audio Library"
+})
 
 
 class DictManager(QDialog):
@@ -27,8 +27,8 @@ class DictManager(QDialog):
         self.setupWidgets()
         self.refresh()
         self.initTimer()
-        #self.loadSettings()
-        #self.setupAutosave()
+        # self.loadSettings()
+        # self.setupAutosave()
 
     def initWidgets(self):
         self.tview = QTreeWidget()
@@ -36,7 +36,8 @@ class DictManager(QDialog):
         self.tview.setHeaderLabels(["Name", "Type", "Language"])
         self.add_dict = QPushButton("Import dictionary or frequency list..")
         self.add_dict.clicked.connect(self.onAdd)
-        self.add_audio = QPushButton("Import GoldenDict/LinguaLibre audio library..")
+        self.add_audio = QPushButton(
+            "Import GoldenDict/LinguaLibre audio library..")
         self.add_audio.clicked.connect(self.onAddAudio)
         self.remove = QPushButton("Remove")
         self.remove.clicked.connect(self.onRemove)
@@ -52,12 +53,12 @@ to be reimported, otherwise this operation will fail.\
 
     def setupWidgets(self):
         self.layout = QVBoxLayout(self)
-        self.layout.addWidget(QLabel(
-            "<strong>Note</strong>: "
-            "<strong>Do not</strong> delete any files after importing them!<br>"
-            "VocabSieve does not store a copy of these files; it only indexes them.<br>"
-            "If you delete the files, your dictionaries will disappear when the database is rebuilt."        
-            ))
+        self.layout.addWidget(
+            QLabel(
+                "<strong>Note</strong>: "
+                "<strong>Do not</strong> delete any files after importing them!<br>"
+                "VocabSieve does not store a copy of these files; it only indexes them.<br>"
+                "If you delete the files, your dictionaries will disappear when the database is rebuilt."))
         self.layout.addWidget(self.tview)
         self.layout.addWidget(self.add_dict)
         self.layout.addWidget(self.add_audio)
@@ -83,15 +84,14 @@ to be reimported, otherwise this operation will fail.\
         dialog.exec()
 
     def onAddAudio(self):
-        folder = QFileDialog.getExistingDirectory(self, "Select sound library",
-            QStandardPaths.writableLocation(QStandardPaths.HomeLocation), QFileDialog.ShowDirsOnly)
+        folder = QFileDialog.getExistingDirectory(
+            self, "Select sound library", QStandardPaths.writableLocation(
+                QStandardPaths.HomeLocation), QFileDialog.ShowDirsOnly)
         if not folder:
             print("No folder is chosen as sound library, aborting.")
             return
         dialog = AddDictDialog(self, folder, True)
         dialog.exec()
-
-
 
     def onRemove(self):
         index = self.tview.indexFromItem(self.tview.currentItem())
@@ -102,12 +102,13 @@ to be reimported, otherwise this operation will fail.\
         self.settings.setValue("custom_dicts", json.dumps(dicts))
         self.refresh()
         self.rebuildDB()
-    
+
     def refresh(self):
         dicts = json.loads(self.settings.value("custom_dicts", '[]'))
         self.tview.clear()
         for item in dicts:
-            treeitem = QTreeWidgetItem([item['name'], supported_dict_formats[item['type']], langcodes[item['lang']]])
+            treeitem = QTreeWidgetItem(
+                [item['name'], supported_dict_formats[item['type']], langcodes[item['lang']]])
             self.tview.addTopLevelItem(treeitem)
         for i in range(3):
             self.tview.resizeColumnToContents(i)
@@ -117,6 +118,7 @@ to be reimported, otherwise this operation will fail.\
 
     def time(self):
         return QDateTime.currentDateTime().toString('[hh:mm:ss]')
+
     def closeEvent(self, event):
         self.parent.loadDictionaries()
         self.parent.loadFreqSources()
@@ -169,10 +171,10 @@ class AddDictDialog(QDialog):
         self.type.setCurrentText(supported_dict_formats[self.dicttype])
         self.lang = QComboBox()
         self.lang.addItems(langs_supported.values())
-        self.lang.setCurrentText(langcodes[self.settings.value("target_language")])
+        self.lang.setCurrentText(
+            langcodes[self.settings.value("target_language")])
         self.commit_button = QPushButton("Add")
         self.commit_button.clicked.connect(self.commit)
-
 
     def setupWidgets(self):
         self.layout = QFormLayout(self)
@@ -181,24 +183,22 @@ class AddDictDialog(QDialog):
         self.layout.addRow(QLabel("Language"), self.lang)
         self.layout.addRow(self.commit_button)
 
-
     def commit(self):
         dictimport(
-            self.path, 
-            supported_dict_formats.inverse[self.type.currentText()], 
-            langcodes.inverse[self.lang.currentText()], 
+            self.path,
+            supported_dict_formats.inverse[self.type.currentText()],
+            langcodes.inverse[self.lang.currentText()],
             self.name.text())
         dicts = json.loads(self.settings.value("custom_dicts", '[]'))
-        dicts.append({"name": self.name.text(), 
-                      "type": supported_dict_formats.inverse[self.type.currentText()], 
-                      "path": self.path, 
+        dicts.append({"name": self.name.text(),
+                      "type": supported_dict_formats.inverse[self.type.currentText()],
+                      "path": self.path,
                       "lang": langcodes.inverse[self.lang.currentText()]})
         self.settings.setValue("custom_dicts", json.dumps(dicts))
         self.parent.status(f"Importing {self.name.text()} to database..")
         self.parent.refresh()
         self.parent.status("Importing done.")
         self.close()
-
 
     def warn(self, text):
         msg = QMessageBox()
