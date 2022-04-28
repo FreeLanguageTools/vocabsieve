@@ -9,6 +9,14 @@ from PyQt5.QtCore import QStandardPaths, QCoreApplication, QObject, pyqtSignal
 from pathlib import Path
 # The following import is to avoid cxfreeze error
 import sqlalchemy.sql.default_comparator
+DEBUGGING = None
+if os.environ.get("VOCABSIEVE_DEBUG"):
+    DEBUGGING = True
+    QCoreApplication.setApplicationName(
+        "VocabSieve" + os.environ.get("VOCABSIEVE_DEBUG"))
+else:
+    QCoreApplication.setApplicationName("VocabSieve")
+QCoreApplication.setOrganizationName("FreeLanguageTools")
 
 datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
 Path(datapath).mkdir(parents=True, exist_ok=True)
