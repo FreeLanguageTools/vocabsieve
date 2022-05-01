@@ -16,3 +16,5 @@ pymorphy2-dicts-ru
 playsound
 ebooklib
 pycountry
+markdown
+markdownify
