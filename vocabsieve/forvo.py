@@ -1,4 +1,6 @@
+from __future__ import annotations
 from bs4 import BeautifulSoup
+from typing import List
 import requests
 from playsound import PlaysoundException, playsound
 from os import path
@@ -16,26 +18,6 @@ datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
 Path(path.join(datapath, "_forvo")).mkdir(parents=True, exist_ok=True)
 
 
-def fetch_audio_all(word, lang):
-    sounds = Forvo(word, lang).get_pronunciations().pronunciations
-    if len(sounds) == 0:
-        return {}
-    result = {}
-    for item in sounds:
-        result[item.origin + "/" + item.headword] = item.download_url
-    return result
-
-
-def fetch_audio_best(word, lang):
-    sounds = Forvo(word, lang).get_pronunciations().pronunciations
-    if len(sounds) == 0:
-        return {}
-    sounds = sorted(sounds, key=lambda x: x.votes, reverse=True)
-    return {
-        sounds[0].origin +
-        "/" +
-        sounds[0].headword: sounds[0].download_url}
-
 
 @dataclass
 class Pronunciation:
@@ -48,16 +30,6 @@ class Pronunciation:
     is_ogg: bool
     id: int
 
-    def download_pronunciation(self, session, number: str):
-        folder = f'{path.join(datapath, "_forvo")}/{self.language}/{unquote(self.origin)}'
-        os.makedirs(folder, exist_ok=True)
-        dl_path = os.path.join(self.headword + "_" + number + (
-            ".ogg" if self.is_ogg else ".mp3"))
-        with open(f'{folder}/{dl_path}', "wb") as f:
-            r = fetch(session, self.download_url)
-            f.write(r.content)
-
-
 class Forvo:
     def __init__(self, word, lang):
         self.url = "https://forvo.com/word/" + quote(word)
@@ -65,7 +37,7 @@ class Forvo:
         self.session = requests.Session()
         self.language = lang
 
-    def get_pronunciations(self):
+    def get_pronunciations(self) -> Forvo:
         res = requests.get(self.url, headers=HEADERS)
         if res.status_code == 200:
             page = res.text
@@ -79,14 +51,14 @@ class Forvo:
                 r"language-container-(\w{2,4})",
                 el.attrs["id"])[0] for el in available_langs_els]
         if self.language not in available_langs:
-            return
+            return self
 
         lang_container = [
             lang for lang in available_langs_els if re.findall(
                 r"language-container-(\w{2,4})",
                 lang.attrs["id"])[0] == self.language][0]
         pronunciations_els = lang_container.find_all(class_="pronunciations")
-        pronunciation_items: Tag = pronunciations_els[0].find_all(
+        pronunciation_items = pronunciations_els[0].find_all(
             class_="show-all-pronunciations")[0].find_all("li")
         word = self.url.rsplit('/', 2)[-2]
         headword_el = pronunciation_items[0].find_all('span')[0]
@@ -160,6 +132,26 @@ class Forvo:
         print(self.pronunciations)
         return self
 
+
+def fetch_audio_all(word, lang):
+    sounds = Forvo(word, lang).get_pronunciations().pronunciations
+    if len(sounds) == 0:
+        return {}
+    result = {}
+    for item in sounds:
+        result[item.origin + "/" + item.headword] = item.download_url
+    return result
+
+
+def fetch_audio_best(word, lang):
+    sounds = Forvo(word, lang).get_pronunciations().pronunciations
+    if len(sounds) == 0:
+        return {}
+    sounds = sorted(sounds, key=lambda x: x.votes, reverse=True)
+    return {
+        sounds[0].origin +
+        "/" +
+        sounds[0].headword: sounds[0].download_url}
 
 if __name__ == "__main__":
     print(fetch_audio_all("what", "en"))

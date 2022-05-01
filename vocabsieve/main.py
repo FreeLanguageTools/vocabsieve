@@ -1,22 +1,14 @@
-from .ext.importer import KindleImporter
-from .ext.reader import ReaderServer
-from . import __version__
-from .api import LanguageServer
-from .dictionary import *
-from .db import *
-from .tools import *
-from .config import *
 import sys
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.Qt import QDesktopServices, QUrl
+from PyQt5.QtCore import *
 from os import path
 import os
 import functools
 import platform
 import json
-from collections import deque
+from markdown import markdown
 import re
 DEBUGGING = None
 if os.environ.get("VOCABSIEVE_DEBUG"):
@@ -26,6 +18,14 @@ if os.environ.get("VOCABSIEVE_DEBUG"):
 else:
     QCoreApplication.setApplicationName("VocabSieve")
 QCoreApplication.setOrganizationName("FreeLanguageTools")
+from .ext.importer import KindleImporter
+from .ext.reader import ReaderServer
+from . import __version__
+from .api import LanguageServer
+from .dictionary import *
+from .db import *
+from .tools import *
+from .config import *
 
 # If on macOS, display the modifier key as "Cmd", else display it as "Ctrl".
 # For whatever reason, Qt automatically uses Cmd key when Ctrl is specified on Mac
@@ -83,7 +83,6 @@ class DictionaryWindow(QMainWindow):
         self.initTimer()
         self.updateAnkiButtonState()
         self.setupShortcuts()
-        self.prev_states = deque(maxlen=30)
 
         GlobalObject().addEventListener("double clicked", self.lookupClicked)
         if self.settings.value("primary", False, type=bool)\
@@ -134,7 +133,6 @@ class DictionaryWindow(QMainWindow):
             "This will look up the word without lemmatization.")
         self.toanki_button = QPushButton(f"Add note [{MOD}-S]")
 
-        self.undo_button = QPushButton("Undo")
         self.config_button = QPushButton("Configure..")
         self.read_button = QPushButton("Read clipboard")
         self.bar = QStatusBar()
@@ -192,7 +190,6 @@ class DictionaryWindow(QMainWindow):
 
         self.layout.addWidget(
             QLabel("<h3 style=\"font-weight: normal;\">Sentence</h3>"), 2, 0)
-        self.layout.addWidget(self.undo_button, 2, 1)
         self.layout.addWidget(self.read_button, 2, 2)
 
         self.layout.addWidget(self.sentence, 3, 0, 1, 3)
@@ -211,14 +208,13 @@ class DictionaryWindow(QMainWindow):
         self.layout.addWidget(self.freq_display, 6, 1)
         self.layout.addWidget(self.web_button, 6, 2)
         self.layout.addWidget(self.word, 5, 0, 1, 3)
+        self.layout.setRowStretch(7, 2)
+        self.layout.setRowStretch(9, 2)
         if self.settings.value("dict_source2", "<disabled>") != "<disabled>":
             self.layout.addWidget(self.definition, 7, 0, 2, 3)
-            self.layout.setRowStretch(7, 2)
             self.layout.addWidget(self.definition2, 9, 0, 2, 3)
-            self.layout.setRowStretch(9, 2)
         else:
             self.layout.addWidget(self.definition, 7, 0, 4, 3)
-            self.layout.setRowStretch(7, 2)
 
         self.layout.addWidget(
             QLabel("<h3 style=\"font-weight: normal;\">Pronunciation</h3>"),
@@ -252,7 +248,6 @@ class DictionaryWindow(QMainWindow):
         self.read_button.clicked.connect(lambda: self.clipboardChanged(True))
 
         self.sentence.textChanged.connect(self.updateAnkiButtonState)
-        self.undo_button.clicked.connect(self.undo)
 
         self.bar.addPermanentWidget(self.stats_label)
 
@@ -283,7 +278,7 @@ class DictionaryWindow(QMainWindow):
         self.setMenuBar(self.menu)
 
     def onHelp(self):
-        url = f"https://freelanguagetools.org/2021/07/simple-sentence-mining-ssmtool-full-tutorial/"
+        url = f"https://wiki.freelanguagetools.org/vocabsieve_setup"
         QDesktopServices.openUrl(QUrl(url))
 
     def onAbout(self):
@@ -304,7 +299,6 @@ class DictionaryWindow(QMainWindow):
         self.layout.addWidget(
             QLabel("<h3 style=\"font-weight: normal;\">Sentence</h3>"), 1, 0)
         self.layout.addWidget(self.freq_display, 1, 1)
-        self.layout.addWidget(self.undo_button, 6, 0)
         self.layout.addWidget(self.read_button, 6, 1)
 
         self.layout.addWidget(self.sentence, 2, 0, 3, 2)
@@ -396,25 +390,12 @@ class DictionaryWindow(QMainWindow):
 
     def setState(self, state):
         self.word.setText(state['word'])
-        self.definition.setText(state['definition'].strip())
+        self.definition.setHtml(re.sub(r'(\<br\/\>)+', r'', state['definition'].strip()))
         if state.get('definition2') is not None:
-            self.definition2.setText(state['definition2'].strip())
+            self.definition2.setHtml(state['definition2'].strip())
         cursor = self.sentence.textCursor()
         cursor.clearSelection()
         self.sentence.setTextCursor(cursor)
-
-    def getState(self):
-        return {
-            'word': self.word.text(),
-            'definition': self.definition.toPlainText().replace(
-                "\n",
-                "<br>")}
-
-    def undo(self):
-        try:
-            self.setState(self.prev_states.pop())
-        except IndexError:
-            self.setState({'word': "", 'definition': ""})
 
     def setSentence(self, content):
         self.sentence.setText(str.strip(content))
@@ -491,7 +472,6 @@ class DictionaryWindow(QMainWindow):
         and definition
         """
         TL = self.settings.value("target_language", "en")
-        self.prev_states.append(self.getState())
         lemmatize = use_lemmatize and self.settings.value(
             "lemmatization", True, type=bool)
         lemfreq = self.settings.value("lemfreq", True, type=bool)
@@ -593,11 +573,11 @@ class DictionaryWindow(QMainWindow):
             },
             "tags": tags
         }
-        definition = self.definition.toPlainText().replace("\n", "<br>")
+        definition = markdown(self.definition.toMarkdown())
         content['fields'][self.settings.value('definition_field')] = definition
         if self.settings.value("dict_source2", "<disabled>") != '<disabled>':
             try:
-                definition2 = self.definition2.toPlainText().replace("\n", "<br>")
+                definition2 = markdown(self.definition2.toMarkdown())
                 if self.settings.value(
                     "definition2_field",
                         "<disabled>") == "<disabled>":

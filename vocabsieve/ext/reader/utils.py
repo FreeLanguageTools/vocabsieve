@@ -2,6 +2,8 @@ import ebooklib
 from ebooklib import epub
 from charset_normalizer import from_bytes
 from lxml import etree
+from markdownify import markdownify
+from markdown import markdown
 import os
 
 
@@ -30,21 +32,25 @@ def parseEpub(path):
     chapters = []
     for doc in book.get_items_of_type(ebooklib.ITEM_DOCUMENT):
         tree = etree.fromstring(doc.get_content())
-        notags = etree.tostring(tree, encoding='utf8', method='text')
-        data = str(from_bytes(notags).best()).strip()
+        notags = etree.tostring(tree, encoding='utf8')
+        data = markdownify(str(from_bytes(notags).best()).strip())
         if len(data.splitlines()) < 2:
             continue
         ch_name = data.splitlines()[0]
         content = "\n".join(data.splitlines()[1:])
-        chapters.append(f"######{ch_name}\n" + content)
-    return {"title": title[0][0], "author": author[0][0], "chapters": chapters}
+        chapters.append(f"## {ch_name}\n\n" + content)
+    return {
+        "title": title[0][0], 
+        "author": author[0][0], 
+        "chapters": chapters
+        }
 
 
 def parseFb2(path):
     with open(path, 'rb') as f:
-        data = bytes(f.read())
+        data = f.read()
         tree = etree.fromstring(data)
-    chapters = []
+    chapters = [] 
     already_seen = False
     authors = []
     title = ""
@@ -55,8 +61,7 @@ def parseFb2(path):
                 if remove_ns(item.tag) == "title-info":
                     for subitem in item:
                         if remove_ns(subitem.tag) == "author":
-                            authors.append(
-                                " ".join(tostr(subitem).split("\n")))
+                            authors.append(" ".join(tostr(subitem).split()))
                         if remove_ns(subitem.tag) == "book-title":
                             title = tostr(subitem)
         if tag_nons == "body" and not already_seen:
@@ -65,14 +70,14 @@ def parseFb2(path):
                 current_chapter = ""
                 for item in section:
                     if remove_ns(item.tag) == "title":
-                        current_chapter = "######" + tostr(item) + "\n"
+                        current_chapter = "## " + tostr(item) + "\n\n"
                     else:
-                        current_chapter += tostr(item) + "\n"
+                        current_chapter += markdownify(tohtml(item))
                 chapters.append(current_chapter)
     return {
         "author": ", ".join(authors),
         "title": title,
-        "chapters": chapters
+        "chapters": [markdown(chapter) for chapter in chapters]
     }
 
 
@@ -81,13 +86,11 @@ def parseBook(path):
         return parseEpub(path)
     elif os.path.splitext(path)[1] == ".fb2":
         return parseFb2(path)
-    elif os.path.splitext(path)[1] == ".txt":
-        return parseTxt(path)
     else:
         raise Exception("Filetype unknown")
 
 
-ALLOWED_EXTENSIONS = {'txt', 'epub', 'fb2'}
+ALLOWED_EXTENSIONS = {'epub', 'fb2'}
 
 
 def allowed_file(filename):

@@ -14,12 +14,13 @@
 {% endblock %}
 
 {% block content %}
+<div class="content">
 <h1 class="title is-1">{{text.title}}</h1>
-{% for paragraph in text.content.split("######")[1:] %}
-<h4 class="title is-4 mb-1">{{paragraph.splitlines()[0]}}</h2>
-    <p>{{"\n".join(paragraph.splitlines()[1:]).replace("\n"," <br>")}}</p>
+{% for chapter in text.content.split("\n"*16) %}
+    {{chapter|safe}}
 {% endfor %}
 {% endblock %}
+</div>
 
 {% block script %}
 <script>

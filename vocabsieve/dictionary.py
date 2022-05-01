@@ -5,6 +5,7 @@ import re
 import requests
 import pycountry
 from urllib.parse import quote
+from typing import Optional
 from bs4 import BeautifulSoup
 from bidict import bidict
 import pymorphy2
@@ -28,165 +29,29 @@ langcodes['ceb'] = "Cebuano"
 langcodes['hmn'] = "Hmong"
 
 
-gtrans_languages = [
-    'af',
-    'sq',
-    'am',
-    'ar',
-    'hy',
-    'az',
-    'eu',
-    'be',
-    'bn',
-    'bs',
-    'bg',
-    'ca',
-    'ceb',
-    'ny',
-    'zh',
-    'zh_HANT',
-    'co',
-    'hr',
-    'cs',
-    'da',
-    'nl',
-    'en',
-    'eo',
-    'et',
-    'tl',
-    'fi',
-    'fr',
-    'fy',
-    'gl',
-    'ka',
-    'de',
-    'el',
-    'gu',
-    'ht',
-    'ha',
-    'haw',
-    'hi',
-    'hmn',
-    'hu',
-    'is',
-    'ig',
-    'id',
-    'ga',
-    'it',
-    'ja',
-    'kn',
-    'kk',
-    'km',
-    'rw',
-    'ko',
-    'ku',
-    'ky',
-    'lo',
-    'la',
-    'lv',
-    'lt',
-    'lb',
-    'mk',
-    'mg',
-    'ms',
-    'ml',
-    'mt',
-    'mi',
-    'mr',
-    'mn',
-    'my',
-    'ne',
-    'no',
-    'or',
-    'ps',
-    'fa',
-    'pl',
-    'pt',
-    'pa',
-    'ro',
-    'ru',
-    'sm',
-    'gd',
-    'sr',
-    'st',
-    'sn',
-    'sd',
-    'si',
-    'sk',
-    'sl',
-    'so',
-    'es',
-    'su',
-    'sw',
-    'sv',
-    'tg',
-    'ta',
-    'tt',
-    'te',
-    'th',
-    'tr',
-    'tk',
-    'uk',
-    'ur',
-    'ug',
-    'uz',
-    'vi',
-    'cy',
-    'xh',
-    'yi',
-    'yo',
-    'zu']
+gtrans_languages = [ 'af', 'sq', 'am', 'ar', 'hy', 'az', 'eu', 'be', 'bn',
+        'bs', 'bg', 'ca', 'ceb', 'ny', 'zh', 'zh_HANT', 'co', 'hr', 'cs',
+        'da', 'nl', 'en', 'eo', 'et', 'tl', 'fi', 'fr', 'fy', 'gl', 'ka',
+        'de', 'el', 'gu', 'ht', 'ha', 'haw', 'hi', 'hmn', 'hu', 'is', 'ig',
+        'id', 'ga', 'it', 'ja', 'kn', 'kk', 'km', 'rw', 'ko', 'ku', 'ky',
+        'lo', 'la', 'lv', 'lt', 'lb', 'mk', 'mg', 'ms', 'ml', 'mt', 'mi',
+        'mr', 'mn', 'my', 'ne', 'no', 'or', 'ps', 'fa', 'pl', 'pt', 'pa',
+        'ro', 'ru', 'sm', 'gd', 'sr', 'st', 'sn', 'sd', 'si', 'sk', 'sl',
+        'so', 'es', 'su', 'sw', 'sv', 'tg', 'ta', 'tt', 'te', 'th', 'tr',
+        'tk', 'uk', 'ur', 'ug', 'uz', 'vi', 'cy', 'xh', 'yi', 'yo', 'zu'
+        ]
 
 langs_supported = bidict(
     dict(zip(gtrans_languages, [langcodes[item] for item in gtrans_languages])))
 
 gdict_languages = [
-    'en',
-    'hi',
-    'es',
-    'fr',
-    'ja',
-    'ru',
-    'de',
-    'it',
-    'ko',
-    'ar',
-    'tr',
-    'pt']
+    'en', 'hi', 'es', 'fr', 'ja', 'ru', 'de', 'it', 'ko', 'ar', 'tr', 'pt'
+    ]
 simplemma_languages = [
-    'bg',
-    'ca',
-    'cy',
-    'da',
-    'de',
-    'en',
-    'es',
-    'et',
-    'fa',
-    'fi',
-    'fr',
-    'ga',
-    'gd',
-    'gl',
-    'gv',
-    'hu',
-    'id',
-    'it',
-    'ka',
-    'la',
-    'lb',
-    'lt',
-    'lv',
-    'nl',
-    'pt',
-    'ro',
-    'ru',
-    'sk',
-    'sl',
-    'sv',
-    'tr',
-    'uk',
-    'ur']
+    'bg', 'ca', 'cy', 'da', 'de', 'en', 'es', 'et', 'fa', 'fi', 'fr', 'ga',
+    'gd', 'gl', 'gv', 'hu', 'id', 'it', 'ka', 'la', 'lb', 'lt', 'lv', 'nl',
+    'pt', 'ro', 'ru', 'sk', 'sl', 'sv', 'tr', 'uk', 'ur'
+    ]
 dictionaries = bidict({"Wiktionary (English)": "wikt-en",
                        "Google dictionary (Monolingual)": "gdict",
                        "Google Translate": "gtrans"})
@@ -270,7 +135,7 @@ def lem_word(word, language):
         return word
 
 
-def wiktionary(word, language, lemmatize=True):
+def wiktionary(word, language, lemmatize=True) -> Optional[dict]:
     "Get definitions from Wiktionary"
     try:
         res = requests.get(
@@ -279,6 +144,7 @@ def wiktionary(word, language, lemmatize=True):
             timeout=4)
     except Exception as e:
         print(e)
+        return
 
     if res.status_code != 200:
         raise Exception("Lookup error")
@@ -295,7 +161,7 @@ def wiktionary(word, language, lemmatize=True):
     return {"word": word, "definition": definitions}
 
 
-def googledict(word, language, lemmatize=True):
+def googledict(word, language, lemmatize=True) -> Optional[dict]:
     """Google dictionary lookup. Note Google dictionary cannot provide
     lemmatization, so only Russian is supported through PyMorphy2."""
     if language not in gdict_languages:
@@ -314,6 +180,7 @@ def googledict(word, language, lemmatize=True):
             timeout=4)
     except Exception as e:
         print(e)
+        return
     if res.status_code != 200:
         raise Exception("Lookup error")
     definitions = []
@@ -341,7 +208,7 @@ def googletranslate(word, language, gtrans_lang, gtrans_api):
         return
 
 
-def getAudio(word, language, dictionary="Forvo (all)", custom_dicts=[]):
+def getAudio(word, language, dictionary="Forvo (all)", custom_dicts=[]) -> Optional[dict]:
     # should return a dict of audio names and paths to audio
     if dictionary == "Forvo (all)":
         return fetch_audio_all(word, language)

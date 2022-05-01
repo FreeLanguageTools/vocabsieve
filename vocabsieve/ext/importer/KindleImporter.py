@@ -8,8 +8,6 @@ from pathlib import Path
 from difflib import SequenceMatcher
 from sentence_splitter import split_text_into_sentences
 from vocabsieve.tools import addNotes
-from vocabsieve.dictionary import lookupin
-import time
 from datetime import datetime
 
 

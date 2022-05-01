@@ -2,10 +2,11 @@ from flask import Flask, render_template, flash, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from werkzeug.utils import secure_filename
+from markdown import markdown
 import os
 import re
 from .utils import *
-from PyQt5.QtCore import QStandardPaths, QCoreApplication, QObject, pyqtSignal
+from PyQt5.QtCore import QStandardPaths, QCoreApplication, QObject
 from pathlib import Path
 # The following import is to avoid cxfreeze error
 import sqlalchemy.sql.default_comparator
@@ -13,7 +14,7 @@ DEBUGGING = None
 if os.environ.get("VOCABSIEVE_DEBUG"):
     DEBUGGING = True
     QCoreApplication.setApplicationName(
-        "VocabSieve" + os.environ.get("VOCABSIEVE_DEBUG"))
+        "VocabSieve" + os.environ.get("VOCABSIEVE_DEBUG", ""))
 else:
     QCoreApplication.setApplicationName("VocabSieve")
 QCoreApplication.setOrganizationName("FreeLanguageTools")
@@ -89,8 +90,11 @@ class ReaderServer(QObject):
                     if request.form.get('title') and request.form.get('text'):
                         new_item = Text(
                             title=request.form.get('title'),
-                            content="######\n" +
-                            request.form.get('text'),
+                            content="\n".join([
+                                f"<p>{item}</p>" 
+                                for item in 
+                                request.form.get('text').splitlines()
+                                ]),
                             length=len(
                                 re.findall(
                                     r'\w+',
@@ -133,7 +137,7 @@ class ReaderServer(QObject):
 
 
 def add_book(book_obj):
-    chapters = "\n\n\n\n".join(book_obj['chapters'])
+    chapters = (("\n"*16).join(book_obj['chapters']))#.replace(r"<h2>", r'<h2 class="title is-2">')
     new_item = Text(title=book_obj['title'],
                     author=book_obj['author'],
                     content=chapters,

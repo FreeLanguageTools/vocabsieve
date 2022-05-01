@@ -121,7 +121,7 @@ def dictimport(path, dicttype, lang, name):
         stardict = Dictionary(os.path.splitext(path)[0])
         newdict = {}
         for key in stardict.idx.keys():
-            newdict[key] = re.sub('<[^>]*>', '', stardict.dict[key])
+            newdict[key] = stardict.dict[key]
         dictdb.importdict(newdict, lang, name)
     elif dicttype == "json":
         with open(path, encoding="utf-8") as f:

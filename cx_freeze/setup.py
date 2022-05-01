@@ -31,7 +31,9 @@ build_exe_options = {
         "charset_normalizer",
         "slpp",
         "ebooklib",
-        "pycountry"],
+        "pycountry",
+        "markdown",
+        "markdownify"],
     "include_files": include_files,
     "excludes": ["tkinter"],
     "include_msvcr": True}
