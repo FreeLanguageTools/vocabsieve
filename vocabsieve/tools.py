@@ -8,6 +8,7 @@ from typing import List, Dict
 from .db import *
 from pystardict import Dictionary
 from .dictionary import *
+from .xdxftransform import xdxf2html
 
 
 def request(action, **params):
@@ -122,8 +123,12 @@ def dictimport(path, dicttype, lang, name) -> None:
     if dicttype == "stardict":
         stardict = Dictionary(os.path.splitext(path)[0])
         newdict = {}
-        for key in stardict.idx.keys():
-            newdict[key] = stardict.dict[key]
+        if stardict.ifo.sametypesequence == 'x':
+            for key in stardict.idx.keys():
+                newdict[key] = xdxf2html(stardict.dict[key])
+        else:
+            for key in stardict.idx.keys():
+                newdict[key] = stardict.dict[key]
         dictdb.importdict(newdict, lang, name)
     elif dicttype == "json":
         with open(path, encoding="utf-8") as f:
