@@ -18,3 +18,4 @@ ebooklib
 pycountry
 markdown
 markdownify
+# python-lzo This cannot be compiled on Windows without special tools.

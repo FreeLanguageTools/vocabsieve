@@ -33,7 +33,8 @@ build_exe_options = {
         "ebooklib",
         "pycountry",
         "markdown",
-        "markdownify"],
+        "markdownify",
+        "python-lzo"],
     "include_files": include_files,
     "excludes": ["tkinter"],
     "include_msvcr": True}
