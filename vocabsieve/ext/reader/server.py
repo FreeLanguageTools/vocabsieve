@@ -31,7 +31,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{datapath}/reader.db"
 db = SQLAlchemy(app)
 
 
-class Text(db.Model):
+class Text(db.Model): # type: ignore[name-defined]
     added = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     last = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     id = db.Column(db.Integer, primary_key=True)

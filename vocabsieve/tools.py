@@ -4,6 +4,7 @@ import requests
 import os
 import re
 from bs4 import BeautifulSoup
+from typing import List, Dict
 from .db import *
 from pystardict import Dictionary
 from .dictionary import *
@@ -30,37 +31,37 @@ def invoke(action, server, **params):
     return response['result']
 
 
-def getDeckList(server):
+def getDeckList(server) -> list:
     result = invoke('deckNames', server)
-    return result
+    return list(result)
 
 
-def getNoteTypes(server):
+def getNoteTypes(server) -> list:
     result = invoke('modelNames', server)
-    return result
+    return list(result)
 
 
-def getFields(server, name):
+def getFields(server, name) -> list:
     result = invoke('modelFieldNames', server, modelName=name)
-    return result
+    return list(result)
 
 
-def addNote(server, content):
+def addNote(server, content) -> int:
     result = invoke('addNote', server, note=content)
-    return result
+    return int(result)
 
 
-def addNotes(server, content):
+def addNotes(server, content) -> List[int]:
     result = invoke('addNotes', server, notes=content)
-    return result
+    return list(result)
 
 
-def getVersion(server):
+def getVersion(server) -> str:
     result = invoke('version', server)
-    return result
+    return str(result)
 
 
-def is_json(myjson):
+def is_json(myjson) -> bool:
     try:
         json_object = json.loads(myjson)
         json_object['word']
