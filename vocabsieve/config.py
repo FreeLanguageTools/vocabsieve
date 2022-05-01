@@ -44,6 +44,8 @@ class SettingsDialog(QDialog):
         self.gtrans_lang = QComboBox()
         self.note_type = QComboBox()
         self.sentence_field = QComboBox()
+        self.reader_font = QComboBox()
+        self.reader_font.addItems(["serif", "sans-serif"])
         self.word_field = QComboBox()
         self.definition_field = QComboBox()
         self.definition2_field = QComboBox()
@@ -200,6 +202,7 @@ class SettingsDialog(QDialog):
         self.tab4.layout.addRow(self.allow_editing)
         self.tab4.layout.addRow(QLabel("Interface layout"), self.orientation)
         self.tab4.layout.addRow(QLabel("Text scale"), self.text_scale_box)
+        self.tab4.layout.addRow(QLabel("Web reader font"), self.reader_font)
 
         self.text_scale.valueChanged.connect(
             lambda _: self.text_scale_label.setText(
@@ -289,6 +292,8 @@ class SettingsDialog(QDialog):
             self.gtrans_api,
             'gtrans_api',
             'https://lingva.ml')
+
+        self.register_config_handler(self.reader_font, "reader_font", "serif")
 
         self.register_config_handler(self.allow_editing, 'allow_editing', True)
         self.register_config_handler(self.primary, 'primary', False)
