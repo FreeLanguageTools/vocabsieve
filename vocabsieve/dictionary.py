@@ -161,43 +161,6 @@ def wiktionary(word, language, lemmatize=True) -> Optional[dict]:
     return {"word": word, "definition": definitions}
 
 
-def googledict(word, language, lemmatize=True) -> Optional[dict]:
-    """Google dictionary lookup. Note Google dictionary cannot provide
-    lemmatization, so only Russian is supported through PyMorphy2."""
-    if language not in gdict_languages:
-        return {"word": word, "definition": "Error: Unsupported language"}
-    if language == "pt":
-        # Patching this because it seems that Google dictionary only
-        # offers the brasillian one.
-        language = "pt-BR"
-
-    try:
-        res = requests.get(
-            'https://api.dictionaryapi.dev/api/v2/entries/' +
-            language +
-            "/" +
-            word,
-            timeout=4)
-    except Exception as e:
-        print(e)
-        return
-    if res.status_code != 200:
-        raise Exception("Lookup error")
-    definitions = []
-    data = res.json()[0]
-    for item in data['meanings']:
-        meanings = []
-        for d in item['definitions']:
-            meanings.append(d['definition'])
-        meaning_item = {
-            "pos": item.get(
-                'partOfSpeech',
-                ""),
-            "meaning": meanings}
-        definitions.append(meaning_item)
-    return {"word": word, "definition": definitions}
-
-
 def googletranslate(word, language, gtrans_lang, gtrans_api):
     "Google translation, through the googletrans python library"
     url = f"{gtrans_api}/api/v1/{language}/{gtrans_lang}/{quote(word)}"
@@ -272,9 +235,6 @@ def lookupin(
     dictid = dictionaries.get(dictionary)
     if dictid == "wikt-en":
         item = wiktionary(word, language, lemmatize)
-        item['definition'] = fmt_result(item['definition'])
-    elif dictid == "gdict":
-        item = googledict(word, language, lemmatize)
         item['definition'] = fmt_result(item['definition'])
     elif dictid == "gtrans":
         return googletranslate(word, language, gtrans_lang, gtrans_api)

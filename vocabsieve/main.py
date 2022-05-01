@@ -464,7 +464,6 @@ class DictionaryWindow(QMainWindow):
                 self.audio_selector.setCurrentItem(
                     self.audio_selector.item(0)
                 )
-                # self.play_audio(list(self.audios.keys())[0])
 
     def lookup(self, word, use_lemmatize=True, record=True):
         """
