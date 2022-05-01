@@ -74,26 +74,27 @@ def is_json(myjson) -> bool:
     return True
 
 
-def failed_lookup(word, setting):
-    return "<b>Definition for \"" + str(word) + "\" not found.</b><br>Check the following:<br>" +\
-        "- Language setting (Current: " + setting.value("target_language", 'en') + ")<br>" +\
+def failed_lookup(word, settings) -> str:
+    return str("<b>Definition for \"" + str(word) + "\" not found.</b><br>Check the following:<br>" +\
+        "- Language setting (Current: " + settings.value("target_language", 'en') + ")<br>" +\
         "- Is the correct word being looked up?<br>" +\
         "- Are you connected to the Internet?<br>" +\
-        "Otherwise, then " + setting.value("dict_source", "Wiktionary (English)") + " probably just does not have this word listed."
+        "Otherwise, then " + settings.value("dict_source", "Wiktionary (English)") + 
+        " probably just does not have this word listed.")
 
 
-def is_oneword(s):
+def is_oneword(s) -> bool :
     return len(s.split()) == 1
 
 
-def dictinfo(path):
+def dictinfo(path) -> Dict[str,str]:
     "Get information about dictionary from file path"
     basename, ext = os.path.splitext(path)
     basename = os.path.basename(basename)
     if os.path.isdir(path):
         return {"type": "audiolib", "basename": basename, "path": path}
     if ext not in [".json", ".ifo"]:
-        return "Unsupported format"
+        raise NotImplementedError("Unsupported format")
     elif ext == ".json":
         with open(path, encoding="utf-8") as f:
             try:
@@ -111,12 +112,12 @@ def dictinfo(path):
                 elif isinstance(d, dict):
                     return {"type": "json", "basename": basename, "path": path}
             except Exception:
-                return "Unsupported format"
+                raise IOError("Reading failed")
     elif ext == ".ifo":
         return {"type": "stardict", "basename": basename, "path": path}
 
 
-def dictimport(path, dicttype, lang, name):
+def dictimport(path, dicttype, lang, name) -> None:
     "Import dictionary from file to database"
     if dicttype == "stardict":
         stardict = Dictionary(os.path.splitext(path)[0])
@@ -168,7 +169,7 @@ def dictimport(path, dicttype, lang, name):
         raise NotImplementedError
 
 
-def dictrebuild(dicts):
+def dictrebuild(dicts) -> None:
     dictdb.purge()
     for item in dicts:
         try:

@@ -150,8 +150,13 @@ class AddDictDialog(QDialog):
             self.setWindowTitle("Add dictionary or frequency list")
         else:
             self.setWindowTitle("Add sound library")
-            if dictinfo(self.fname) == "Unsupported format":
+            try:
+                dictinfo(self.fname)
+            except NotImplementedError:
                 self.warn("Unsupported format")
+                self.close()
+            except IOError:
+                self.warn("Failed to read file")
                 self.close()
 
         self.parent.status("Reading " + self.fname)
