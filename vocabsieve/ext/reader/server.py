@@ -50,11 +50,10 @@ db.create_all()
 
 
 class ReaderServer(QObject):
-    def __init__(self, parent, host, port, font):
+    def __init__(self, parent, host, port):
         super(ReaderServer, self).__init__()
         self.host = host
         self.port = port
-        self.font = font
         self.parent = parent
 
     def start_api(self):
@@ -69,7 +68,10 @@ class ReaderServer(QObject):
         @app.route("/read/<int:id>")
         def read(id):
             text = Text.query.get(id)
-            return render_template("page.html", text=text, font=self.font)
+            return render_template("page.html", 
+                text=text, 
+                font=self.parent.settings.value("reader_font"),
+                size=self.parent.settings.value("reader_fontsize"))
 
         @app.route("/update/<int:id>", methods=['POST'])
         def update_progress(id):

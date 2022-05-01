@@ -46,6 +46,9 @@ class SettingsDialog(QDialog):
         self.sentence_field = QComboBox()
         self.reader_font = QComboBox()
         self.reader_font.addItems(["serif", "sans-serif"])
+        self.reader_fontsize = QSpinBox()
+        self.reader_fontsize.setMinimum(4)
+        self.reader_fontsize.setMaximum(200)
         self.word_field = QComboBox()
         self.definition_field = QComboBox()
         self.definition2_field = QComboBox()
@@ -195,14 +198,17 @@ class SettingsDialog(QDialog):
             self.gtrans_api)
 
         self.tab4.layout.addRow(
-            QLabel("<b>All settings on this tab requires restart to take effect.</b>"))
+            QLabel("<strong>These settings requires restart to take effect:</strong>"))
         if platform.system() == "Linux":
             # Primary selection is only available on Linux
             self.tab4.layout.addRow(self.primary)
         self.tab4.layout.addRow(self.allow_editing)
         self.tab4.layout.addRow(QLabel("Interface layout"), self.orientation)
         self.tab4.layout.addRow(QLabel("Text scale"), self.text_scale_box)
+        self.tab4.layout.addRow(
+            QLabel("<strong>These settings requires page refresh to take effect:</strong>"))
         self.tab4.layout.addRow(QLabel("Web reader font"), self.reader_font)
+        self.tab4.layout.addRow(QLabel("Web reader font size"), self.reader_fontsize)
 
         self.text_scale.valueChanged.connect(
             lambda _: self.text_scale_label.setText(
@@ -294,6 +300,7 @@ class SettingsDialog(QDialog):
             'https://lingva.ml')
 
         self.register_config_handler(self.reader_font, "reader_font", "serif")
+        self.register_config_handler(self.reader_fontsize, "reader_fontsize", 14)
 
         self.register_config_handler(self.allow_editing, 'allow_editing', True)
         self.register_config_handler(self.primary, 'primary', False)

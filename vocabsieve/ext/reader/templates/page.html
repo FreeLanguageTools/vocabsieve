@@ -14,7 +14,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="content" style="font-family: {{font}};">
+<div class="content" style="font-family: {{font}}; font-size: {{size}}pt;">
 <h1 class="title is-1">{{text.title}}</h1>
 {% for chapter in text.content.split("\n"*16) %}
     {{chapter|safe}}
