@@ -176,3 +176,6 @@ def dictrebuild(dicts) -> None:
             dictimport(item['path'], item['type'], item['lang'], item['name'])
         except Exception as e:
             print(e)
+
+def dictdelete(name) -> None:
+    dictdb.deletedict(name)

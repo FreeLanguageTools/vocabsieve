@@ -98,10 +98,10 @@ to be reimported, otherwise this operation will fail.\
         dicts = json.loads(self.settings.value("custom_dicts", '[]'))
         if dicts == []:
             return
+        dictdelete(dicts[index.row()]['name'])
         del dicts[index.row()]
         self.settings.setValue("custom_dicts", json.dumps(dicts))
         self.refresh()
-        self.rebuildDB()
 
     def refresh(self):
         dicts = json.loads(self.settings.value("custom_dicts", '[]'))
