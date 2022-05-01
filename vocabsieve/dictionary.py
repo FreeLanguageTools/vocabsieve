@@ -144,7 +144,7 @@ def wiktionary(word, language, lemmatize=True) -> Optional[dict]:
             timeout=4)
     except Exception as e:
         print(e)
-        return
+        return None
 
     if res.status_code != 200:
         raise Exception("Lookup error")
@@ -171,7 +171,7 @@ def googletranslate(word, language, gtrans_lang, gtrans_api):
         return
 
 
-def getAudio(word, language, dictionary="Forvo (all)", custom_dicts=[]) -> Optional[dict]:
+def getAudio(word, language, dictionary="Forvo (all)", custom_dicts=[]) -> Optional[Dict[str,str]]:
     # should return a dict of audio names and paths to audio
     if dictionary == "Forvo (all)":
         return fetch_audio_all(word, language)

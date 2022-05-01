@@ -87,7 +87,3 @@ class LanguageServer(QObject):
         except OSError:
             return
 
-
-if __name__ == "__main__":
-    server = LanguageServer()
-    server.start_api()

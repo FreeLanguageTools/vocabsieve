@@ -10,7 +10,7 @@
 {% endblock %}
 
 {% block precontent %}
-    <div id="progress-bar"></div>
+    <div id="progress-bar" style="background-color: {{color}};"></div>
 {% endblock %}
 
 {% block content %}
@@ -81,7 +81,7 @@
     });
 
     $("span.sentence").hover(function () {
-        $(this).css("text-decoration", "underline #6b7 solid 3px");
+        $(this).css("text-decoration", "underline {{color}} solid 3px");
         $(this).css("text-decoration-skip-ink", "none");
     },
         function () {

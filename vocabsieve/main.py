@@ -14,7 +14,7 @@ DEBUGGING = None
 if os.environ.get("VOCABSIEVE_DEBUG"):
     DEBUGGING = True
     QCoreApplication.setApplicationName(
-        "VocabSieve" + os.environ.get("VOCABSIEVE_DEBUG"))
+        "VocabSieve" + os.environ.get("VOCABSIEVE_DEBUG", ""))
 else:
     QCoreApplication.setApplicationName("VocabSieve")
 QCoreApplication.setOrganizationName("FreeLanguageTools")

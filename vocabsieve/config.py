@@ -49,6 +49,9 @@ class SettingsDialog(QDialog):
         self.reader_fontsize = QSpinBox()
         self.reader_fontsize.setMinimum(4)
         self.reader_fontsize.setMaximum(200)
+        self.reader_hlcolor = QPushButton(self.settings.value("reader_hlcolor"))
+        self.reader_hlcolor.clicked.connect(self.save_color)
+
         self.word_field = QComboBox()
         self.definition_field = QComboBox()
         self.definition2_field = QComboBox()
@@ -130,6 +133,12 @@ class SettingsDialog(QDialog):
         self.tabs.addTab(self.tab3, "Network")
         self.tabs.addTab(self.tab4, "Interface")
 
+    def save_color(self):
+        color = QColorDialog.getColor()
+        if color.isValid():
+            self.settings.setValue("reader_hlcolor", color.name())
+            self.reader_hlcolor.setText(color.name())
+
     def setupWidgets(self):
         self.target_language.addItems(langs_supported.values())
         self.web_preset.addItems([
@@ -198,7 +207,7 @@ class SettingsDialog(QDialog):
             self.gtrans_api)
 
         self.tab4.layout.addRow(
-            QLabel("<strong>These settings requires restart to take effect:</strong>"))
+            QLabel("<h3>These settings requires restart to take effect</h3>"))
         if platform.system() == "Linux":
             # Primary selection is only available on Linux
             self.tab4.layout.addRow(self.primary)
@@ -206,9 +215,10 @@ class SettingsDialog(QDialog):
         self.tab4.layout.addRow(QLabel("Interface layout"), self.orientation)
         self.tab4.layout.addRow(QLabel("Text scale"), self.text_scale_box)
         self.tab4.layout.addRow(
-            QLabel("<strong>These settings requires page refresh to take effect:</strong>"))
-        self.tab4.layout.addRow(QLabel("Web reader font"), self.reader_font)
-        self.tab4.layout.addRow(QLabel("Web reader font size"), self.reader_fontsize)
+            QLabel("<h3>These settings requires page refresh to take effect</h3>"))
+        self.tab4.layout.addRow(QLabel("Reader font"), self.reader_font)
+        self.tab4.layout.addRow(QLabel("Reader font size"), self.reader_fontsize)
+        self.tab4.layout.addRow(QLabel("Reader highlight color"), self.reader_hlcolor)
 
         self.text_scale.valueChanged.connect(
             lambda _: self.text_scale_label.setText(

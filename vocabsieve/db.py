@@ -163,19 +163,19 @@ class LocalDictionary():
         AND language=?
         AND dictname=?
         """, (word, lang, name))
-        return self.c.fetchone()[0]
+        return str(self.c.fetchone()[0])
 
     def countEntries(self) -> int:
         self.c.execute("""
         SELECT COUNT(*) FROM dictionary
         """)
-        return self.c.fetchone()[0]
+        return int(self.c.fetchone()[0])
 
     def countDicts(self) -> int:
         self.c.execute("""
         SELECT COUNT(DISTINCT dictname) FROM dictionary
         """)
-        return self.c.fetchone()[0]
+        return int(self.c.fetchone()[0])
 
     def getNamesForLang(self, lang: str):
         self.c.row_factory = lambda cursor, row: row[0]

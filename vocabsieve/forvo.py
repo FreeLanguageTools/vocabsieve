@@ -1,6 +1,6 @@
 from __future__ import annotations
 from bs4 import BeautifulSoup
-from typing import List
+from typing import List, Dict
 import requests
 from playsound import PlaysoundException, playsound
 from os import path
@@ -133,7 +133,7 @@ class Forvo:
         return self
 
 
-def fetch_audio_all(word, lang):
+def fetch_audio_all(word: str, lang: str) -> Dict[str, str]:
     sounds = Forvo(word, lang).get_pronunciations().pronunciations
     if len(sounds) == 0:
         return {}
@@ -143,7 +143,7 @@ def fetch_audio_all(word, lang):
     return result
 
 
-def fetch_audio_best(word, lang):
+def fetch_audio_best(word: str, lang: str) -> Dict[str, str]:
     sounds = Forvo(word, lang).get_pronunciations().pronunciations
     if len(sounds) == 0:
         return {}

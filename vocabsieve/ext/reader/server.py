@@ -70,8 +70,10 @@ class ReaderServer(QObject):
             text = Text.query.get(id)
             return render_template("page.html", 
                 text=text, 
-                font=self.parent.settings.value("reader_font"),
-                size=self.parent.settings.value("reader_fontsize"))
+                font=self.parent.settings.value("reader_font", 'serif'),
+                size=self.parent.settings.value("reader_fontsize", 14, type=int),
+                color=self.parent.settings.value("reader_hlcolor", '#66bb77')
+                )
 
         @app.route("/update/<int:id>", methods=['POST'])
         def update_progress(id):

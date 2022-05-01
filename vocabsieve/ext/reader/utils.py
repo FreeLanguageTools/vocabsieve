@@ -1,4 +1,5 @@
 import ebooklib
+from typing import Dict, Optional
 from ebooklib import epub
 from charset_normalizer import from_bytes
 from lxml import etree
@@ -7,7 +8,7 @@ from markdown import markdown
 import os
 
 
-def remove_ns(s): return str(s).split("}")[-1]
+def remove_ns(s: str) -> str: return str(s).split("}")[-1]
 
 def fix_hyphen(s: str) -> str:
     """This replaces first hyphen in a paragraph
@@ -30,7 +31,7 @@ def tohtml(s): return str(
             encoding='utf8')).best()).strip()
 
 
-def parseEpub(path):
+def parseEpub(path: str) -> dict:
     book = epub.read_epub(path)
     title = book.get_metadata('DC', 'title') or ""
     author = book.get_metadata('DC', 'creator') or ""
@@ -51,7 +52,7 @@ def parseEpub(path):
         }
 
 
-def parseFb2(path):
+def parseFb2(path: str) -> dict:
     with open(path, 'rb') as f:
         data = f.read()
         tree = etree.fromstring(data)
@@ -86,18 +87,18 @@ def parseFb2(path):
     }
 
 
-def parseBook(path):
+def parseBook(path) -> Optional[dict]:
     if os.path.splitext(path)[1] == ".epub":
         return parseEpub(path)
     elif os.path.splitext(path)[1] == ".fb2":
         return parseFb2(path)
     else:
-        raise Exception("Filetype unknown")
+        raise NotImplementedError("Filetype not supported")
 
 
 ALLOWED_EXTENSIONS = {'epub', 'fb2'}
 
 
-def allowed_file(filename):
+def allowed_file(filename: str) -> bool:
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
