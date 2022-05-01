@@ -9,6 +9,11 @@ import os
 
 def remove_ns(s): return str(s).split("}")[-1]
 
+def fix_hyphen(s: str) -> str:
+    """This replaces first hyphen in a paragraph
+    (which should not be there) with an en dash.
+    """
+    return s.replace('>-', '>–')
 
 def tostr(s): return str(
     from_bytes(
@@ -33,16 +38,16 @@ def parseEpub(path):
     for doc in book.get_items_of_type(ebooklib.ITEM_DOCUMENT):
         tree = etree.fromstring(doc.get_content())
         notags = etree.tostring(tree, encoding='utf8')
-        data = markdownify(str(from_bytes(notags).best()).strip())
+        data = markdownify(fix_hyphen(str(from_bytes(notags).best()).strip()))
         if len(data.splitlines()) < 2:
             continue
         ch_name = data.splitlines()[0]
         content = "\n".join(data.splitlines()[1:])
-        chapters.append(f"## {ch_name}\n\n" + content)
+        chapters.append(f"## {ch_name}\n" + content)
     return {
         "title": title[0][0], 
         "author": author[0][0], 
-        "chapters": chapters
+        "chapters": [markdown(chapter) for chapter in chapters]
         }
 
 
@@ -72,7 +77,7 @@ def parseFb2(path):
                     if remove_ns(item.tag) == "title":
                         current_chapter = "## " + tostr(item) + "\n\n"
                     else:
-                        current_chapter += markdownify(tohtml(item))
+                        current_chapter += markdownify(fix_hyphen(tohtml(item)))
                 chapters.append(current_chapter)
     return {
         "author": ", ".join(authors),
