@@ -27,9 +27,9 @@ for:
       - "%PYTHON_WIN%\\python.exe --version"
 
     install:
-      - "%PYTHON_WIN%\\python.exe -m pip install -r wheel"
-      - "%PYTHON_WIN%\\python.exe -m pip install -r requirements.txt"
+      - "%PYTHON_WIN%\\python.exe -m pip install wheel"
       - "%PYTHON_WIN%\\python.exe -m pip install https://freelanguagetools.org/python_lzo-1.12-cp38-cp38-win_amd64.whl"
+      - "%PYTHON_WIN%\\python.exe -m pip install -r requirements.txt"
       - "%PYTHON_WIN%\\python.exe -m pip install cx_freeze"
       - "%PYTHON_WIN%\\python.exe -m pip install ."
       - "cd cx_freeze"
@@ -51,9 +51,9 @@ for:
       - "$HOME/$PYTHON_MAC/bin/python --version"
     
     install:
-      - "$HOME/$PYTHON_MAC/bin/python -m pip install -r wheel"
+      - "$HOME/$PYTHON_MAC/bin/python -m pip install wheel"
+      - "$HOME/$PYTHON_MAC/bin/python -m pip install python-lzo"
       - "$HOME/$PYTHON_MAC/bin/python -m pip install -r requirements.txt"
-      - "$HOME/$PYTHON_MAC/bin/python -m pip install -r python-lzo"
       - "$HOME/$PYTHON_MAC/bin/python -m pip install cx_freeze"
       - "$HOME/$PYTHON_MAC/bin/python -m pip install ."
       - "cd cx_freeze"
