@@ -13,7 +13,7 @@ supported_dict_formats = bidict({
     "migaku": "Migaku Dictionary",
     "freq": "Frequency list",
     "audiolib": "Audio Library",
-    "mdx": "Octopus MDict mdx"
+    "mdx": "MDX"
 })
 
 
@@ -23,7 +23,7 @@ class DictManager(QDialog):
         self.settings = parent.settings
         self.setWindowTitle("Manage Local Dictionaries")
         self.parent = parent
-        self.resize(700, 500)
+        self.resize(500, 400)
         self.initWidgets()
         self.setupWidgets()
         self.refresh()
@@ -33,8 +33,8 @@ class DictManager(QDialog):
 
     def initWidgets(self):
         self.tview = QTreeWidget()
-        self.tview.setColumnCount(3)
-        self.tview.setHeaderLabels(["Name", "Type", "Language"])
+        self.tview.setColumnCount(4)
+        self.tview.setHeaderLabels(["Name", "Type", "Language", "Headwords"])
         self.add_dict = QPushButton("Import dictionary or frequency list..")
         self.add_dict.clicked.connect(self.onAdd)
         self.add_audio = QPushButton(
@@ -68,9 +68,21 @@ to be reimported, otherwise this operation will fail.\
         self.layout.addWidget(self.bar)
 
     def rebuildDB(self):
-        self.status("Rebuilding database..")
-        dictrebuild(json.loads(self.settings.value("custom_dicts", '[]')))
-        self.status("Database rebuilt.")
+        start = time.time()
+        dicts = json.loads(self.settings.value("custom_dicts", '[]'))
+        dictdb.purge()
+        n_dicts = len(dicts)
+        for (i, item) in enumerate(dicts):
+            try:
+                self.status(f"Rebuilding database: dictionary ({i+1}/{n_dicts})"
+                    ".. this can take a while.")
+                QCoreApplication.processEvents()
+                dictimport(item['path'], item['type'], item['lang'], item['name'])
+            except Exception as e:
+                print(e)
+
+        QMessageBox.information(self, "Database rebuilt", 
+            f"Database rebuilt in {format(time.time()-start, '.3f')} seconds.")
         self.showStats()
 
     def onAdd(self):
@@ -112,9 +124,15 @@ to be reimported, otherwise this operation will fail.\
         self.tview.clear()
         for item in dicts:
             treeitem = QTreeWidgetItem(
-                [item['name'], supported_dict_formats[item['type']], langcodes[item['lang']]])
+                [
+                    item['name'], 
+                    supported_dict_formats[item['type']], 
+                    langcodes[item['lang']], 
+                    str(dictdb.countEntriesDict(item['name']))
+                ]
+                )
             self.tview.addTopLevelItem(treeitem)
-        for i in range(3):
+        for i in range(4):
             self.tview.resizeColumnToContents(i)
 
     def status(self, msg, t=4000):
@@ -195,8 +213,7 @@ class AddDictDialog(QDialog):
         existing_names = getDictsForLang(lang, dicts)\
             + getFreqlistsForLang(lang, dicts)\
             + getAudioDictsForLang(lang, dicts)\
-            + ['wikt-en', 'gtrans']
-        print(existing_names)
+            + ['wikt-en', 'gtrans', '####METAINFO']
         if name.lower() in [n.lower() for n in existing_names]:
             # Name conflict!!
             QMessageBox.critical(
@@ -216,7 +233,8 @@ class AddDictDialog(QDialog):
         dicts.append({"name": self.name.text(),
                       "type": supported_dict_formats.inverse[self.type.currentText()],
                       "path": self.path,
-                      "lang": langcodes.inverse[self.lang.currentText()]})
+                      "lang": langcodes.inverse[self.lang.currentText()],
+                      })
         self.settings.setValue("custom_dicts", json.dumps(dicts))
         self.parent.status(f"Importing {self.name.text()} to database..")
         self.parent.refresh()

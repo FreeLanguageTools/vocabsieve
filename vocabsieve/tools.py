@@ -156,18 +156,18 @@ def dictimport(path, dicttype, lang, name) -> None:
     "Import dictionary from file to database"
     if dicttype == "stardict":
         stardict = Dictionary(os.path.splitext(path)[0], in_memory=True)
-        newdict = {}
+        d = {}
         if stardict.ifo.sametypesequence == 'x':
             for key in stardict.idx.keys():
-                newdict[key] = xdxf2html(stardict.dict[key])
+                d[key] = xdxf2html(stardict.dict[key])
         else:
             for key in stardict.idx.keys():
-                newdict[key] = stardict.dict[key]
-        dictdb.importdict(newdict, lang, name)
+                d[key] = stardict.dict[key]
+        dictdb.importdict(d, lang, name)
     elif dicttype == "json":
         with open(path, encoding="utf-8") as f:
-            data = json.load(f)
-            dictdb.importdict(data, lang, name)
+            d = json.load(f)
+            dictdb.importdict(d, lang, name)
     elif dicttype == "migaku":
         with open(path, encoding="utf-8") as f:
             data = json.load(f)
@@ -203,19 +203,9 @@ def dictimport(path, dicttype, lang, name) -> None:
             d[word] = json.dumps(d[word])
         dictdb.importdict(d, lang, name)
     elif dicttype == 'mdx':
-        dictdb.importdict(parseMDX(path), lang, name)
-    else:
-        print("Error:", str(dicttype), "is not supported.")
-        raise NotImplementedError
+        d = parseMDX(path)
+        dictdb.importdict(d, lang, name)
 
-
-def dictrebuild(dicts) -> None:
-    dictdb.purge()
-    for item in dicts:
-        try:
-            dictimport(item['path'], item['type'], item['lang'], item['name'])
-        except Exception as e:
-            print(e)
 
 def dictdelete(name) -> None:
     dictdb.deletedict(name)

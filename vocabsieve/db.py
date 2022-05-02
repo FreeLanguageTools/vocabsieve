@@ -177,6 +177,13 @@ class LocalDictionary():
         SELECT COUNT(*) FROM dictionary
         """)
         return int(self.c.fetchone()[0])
+    
+    def countEntriesDict(self, name) -> int:
+        self.c.execute("""
+        SELECT COUNT(*) FROM dictionary
+        WHERE dictname=?
+        """, (name,))
+        return int(self.c.fetchone()[0])
 
     def countDicts(self) -> int:
         self.c.execute("""
