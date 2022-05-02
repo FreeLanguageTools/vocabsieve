@@ -34,7 +34,8 @@ build_exe_options = {
         "pycountry",
         "markdown",
         "markdownify",
-        "lzo"],
+        "lzo",
+        "readmdict"],
     "include_files": include_files,
     "excludes": ["tkinter"],
     "include_msvcr": True}

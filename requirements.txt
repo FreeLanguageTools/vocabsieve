@@ -18,4 +18,5 @@ ebooklib
 pycountry
 markdown
 markdownify
+readmdict
 # python-lzo This cannot be compiled on Windows without special tools.

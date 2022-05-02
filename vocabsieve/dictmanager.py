@@ -12,7 +12,8 @@ supported_dict_formats = bidict({
     "json": "Simple JSON",
     "migaku": "Migaku Dictionary",
     "freq": "Frequency list",
-    "audiolib": "Audio Library"
+    "audiolib": "Audio Library",
+    "mdx": "Octopus MDict mdx"
 })
 
 
@@ -74,7 +75,7 @@ to be reimported, otherwise this operation will fail.\
     def onAdd(self):
         fdialog = QFileDialog()
         fdialog.setFileMode(QFileDialog.ExistingFile)
-        fdialog.setNameFilter("Dictionary files (*.json *.ifo)")
+        fdialog.setNameFilter("Dictionary files (*.json *.ifo *.mdx)")
         fdialog.exec()
         if fdialog.selectedFiles() == []:
             return

@@ -3,16 +3,49 @@ import urllib.request
 import requests
 import os
 import re
+import time
+from readmdict import MDX
 from bs4 import BeautifulSoup
 from typing import List, Dict
 from .db import *
 from pystardict import Dictionary
 from .dictionary import *
 from .xdxftransform import xdxf2html
-
+from PyQt5.QtCore import QCoreApplication
 
 def request(action, **params):
     return {'action': action, 'params': params, 'version': 6}
+
+def parseMDX(path):
+    mdx = MDX(path)
+    stylesheet_lines = mdx.header[b'StyleSheet'].decode().splitlines()
+    stylesheet_map = {}
+    for line in stylesheet_lines:
+        if line.isnumeric():
+            number = int(line)
+        else:
+            stylesheet_map[number] = stylesheet_map.get(number, "") + line
+    newdict = {} # This temporarily stores the new entries
+    i = 0
+    prev_headword = ""
+    for item in mdx.items():
+        headword, entry = item
+        headword = headword.decode()
+        entry = entry.decode()
+        # The following applies the stylesheet
+        if stylesheet_map:
+            entry = re.sub(
+                r'`(\d+)`', 
+                lambda g: stylesheet_map.get(g.group().strip('`')), 
+                entry
+                )
+            #print(entry)
+        if prev_headword == headword:
+            newdict[headword] = newdict[headword] + entry
+        else:
+            newdict[headword] = entry
+        prev_headword = headword
+    return newdict
 
 
 def invoke(action, server, **params):
@@ -94,7 +127,7 @@ def dictinfo(path) -> Dict[str,str]:
     basename = os.path.basename(basename)
     if os.path.isdir(path):
         return {"type": "audiolib", "basename": basename, "path": path}
-    if ext not in [".json", ".ifo"]:
+    if ext not in [".json", ".ifo", ".mdx"]:
         raise NotImplementedError("Unsupported format")
     elif ext == ".json":
         with open(path, encoding="utf-8") as f:
@@ -116,7 +149,8 @@ def dictinfo(path) -> Dict[str,str]:
                 raise IOError("Reading failed")
     elif ext == ".ifo":
         return {"type": "stardict", "basename": basename, "path": path}
-
+    elif ext == ".mdx":
+        return {"type": "mdx", "basename": basename, "path": path}
 
 def dictimport(path, dicttype, lang, name) -> None:
     "Import dictionary from file to database"
@@ -168,7 +202,8 @@ def dictimport(path, dicttype, lang, name) -> None:
         for word in d.keys():
             d[word] = json.dumps(d[word])
         dictdb.importdict(d, lang, name)
-
+    elif dicttype == 'mdx':
+        dictdb.importdict(parseMDX(path), lang, name)
     else:
         print("Error:", str(dicttype), "is not supported.")
         raise NotImplementedError
