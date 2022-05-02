@@ -9,6 +9,7 @@ import functools
 import platform
 import json
 from markdown import markdown
+from markdownify import markdownify
 import re
 DEBUGGING = None
 if os.environ.get("VOCABSIEVE_DEBUG"):
@@ -364,7 +365,11 @@ class DictionaryWindow(QMainWindow):
         selected = cursor.selectedText()
         cursor2 = self.definition.textCursor()
         selected2 = cursor2.selectedText()
-        target = str.strip(selected or selected2
+        cursor3 = self.definition2.textCursor()
+        selected3 = cursor3.selectedText()
+        target = str.strip(selected 
+                           or selected2
+                           or selected3
                            or self.previousWord
                            or self.word.text()
                            or "")
@@ -390,7 +395,7 @@ class DictionaryWindow(QMainWindow):
 
     def setState(self, state):
         self.word.setText(state['word'])
-        self.definition.setHtml(re.sub(r'(\<br\/\>)+', r'', state['definition'].strip()))
+        self.definition.setHtml(state['definition'].strip())
         if state.get('definition2') is not None:
             self.definition2.setHtml(state['definition2'].strip())
         cursor = self.sentence.textCursor()
