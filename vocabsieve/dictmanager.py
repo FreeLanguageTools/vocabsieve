@@ -27,7 +27,7 @@ class DictManager(QDialog):
         self.initWidgets()
         self.setupWidgets()
         self.refresh()
-        self.initTimer()
+        self.showStats()
         # self.loadSettings()
         # self.setupAutosave()
 
@@ -58,7 +58,7 @@ to be reimported, otherwise this operation will fail.\
             QLabel(
                 "<strong>Note</strong>: "
                 "<strong>Do not</strong> delete any files after importing them!<br>"
-                "VocabSieve does not store a copy of these files; it only indexes them.<br>"
+                "VocabSieve does not store a copy of these files; it only indexes and caches them.<br>"
                 "If you delete the files, your dictionaries will disappear when the database is rebuilt."))
         self.layout.addWidget(self.tview)
         self.layout.addWidget(self.add_dict)
@@ -71,6 +71,7 @@ to be reimported, otherwise this operation will fail.\
         self.status("Rebuilding database..")
         dictrebuild(json.loads(self.settings.value("custom_dicts", '[]')))
         self.status("Database rebuilt.")
+        self.showStats()
 
     def onAdd(self):
         fdialog = QFileDialog()
@@ -83,16 +84,17 @@ to be reimported, otherwise this operation will fail.\
             fname = fdialog.selectedFiles()[0]
         dialog = AddDictDialog(self, fname)
         dialog.exec()
+        self.showStats()
 
     def onAddAudio(self):
         folder = QFileDialog.getExistingDirectory(
             self, "Select sound library", QStandardPaths.writableLocation(
                 QStandardPaths.HomeLocation), QFileDialog.ShowDirsOnly)
         if not folder:
-            print("No folder is chosen as sound library, aborting.")
             return
         dialog = AddDictDialog(self, folder, True)
         dialog.exec()
+        self.showStats()
 
     def onRemove(self):
         index = self.tview.indexFromItem(self.tview.currentItem())
@@ -103,6 +105,7 @@ to be reimported, otherwise this operation will fail.\
         del dicts[index.row()]
         self.settings.setValue("custom_dicts", json.dumps(dicts))
         self.refresh()
+        self.showStats()
 
     def refresh(self):
         dicts = json.loads(self.settings.value("custom_dicts", '[]'))
@@ -114,8 +117,8 @@ to be reimported, otherwise this operation will fail.\
         for i in range(3):
             self.tview.resizeColumnToContents(i)
 
-    def status(self, msg):
-        self.bar.showMessage(self.time() + " " + msg, 4000)
+    def status(self, msg, t=4000):
+        self.bar.showMessage(self.time() + " " + msg, t)
 
     def time(self):
         return QDateTime.currentDateTime().toString('[hh:mm:ss]')
@@ -126,17 +129,12 @@ to be reimported, otherwise this operation will fail.\
         self.parent.loadAudioDictionaries()
         event.accept()
 
-    def initTimer(self):
-        self.showStats()
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.showStats)
-        self.timer.start(500)
 
     def showStats(self):
         n_dicts = dictdb.countDicts()
         n_entries = dictdb.countEntries()
-        if self.bar.currentMessage() == "":
-            self.status(f"Total: {n_dicts} dictionaries, {n_entries} entries.")
+        self.status(f"Total: {n_dicts} dictionaries, {n_entries} entries.", t=0)
+        # t=0 means it will not disappear
 
 
 class AddDictDialog(QDialog):
@@ -190,12 +188,31 @@ class AddDictDialog(QDialog):
         self.layout.addRow(self.commit_button)
 
     def commit(self):
+        "Make sure there are no name conflicts, then add dictionary"
+        name = self.name.text()
+        dicts = json.loads(self.settings.value("custom_dicts", '[]'))
+        lang = langcodes.inverse[self.lang.currentText()]
+        existing_names = getDictsForLang(lang, dicts)\
+            + getFreqlistsForLang(lang, dicts)\
+            + getAudioDictsForLang(lang, dicts)\
+            + ['wikt-en', 'gtrans']
+        print(existing_names)
+        if name.lower() in [n.lower() for n in existing_names]:
+            # Name conflict!!
+            QMessageBox.critical(
+                self,
+                "Name conflict",
+                f"A dictionary with name '{name}' already exists. "
+                    + "Please choose a different name",
+                )
+            return
+
+
         dictimport(
             self.path,
             supported_dict_formats.inverse[self.type.currentText()],
-            langcodes.inverse[self.lang.currentText()],
+            lang,
             self.name.text())
-        dicts = json.loads(self.settings.value("custom_dicts", '[]'))
         dicts.append({"name": self.name.text(),
                       "type": supported_dict_formats.inverse[self.type.currentText()],
                       "path": self.path,

@@ -39,7 +39,7 @@ def parseMDX(path):
                 lambda g: stylesheet_map.get(g.group().strip('`')), 
                 entry
                 )
-            #print(entry)
+        entry = entry.replace("\n", "").replace("\r", "")
         if prev_headword == headword:
             newdict[headword] = newdict[headword] + entry
         else:
@@ -155,7 +155,7 @@ def dictinfo(path) -> Dict[str,str]:
 def dictimport(path, dicttype, lang, name) -> None:
     "Import dictionary from file to database"
     if dicttype == "stardict":
-        stardict = Dictionary(os.path.splitext(path)[0])
+        stardict = Dictionary(os.path.splitext(path)[0], in_memory=True)
         newdict = {}
         if stardict.ifo.sametypesequence == 'x':
             for key in stardict.idx.keys():

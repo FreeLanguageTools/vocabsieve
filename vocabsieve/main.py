@@ -62,7 +62,7 @@ class GlobalObject(QObject):
 class DictionaryWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("VocabSieve")
+        self.setWindowTitle("VocabSieve" + os.environ.get("VOCABSIEVE_DEBUG", ""))
         self.setFocusPolicy(Qt.StrongFocus)
         self.widget = QWidget()
         self.settings = QSettings()
@@ -104,10 +104,16 @@ class DictionaryWindow(QMainWindow):
         super().focusInEvent(event)
 
     def initWidgets(self):
-        self.namelabel = QLabel(
-            "<h2 style=\"font-weight: normal;\">VocabSieve v" +
-            __version__ +
-            "</h2>")
+        if os.environ.get("VOCABSIEVE_DEBUG"):
+            self.namelabel = QLabel(
+                "<h2 style=\"font-weight: normal;\">VocabSieve"
+                " (debug=" + os.environ.get("VOCABSIEVE_DEBUG", "")\
+                + ")</h2>")
+        else:
+            self.namelabel = QLabel(
+                "<h2 style=\"font-weight: normal;\">VocabSieve v" +
+                __version__ +
+                "</h2>")
         self.menu = QMenuBar(self)
         self.sentence = MyTextEdit()
         self.sentence.setPlaceholderText(

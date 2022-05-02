@@ -161,6 +161,7 @@ class LocalDictionary():
             DELETE FROM dictionary
             WHERE dictname=?
         """, (name,))
+        self.conn.commit()
 
     def define(self, word: str, lang: str, name: str) -> str:
         self.c.execute("""

@@ -53,7 +53,6 @@ simplemma_languages = [
     'pt', 'ro', 'ru', 'sk', 'sl', 'sv', 'tr', 'uk', 'ur'
     ]
 dictionaries = bidict({"Wiktionary (English)": "wikt-en",
-                       "Google dictionary (Monolingual)": "gdict",
                        "Google Translate": "gtrans"})
 pronunciation_sources = ["Forvo (all)", "Forvo (best)"]
 
@@ -232,11 +231,10 @@ def lookupin(
         word = removeAccents(word)
     if lemmatize:
         word = lem_word(word, language)
-    dictid = dictionaries.get(dictionary)
-    if dictid == "wikt-en":
+    if dictionary == "Wiktionary (English)":
         item = wiktionary(word, language, lemmatize)
         item['definition'] = fmt_result(item['definition'])
-    elif dictid == "gtrans":
+    elif dictionary == "Google Translate":
         return googletranslate(word, language, gtrans_lang, gtrans_api)
     else:
         return {
@@ -258,8 +256,6 @@ def getDictsForLang(lang: str, dicts: list):
     "Get the list of dictionaries for a given language"
     # These are for all the languages
     results = ["Wiktionary (English)", "Google Translate"]
-    # if lang in gdict_languages:
-    #    results.append("Google dictionary (Monolingual)")
     results.extend([item['name'] for item in dicts if item['lang'] ==
                    lang and item['type'] != "freq" and item['type'] != 'audiolib'])
     return results

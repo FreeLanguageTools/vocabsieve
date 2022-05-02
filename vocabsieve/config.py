@@ -16,6 +16,7 @@ class SettingsDialog(QDialog):
         self.initTabs()
         self.setupWidgets()
         self.setupAutosave()
+        self.setupProcessing()
         self.twodictmode = self.settings.value(
             "dict_source2", "<disabled>") != "<disabled>"
 
@@ -49,7 +50,7 @@ class SettingsDialog(QDialog):
         self.reader_fontsize = QSpinBox()
         self.reader_fontsize.setMinimum(4)
         self.reader_fontsize.setMaximum(200)
-        self.reader_hlcolor = QPushButton(self.settings.value("reader_hlcolor"))
+        self.reader_hlcolor = QPushButton(self.settings.value("reader_hlcolor", "#66bb77"))
         self.reader_hlcolor.clicked.connect(self.save_color)
 
         self.word_field = QComboBox()
@@ -104,6 +105,14 @@ class SettingsDialog(QDialog):
 
         self.importdict.clicked.connect(self.dictmanager)
 
+        self.postproc_selector = QComboBox()
+        self.display_mode = QComboBox()
+        self.skip_top = QSpinBox()
+        self.skip_top.setSuffix(" lines")
+        self.cleanup_html = QCheckBox()
+        self.collapse_newlines = QSpinBox()
+        self.collapse_newlines.setSuffix(" newlines")
+
     def dictmanager(self):
         importer = DictManager(self)
         importer.exec()
@@ -113,14 +122,16 @@ class SettingsDialog(QDialog):
 
     def initTabs(self):
         self.tabs = QTabWidget()
-        self.tab1 = QWidget()
-        self.tab1.layout = QFormLayout(self.tab1)
-        self.tab2 = QWidget()
-        self.tab2.layout = QFormLayout(self.tab2)
-        self.tab3 = QWidget()
-        self.tab3.layout = QFormLayout(self.tab3)
-        self.tab4 = QWidget()
-        self.tab4.layout = QFormLayout(self.tab4)
+        self.tab_d = QWidget()
+        self.tab_d.layout = QFormLayout(self.tab_d)
+        self.tab_a = QWidget()
+        self.tab_a.layout = QFormLayout(self.tab_a)
+        self.tab_n = QWidget()
+        self.tab_n.layout = QFormLayout(self.tab_n)
+        self.tab_i = QWidget()
+        self.tab_i.layout = QFormLayout(self.tab_i)
+        self.tab_p = QWidget()
+        self.tab_p.layout = QFormLayout(self.tab_p)
 
         self.tabs.resize(250, 300)
 
@@ -128,10 +139,11 @@ class SettingsDialog(QDialog):
         self.layout.addWidget(self.tabs)
         self.layout.addWidget(self.bar)
 
-        self.tabs.addTab(self.tab1, "Dictionary")
-        self.tabs.addTab(self.tab2, "Anki")
-        self.tabs.addTab(self.tab3, "Network")
-        self.tabs.addTab(self.tab4, "Interface")
+        self.tabs.addTab(self.tab_d, "Dictionary")
+        self.tabs.addTab(self.tab_p, "Processing")
+        self.tabs.addTab(self.tab_a, "Anki")
+        self.tabs.addTab(self.tab_n, "Network")
+        self.tabs.addTab(self.tab_i, "Interface")
 
     def save_color(self):
         color = QColorDialog.getColor()
@@ -149,82 +161,128 @@ class SettingsDialog(QDialog):
             "Custom (Enter below)"
         ])
         self.gtrans_lang.addItems(langs_supported.values())
-
-        self.tab1.layout.addRow(self.lemmatization)
-        self.tab1.layout.addRow(self.lemfreq)
-        self.tab1.layout.addRow(self.bold_word)
-        self.tab1.layout.addRow(
+        self.display_mode.addItems(["Plaintext","Markdown","HTML", "Markdown-HTML"])
+        self.tab_d.layout.addRow(QLabel("<h3>Dictionary sources</h3>"))
+        self.tab_d.layout.addRow(self.lemmatization)
+        self.tab_d.layout.addRow(self.lemfreq)
+        self.tab_d.layout.addRow(self.bold_word)
+        self.tab_d.layout.addRow(
             QLabel("Target language"),
             self.target_language)
-        self.tab1.layout.addRow(
+        self.tab_d.layout.addRow(
             QLabel("Dictionary source 1"),
             self.dict_source)
-        self.tab1.layout.addRow(
+        self.tab_d.layout.addRow(
             QLabel("Dictionary source 2"),
             self.dict_source2)
-        self.tab1.layout.addRow(
+        self.tab_d.layout.addRow(
             QLabel("Pronunciation source"),
             self.audio_dict)
-        self.tab1.layout.addRow(QLabel("Frequency list"), self.freq_source)
-        self.tab1.layout.addRow(
+        self.tab_d.layout.addRow(QLabel("Frequency list"), self.freq_source)
+        self.tab_d.layout.addRow(
             QLabel("Google translate: To"),
             self.gtrans_lang)
-        self.tab1.layout.addRow(QLabel("Web lookup preset"), self.web_preset)
-        self.tab1.layout.addRow(QLabel("Custom URL pattern"), self.custom_url)
-        self.tab1.layout.addRow(self.importdict)
+        self.tab_d.layout.addRow(QLabel("Web lookup preset"), self.web_preset)
+        self.tab_d.layout.addRow(QLabel("Custom URL pattern"), self.custom_url)
+        self.tab_d.layout.addRow(self.importdict)
 
-        self.tab2.layout.addRow(QLabel('AnkiConnect API'), self.anki_api)
-        self.tab2.layout.addRow(QLabel("Deck name"), self.deck_name)
-        self.tab2.layout.addRow(QLabel('Default tags'), self.tags)
-        self.tab2.layout.addRow(QLabel("Note type"), self.note_type)
-        self.tab2.layout.addRow(
+        self.tab_a.layout.addRow(QLabel("<h3>Anki settings</h3>"))
+        self.tab_a.layout.addRow(QLabel('AnkiConnect API'), self.anki_api)
+        self.tab_a.layout.addRow(QLabel("Deck name"), self.deck_name)
+        self.tab_a.layout.addRow(QLabel('Default tags'), self.tags)
+        self.tab_a.layout.addRow(QLabel("Note type"), self.note_type)
+        self.tab_a.layout.addRow(
             QLabel('Field name for "Sentence"'),
             self.sentence_field)
-        self.tab2.layout.addRow(
+        self.tab_a.layout.addRow(
             QLabel('Field name for "Word"'),
             self.word_field)
-        self.tab2.layout.addRow(
+        self.tab_a.layout.addRow(
             QLabel('Field name for "Definition"'),
             self.definition_field)
-        self.tab2.layout.addRow(
+        self.tab_a.layout.addRow(
             QLabel('Field name for "Definition#2"'),
             self.definition2_field)
-        self.tab2.layout.addRow(
+        self.tab_a.layout.addRow(
             QLabel('Field name for "Pronunciation"'),
             self.pronunciation_field)
-        self.tab2.layout.addRow(self.note_type_url)
+        self.tab_a.layout.addRow(self.note_type_url)
 
-        self.tab3.layout.addRow(QLabel(
-            '<i>Most users should not need to change these settings.</i><br><b>All settings on this tab requires restart to take effect.</b>'))
-        self.tab3.layout.addRow(self.api_enabled)
-        self.tab3.layout.addRow(QLabel("API host"), self.api_host)
-        self.tab3.layout.addRow(QLabel("API port"), self.api_port)
-        self.tab3.layout.addRow(self.reader_enabled)
-        self.tab3.layout.addRow(QLabel("Web reader host"), self.reader_host)
-        self.tab3.layout.addRow(QLabel("Web reader port"), self.reader_port)
-        self.tab3.layout.addRow(
+        self.tab_n.layout.addRow(QLabel(
+            '<h3>All settings on this tab requires restart to take effect.</h3>'
+            '<i>Most users should not need to change these settings.</i>'
+            ))
+        self.tab_n.layout.addRow(self.api_enabled)
+        self.tab_n.layout.addRow(QLabel("API host"), self.api_host)
+        self.tab_n.layout.addRow(QLabel("API port"), self.api_port)
+        self.tab_n.layout.addRow(self.reader_enabled)
+        self.tab_n.layout.addRow(QLabel("Web reader host"), self.reader_host)
+        self.tab_n.layout.addRow(QLabel("Web reader port"), self.reader_port)
+        self.tab_n.layout.addRow(
             QLabel("Google Translate API"),
             self.gtrans_api)
 
-        self.tab4.layout.addRow(
+        self.tab_i.layout.addRow(
             QLabel("<h3>These settings requires restart to take effect</h3>"))
         if platform.system() == "Linux":
             # Primary selection is only available on Linux
-            self.tab4.layout.addRow(self.primary)
-        self.tab4.layout.addRow(self.allow_editing)
-        self.tab4.layout.addRow(QLabel("Interface layout"), self.orientation)
-        self.tab4.layout.addRow(QLabel("Text scale"), self.text_scale_box)
-        self.tab4.layout.addRow(
+            self.tab_i.layout.addRow(self.primary)
+        self.tab_i.layout.addRow(self.allow_editing)
+        self.tab_i.layout.addRow(QLabel("Interface layout"), self.orientation)
+        self.tab_i.layout.addRow(QLabel("Text scale"), self.text_scale_box)
+        self.tab_i.layout.addRow(
             QLabel("<h3>These settings requires page refresh to take effect</h3>"))
-        self.tab4.layout.addRow(QLabel("Reader font"), self.reader_font)
-        self.tab4.layout.addRow(QLabel("Reader font size"), self.reader_fontsize)
-        self.tab4.layout.addRow(QLabel("Reader highlight color"), self.reader_hlcolor)
+        self.tab_i.layout.addRow(QLabel("Reader font"), self.reader_font)
+        self.tab_i.layout.addRow(QLabel("Reader font size"), self.reader_fontsize)
+        self.tab_i.layout.addRow(QLabel("Reader highlight color"), self.reader_hlcolor)
+
+        self.tab_p.layout.addRow(QLabel("<h3>Per-dictionary postprocessing options</h3>"))
+        self.tab_p.layout.addRow(QLabel("Configure for dictionary:"), self.postproc_selector)
+        self.tab_p.layout.addRow(QLabel("<hr>"))
+        self.tab_p.layout.addRow(QLabel("Display mode"), self.display_mode)
+        self.tab_p.layout.addRow(QLabel("<i>◊ HTML mode does not support editing. "
+            "Your edits will not be saved!</i>"))
+        self.tab_p.layout.addRow(QLabel("Do not display the top"), self.skip_top)
+        self.tab_p.layout.addRow(QLabel(
+            "<i>◊ Use this if your dictionary repeats the word in the first line.</i>"))
+        self.tab_p.layout.addRow(QLabel("Collapse continuous newlines into"), self.collapse_newlines)
+        self.tab_p.layout.addRow(QLabel(
+            "<i>◊ Set to 1 to remove blank lines. 0 will leave them intact.</i>"))
+        self.tab_p.layout.addRow(QLabel("Attempt to clean up HTML"), self.cleanup_html)
+        self.tab_p.layout.addRow(QLabel(
+            "<i>◊ Try this if your mdx dictionary does not work.</i>"))
 
         self.text_scale.valueChanged.connect(
             lambda _: self.text_scale_label.setText(
                 format(
                     self.text_scale.value() / 100,
                     "1.2f") + "x"))
+
+    def setupProcessing(self):
+        """This will allow per-dictionary configurations.
+        Whenever dictionary changes, the QSettings key name must change.
+        """
+        curr_dict = self.postproc_selector.currentText()
+        # Remove all existing connections
+        try:
+            self.display_mode.currentTextChanged.disconnect()
+            self.skip_top.valueChanged.disconnect()
+            self.collapse_newlines.valueChanged.disconnect()
+            self.cleanup_html.clicked.disconnect()
+        except TypeError: 
+            # When there are no connected functions, it raises a TypeError
+            pass
+        # Reestablish config handlers
+        self.register_config_handler(self.display_mode,
+            f"{curr_dict}/"+"display_mode", "Markdown-HTML")
+        self.register_config_handler(self.skip_top,
+            f"{curr_dict}/"+"skip_top", 0)
+        self.register_config_handler(self.collapse_newlines,
+            f"{curr_dict}/"+"collapse_newlines", 0)
+        self.register_config_handler(self.cleanup_html,
+            f"{curr_dict}/"+"cleanup_html", False)
+
+
 
     def setupAutosave(self):
         if self.settings.value("config_ver") is None:
@@ -238,6 +296,7 @@ class SettingsDialog(QDialog):
             'target_language',
             'en',
             code_translate=True)
+
 
         api = self.anki_api.text()
         try:
@@ -269,6 +328,7 @@ class SettingsDialog(QDialog):
         self.loadFreqSources()
 
         self.dict_source2.currentTextChanged.connect(self.changeMainLayout)
+        self.postproc_selector.currentTextChanged.connect(self.setupProcessing)
         self.note_type.currentTextChanged.connect(self.loadFields)
         self.api_enabled.clicked.connect(self.setAvailable)
         self.reader_enabled.clicked.connect(self.setAvailable)
@@ -325,6 +385,7 @@ class SettingsDialog(QDialog):
         self.target_language.currentTextChanged.connect(self.loadUrl)
         self.web_preset.currentTextChanged.connect(self.loadUrl)
         self.gtrans_lang.currentTextChanged.connect(self.loadUrl)
+        self.loadUrl()
 
     def setAvailable(self):
         self.api_host.setEnabled(self.api_enabled.isChecked())
@@ -351,11 +412,14 @@ class SettingsDialog(QDialog):
         self.dict_source2.blockSignals(True)
         self.dict_source2.clear()
         self.dict_source2.addItem("<disabled>")
+        self.postproc_selector.blockSignals(True)
+        self.postproc_selector.clear()
         dicts = getDictsForLang(
             langcodes.inverse[self.target_language.currentText()], custom_dicts)
 
         self.dict_source.addItems(dicts)
         self.dict_source2.addItems(dicts)
+        self.postproc_selector.addItems(dicts)
         self.dict_source.setCurrentText(
             self.settings.value(
                 'dict_source',
@@ -365,6 +429,7 @@ class SettingsDialog(QDialog):
                 'dict_source2', '<disabled>'))
         self.dict_source.blockSignals(False)
         self.dict_source2.blockSignals(False)
+        self.postproc_selector.blockSignals(False)
 
     def loadFreqSources(self):
         custom_dicts = json.loads(self.settings.value("custom_dicts", '[]'))
