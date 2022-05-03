@@ -58,6 +58,14 @@ class GlobalObject(QObject):
         for func in functions:
             QTimer.singleShot(0, func)
 
+class MyTextEdit(QTextEdit):
+
+    @pyqtSlot()
+    def mouseDoubleClickEvent(self, e):
+        super().mouseDoubleClickEvent(e)
+        GlobalObject().dispatchEvent("double clicked")
+        self.textCursor().clearSelection()
+        self.original = ""
 
 class DictionaryWindow(QMainWindow):
     def __init__(self):
@@ -401,9 +409,37 @@ class DictionaryWindow(QMainWindow):
 
     def setState(self, state):
         self.word.setText(state['word'])
-        self.definition.setHtml(state['definition'].strip())
-        if state.get('definition2') is not None:
-            self.definition2.setHtml(state['definition2'].strip())
+        self.definition.original = state['definition']
+        display_mode1 = self.settings.value(
+            self.settings.value("dict_source1", "Wiktionary (English)")
+            + "/display_mode",
+            "Markdown-HTML"
+        )
+        if display_mode1 in ['Raw', 'Plaintext', 'Markdown']:
+            self.definition.setPlainText(
+                process_definition(state['definition'].strip(), display_mode1)
+            )
+        else:
+            self.definition.setHtml(
+                process_definition(state['definition'].strip(), display_mode1)
+            )
+
+        if state.get('definition2'):
+            self.definition2.original = state['definition2']
+            display_mode2 = self.settings.value(
+                self.settings.value("dict_source2", "Wiktionary (English)")
+                + "/display_mode",
+                "Markdown-HTML"
+                )
+            if display_mode2 in ['Raw', 'Plaintext', 'Markdown']:
+                self.definition2.setPlainText(
+                    process_definition(state['definition2'].strip(), display_mode2)
+                )
+            else:
+                self.definition2.setHtml(
+                    process_definition(state['definition2'].strip(), display_mode2)
+                )
+            
         cursor = self.sentence.textCursor()
         cursor.clearSelection()
         self.sentence.setTextCursor(cursor)
@@ -583,7 +619,14 @@ class DictionaryWindow(QMainWindow):
             },
             "tags": tags
         }
-        definition = markdown(self.definition.toMarkdown())
+        definition = self.process_defi_anki(
+            self.definition,
+            self.settings.value(
+                self.settings.value("dict_source1", "Wiktionary (English)")
+                + "/display_mode",
+                "Markdown-HTML"
+                )
+            )
         content['fields'][self.settings.value('definition_field')] = definition
         if self.settings.value("dict_source2", "<disabled>") != '<disabled>':
             try:
@@ -594,6 +637,14 @@ class DictionaryWindow(QMainWindow):
                     self.warn(
                         "Aborted.\nYou must have field for Definition#2 in order to use two dictionaries.")
                     return
+                definition2 = self.process_defi_anki(
+                    self.definition2,
+                    self.settings.value(
+                        self.settings.value("dict_source2", "Wiktionary (English)")
+                        + "/display_mode",
+                        "Markdown-HTML"
+                        )
+                    )                
                 content['fields'][self.settings.value(
                     'definition2_field')] = definition2
             except Exception as e:
@@ -625,6 +676,20 @@ class DictionaryWindow(QMainWindow):
             self.status(f"Failed to add note: {word}")
             self.errorNoConnection(e)
             return
+
+
+    def process_defi_anki(self, w: MyTextEdit, display_mode):
+        "Process definitions before sending to Anki"
+        if display_mode in ["Raw", "Plaintext"]:
+            return w.toPlainText()
+        elif display_mode == "Markdown":
+            return markdown(w.toPlainText())
+        elif display_mode == "Markdown-HTML":
+            return markdown(w.toMarkdown())
+        elif display_mode == "HTML":
+            return w.original
+            
+            
 
     def errorNoConnection(self, error):
         """
@@ -704,13 +769,6 @@ class DictionaryWindow(QMainWindow):
         self.createNote()
 
 
-class MyTextEdit(QTextEdit):
-
-    @pyqtSlot()
-    def mouseDoubleClickEvent(self, e):
-        super().mouseDoubleClickEvent(e)
-        GlobalObject().dispatchEvent("double clicked")
-        self.textCursor().clearSelection()
 
 
 class AboutDialog(QDialog):

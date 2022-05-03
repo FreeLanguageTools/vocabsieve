@@ -2,8 +2,7 @@
 # and Ashwin V. Mohanan (ashwinvis)
 # Obtained and modified from pyglossary library
 # Using under the terms of the GNU GPLv3
-
-import logging
+from typing import Union
 from io import BytesIO
 from io import StringIO
 
@@ -119,8 +118,6 @@ class XdxfTransformer(object):
 				"href": iref_url,
 			}):
 				hf.write("⎋")
-		else:
-			log.warning(f"iref with no text and no url: {self.tostring(child)}")
 
 	def writeChild(
 		self,
@@ -201,7 +198,6 @@ class XdxfTransformer(object):
 
 		if child.tag == "kref":
 			if not child.text:
-				log.warning(f"kref with no text: {self.tostring(child)}")
 				return
 			with hf.element("a", **{
 				"class": "kref",
@@ -216,7 +212,6 @@ class XdxfTransformer(object):
 
 		if child.tag == "rref":
 			if not child.text:
-				log.warning(f"rref with no text: {self.tostring(child)}")
 				return
 
 		if child.tag == "def":
@@ -274,7 +269,6 @@ class XdxfTransformer(object):
 				hf.write(f"{child.text}")
 			return
 
-		log.warning(f"unknown tag {child.tag}")
 		self.writeChildrenOf(hf, child)
 
 	def writeChildrenOf(

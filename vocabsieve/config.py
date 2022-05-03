@@ -161,7 +161,7 @@ class SettingsDialog(QDialog):
             "Custom (Enter below)"
         ])
         self.gtrans_lang.addItems(langs_supported.values())
-        self.display_mode.addItems(["Plaintext","Markdown","HTML", "Markdown-HTML"])
+        self.display_mode.addItems(["Raw", "Plaintext","Markdown","HTML", "Markdown-HTML"])
         self.tab_d.layout.addRow(QLabel("<h3>Dictionary sources</h3>"))
         self.tab_d.layout.addRow(self.lemmatization)
         self.tab_d.layout.addRow(self.lemfreq)

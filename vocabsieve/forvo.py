@@ -129,7 +129,6 @@ class Forvo:
                                                  )
 
             self.pronunciations.append(pronunciation_object)
-        print(self.pronunciations)
         return self
 
 

@@ -9,6 +9,7 @@ from typing import Optional
 from bs4 import BeautifulSoup
 from bidict import bidict
 import pymorphy2
+from markdownify import markdownify
 from .db import *
 from playsound import playsound
 from .forvo import *
@@ -302,3 +303,17 @@ def play_audio(name: str, data: dict, lang: str):
     else:
         playsound(audiopath)
         return audiopath
+
+def process_definition(entry: str, mode: str):
+    if mode in ['Raw', 'HTML', 'Markdown-HTML']:
+        return entry
+    elif mode == 'Markdown':
+        return markdownify(entry)
+    elif mode == 'Plaintext':
+        entry = entry.replace("<br>", "\n")\
+                     .replace("<br/>", "\n")\
+                     .replace("<BR>", "\n")
+        entry = re.sub(r"<.*?>", "", entry)
+        return entry
+    else:
+        raise NotImplementedError("Mode not supported")
