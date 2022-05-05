@@ -40,6 +40,8 @@ def parseMDX(path):
                 entry
                 )
         entry = entry.replace("\n", "").replace("\r", "")
+        # Using newdict.get would become incredibly slow,
+        # here we exploit the fact that they are alphabetically ordered
         if prev_headword == headword:
             newdict[headword] = newdict[headword] + entry
         else:

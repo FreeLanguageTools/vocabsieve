@@ -83,6 +83,7 @@ to be reimported, otherwise this operation will fail.\
 
         QMessageBox.information(self, "Database rebuilt", 
             f"Database rebuilt in {format(time.time()-start, '.3f')} seconds.")
+        self.refresh()
         self.showStats()
 
     def onAdd(self):
@@ -239,6 +240,7 @@ class AddDictDialog(QDialog):
         self.parent.status(f"Importing {self.name.text()} to database..")
         self.parent.refresh()
         self.parent.status("Importing done.")
+        self.parent.showStats()
         self.close()
 
     def warn(self, text):

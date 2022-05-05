@@ -347,7 +347,7 @@ class SettingsDialog(QDialog):
             'Wiktionary (English)')
         self.register_config_handler(
             self.dict_source2, 'dict_source2', '<disabled>')
-        self.register_config_handler(self.audio_dict, 'audio_dict', 'Forvo')
+        self.register_config_handler(self.audio_dict, 'audio_dict', 'Forvo (all)')
         self.register_config_handler(
             self.freq_source, 'freq_source', '<disabled>')
         self.register_config_handler(

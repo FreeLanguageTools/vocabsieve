@@ -485,7 +485,7 @@ class DictionaryWindow(QMainWindow):
 
     def lookupSet(self, word, use_lemmatize=True):
         sentence_text = self.sentence.toPlainText()
-        if self.settings.value("bold_word", type=bool):
+        if self.settings.value("bold_word", True, type=bool):
             sentence_text = sentence_text.replace(
                 "_", "").replace(word, f"__{word}__")
         self.sentence.setText(sentence_text)
@@ -498,10 +498,10 @@ class DictionaryWindow(QMainWindow):
             try:
                 self.audios = getAudio(
                     word,
-                    self.settings.value("target_language"),
-                    dictionary=self.settings.value("audio_dict"),
+                    self.settings.value("target_language", 'en'),
+                    dictionary=self.settings.value("audio_dict", "<disabled>"),
                     custom_dicts=json.loads(
-                        self.settings.value("custom_dicts")))
+                        self.settings.value("custom_dicts", '[]')))
             except Exception:
                 self.audios = {}
             self.audio_selector.clear()
@@ -543,7 +543,7 @@ class DictionaryWindow(QMainWindow):
                 lemmatize,
                 dictname,
                 gtrans_lang,
-                self.settings.value("gtrans_api"))
+                self.settings.value("gtrans_api", "https://lingva.ml"))
             if record:
                 self.rec.recordLookup(
                     word,
@@ -596,12 +596,12 @@ class DictionaryWindow(QMainWindow):
 
     def createNote(self):
         sentence = self.sentence.toPlainText().replace("\n", "<br>")
-        if self.settings.value("bold_word", type=bool):
+        if self.settings.value("bold_word", True, type=bool):
             sentence = re.sub(
                 r"__([ \w]+)__",
                 r"<strong>\1</strong>",
                 sentence)
-        if self.settings.value("remove_spaces", type=bool):
+        if self.settings.value("remove_spaces", False, type=bool):
             sentence = re.sub("\\s", "", sentence)
         tags = (
             self.settings.value(
