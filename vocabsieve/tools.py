@@ -96,6 +96,8 @@ def getVersion(server) -> str:
 
 
 def is_json(myjson) -> bool:
+    if not myjson.startswith("{"):
+        return False
     try:
         json_object = json.loads(myjson)
         json_object['word']
