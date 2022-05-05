@@ -392,8 +392,10 @@ class DictionaryWindow(QMainWindow):
         return target
 
     def onWebButton(self):
-        url = self.settings.value("custom_url").replace(
-            "@@@@", self.word.text())
+        url = self.settings.value("custom_url", 
+                                  "https://en.wiktionary.org/wiki/@@@@").replace(
+                                        "@@@@", self.word.text()
+                                )
         QDesktopServices.openUrl(QUrl(url))
 
     def onReaderOpen(self):
@@ -494,12 +496,12 @@ class DictionaryWindow(QMainWindow):
         self.setState(result)
         QCoreApplication.processEvents()
         self.audio_path = None
-        if self.settings.value("audio_dict", "<disabled>") != "<disabled>":
+        if self.settings.value("audio_dict", "Forvo (all)") != "<disabled>":
             try:
                 self.audios = getAudio(
                     word,
                     self.settings.value("target_language", 'en'),
-                    dictionary=self.settings.value("audio_dict", "<disabled>"),
+                    dictionary=self.settings.value("audio_dict", "Forvo (all)"),
                     custom_dicts=json.loads(
                         self.settings.value("custom_dicts", '[]')))
             except Exception:

@@ -354,7 +354,7 @@ class SettingsDialog(QDialog):
             self.web_preset,
             'web_preset',
             'English Wiktionary')
-        self.register_config_handler(self.custom_url, 'custom_url', "")
+        self.register_config_handler(self.custom_url, 'custom_url', "https://en.wiktionary.org/wiki/@@@@")
 
         self.register_config_handler(self.api_enabled, 'api_enabled', True)
         self.register_config_handler(self.api_host, 'api_host', '127.0.0.1')
