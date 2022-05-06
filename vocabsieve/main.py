@@ -413,20 +413,24 @@ class DictionaryWindow(QMainWindow):
         self.word.setText(state['word'])
         self.definition.original = state['definition']
         display_mode1 = self.settings.value(
-            self.settings.value("dict_source1", "Wiktionary (English)")
+            self.settings.value("dict_source", "Wiktionary (English)")
             + "/display_mode",
             "Markdown-HTML"
         )
         skip_top1 = self.settings.value(
-            self.settings.value("dict_source1", "Wiktionary (English)")
+            self.settings.value("dict_source", "Wiktionary (English)")
             + "/skip_top",
             0, type=int
         )
         collapse_newlines1 = self.settings.value(
-            self.settings.value("dict_source1", "Wiktionary (English)")
+            self.settings.value("dict_source", "Wiktionary (English)")
             + "/collapse_newlines",
             0, type=int
         )
+        print(self.settings.value("dict_source", "Wiktionary (English)"))
+        print(display_mode1)
+        print(skip_top1)
+        print(collapse_newlines1)
         if display_mode1 in ['Raw', 'Plaintext', 'Markdown']:
             self.definition.setPlainText(
                 process_definition(
@@ -750,7 +754,7 @@ class DictionaryWindow(QMainWindow):
         self.showStats()
         self.timer = QTimer()
         self.timer.timeout.connect(self.showStats)
-        self.timer.start(500)
+        self.timer.start(2000)
 
     def showStats(self):
         lookups = self.rec.countLookupsToday()

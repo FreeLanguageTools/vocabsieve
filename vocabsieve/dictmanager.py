@@ -3,18 +3,12 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from .dictionary import *
 from .tools import *
+from .dictformats import supported_dict_formats, dictinfo
 from bidict import bidict
 import json
 import os
 
-supported_dict_formats = bidict({
-    "stardict": "StarDict",
-    "json": "Simple JSON",
-    "migaku": "Migaku Dictionary",
-    "freq": "Frequency list",
-    "audiolib": "Audio Library",
-    "mdx": "MDX"
-})
+
 
 
 class DictManager(QDialog):
@@ -89,7 +83,7 @@ to be reimported, otherwise this operation will fail.\
     def onAdd(self):
         fdialog = QFileDialog()
         fdialog.setFileMode(QFileDialog.ExistingFile)
-        fdialog.setNameFilter("Dictionary files (*.json *.ifo *.mdx)")
+        fdialog.setNameFilter("Dictionary files (*.json *.ifo *.mdx *.dsl *.dsl.dz)")
         fdialog.exec()
         if fdialog.selectedFiles() == []:
             return
@@ -248,3 +242,4 @@ class AddDictDialog(QDialog):
         msg.setIcon(QMessageBox.Warning)
         msg.setText(text)
         msg.exec()
+

@@ -14,6 +14,7 @@ from markdown import markdown
 from .db import *
 from playsound import playsound
 from .forvo import *
+from .dictformats import removeprefix
 dictdb = LocalDictionary()
 langdata = simplemma.load_data('en')
 
@@ -318,7 +319,7 @@ def convert_display_mode(entry: str, mode: str):
     elif mode == 'Markdown':
         return markdownify(entry)
     elif mode == "Markdown-HTML":
-        return markdown(markdownify(entry))
+        return markdown_nop(markdownify(entry))
     elif mode == 'Plaintext':
         entry = entry.replace("<br>", "\n")\
                      .replace("<br/>", "\n")\
@@ -352,3 +353,9 @@ def collapse_newlines(entry: str, number: int) -> str:
         return re.sub(r'(\<br\>)+', r'<br>'*number, entry)
     else:
         return re.sub(r'(\n)+', r'\n'*number, entry)
+
+def markdown_nop(s: str) -> str:
+    return removeprefix(
+        markdown(s).replace("<p>", "<br>").replace("</p>", ""),
+        "<br>"
+        )

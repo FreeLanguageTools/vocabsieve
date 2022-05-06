@@ -4,50 +4,17 @@ import requests
 import os
 import re
 import time
-from readmdict import MDX
 from bs4 import BeautifulSoup
 from typing import List, Dict
 from .db import *
 from pystardict import Dictionary
 from .dictionary import *
+from .dictformats import *
 from .xdxftransform import xdxf2html
 from PyQt5.QtCore import QCoreApplication
 
 def request(action, **params):
     return {'action': action, 'params': params, 'version': 6}
-
-def parseMDX(path):
-    mdx = MDX(path)
-    stylesheet_lines = mdx.header[b'StyleSheet'].decode().splitlines()
-    stylesheet_map = {}
-    for line in stylesheet_lines:
-        if line.isnumeric():
-            number = int(line)
-        else:
-            stylesheet_map[number] = stylesheet_map.get(number, "") + line
-    newdict = {} # This temporarily stores the new entries
-    i = 0
-    prev_headword = ""
-    for item in mdx.items():
-        headword, entry = item
-        headword = headword.decode()
-        entry = entry.decode()
-        # The following applies the stylesheet
-        if stylesheet_map:
-            entry = re.sub(
-                r'`(\d+)`', 
-                lambda g: stylesheet_map.get(g.group().strip('`')), 
-                entry
-                )
-        entry = entry.replace("\n", "").replace("\r", "")
-        # Using newdict.get would become incredibly slow,
-        # here we exploit the fact that they are alphabetically ordered
-        if prev_headword == headword:
-            newdict[headword] = newdict[headword] + entry
-        else:
-            newdict[headword] = entry
-        prev_headword = headword
-    return newdict
 
 
 def invoke(action, server, **params):
@@ -124,38 +91,6 @@ def failed_lookup(word, settings) -> str:
 def is_oneword(s) -> bool :
     return len(s.split()) == 1
 
-
-def dictinfo(path) -> Dict[str,str]:
-    "Get information about dictionary from file path"
-    basename, ext = os.path.splitext(path)
-    basename = os.path.basename(basename)
-    if os.path.isdir(path):
-        return {"type": "audiolib", "basename": basename, "path": path}
-    if ext not in [".json", ".ifo", ".mdx"]:
-        raise NotImplementedError("Unsupported format")
-    elif ext == ".json":
-        with open(path, encoding="utf-8") as f:
-            try:
-                d = json.load(f)
-                if isinstance(d, list):
-                    if isinstance(d[0], str):
-                        return {
-                            "type": "freq",
-                            "basename": basename,
-                            "path": path}
-                    return {
-                        "type": "migaku",
-                        "basename": basename,
-                        "path": path}
-                elif isinstance(d, dict):
-                    return {"type": "json", "basename": basename, "path": path}
-            except Exception:
-                raise IOError("Reading failed")
-    elif ext == ".ifo":
-        return {"type": "stardict", "basename": basename, "path": path}
-    elif ext == ".mdx":
-        return {"type": "mdx", "basename": basename, "path": path}
-
 def dictimport(path, dicttype, lang, name) -> None:
     "Import dictionary from file to database"
     if dicttype == "stardict":
@@ -208,6 +143,9 @@ def dictimport(path, dicttype, lang, name) -> None:
         dictdb.importdict(d, lang, name)
     elif dicttype == 'mdx':
         d = parseMDX(path)
+        dictdb.importdict(d, lang, name)
+    elif dicttype == "dsl":
+        d = parseDSL(path)
         dictdb.importdict(d, lang, name)
 
 
