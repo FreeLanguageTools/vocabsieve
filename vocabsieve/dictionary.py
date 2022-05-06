@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 from bidict import bidict
 import pymorphy2
 from markdownify import markdownify
+from markdown import markdown
 from .db import *
 from playsound import playsound
 from .forvo import *
@@ -304,11 +305,20 @@ def play_audio(name: str, data: dict, lang: str):
         playsound(audiopath)
         return audiopath
 
-def process_definition(entry: str, mode: str):
-    if mode in ['Raw', 'HTML', 'Markdown-HTML']:
+def process_definition(entry: str, mode: str, skip: int, newlines: str) -> str:
+    result = entry
+    result = convert_display_mode(result, mode)
+    result = skip_lines(result, skip)
+    result = collapse_newlines(result, newlines)
+    return result
+
+def convert_display_mode(entry: str, mode: str):
+    if mode in ['Raw', 'HTML']:
         return entry
     elif mode == 'Markdown':
         return markdownify(entry)
+    elif mode == "Markdown-HTML":
+        return markdown(markdownify(entry))
     elif mode == 'Plaintext':
         entry = entry.replace("<br>", "\n")\
                      .replace("<br/>", "\n")\
@@ -317,3 +327,28 @@ def process_definition(entry: str, mode: str):
         return entry
     else:
         raise NotImplementedError("Mode not supported")
+
+def is_html(s: str) -> bool:
+    return bool(BeautifulSoup(s, "html.parser").find())
+
+def skip_lines(entry: str, number: int) -> str:
+    if is_html(entry):
+        # Try to replace all the weird <br> tags with the standard one
+        entry = entry.replace("<BR>", "<br>")\
+                     .replace("<br/>", "<br>")\
+                     .replace("<br />", "<br>")
+        return "<br>".join(entry.split("<br>")[number:])
+    else:
+        return "\n".join(entry.splitlines()[number:])
+
+def collapse_newlines(entry: str, number: int) -> str:
+    if number == 0: # no-op
+        return entry
+    if is_html(entry):
+    # Try to replace all the weird <br> tags with the standard one
+        entry = entry.replace("<BR>", "<br>")\
+                     .replace("<br/>", "<br>")\
+                     .replace("<br />", "<br>")
+        return re.sub(r'(\<br\>)+', r'<br>'*number, entry)
+    else:
+        return re.sub(r'(\n)+', r'\n'*number, entry)

@@ -417,13 +417,33 @@ class DictionaryWindow(QMainWindow):
             + "/display_mode",
             "Markdown-HTML"
         )
+        skip_top1 = self.settings.value(
+            self.settings.value("dict_source1", "Wiktionary (English)")
+            + "/skip_top",
+            0, type=int
+        )
+        collapse_newlines1 = self.settings.value(
+            self.settings.value("dict_source1", "Wiktionary (English)")
+            + "/collapse_newlines",
+            0, type=int
+        )
         if display_mode1 in ['Raw', 'Plaintext', 'Markdown']:
             self.definition.setPlainText(
-                process_definition(state['definition'].strip(), display_mode1)
+                process_definition(
+                    state['definition'].strip(), 
+                    display_mode1, 
+                    skip_top1, 
+                    collapse_newlines1
+                    )
             )
         else:
             self.definition.setHtml(
-                process_definition(state['definition'].strip(), display_mode1)
+                process_definition(
+                    state['definition'].strip(), 
+                    display_mode1, 
+                    skip_top1, 
+                    collapse_newlines1
+                    )
             )
 
         if state.get('definition2'):
@@ -433,13 +453,31 @@ class DictionaryWindow(QMainWindow):
                 + "/display_mode",
                 "Markdown-HTML"
                 )
+            skip_top2 = self.settings.value(
+                self.settings.value("dict_source2", "Wiktionary (English)")
+                + "/skip_top",
+                0, type=int
+            )
+            collapse_newlines2 = self.settings.value(
+                self.settings.value("dict_source2", "Wiktionary (English)")
+                + "/collapse_newlines",
+                0, type=int
+            )
             if display_mode2 in ['Raw', 'Plaintext', 'Markdown']:
                 self.definition2.setPlainText(
-                    process_definition(state['definition2'].strip(), display_mode2)
+                    process_definition(
+                        state['definition2'].strip(), 
+                        display_mode2, 
+                        skip_top2, 
+                        collapse_newlines2)
                 )
             else:
                 self.definition2.setHtml(
-                    process_definition(state['definition2'].strip(), display_mode2)
+                    process_definition(
+                        state['definition2'].strip(), 
+                        display_mode2, 
+                        skip_top2, 
+                        collapse_newlines2)
                 )
             
         cursor = self.sentence.textCursor()

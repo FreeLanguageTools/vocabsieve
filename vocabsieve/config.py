@@ -17,6 +17,7 @@ class SettingsDialog(QDialog):
         self.setupWidgets()
         self.setupAutosave()
         self.setupProcessing()
+        self.deactivateProcessing()
         self.twodictmode = self.settings.value(
             "dict_source2", "<disabled>") != "<disabled>"
 
@@ -110,6 +111,7 @@ class SettingsDialog(QDialog):
         self.skip_top = QSpinBox()
         self.skip_top.setSuffix(" lines")
         self.cleanup_html = QCheckBox()
+        self.cleanup_html.setDisabled(True)
         self.collapse_newlines = QSpinBox()
         self.collapse_newlines.setSuffix(" newlines")
 
@@ -240,7 +242,7 @@ class SettingsDialog(QDialog):
         self.tab_p.layout.addRow(QLabel("Configure for dictionary:"), self.postproc_selector)
         self.tab_p.layout.addRow(QLabel("<hr>"))
         self.tab_p.layout.addRow(QLabel("Display mode"), self.display_mode)
-        self.tab_p.layout.addRow(QLabel("<i>◊ HTML mode does not support editing. "
+        self.tab_p.layout.addRow(QLabel("<i>◊ HTML mode does not support editing/processing. "
             "Your edits will not be saved!</i>"))
         self.tab_p.layout.addRow(QLabel("Do not display the top"), self.skip_top)
         self.tab_p.layout.addRow(QLabel(
@@ -250,7 +252,7 @@ class SettingsDialog(QDialog):
             "<i>◊ Set to 1 to remove blank lines. 0 will leave them intact.</i>"))
         self.tab_p.layout.addRow(QLabel("Attempt to clean up HTML"), self.cleanup_html)
         self.tab_p.layout.addRow(QLabel(
-            "<i>◊ Try this if your mdx dictionary does not work.</i>"))
+            "<i>◊ Try this if your mdx dictionary does not work.</i> (NOT IMPLEMENTED)"))
 
         self.text_scale.valueChanged.connect(
             lambda _: self.text_scale_label.setText(
@@ -275,6 +277,9 @@ class SettingsDialog(QDialog):
         # Reestablish config handlers
         self.register_config_handler(self.display_mode,
             f"{curr_dict}/"+"display_mode", "Markdown-HTML")
+        self.display_mode.currentTextChanged.connect(
+            self.deactivateProcessing
+        )
         self.register_config_handler(self.skip_top,
             f"{curr_dict}/"+"skip_top", 0)
         self.register_config_handler(self.collapse_newlines,
@@ -282,6 +287,14 @@ class SettingsDialog(QDialog):
         self.register_config_handler(self.cleanup_html,
             f"{curr_dict}/"+"cleanup_html", False)
 
+    def deactivateProcessing(self):
+        curr_display_mode = self.display_mode.currentText()
+        if curr_display_mode == 'HTML':
+            self.skip_top.setDisabled(True)
+            self.collapse_newlines.setDisabled(True)
+        else:
+            self.skip_top.setEnabled(True)
+            self.collapse_newlines.setEnabled(True)
 
 
     def setupAutosave(self):
@@ -326,6 +339,7 @@ class SettingsDialog(QDialog):
         self.loadDictionaries()
         self.loadAudioDictionaries()
         self.loadFreqSources()
+
 
         self.dict_source2.currentTextChanged.connect(self.changeMainLayout)
         self.postproc_selector.currentTextChanged.connect(self.setupProcessing)
