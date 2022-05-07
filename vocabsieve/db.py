@@ -150,10 +150,18 @@ class LocalDictionary():
 
     def importdict(self, data: dict, lang: str, name: str):
         for item in data.items():
+            # Handle escape sequences
             self.c.execute("""
-            INSERT INTO dictionary(word, definition, language, dictname)
-            VALUES(?, ?, ?, ?)
-            """, (item[0], item[1], lang, name))
+                INSERT INTO dictionary(word, definition, language, dictname)
+                VALUES(?, ?, ?, ?)
+                """, 
+                (
+                    item[0].lower() if item[0].isupper() else item[0], #no caps
+                    item[1].replace("\\n", "\n"), 
+                    lang, 
+                    name
+                )
+            )
         self.conn.commit()
 
     def deletedict(self, name: str):

@@ -119,7 +119,7 @@ def dictimport(path, dicttype, lang, name) -> None:
             data = json.load(f)
             d = {}
             for i, word in enumerate(data):
-                d[word] = i + 1
+                d[word] = str(i + 1)
             dictdb.importdict(d, lang, name)
     elif dicttype == "audiolib":
         # Audios will be stored as a serialized json list
@@ -131,7 +131,6 @@ def dictimport(path, dicttype, lang, name) -> None:
                     os.path.relpath(
                         os.path.join(
                             root, item), path))
-        print(len(filelist), "audios selected.")
         for item in filelist:
             headword = os.path.basename(os.path.splitext(item)[0]).lower()
             if not d.get(headword):
@@ -147,7 +146,12 @@ def dictimport(path, dicttype, lang, name) -> None:
     elif dicttype == "dsl":
         d = parseDSL(path)
         dictdb.importdict(d, lang, name)
-
+    elif dicttype == "csv":
+        d = parseCSV(path)
+        dictdb.importdict(d, lang, name)
+    elif dicttype == "tsv":
+        d = parseTSV(path)
+        dictdb.importdict(d, lang, name)
 
 def dictdelete(name) -> None:
     dictdb.deletedict(name)

@@ -83,7 +83,7 @@ to be reimported, otherwise this operation will fail.\
     def onAdd(self):
         fdialog = QFileDialog()
         fdialog.setFileMode(QFileDialog.ExistingFile)
-        fdialog.setNameFilter("Dictionary files (*.json *.ifo *.mdx *.dsl *.dsl.dz)")
+        fdialog.setNameFilter("Dictionary files (*.json *.ifo *.mdx *.dsl *.dsl.dz *.csv *.tsv)")
         fdialog.exec()
         if fdialog.selectedFiles() == []:
             return

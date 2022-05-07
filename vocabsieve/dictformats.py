@@ -4,6 +4,7 @@ from bidict import bidict
 from typing import Dict
 import os
 import re
+import csv
 
 supported_dict_formats = bidict({
     "stardict": "StarDict",
@@ -12,15 +13,22 @@ supported_dict_formats = bidict({
     "freq": "Frequency list",
     "audiolib": "Audio Library",
     "mdx": "MDX",
-    "dsl": "Lingvo DSL"
+    "dsl": "Lingvo DSL",
+    "csv": "CSV",
+    "tsv": "TSV (Tabfile)"
 })
+
+supported_dict_extensions = [
+    ".json", ".ifo", ".mdx", ".dsl", ".dz", ".csv", ".tsv"
+]
+
 def dictinfo(path) -> Dict[str,str]:
     "Get information about dictionary from file path"
     basename, ext = os.path.splitext(path)
     basename = os.path.basename(basename)
     if os.path.isdir(path):
         return {"type": "audiolib", "basename": basename, "path": path}
-    if ext not in [".json", ".ifo", ".mdx", ".dsl", ".dz"]:
+    if ext not in supported_dict_extensions:
         raise NotImplementedError("Unsupported format")
     elif ext == ".json":
         with open(path, encoding="utf-8") as f:
@@ -49,6 +57,10 @@ def dictinfo(path) -> Dict[str,str]:
     elif ext == ".dz":
         if basename.endswith(".dsl"):
             return {"type": "dsl", "basename": basename.rstrip(".dsl"), "path": path}
+    elif ext == ".tsv":
+        return {"type": "tsv", "basename": basename, "path": path}
+    elif ext == ".csv":
+        return {"type": "csv", "basename": basename, "path": path}
 
 def parseMDX(path) -> Dict[str, str]:
     mdx = MDX(path)
@@ -103,3 +115,19 @@ def removeprefix(self: str, prefix: str, /) -> str:
         return self[len(prefix):]
     else:
         return self[:]
+
+def parseCSV(path) -> Dict[str, str]:
+    newdict = {}
+    with open(path, newline="") as csvfile:
+        data = csv.reader(csvfile)
+        for row in data:
+            newdict[row[0]] = row[1]
+    return newdict
+
+def parseTSV(path) -> Dict[str, str]:
+    newdict = {}
+    with open(path, newline="") as csvfile:
+        data = csv.reader(csvfile, delimiter="\t")
+        for row in data:
+            newdict[row[0]] = row[1]
+    return newdict
