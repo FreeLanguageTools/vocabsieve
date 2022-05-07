@@ -303,7 +303,7 @@ class SettingsDialog(QDialog):
             self.settings.clear()
         self.settings.setValue("config_ver", 1)
         self.register_config_handler(
-            self.anki_api, 'anki_api', 'http://localhost:8765')
+            self.anki_api, 'anki_api', 'http://127.0.0.1:8765')
         self.register_config_handler(
             self.target_language,
             'target_language',
