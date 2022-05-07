@@ -13,7 +13,7 @@ mobi
 sentence_splitter
 pymorphy2
 pymorphy2-dicts-ru
-playsound
+playsound==1.2.2
 ebooklib
 pycountry
 markdown
