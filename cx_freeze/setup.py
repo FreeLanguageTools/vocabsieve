@@ -36,7 +36,6 @@ build_exe_options = {
         "markdownify",
         "lzo",
         "readmdict",
-        "tidylib"
         ],
     "include_files": include_files,
     "excludes": ["tkinter"],

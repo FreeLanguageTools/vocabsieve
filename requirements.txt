@@ -19,5 +19,4 @@ pycountry
 markdown
 markdownify
 readmdict
-pytidylib
 # python-lzo This cannot be compiled on Windows without special tools.
