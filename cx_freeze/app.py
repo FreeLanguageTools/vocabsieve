@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-from PyQt5.QtWidgets import QApplication
-from vocabsieve.main import DictionaryWindow
 import sys
-
 
 class dummyStream:
     ''' dummyStream behaves like a stream but does nothing. '''
@@ -21,12 +18,13 @@ sys.stdin = dummyStream()
 sys.__stdout__ = dummyStream()
 sys.__stderr__ = dummyStream()
 sys.__stdin__ = dummyStream()
+from PyQt5.QtWidgets import QApplication
+from vocabsieve.main import DictionaryWindow
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setApplicationName("VocabSieve")
     app.setOrganizationName("FreeLanguageTools")
     w = DictionaryWindow()
-
     w.show()
     sys.exit(app.exec())
