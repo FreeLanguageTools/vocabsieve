@@ -19,4 +19,5 @@ pycountry
 markdown
 markdownify
 readmdict
-# python-lzo This cannot be compiled on Windows without special tools.
+python-lzo; sys_platform == 'linux'
+
