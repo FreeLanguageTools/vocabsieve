@@ -23,14 +23,69 @@ import html
 import html.entities
 from xml.sax.saxutils import escape, quoteattr
 
-from pyglossary.plugins.formats_common import *
-from pyglossary.text_reader import TextFilePosWrapper
-
 from . import layer
 from . import tag
 from .main import (
     DSLParser,
 )
+
+
+stdCompressions = ("gz", "bz2", "lzma")
+
+class TextFilePosWrapper(object):
+	def __init__(self, fileobj, encoding):
+		self.fileobj = fileobj
+		self._encoding = encoding
+		self.pos = 0
+
+	def __iter__(self):
+		return self
+
+	def close(self):
+		self.fileobj.close()
+
+	def __next__(self):
+		line = self.fileobj.__next__()
+		self.pos += len(line.encode(self._encoding))
+		return line
+
+	def tell(self):
+		return self.pos
+
+
+def compressionOpen(filename, dz=False, **kwargs):
+	from os.path import splitext
+	filenameNoExt, ext = splitext(filename)
+	ext = ext.lower().lstrip(".")
+	try:
+		int(ext)
+	except ValueError:
+		pass
+	else:
+		_, ext = splitext(filenameNoExt)
+		ext = ext.lower().lstrip(".")
+	if ext in stdCompressions or (dz and ext == "dz"):
+		_file = compressionOpenFunc(ext)(filename, **kwargs)
+		_file.compression = ext
+		return _file
+	return open(filename, **kwargs)
+
+def compressionOpenFunc(c: str):
+	if not c:
+		return open
+	if c == "gz":
+		import gzip
+		return gzip.open
+	if c == "bz2":
+		import bz2
+		return bz2.open
+	if c == "lzma":
+		import lzma
+		return lzma.open
+	if c == "dz":
+		import gzip
+		return gzip.open
+	return None
 
 enable = True
 lname = "dsl"
@@ -45,11 +100,6 @@ website = (
     "https://www.lingvo.ru/",
     "www.lingvo.ru",
 )
-optionsProp = {
-    "encoding": EncodingOption(),
-    "audio": BoolOption(comment="Enable audio objects"),
-    "only_fix_markup": BoolOption(comment="Only fix markup, without tag conversion"),
-}
 
 # ABBYY is a Russian company
 # https://ru.wikipedia.org/wiki/ABBYY_Lingvo
@@ -295,7 +345,7 @@ def unwrap_quotes(s):
 
 
 class Reader(object):
-    compressions = stdCompressions + ("dz",)
+    compressions = ("dz",)
 
     _encoding: str = ""
     _audio: bool = False
@@ -369,10 +419,8 @@ class Reader(object):
                     for i in range(10):
                         fileObj.readline()
                 except UnicodeDecodeError:
-                    log.info(f"Encoding of DSL file is not {testEncoding}")
                     continue
                 else:
-                    log.info(f"Encoding of DSL file detected: {testEncoding}")
                     return testEncoding
         raise ValueError(
             "Could not detect encoding of DSL file"

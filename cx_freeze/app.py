@@ -19,12 +19,12 @@ sys.__stdout__ = dummyStream()
 sys.__stderr__ = dummyStream()
 sys.__stdin__ = dummyStream()
 from PyQt5.QtWidgets import QApplication
-from vocabsieve.main import DictionaryWindow
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setApplicationName("VocabSieve")
     app.setOrganizationName("FreeLanguageTools")
+    from vocabsieve.main import DictionaryWindow
     w = DictionaryWindow()
     w.show()
     sys.exit(app.exec())
