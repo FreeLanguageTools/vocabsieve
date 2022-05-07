@@ -300,10 +300,10 @@ def play_audio(name: str, data: dict, lang: str):
                     file.write(res.content)
             else:
                 return
-        playsound(fpath)
+        playsound(os.path.abspath(fpath))
         return fpath
     else:
-        playsound(audiopath)
+        playsound(os.path.abspath(audiopath))
         return audiopath
 
 def process_definition(entry: str, mode: str, skip: int, newlines: str) -> str:
