@@ -230,23 +230,32 @@ def lookupin(
         gtrans_api="https://lingva.ml"):
     # Remove any punctuation other than a hyphen
     # @language is code
+    IS_UPPER = word[0].isupper()
     if language == 'ru':
         word = removeAccents(word)
     if lemmatize:
         word = lem_word(word, language)
-    if dictionary == "Wiktionary (English)":
-        item = wiktionary(word, language, lemmatize)
-        item['definition'] = fmt_result(item['definition'])
-    elif dictionary == "Google Translate":
-        return googletranslate(word, language, gtrans_lang, gtrans_api)
-    else:
-        return {
-            "word": word,
-            "definition": dictdb.define(
-                word,
-                language,
-                dictionary)}
-    return item
+    # The lemmatizer would always turn words lowercase, which can cause 
+    # lookups to fail if not recovered.
+    candidates = [word, word.capitalize()] if IS_UPPER else [word]
+    for word in candidates:
+        try:
+            if dictionary == "Wiktionary (English)":
+                item = wiktionary(word, language, lemmatize)
+                item['definition'] = fmt_result(item['definition'])
+                return item
+            elif dictionary == "Google Translate":
+                return googletranslate(word, language, gtrans_lang, gtrans_api)
+            else:
+                return {
+                    "word": word,
+                    "definition": dictdb.define(
+                        word,
+                        language,
+                        dictionary)}
+        except:
+            pass
+    raise Exception("Word not found")
 
 
 def getFreq(word, language, lemfreq, dictionary):
