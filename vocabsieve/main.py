@@ -674,7 +674,6 @@ class DictionaryWindow(QMainWindow):
         content['fields'][self.settings.value('definition_field')] = definition
         if self.settings.value("dict_source2", "<disabled>") != '<disabled>':
             try:
-                definition2 = markdown(self.definition2.toMarkdown())
                 if self.settings.value(
                     "definition2_field",
                         "<disabled>") == "<disabled>":
@@ -727,9 +726,9 @@ class DictionaryWindow(QMainWindow):
         if display_mode in ["Raw", "Plaintext"]:
             return w.toPlainText()
         elif display_mode == "Markdown":
-            return markdown(w.toPlainText())
+            return markdown_nop(w.toPlainText())
         elif display_mode == "Markdown-HTML":
-            return markdown(w.toMarkdown())
+            return markdown_nop(w.toMarkdown())
         elif display_mode == "HTML":
             return w.original
             
