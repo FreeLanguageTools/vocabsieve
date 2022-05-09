@@ -18,11 +18,11 @@ VocabSieve (formerly Simple Sentence Mining, `ssmtool`) is a program for sentenc
 - Web reader for ebooks and long articles (epub, fb2, plaintext), allowing one-click lookup
 - Kindle highlights to Anki sentence cards (KOReader support is planned)
 
-For a detailed list of features and language support data, please consult the [blog post](https://freelanguagetools.org/2021/07/simple-sentence-mining-ssmtool-full-tutorial/) on my blog
+For a detailed list of features and language support data, please consult the [wiki page](https://wiki.freelanguagetools.org/vocabsieve_setup).
 
 ## Tutorials
-[Text tutorial](https://freelanguagetools.org/2021/07/simple-sentence-mining-ssmtool-full-tutorial/)
-(The text originally on this document has since been moved there.)
+[wiki page](https://wiki.freelanguagetools.org/vocabsieve_setup)
+(The text originally on this document or the blog post has since been moved there, with some updates)
 
 [New video tutorial](https://www.youtube.com/watch?v=EHW-kBLmuHU)
 
