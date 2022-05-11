@@ -427,10 +427,6 @@ class DictionaryWindow(QMainWindow):
             + "/collapse_newlines",
             0, type=int
         )
-        print(self.settings.value("dict_source", "Wiktionary (English)"))
-        print(display_mode1)
-        print(skip_top1)
-        print(collapse_newlines1)
         if display_mode1 in ['Raw', 'Plaintext', 'Markdown']:
             self.definition.setPlainText(
                 process_definition(

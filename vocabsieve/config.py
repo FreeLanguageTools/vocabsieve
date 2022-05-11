@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 import platform
+from shutil import rmtree
 from .tools import *
 from .dictionary import *
 from .dictmanager import *
@@ -115,6 +116,11 @@ class SettingsDialog(QDialog):
         self.collapse_newlines = QSpinBox()
         self.collapse_newlines.setSuffix(" newlines")
 
+        self.reset_button = QPushButton("Reset settings")
+        self.reset_button.setStyleSheet('QPushButton {color: red;}')
+        self.nuke_button = QPushButton("Delete data")
+        self.nuke_button.setStyleSheet('QPushButton {color: red;}')
+
     def dictmanager(self):
         importer = DictManager(self)
         importer.exec()
@@ -124,16 +130,18 @@ class SettingsDialog(QDialog):
 
     def initTabs(self):
         self.tabs = QTabWidget()
-        self.tab_d = QWidget()
+        self.tab_d = QWidget() # Dictionary
         self.tab_d.layout = QFormLayout(self.tab_d)
-        self.tab_a = QWidget()
+        self.tab_a = QWidget() # Anki
         self.tab_a.layout = QFormLayout(self.tab_a)
-        self.tab_n = QWidget()
+        self.tab_n = QWidget() # Network
         self.tab_n.layout = QFormLayout(self.tab_n)
-        self.tab_i = QWidget()
+        self.tab_i = QWidget() # Interface
         self.tab_i.layout = QFormLayout(self.tab_i)
-        self.tab_p = QWidget()
+        self.tab_p = QWidget() # Processing
         self.tab_p.layout = QFormLayout(self.tab_p)
+        self.tab_r = QWidget() # Reset
+        self.tab_r.layout = QFormLayout(self.tab_r)
 
         self.tabs.resize(250, 300)
 
@@ -146,12 +154,46 @@ class SettingsDialog(QDialog):
         self.tabs.addTab(self.tab_a, "Anki")
         self.tabs.addTab(self.tab_n, "Network")
         self.tabs.addTab(self.tab_i, "Interface")
+        self.tabs.addTab(self.tab_r, "Reset")
 
     def save_color(self):
         color = QColorDialog.getColor()
         if color.isValid():
             self.settings.setValue("reader_hlcolor", color.name())
             self.reader_hlcolor.setText(color.name())
+
+    def reset_settings(self):
+        answer = QMessageBox.question(
+            self,
+            "Confirm Reset<",
+            "<h1>Danger!</h1>"
+            "Are you sure you want to reset all settings? "
+            "This action cannot be undone. "
+            "This will also close the configuration window.",
+            defaultButton=QMessageBox.StandardButton.No
+        )
+        if answer == QMessageBox.Yes:
+            self.settings.clear()
+            self.close()
+
+    def nuke_profile(self):
+        datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
+        answer = QMessageBox.question(
+            self,
+            "Confirm Reset",
+            "<h1>Danger!</h1>"
+            "Are you sure you want to delete all user data? "
+            "The following directory will be deleted:<br>" + datapath
+            + "<br>This action cannot be undone. "
+            "This will also close the program.",
+            defaultButton=QMessageBox.StandardButton.No
+        )
+        if answer == QMessageBox.Yes:
+            self.settings.clear()
+            rmtree(datapath)
+            os.mkdir(datapath)
+            self.parent.close()
+
 
     def setupWidgets(self):
         self.target_language.addItems(langs_supported.values())
@@ -259,6 +301,14 @@ class SettingsDialog(QDialog):
                 format(
                     self.text_scale.value() / 100,
                     "1.2f") + "x"))
+
+        self.tab_r.layout.addRow(QLabel("<h3>Reset</h3>"))
+        self.tab_r.layout.addRow(QLabel("Your data will be lost forever! There is NO cloud backup."))
+        self.tab_r.layout.addRow(QLabel("<strong>Reset all settings to defaults</strong>"), self.reset_button)
+        self.tab_r.layout.addRow(QLabel("<strong>Delete all user data</strong>"), self.nuke_button)
+
+        self.reset_button.clicked.connect(self.reset_settings)
+        self.nuke_button.clicked.connect(self.nuke_profile)
 
     def setupProcessing(self):
         """This will allow per-dictionary configurations.
