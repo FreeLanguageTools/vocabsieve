@@ -3,13 +3,14 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.Qt import QDesktopServices, QUrl
 from PyQt5.QtCore import *
-from os import path
 import os
 import functools
 import platform
 import json
+import csv
 from markdown import markdown
 from markdownify import markdownify
+from datetime import datetime
 import re
 DEBUGGING = None
 if os.environ.get("VOCABSIEVE_DEBUG"):
@@ -272,6 +273,7 @@ class DictionaryWindow(QMainWindow):
         if not self.settings.value("reader_enabled", True, type=bool):
             self.open_reader_action.setEnabled(False)
         importmenu = self.menu.addMenu("&Import")
+        exportmenu = self.menu.addMenu("&Export")
         helpmenu = self.menu.addMenu("&Help")
         self.help_action = QAction("&Help")
         self.about_action = QAction("&About")
@@ -282,15 +284,71 @@ class DictionaryWindow(QMainWindow):
         self.import_koreader_action.setEnabled(False)
         self.import_kindle_action = QAction("Import &Kindle")
 
+        self.export_notes_csv_action = QAction("Export &notes to CSV")
+        self.export_lookups_csv_action = QAction("Export &lookup data to CSV")
+
         self.help_action.triggered.connect(self.onHelp)
         self.about_action.triggered.connect(self.onAbout)
         self.open_reader_action.triggered.connect(self.onReaderOpen)
         self.import_kindle_action.triggered.connect(self.importkindle)
+        self.export_notes_csv_action.triggered.connect(self.exportNotes)
+        self.export_lookups_csv_action.triggered.connect(self.exportLookups)
 
         importmenu.addActions(
-            [self.import_koreader_action, self.import_kindle_action])
+            [self.import_koreader_action, self.import_kindle_action]
+        )
+        
+        exportmenu.addActions(
+            [self.export_notes_csv_action, self.export_lookups_csv_action]
+        )
 
         self.setMenuBar(self.menu)
+
+    def exportNotes(self):
+        """
+        First ask for a file path, then save a CSV there.
+        """
+        path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save CSV to file",
+            os.path.join(
+                QStandardPaths.writableLocation(QStandardPaths.DesktopLocation),
+                f"vocabsieve-lookups-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.csv"
+                ),
+            "CSV (*.csv)"
+            )
+        if path:
+            with open(path, 'w') as file:
+                writer = csv.writer(file)
+                writer.writerow(
+                    ['timestamp', 'content', 'anki_export_success']
+                )
+                writer.writerows(self.rec.getAllNotes())
+        else:
+            return
+
+    def exportLookups(self):
+        """
+        First ask for a file path, then save a CSV there.
+        """
+        path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save CSV to file",
+            os.path.join(
+                QStandardPaths.writableLocation(QStandardPaths.DesktopLocation),
+                f"vocabsieve-lookups-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.csv"
+                ),
+            "CSV (*.csv)"
+            )
+        if path:
+            with open(path, 'w') as file:
+                writer = csv.writer(file)
+                writer.writerow(
+                    ['timestamp', 'word', 'definition', 'language', 'lemmatize', 'dictionary', 'success']
+                )
+                writer.writerows(self.rec.getAllLookups())
+        else:
+            return
 
     def onHelp(self):
         url = f"https://wiki.freelanguagetools.org/vocabsieve_setup"
@@ -348,6 +406,28 @@ class DictionaryWindow(QMainWindow):
             self.toanki_button.setEnabled(True)
 
     def configure(self):
+        try:
+            _ = getVersion(api)
+        except Exception:
+            answer = QMessageBox.question(
+                self, 
+                "Could not reach AnkiConnect", 
+                "<h2>Could not reach AnkiConnect</h2>"
+                "AnkiConnect is required for changing Anki-related settings."
+                "<br>Choose 'Ignore' to not change Anki settings this time"
+                "<br>Choose 'Abort' to not open the configuration window"
+                "<br><br>If you have AnkiConnect listening to a non-default port or address, "
+                "select 'Ignore and change the Anki API option on the Anki tab, and "
+                "reopen the configuration window."
+                "<br><br>If you do not wish to use Anki with this program, select 'Ignore' "
+                "and then uncheck the 'Enable Anki' checkbox on the Anki tab.",
+                buttons=QMessageBox.Ignore | QMessageBox.Abort,
+                defaultButton=QMessageBox.Ignore
+                )
+            if answer == QMessageBox.Ignore:
+                pass
+            if answer == QMessageBox.Abort:
+                return
         self.settings_dialog = SettingsDialog(self)
         self.settings_dialog.exec()
 
@@ -694,7 +774,7 @@ class DictionaryWindow(QMainWindow):
                 "<disabled>") != '<disabled>' and self.audio_path:
             content['audio'] = {
                 "path": self.audio_path,
-                "filename": path.basename(self.audio_path),
+                "filename": os.path.basename(self.audio_path),
                 "fields": [
                     self.settings.value("pronunciation_field")
                 ]
@@ -713,7 +793,17 @@ class DictionaryWindow(QMainWindow):
         except Exception as e:
             self.rec.recordNote(str(content), False)
             self.status(f"Failed to add note: {word}")
-            self.errorNoConnection(e)
+            answer = QMessageBox.warning(
+                self,
+                f"Failed to add note: {word}",
+                "<h2>Failed to add note</h2>"
+                + str(e)\
+                + "AnkiConnect must be running to add notes."
+                "<br>If you wish to only add notes to the database (and "
+                "export it as CSV), click Configure and uncheck 'Enable"
+                " Anki' on the Anki tab."
+
+            )
             return
 
 

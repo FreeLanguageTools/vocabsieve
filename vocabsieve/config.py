@@ -91,13 +91,13 @@ class SettingsDialog(QDialog):
         self.gtrans_api = QLineEdit()
         self.anki_api = QLineEdit()
 
-        self.api_enabled = QCheckBox("Enable SSM local API")
+        self.api_enabled = QCheckBox("Enable VocabSieve local API")
         self.api_host = QLineEdit()
         self.api_port = QSpinBox()
         self.api_port.setMinimum(1024)
         self.api_port.setMaximum(49151)
 
-        self.reader_enabled = QCheckBox("Enable SSM Web Reader")
+        self.reader_enabled = QCheckBox("Enable VocabSieve Web Reader")
         self.reader_host = QLineEdit()
         self.reader_port = QSpinBox()
         self.reader_port.setMinimum(1024)
@@ -364,6 +364,10 @@ class SettingsDialog(QDialog):
         api = self.anki_api.text()
         try:
             _ = getVersion(api)
+        except Exception as e:
+            pass
+            #self.errorNoConnection(e)
+        else:
             self.loadDecks()
             self.loadFields()
             self.register_config_handler(
@@ -383,8 +387,6 @@ class SettingsDialog(QDialog):
                 self.pronunciation_field,
                 'pronunciation_field',
                 "<disabled>")
-        except Exception as e:
-            self.errorNoConnection(e)
 
         self.loadDictionaries()
         self.loadAudioDictionaries()

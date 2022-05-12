@@ -76,7 +76,7 @@ class LanguageServer(QObject):
         def logs():
             rec = Record()
             return "\n".join([" ".join([str(i) for i in item])
-                             for item in rec.getAll()][::-1])
+                             for item in rec.getAllLookups()][::-1])
 
         try:
             self.app.run(

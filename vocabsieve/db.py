@@ -71,8 +71,12 @@ class Record():
         self.c.execute(sql, (timestamp, data, success))
         self.conn.commit()
 
-    def getAll(self):
+    def getAllLookups(self):
         self.c.execute("SELECT * FROM lookups")
+        return self.c.fetchall()
+
+    def getAllNotes(self):
+        self.c.execute("SELECT * FROM notes")
         return self.c.fetchall()
 
     def countLookupsToday(self):
@@ -219,7 +223,7 @@ class LocalDictionary():
 if __name__ == "__main__":
     db = Record()
     #db.recordLookup("word", "sample-def", True, "wikt-en")
-    print("\n".join([str(item) for item in db.getAll()]))
+    print("\n".join([str(item) for item in db.getAllLookups()]))
     print("Lookups today:", db.countLookupsToday())
     print(
         "Lookups yesterday:",
