@@ -1,3 +1,11 @@
+from .config import *
+from .tools import *
+from .db import *
+from .dictionary import *
+from .api import LanguageServer
+from . import __version__
+from .ext.reader import ReaderServer
+from .ext.importer import KindleImporter
 import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -23,14 +31,6 @@ if os.environ.get("VOCABSIEVE_DEBUG"):
 else:
     QCoreApplication.setApplicationName("VocabSieve")
 QCoreApplication.setOrganizationName("FreeLanguageTools")
-from .ext.importer import KindleImporter
-from .ext.reader import ReaderServer
-from . import __version__
-from .api import LanguageServer
-from .dictionary import *
-from .db import *
-from .tools import *
-from .config import *
 
 # If on macOS, display the modifier key as "Cmd", else display it as "Ctrl".
 # For whatever reason, Qt automatically uses Cmd key when Ctrl is specified on Mac
@@ -62,6 +62,7 @@ class GlobalObject(QObject):
         for func in functions:
             QTimer.singleShot(0, func)
 
+
 class MyTextEdit(QTextEdit):
 
     @pyqtSlot()
@@ -70,6 +71,7 @@ class MyTextEdit(QTextEdit):
         GlobalObject().dispatchEvent("double clicked")
         self.textCursor().clearSelection()
         self.original = ""
+
 
 class DictionaryWindow(QMainWindow):
     def __init__(self):
@@ -117,7 +119,7 @@ class DictionaryWindow(QMainWindow):
         super().focusInEvent(event)
 
     def checkUpdates(self):
-        if self.settings.value("check_updates") == None:
+        if self.settings.value("check_updates") is None:
             answer = QMessageBox.question(
                 self,
                 "Check updates",
@@ -134,16 +136,16 @@ class DictionaryWindow(QMainWindow):
         elif self.settings.value("check_updates", True, type=bool):
             res = requests.get("https://api.github.com/repos/FreeLanguageTools/vocabsieve/releases")
             data = res.json()
-            latest_version = (current:=data[0])['tag_name'].strip('v')
+            latest_version = (current := data[0])['tag_name'].strip('v')
             current_version = importlib.metadata.version('vocabsieve')
             print(current_version, latest_version)
             if version.parse(latest_version) > version.parse(current_version):
                 answer2 = QMessageBox.information(
                     self,
                     "New version",
-                    "<h2>There is a new version available!</h2>"\
-                        + f"<h3>Version {latest_version}</h3>"\
-                        + markdown(current['body']),
+                    "<h2>There is a new version available!</h2>"
+                    + f"<h3>Version {latest_version}</h3>"
+                    + markdown(current['body']),
                     buttons=QMessageBox.Open | QMessageBox.Ignore
                 )
                 if answer2 == QMessageBox.Open:
@@ -151,12 +153,11 @@ class DictionaryWindow(QMainWindow):
         else:
             pass
 
-
     def initWidgets(self):
         if os.environ.get("VOCABSIEVE_DEBUG"):
             self.namelabel = QLabel(
                 "<h2 style=\"font-weight: normal;\">VocabSieve"
-                " (debug=" + os.environ.get("VOCABSIEVE_DEBUG", "")\
+                " (debug=" + os.environ.get("VOCABSIEVE_DEBUG", "")
                 + ")</h2>")
         else:
             self.namelabel = QLabel(
@@ -181,7 +182,8 @@ class DictionaryWindow(QMainWindow):
         self.tags.setPlaceholderText(
             "Type in a list of tags to be used, separated by spaces (same as in Anki).")
         self.sentence.setToolTip(
-            "You can look up any word in this box by double clicking it, or alternatively by selecting it, then press \"Get definition\".")
+            "You can look up any word in this box by double clicking it, or alternatively by selecting it"
+            ", then press \"Get definition\".")
 
         self.lookup_button = QPushButton(f"Define [{MOD}-D]")
         self.lookup_exact_button = QPushButton("Define (Direct)")
@@ -337,7 +339,7 @@ class DictionaryWindow(QMainWindow):
         importmenu.addActions(
             [self.import_koreader_action, self.import_kindle_action]
         )
-        
+
         exportmenu.addActions(
             [self.export_notes_csv_action, self.export_lookups_csv_action]
         )
@@ -354,9 +356,9 @@ class DictionaryWindow(QMainWindow):
             os.path.join(
                 QStandardPaths.writableLocation(QStandardPaths.DesktopLocation),
                 f"vocabsieve-lookups-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.csv"
-                ),
+            ),
             "CSV (*.csv)"
-            )
+        )
         if path:
             with open(path, 'w') as file:
                 writer = csv.writer(file)
@@ -377,9 +379,9 @@ class DictionaryWindow(QMainWindow):
             os.path.join(
                 QStandardPaths.writableLocation(QStandardPaths.DesktopLocation),
                 f"vocabsieve-lookups-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.csv"
-                ),
+            ),
             "CSV (*.csv)"
-            )
+        )
         if path:
             with open(path, 'w') as file:
                 writer = csv.writer(file)
@@ -453,8 +455,8 @@ class DictionaryWindow(QMainWindow):
             except Exception as e:
                 print(e)
                 answer = QMessageBox.question(
-                    self, 
-                    "Could not reach AnkiConnect", 
+                    self,
+                    "Could not reach AnkiConnect",
                     "<h2>Could not reach AnkiConnect</h2>"
                     "AnkiConnect is required for changing Anki-related settings."
                     "<br>Choose 'Ignore' to not change Anki settings this time"
@@ -466,7 +468,7 @@ class DictionaryWindow(QMainWindow):
                     "and then uncheck the 'Enable Anki' checkbox on the Anki tab.",
                     buttons=QMessageBox.Ignore | QMessageBox.Abort,
                     defaultButton=QMessageBox.Ignore
-                    )
+                )
                 if answer == QMessageBox.Ignore:
                     pass
                 if answer == QMessageBox.Abort:
@@ -475,11 +477,6 @@ class DictionaryWindow(QMainWindow):
         self.settings_dialog.exec()
 
     def importkindle(self):
-        #fdialog = QFileDialog()
-        # fdialog.setFileMode(QFileDialog.ExistingFile)
-        # fdialog.setAcceptMode(QFileDialog.AcceptOpen)
-        #fdialog.setNameFilter("Kindle clippings files (*.txt)")
-        # fdialog.exec()
         fname = QFileDialog.getOpenFileName(
             parent=self,
             caption="Select a file",
@@ -504,7 +501,7 @@ class DictionaryWindow(QMainWindow):
         selected2 = cursor2.selectedText()
         cursor3 = self.definition2.textCursor()
         selected3 = cursor3.selectedText()
-        target = str.strip(selected 
+        target = str.strip(selected
                            or selected2
                            or selected3
                            or self.previousWord
@@ -515,10 +512,10 @@ class DictionaryWindow(QMainWindow):
         return target
 
     def onWebButton(self):
-        url = self.settings.value("custom_url", 
+        url = self.settings.value("custom_url",
                                   "https://en.wiktionary.org/wiki/@@@@").replace(
-                                        "@@@@", self.word.text()
-                                )
+            "@@@@", self.word.text()
+        )
         QDesktopServices.openUrl(QUrl(url))
 
     def onReaderOpen(self):
@@ -553,20 +550,20 @@ class DictionaryWindow(QMainWindow):
         if display_mode1 in ['Raw', 'Plaintext', 'Markdown']:
             self.definition.setPlainText(
                 process_definition(
-                    state['definition'].strip(), 
-                    display_mode1, 
-                    skip_top1, 
+                    state['definition'].strip(),
+                    display_mode1,
+                    skip_top1,
                     collapse_newlines1
-                    )
+                )
             )
         else:
             self.definition.setHtml(
                 process_definition(
-                    state['definition'].strip(), 
-                    display_mode1, 
-                    skip_top1, 
+                    state['definition'].strip(),
+                    display_mode1,
+                    skip_top1,
                     collapse_newlines1
-                    )
+                )
             )
 
         if state.get('definition2'):
@@ -575,7 +572,7 @@ class DictionaryWindow(QMainWindow):
                 self.settings.value("dict_source2", "Wiktionary (English)")
                 + "/display_mode",
                 "Markdown-HTML"
-                )
+            )
             skip_top2 = self.settings.value(
                 self.settings.value("dict_source2", "Wiktionary (English)")
                 + "/skip_top",
@@ -589,20 +586,20 @@ class DictionaryWindow(QMainWindow):
             if display_mode2 in ['Raw', 'Plaintext', 'Markdown']:
                 self.definition2.setPlainText(
                     process_definition(
-                        state['definition2'].strip(), 
-                        display_mode2, 
-                        skip_top2, 
+                        state['definition2'].strip(),
+                        display_mode2,
+                        skip_top2,
                         collapse_newlines2)
                 )
             else:
                 self.definition2.setHtml(
                     process_definition(
-                        state['definition2'].strip(), 
-                        display_mode2, 
-                        skip_top2, 
+                        state['definition2'].strip(),
+                        display_mode2,
+                        skip_top2,
                         collapse_newlines2)
                 )
-            
+
         cursor = self.sentence.textCursor()
         cursor.clearSelection()
         self.sentence.setTextCursor(cursor)
@@ -782,8 +779,8 @@ class DictionaryWindow(QMainWindow):
                 self.settings.value("dict_source1", "Wiktionary (English)")
                 + "/display_mode",
                 "Markdown-HTML"
-                )
             )
+        )
         content['fields'][self.settings.value('definition_field')] = definition
         if self.settings.value("dict_source2", "<disabled>") != '<disabled>':
             try:
@@ -799,8 +796,8 @@ class DictionaryWindow(QMainWindow):
                         self.settings.value("dict_source2", "Wiktionary (English)")
                         + "/display_mode",
                         "Markdown-HTML"
-                        )
-                    )                
+                    )
+                )
                 content['fields'][self.settings.value(
                     'definition2_field')] = definition2
             except Exception as e:
@@ -837,7 +834,7 @@ class DictionaryWindow(QMainWindow):
                 self,
                 f"Failed to add note: {word}",
                 "<h2>Failed to add note</h2>"
-                + str(e)\
+                + str(e)
                 + "AnkiConnect must be running to add notes."
                 "<br>If you wish to only add notes to the database (and "
                 "export it as CSV), click Configure and uncheck 'Enable"
@@ -845,7 +842,6 @@ class DictionaryWindow(QMainWindow):
 
             )
             return
-
 
     def process_defi_anki(self, w: MyTextEdit, display_mode):
         "Process definitions before sending to Anki"
@@ -857,8 +853,6 @@ class DictionaryWindow(QMainWindow):
             return markdown_nop(w.toMarkdown())
         elif display_mode == "HTML":
             return w.original
-            
-            
 
     def errorNoConnection(self, error):
         """
@@ -936,8 +930,6 @@ class DictionaryWindow(QMainWindow):
         self.definition.setText(definition)
         self.tags.setText(" ".join(tags))
         self.createNote()
-
-
 
 
 class AboutDialog(QDialog):

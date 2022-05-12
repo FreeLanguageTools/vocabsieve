@@ -11,8 +11,14 @@ datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
 Path(datapath).mkdir(parents=True, exist_ok=True)
 print(datapath)
 # Currently, all languages with two letter codes can be set
-langcodes = bidict(dict(zip([l.alpha_2 for l in list(pycountry.languages) if getattr(
-    l, 'alpha_2', None)], [l.name for l in list(pycountry.languages) if getattr(l, 'alpha_2', None)])))
+langcodes = bidict(
+    dict(
+        zip(
+            [langcode.alpha_2 for langcode in list(pycountry.languages) if getattr(langcode, 'alpha_2', None)],
+            [langcode.name for langcode in list(pycountry.languages) if getattr(langcode, 'alpha_2', None)]
+        )
+    )
+)
 # Apply patches
 langcodes['el'] = "Greek"
 for item in langcodes:
@@ -24,6 +30,7 @@ langcodes['hmn'] = "Hmong"
 
 dictionaries = bidict({"Wiktionary (English)": "wikt-en",
                        "Google Translate": "gtrans"})
+
 
 class Record():
     def __init__(self):
@@ -65,7 +72,7 @@ class Record():
         self.c.execute("""
         SELECT DISTINCT language FROM lookups
         """)
-        for languagename, in self.c.fetchall(): # comma unpacks a single value tuple
+        for languagename, in self.c.fetchall():  # comma unpacks a single value tuple
             if not langcodes.get(languagename) and langcodes.inverse.get(languagename):
                 print(f"Replacing {languagename} with {langcodes.inverse[languagename]}")
                 self.c.execute("""
@@ -75,15 +82,13 @@ class Record():
         self.c.execute("""
         SELECT DISTINCT source FROM lookups
         """)
-        for source, in self.c.fetchall(): # comma unpacks a single value tuple
+        for source, in self.c.fetchall():  # comma unpacks a single value tuple
             if source in dictionaries.inverse:
                 print(f"Replacing {source} with {dictionaries.inverse[source]}")
                 self.c.execute("""
                 UPDATE lookups SET source=? WHERE source=?
                 """, (dictionaries.inverse[source], source))
                 self.conn.commit()
-
-
 
     def recordLookup(
             self,
@@ -177,7 +182,6 @@ class Record():
 
 class LocalDictionary():
     def __init__(self):
-        #print(path.join(datapath, "dict.db"))
         self.conn = sqlite3.connect(
             path.join(
                 datapath,
@@ -203,14 +207,14 @@ class LocalDictionary():
             self.c.execute("""
                 INSERT INTO dictionary(word, definition, language, dictname)
                 VALUES(?, ?, ?, ?)
-                """, 
-                (
-                    item[0].lower() if item[0].isupper() else item[0], #no caps
-                    item[1].replace("\\n", "\n"), 
-                    lang, 
-                    name
-                )
-            )
+                """,
+                           (
+                               item[0].lower() if item[0].isupper() else item[0],  # no caps
+                               item[1].replace("\\n", "\n"),
+                               lang,
+                               name
+                           )
+                           )
         self.conn.commit()
 
     def deletedict(self, name: str):
@@ -234,7 +238,7 @@ class LocalDictionary():
         SELECT COUNT(*) FROM dictionary
         """)
         return int(self.c.fetchone()[0])
-    
+
     def countEntriesDict(self, name) -> int:
         self.c.execute("""
         SELECT COUNT(*) FROM dictionary
@@ -263,21 +267,3 @@ class LocalDictionary():
         DROP TABLE IF EXISTS dictionary
         """)
         self.createTables()
-
-
-if __name__ == "__main__":
-    db = Record()
-    #db.recordLookup("word", "sample-def", True, "wikt-en")
-    print("\n".join([str(item) for item in db.getAllLookups()]))
-    print("Lookups today:", db.countLookupsToday())
-    print(
-        "Lookups yesterday:",
-        db.countLookupsDay(
-            datetime.now() -
-            timedelta(
-                days=1)))
-    di = LocalDictionary()
-    #print(di.define("test", "en", "testdict"))
-    print("Names", di.getNamesForLang("ru"))
-    print(di.define("test", "en", "Oxford Dictionary of English - No Examples"))
-    print(di.countEntries())

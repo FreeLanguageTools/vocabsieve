@@ -9,8 +9,6 @@ import json
 import os
 
 
-
-
 class DictManager(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
@@ -69,14 +67,14 @@ to be reimported, otherwise this operation will fail.\
         for (i, item) in enumerate(dicts):
             try:
                 self.status(f"Rebuilding database: dictionary ({i+1}/{n_dicts})"
-                    ".. this can take a while.")
+                            ".. this can take a while.")
                 QCoreApplication.processEvents()
                 dictimport(item['path'], item['type'], item['lang'], item['name'])
             except Exception as e:
                 print(e)
 
-        QMessageBox.information(self, "Database rebuilt", 
-            f"Database rebuilt in {format(time.time()-start, '.3f')} seconds.")
+        QMessageBox.information(self, "Database rebuilt",
+                                f"Database rebuilt in {format(time.time()-start, '.3f')} seconds.")
         self.refresh()
         self.showStats()
 
@@ -120,12 +118,12 @@ to be reimported, otherwise this operation will fail.\
         for item in dicts:
             treeitem = QTreeWidgetItem(
                 [
-                    item['name'], 
-                    supported_dict_formats[item['type']], 
-                    langcodes[item['lang']], 
+                    item['name'],
+                    supported_dict_formats[item['type']],
+                    langcodes[item['lang']],
                     str(dictdb.countEntriesDict(item['name']))
                 ]
-                )
+            )
             self.tview.addTopLevelItem(treeitem)
         for i in range(4):
             self.tview.resizeColumnToContents(i)
@@ -141,7 +139,6 @@ to be reimported, otherwise this operation will fail.\
         self.parent.loadFreqSources()
         self.parent.loadAudioDictionaries()
         event.accept()
-
 
     def showStats(self):
         n_dicts = dictdb.countDicts()
@@ -215,10 +212,9 @@ class AddDictDialog(QDialog):
                 self,
                 "Name conflict",
                 f"A dictionary with name '{name}' already exists. "
-                    + "Please choose a different name",
-                )
+                + "Please choose a different name",
+            )
             return
-
 
         dictimport(
             self.path,
@@ -242,4 +238,3 @@ class AddDictDialog(QDialog):
         msg.setIcon(QMessageBox.Warning)
         msg.setText(text)
         msg.exec()
-

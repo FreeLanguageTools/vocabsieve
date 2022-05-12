@@ -18,7 +18,6 @@ datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
 Path(path.join(datapath, "_forvo")).mkdir(parents=True, exist_ok=True)
 
 
-
 @dataclass
 class Pronunciation:
     language: str
@@ -29,6 +28,7 @@ class Pronunciation:
     download_url: str
     is_ogg: bool
     id: int
+
 
 class Forvo:
     def __init__(self, word, lang):
@@ -151,6 +151,7 @@ def fetch_audio_best(word: str, lang: str) -> Dict[str, str]:
         sounds[0].origin +
         "/" +
         sounds[0].headword: sounds[0].download_url}
+
 
 if __name__ == "__main__":
     print(fetch_audio_all("what", "en"))

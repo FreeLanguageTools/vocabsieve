@@ -99,7 +99,7 @@ class KindleImporter(QDialog):
         for title in self.titles:
             self.comboboxes.append(QComboBox())
             self.comboboxes[-1].addItems(sorted(list(bookfiles.keys()),
-                key=lambda x: similar(x, title), reverse=True)) 
+                                                key=lambda x: similar(x, title), reverse=True))
             self.comboboxes[-1].addItem("<ignore>")
             self.layout.addRow(QLabel(title), self.comboboxes[-1])
 

@@ -10,25 +10,29 @@ import os
 
 def remove_ns(s: str) -> str: return str(s).split("}")[-1]
 
+
 def fix_hyphen(s: str) -> str:
     """This replaces first hyphen in a paragraph
     (which should not be there) with an en dash.
     """
     return s.replace('>-', '>–')
 
-def tostr(s): return str(
-    from_bytes(
-        etree.tostring(
-            s,
-            encoding='utf8',
-            method='text')).best()).strip()
+
+def tostr(s):
+    return str(
+        from_bytes(
+            etree.tostring(
+                s,
+                encoding='utf8',
+                method='text')).best()).strip()
 
 
-def tohtml(s): return str(
-    from_bytes(
-        etree.tostring(
-            s,
-            encoding='utf8')).best()).strip()
+def tohtml(s):
+    return str(
+        from_bytes(
+            etree.tostring(
+                s,
+                encoding='utf8')).best()).strip()
 
 
 def parseEpub(path: str) -> dict:
@@ -46,17 +50,17 @@ def parseEpub(path: str) -> dict:
         content = "\n".join(data.splitlines()[1:])
         chapters.append(f"## {ch_name}\n" + content)
     return {
-        "title": title[0][0], 
-        "author": author[0][0], 
+        "title": title[0][0],
+        "author": author[0][0],
         "chapters": [markdown(chapter) for chapter in chapters]
-        }
+    }
 
 
 def parseFb2(path: str) -> dict:
     with open(path, 'rb') as f:
         data = f.read()
         tree = etree.fromstring(data)
-    chapters = [] 
+    chapters = []
     already_seen = False
     authors = []
     title = ""

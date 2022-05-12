@@ -133,17 +133,17 @@ class SettingsDialog(QDialog):
 
     def initTabs(self):
         self.tabs = QTabWidget()
-        self.tab_d = QWidget() # Dictionary
+        self.tab_d = QWidget()  # Dictionary
         self.tab_d.layout = QFormLayout(self.tab_d)
-        self.tab_a = QWidget() # Anki
+        self.tab_a = QWidget()  # Anki
         self.tab_a.layout = QFormLayout(self.tab_a)
-        self.tab_n = QWidget() # Network
+        self.tab_n = QWidget()  # Network
         self.tab_n.layout = QFormLayout(self.tab_n)
-        self.tab_i = QWidget() # Interface
+        self.tab_i = QWidget()  # Interface
         self.tab_i.layout = QFormLayout(self.tab_i)
-        self.tab_p = QWidget() # Processing
+        self.tab_p = QWidget()  # Processing
         self.tab_p.layout = QFormLayout(self.tab_p)
-        self.tab_r = QWidget() # Reset
+        self.tab_r = QWidget()  # Reset
         self.tab_r.layout = QFormLayout(self.tab_r)
 
         self.tabs.resize(250, 300)
@@ -197,7 +197,6 @@ class SettingsDialog(QDialog):
             os.mkdir(datapath)
             self.parent.close()
 
-
     def setupWidgets(self):
         self.target_language.addItems(langs_supported.values())
         self.web_preset.addItems([
@@ -208,7 +207,7 @@ class SettingsDialog(QDialog):
             "Custom (Enter below)"
         ])
         self.gtrans_lang.addItems(langs_supported.values())
-        self.display_mode.addItems(["Raw", "Plaintext","Markdown","HTML", "Markdown-HTML"])
+        self.display_mode.addItems(["Raw", "Plaintext", "Markdown", "HTML", "Markdown-HTML"])
         self.tab_d.layout.addRow(QLabel("<h3>Dictionary sources</h3>"))
         self.tab_d.layout.addRow(self.lemmatization)
         self.tab_d.layout.addRow(self.lemfreq)
@@ -264,7 +263,7 @@ class SettingsDialog(QDialog):
             '<h3>Network settings</h3>'
             '◊ All settings on this tab requires restart to take effect.'
             '<br>◊ Most users should not need to change these settings.</i>'
-            ))
+        ))
         self.tab_n.layout.addRow(self.check_updates)
         self.tab_n.layout.addRow(QLabel("<h4>Local API</h4>"))
         self.tab_n.layout.addRow(self.api_enabled)
@@ -300,7 +299,7 @@ class SettingsDialog(QDialog):
         self.tab_p.layout.addRow(QLabel("<hr>"))
         self.tab_p.layout.addRow(QLabel("Display mode"), self.display_mode)
         self.tab_p.layout.addRow(QLabel("<i>◊ HTML mode does not support editing/processing. "
-            "Your edits will not be saved!</i>"))
+                                        "Your edits will not be saved!</i>"))
         self.tab_p.layout.addRow(QLabel("Do not display the top"), self.skip_top)
         self.tab_p.layout.addRow(QLabel(
             "<i>◊ Use this if your dictionary repeats the word in the first line.</i>"))
@@ -336,21 +335,21 @@ class SettingsDialog(QDialog):
             self.skip_top.valueChanged.disconnect()
             self.collapse_newlines.valueChanged.disconnect()
             self.cleanup_html.clicked.disconnect()
-        except TypeError: 
+        except TypeError:
             # When there are no connected functions, it raises a TypeError
             pass
         # Reestablish config handlers
         self.register_config_handler(self.display_mode,
-            f"{curr_dict}/"+"display_mode", "Markdown-HTML")
+                                     f"{curr_dict}/" + "display_mode", "Markdown-HTML")
         self.display_mode.currentTextChanged.connect(
             self.deactivateProcessing
         )
         self.register_config_handler(self.skip_top,
-            f"{curr_dict}/"+"skip_top", 0)
+                                     f"{curr_dict}/" + "skip_top", 0)
         self.register_config_handler(self.collapse_newlines,
-            f"{curr_dict}/"+"collapse_newlines", 0)
+                                     f"{curr_dict}/" + "collapse_newlines", 0)
         self.register_config_handler(self.cleanup_html,
-            f"{curr_dict}/"+"cleanup_html", False)
+                                     f"{curr_dict}/" + "cleanup_html", False)
 
     def deactivateProcessing(self):
         curr_display_mode = self.display_mode.currentText()
@@ -360,7 +359,6 @@ class SettingsDialog(QDialog):
         else:
             self.skip_top.setEnabled(True)
             self.collapse_newlines.setEnabled(True)
-
 
     def setupAutosave(self):
         if self.settings.value("config_ver") is None:
@@ -385,7 +383,7 @@ class SettingsDialog(QDialog):
             _ = getVersion(api)
         except Exception as e:
             pass
-            #self.errorNoConnection(e)
+            # self.errorNoConnection(e)
         else:
             self.loadDecks()
             self.loadFields()
@@ -410,7 +408,6 @@ class SettingsDialog(QDialog):
         self.loadDictionaries()
         self.loadAudioDictionaries()
         self.loadFreqSources()
-
 
         self.dict_source2.currentTextChanged.connect(self.changeMainLayout)
         self.postproc_selector.currentTextChanged.connect(self.setupProcessing)

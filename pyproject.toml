@@ -4,3 +4,10 @@ requires = [
     "wheel"
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.autopep8]
+max_line_length = 120
+ignore = "E741,E704,E265"
+in-place = true
+recursive = true
+aggressive = 3

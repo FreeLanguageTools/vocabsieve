@@ -32,7 +32,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 
-class Text(db.Model): # type: ignore[name-defined]
+class Text(db.Model):  # type: ignore[name-defined]
     added = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     last = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     id = db.Column(db.Integer, primary_key=True)
@@ -69,12 +69,12 @@ class ReaderServer(QObject):
         @app.route("/read/<int:id>")
         def read(id):
             text = Text.query.get(id)
-            return render_template("page.html", 
-                text=text, 
-                font=self.parent.settings.value("reader_font", 'serif'),
-                size=self.parent.settings.value("reader_fontsize", 14, type=int),
-                color=self.parent.settings.value("reader_hlcolor", '#66bb77')
-                )
+            return render_template("page.html",
+                                   text=text,
+                                   font=self.parent.settings.value("reader_font", 'serif'),
+                                   size=self.parent.settings.value("reader_fontsize", 14, type=int),
+                                   color=self.parent.settings.value("reader_hlcolor", '#66bb77')
+                                   )
 
         @app.route("/update/<int:id>", methods=['POST'])
         def update_progress(id):
@@ -97,10 +97,10 @@ class ReaderServer(QObject):
                         new_item = Text(
                             title=request.form.get('title'),
                             content="\n".join([
-                                f"<p>{item}</p>" 
-                                for item in 
+                                f"<p>{item}</p>"
+                                for item in
                                 request.form.get('text').splitlines()
-                                ]),
+                            ]),
                             length=len(
                                 re.findall(
                                     r'\w+',
@@ -143,7 +143,7 @@ class ReaderServer(QObject):
 
 
 def add_book(book_obj):
-    chapters = (("\n"*16).join(book_obj['chapters']))#.replace(r"<h2>", r'<h2 class="title is-2">')
+    chapters = (("\n" * 16).join(book_obj['chapters']))  # .replace(r"<h2>", r'<h2 class="title is-2">')
     new_item = Text(title=book_obj['title'],
                     author=book_obj['author'],
                     content=chapters,

@@ -13,6 +13,7 @@ from .dictformats import *
 from .xdxftransform import xdxf2html
 from PyQt5.QtCore import QCoreApplication
 
+
 def request(action, **params):
     return {'action': action, 'params': params, 'version': 6}
 
@@ -80,16 +81,17 @@ def is_json(myjson) -> bool:
 
 
 def failed_lookup(word, settings) -> str:
-    return str("<b>Definition for \"" + str(word) + "\" not found.</b><br>Check the following:<br>" +\
-        "- Language setting (Current: " + settings.value("target_language", 'en') + ")<br>" +\
-        "- Is the correct word being looked up?<br>" +\
-        "- Are you connected to the Internet?<br>" +\
-        "Otherwise, then " + settings.value("dict_source", "Wiktionary (English)") + 
-        " probably just does not have this word listed.")
+    return str("<b>Definition for \"" + str(word) + "\" not found.</b><br>Check the following:<br>" +
+               "- Language setting (Current: " + settings.value("target_language", 'en') + ")<br>" +
+               "- Is the correct word being looked up?<br>" +
+               "- Are you connected to the Internet?<br>" +
+               "Otherwise, then " + settings.value("dict_source", "Wiktionary (English)") +
+               " probably just does not have this word listed.")
 
 
-def is_oneword(s) -> bool :
+def is_oneword(s) -> bool:
     return len(s.split()) == 1
+
 
 def dictimport(path, dicttype, lang, name) -> None:
     "Import dictionary from file to database"
@@ -152,6 +154,7 @@ def dictimport(path, dicttype, lang, name) -> None:
     elif dicttype == "tsv":
         d = parseTSV(path)
         dictdb.importdict(d, lang, name)
+
 
 def dictdelete(name) -> None:
     dictdb.deletedict(name)

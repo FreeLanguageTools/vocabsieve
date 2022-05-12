@@ -22,7 +22,8 @@ supported_dict_extensions = [
     ".json", ".ifo", ".mdx", ".dsl", ".dz", ".csv", ".tsv"
 ]
 
-def dictinfo(path) -> Dict[str,str]:
+
+def dictinfo(path) -> Dict[str, str]:
     "Get information about dictionary from file path"
     basename, ext = os.path.splitext(path)
     basename = os.path.basename(basename)
@@ -62,6 +63,7 @@ def dictinfo(path) -> Dict[str,str]:
     elif ext == ".csv":
         return {"type": "csv", "basename": basename, "path": path}
 
+
 def parseMDX(path) -> Dict[str, str]:
     mdx = MDX(path)
     stylesheet_lines = mdx.header[b'StyleSheet'].decode().splitlines()
@@ -71,7 +73,7 @@ def parseMDX(path) -> Dict[str, str]:
             number = int(line)
         else:
             stylesheet_map[number] = stylesheet_map.get(number, "") + line
-    newdict = {} # This temporarily stores the new entries
+    newdict = {}  # This temporarily stores the new entries
     i = 0
     prev_headword = ""
     for item in mdx.items():
@@ -81,10 +83,10 @@ def parseMDX(path) -> Dict[str, str]:
         # The following applies the stylesheet
         if stylesheet_map:
             entry = re.sub(
-                r'`(\d+)`', 
-                lambda g: stylesheet_map.get(g.group().strip('`')), 
+                r'`(\d+)`',
+                lambda g: stylesheet_map.get(g.group().strip('`')),
                 entry
-                )
+            )
         entry = entry.replace("\n", "").replace("\r", "")
         # Using newdict.get would become incredibly slow,
         # here we exploit the fact that they are alphabetically ordered
@@ -94,6 +96,7 @@ def parseMDX(path) -> Dict[str, str]:
             newdict[headword] = entry
         prev_headword = headword
     return newdict
+
 
 def parseDSL(path) -> Dict[str, str]:
     r = Reader()
@@ -116,6 +119,7 @@ def removeprefix(self: str, prefix: str, /) -> str:
     else:
         return self[:]
 
+
 def parseCSV(path) -> Dict[str, str]:
     newdict = {}
     with open(path, newline="") as csvfile:
@@ -123,6 +127,7 @@ def parseCSV(path) -> Dict[str, str]:
         for row in data:
             newdict[row[0]] = row[1]
     return newdict
+
 
 def parseTSV(path) -> Dict[str, str]:
     newdict = {}

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 
+
 class dummyStream:
     ''' dummyStream behaves like a stream but does nothing. '''
 

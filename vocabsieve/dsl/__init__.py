@@ -32,60 +32,63 @@ from .main import (
 
 stdCompressions = ("gz", "bz2", "lzma")
 
+
 class TextFilePosWrapper(object):
-	def __init__(self, fileobj, encoding):
-		self.fileobj = fileobj
-		self._encoding = encoding
-		self.pos = 0
+    def __init__(self, fileobj, encoding):
+        self.fileobj = fileobj
+        self._encoding = encoding
+        self.pos = 0
 
-	def __iter__(self):
-		return self
+    def __iter__(self):
+        return self
 
-	def close(self):
-		self.fileobj.close()
+    def close(self):
+        self.fileobj.close()
 
-	def __next__(self):
-		line = self.fileobj.__next__()
-		self.pos += len(line.encode(self._encoding))
-		return line
+    def __next__(self):
+        line = self.fileobj.__next__()
+        self.pos += len(line.encode(self._encoding))
+        return line
 
-	def tell(self):
-		return self.pos
+    def tell(self):
+        return self.pos
 
 
 def compressionOpen(filename, dz=False, **kwargs):
-	from os.path import splitext
-	filenameNoExt, ext = splitext(filename)
-	ext = ext.lower().lstrip(".")
-	try:
-		int(ext)
-	except ValueError:
-		pass
-	else:
-		_, ext = splitext(filenameNoExt)
-		ext = ext.lower().lstrip(".")
-	if ext in stdCompressions or (dz and ext == "dz"):
-		_file = compressionOpenFunc(ext)(filename, **kwargs)
-		_file.compression = ext
-		return _file
-	return open(filename, **kwargs)
+    from os.path import splitext
+    filenameNoExt, ext = splitext(filename)
+    ext = ext.lower().lstrip(".")
+    try:
+        int(ext)
+    except ValueError:
+        pass
+    else:
+        _, ext = splitext(filenameNoExt)
+        ext = ext.lower().lstrip(".")
+    if ext in stdCompressions or (dz and ext == "dz"):
+        _file = compressionOpenFunc(ext)(filename, **kwargs)
+        _file.compression = ext
+        return _file
+    return open(filename, **kwargs)
+
 
 def compressionOpenFunc(c: str):
-	if not c:
-		return open
-	if c == "gz":
-		import gzip
-		return gzip.open
-	if c == "bz2":
-		import bz2
-		return bz2.open
-	if c == "lzma":
-		import lzma
-		return lzma.open
-	if c == "dz":
-		import gzip
-		return gzip.open
-	return None
+    if not c:
+        return open
+    if c == "gz":
+        import gzip
+        return gzip.open
+    if c == "bz2":
+        import bz2
+        return bz2.open
+    if c == "lzma":
+        import lzma
+        return lzma.open
+    if c == "dz":
+        import gzip
+        return gzip.open
+    return None
+
 
 enable = True
 lname = "dsl"
@@ -300,8 +303,8 @@ def _clean_tags(line, audio):
     line = line.replace("[/c]", "</font>")
 
     # example zone
-    #line = line.replace("[ex]", "<span class=\"ex\"><font color=\"steelblue\">")
-    #line = line.replace("[/ex]", "</font></span>")
+    # line = line.replace("[ex]", "<span class=\"ex\"><font color=\"steelblue\">")
+    # line = line.replace("[/ex]", "</font></span>")
 
     # SKIP EXAMPLES
     line = re.sub(r"\[ex\].*?\[\/ex\]", "r", line)
@@ -440,7 +443,6 @@ class Reader(object):
         elif line.startswith("#CONTENTS_LANGUAGE"):
             # self._glos.targetLangName = unwrap_quotes(line[19:].strip())\
             pass
-
 
     def _iterLines(self) -> "Iterator[str]":
         if self._bufferLine:

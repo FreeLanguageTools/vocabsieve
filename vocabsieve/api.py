@@ -86,4 +86,3 @@ class LanguageServer(QObject):
                 port=self.port)
         except OSError:
             return
-

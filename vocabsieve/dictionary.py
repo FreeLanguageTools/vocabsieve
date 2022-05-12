@@ -18,29 +18,29 @@ from .dictformats import removeprefix
 dictdb = LocalDictionary()
 langdata = simplemma.load_data('en')
 
-gtrans_languages = [ 'af', 'sq', 'am', 'ar', 'hy', 'az', 'eu', 'be', 'bn',
-        'bs', 'bg', 'ca', 'ceb', 'ny', 'zh', 'zh_HANT', 'co', 'hr', 'cs',
-        'da', 'nl', 'en', 'eo', 'et', 'tl', 'fi', 'fr', 'fy', 'gl', 'ka',
-        'de', 'el', 'gu', 'ht', 'ha', 'haw', 'hi', 'hmn', 'hu', 'is', 'ig',
-        'id', 'ga', 'it', 'ja', 'kn', 'kk', 'km', 'rw', 'ko', 'ku', 'ky',
-        'lo', 'la', 'lv', 'lt', 'lb', 'mk', 'mg', 'ms', 'ml', 'mt', 'mi',
-        'mr', 'mn', 'my', 'ne', 'no', 'or', 'ps', 'fa', 'pl', 'pt', 'pa',
-        'ro', 'ru', 'sm', 'gd', 'sr', 'st', 'sn', 'sd', 'si', 'sk', 'sl',
-        'so', 'es', 'su', 'sw', 'sv', 'tg', 'ta', 'tt', 'te', 'th', 'tr',
-        'tk', 'uk', 'ur', 'ug', 'uz', 'vi', 'cy', 'xh', 'yi', 'yo', 'zu'
-        ]
+gtrans_languages = ['af', 'sq', 'am', 'ar', 'hy', 'az', 'eu', 'be', 'bn',
+                    'bs', 'bg', 'ca', 'ceb', 'ny', 'zh', 'zh_HANT', 'co', 'hr', 'cs',
+                    'da', 'nl', 'en', 'eo', 'et', 'tl', 'fi', 'fr', 'fy', 'gl', 'ka',
+                    'de', 'el', 'gu', 'ht', 'ha', 'haw', 'hi', 'hmn', 'hu', 'is', 'ig',
+                    'id', 'ga', 'it', 'ja', 'kn', 'kk', 'km', 'rw', 'ko', 'ku', 'ky',
+                    'lo', 'la', 'lv', 'lt', 'lb', 'mk', 'mg', 'ms', 'ml', 'mt', 'mi',
+                    'mr', 'mn', 'my', 'ne', 'no', 'or', 'ps', 'fa', 'pl', 'pt', 'pa',
+                    'ro', 'ru', 'sm', 'gd', 'sr', 'st', 'sn', 'sd', 'si', 'sk', 'sl',
+                    'so', 'es', 'su', 'sw', 'sv', 'tg', 'ta', 'tt', 'te', 'th', 'tr',
+                    'tk', 'uk', 'ur', 'ug', 'uz', 'vi', 'cy', 'xh', 'yi', 'yo', 'zu'
+                    ]
 
 langs_supported = bidict(
     dict(zip(gtrans_languages, [langcodes[item] for item in gtrans_languages])))
 
 gdict_languages = [
     'en', 'hi', 'es', 'fr', 'ja', 'ru', 'de', 'it', 'ko', 'ar', 'tr', 'pt'
-    ]
+]
 simplemma_languages = [
     'bg', 'ca', 'cy', 'da', 'de', 'en', 'es', 'et', 'fa', 'fi', 'fr', 'ga',
     'gd', 'gl', 'gv', 'hu', 'id', 'it', 'ka', 'la', 'lb', 'lt', 'lv', 'nl',
     'pt', 'ro', 'ru', 'sk', 'sl', 'sv', 'tr', 'uk', 'ur'
-    ]
+]
 pronunciation_sources = ["Forvo (all)", "Forvo (best)"]
 
 # On Windows frozen build, there is no pymorphy2 support for Russian due
@@ -157,7 +157,7 @@ def googletranslate(word, language, gtrans_lang, gtrans_api):
         return
 
 
-def getAudio(word, language, dictionary="Forvo (all)", custom_dicts=[]) -> Optional[Dict[str,str]]:
+def getAudio(word, language, dictionary="Forvo (all)", custom_dicts=[]) -> Optional[Dict[str, str]]:
     # should return a dict of audio names and paths to audio
     if dictionary == "Forvo (all)":
         return fetch_audio_all(word, language)
@@ -219,7 +219,7 @@ def lookupin(
         word = removeAccents(word)
     if lemmatize:
         word = lem_word(word, language)
-    # The lemmatizer would always turn words lowercase, which can cause 
+    # The lemmatizer would always turn words lowercase, which can cause
     # lookups to fail if not recovered.
     candidates = [word, word.capitalize()] if IS_UPPER else [word]
     for word in candidates:
@@ -237,7 +237,7 @@ def lookupin(
                         word,
                         language,
                         dictionary)}
-        except:
+        except BaseException:
             pass
     raise Exception("Word not found")
 
@@ -299,12 +299,14 @@ def play_audio(name: str, data: dict, lang: str):
         playsound(os.path.abspath(audiopath))
         return audiopath
 
+
 def process_definition(entry: str, mode: str, skip: int, newlines: str) -> str:
     result = entry
     result = convert_display_mode(result, mode)
     result = skip_lines(result, skip)
     result = collapse_newlines(result, newlines)
     return result
+
 
 def convert_display_mode(entry: str, mode: str):
     if mode in ['Raw', 'HTML']:
@@ -322,8 +324,10 @@ def convert_display_mode(entry: str, mode: str):
     else:
         raise NotImplementedError("Mode not supported")
 
+
 def is_html(s: str) -> bool:
     return bool(BeautifulSoup(s, "html.parser").find())
+
 
 def skip_lines(entry: str, number: int) -> str:
     if is_html(entry):
@@ -335,20 +339,22 @@ def skip_lines(entry: str, number: int) -> str:
     else:
         return "\n".join(entry.splitlines()[number:])
 
+
 def collapse_newlines(entry: str, number: int) -> str:
-    if number == 0: # no-op
+    if number == 0:  # no-op
         return entry
     if is_html(entry):
-    # Try to replace all the weird <br> tags with the standard one
+        # Try to replace all the weird <br> tags with the standard one
         entry = entry.replace("<BR>", "<br>")\
                      .replace("<br/>", "<br>")\
                      .replace("<br />", "<br>")
-        return re.sub(r'(\<br\>)+', r'<br>'*number, entry)
+        return re.sub(r'(\<br\>)+', r'<br>' * number, entry)
     else:
-        return re.sub(r'(\n)+', r'\n'*number, entry)
+        return re.sub(r'(\n)+', r'\n' * number, entry)
+
 
 def markdown_nop(s: str) -> str:
     return removeprefix(
         markdown(s).replace("<p>", "<br>").replace("</p>", ""),
         "<br>"
-        )
+    )
