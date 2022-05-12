@@ -122,6 +122,7 @@ class SettingsDialog(QDialog):
         self.nuke_button.setStyleSheet('QPushButton {color: red;}')
 
         self.enable_anki = QCheckBox("Enable sending notes to Anki")
+        self.check_updates = QCheckBox("Check for updates")
 
     def dictmanager(self):
         importer = DictManager(self)
@@ -260,12 +261,16 @@ class SettingsDialog(QDialog):
         self.tab_a.layout.addRow(self.note_type_url)
 
         self.tab_n.layout.addRow(QLabel(
-            '<h3>All settings on this tab requires restart to take effect.</h3>'
-            '<i>Most users should not need to change these settings.</i>'
+            '<h3>Network settings</h3>'
+            '◊ All settings on this tab requires restart to take effect.'
+            '<br>◊ Most users should not need to change these settings.</i>'
             ))
+        self.tab_n.layout.addRow(self.check_updates)
+        self.tab_n.layout.addRow(QLabel("<h4>Local API</h4>"))
         self.tab_n.layout.addRow(self.api_enabled)
         self.tab_n.layout.addRow(QLabel("API host"), self.api_host)
         self.tab_n.layout.addRow(QLabel("API port"), self.api_port)
+        self.tab_n.layout.addRow(QLabel("<h4>Web Reader</h4>"))
         self.tab_n.layout.addRow(self.reader_enabled)
         self.tab_n.layout.addRow(QLabel("Web reader host"), self.reader_host)
         self.tab_n.layout.addRow(QLabel("Web reader port"), self.reader_port)
@@ -274,15 +279,18 @@ class SettingsDialog(QDialog):
             self.gtrans_api)
 
         self.tab_i.layout.addRow(
-            QLabel("<h3>These settings requires restart to take effect</h3>"))
+            QLabel("<h3>Interface settings</h3>")
+        )
+        self.tab_i.layout.addRow(
+            QLabel("<h4>These settings requires restart to take effect</h4>"))
         if platform.system() == "Linux":
             # Primary selection is only available on Linux
             self.tab_i.layout.addRow(self.primary)
         self.tab_i.layout.addRow(self.allow_editing)
-        self.tab_i.layout.addRow(QLabel("Interface layout"), self.orientation)
+        self.tab_i.layout.addRow(QLabel("Interface layout orientation"), self.orientation)
         self.tab_i.layout.addRow(QLabel("Text scale"), self.text_scale_box)
         self.tab_i.layout.addRow(
-            QLabel("<h3>These settings requires page refresh to take effect</h3>"))
+            QLabel("<h4>These settings requires page refresh to take effect</h4>"))
         self.tab_i.layout.addRow(QLabel("Reader font"), self.reader_font)
         self.tab_i.layout.addRow(QLabel("Reader font size"), self.reader_fontsize)
         self.tab_i.layout.addRow(QLabel("Reader highlight color"), self.reader_hlcolor)
@@ -367,6 +375,7 @@ class SettingsDialog(QDialog):
             'en',
             code_translate=True)
 
+        self.register_config_handler(self.check_updates, 'check_updates', True)
 
         self.register_config_handler(self.enable_anki, 'enable_anki', True)
         self.enable_anki.clicked.connect(self.toggle_anki_settings)

@@ -4,10 +4,13 @@ from PyQt5.QtGui import *
 from PyQt5.Qt import QDesktopServices, QUrl
 from PyQt5.QtCore import *
 import os
+import importlib
 import functools
+import requests
 import platform
 import json
 import csv
+from packaging import version
 from markdown import markdown
 from markdownify import markdownify
 from datetime import datetime
@@ -93,6 +96,7 @@ class DictionaryWindow(QMainWindow):
         self.initTimer()
         self.updateAnkiButtonState()
         self.setupShortcuts()
+        self.checkUpdates()
 
         GlobalObject().addEventListener("double clicked", self.lookupClicked)
         if self.settings.value("primary", False, type=bool)\
@@ -111,6 +115,42 @@ class DictionaryWindow(QMainWindow):
         if platform.system() == "Darwin":
             self.clipboardChanged(evenWhenFocused=True)
         super().focusInEvent(event)
+
+    def checkUpdates(self):
+        if self.settings.value("check_updates") == None:
+            answer = QMessageBox.question(
+                self,
+                "Check updates",
+                "<h2>Would you like VocabSieve to check for updates automatically?</h2>"
+                "Currently, the repository and releases are hosted on GitHub's servers, "
+                "which will be queried for checking updates. <br>VocabSieve cannot and "
+                "<strong>will not</strong> install any updates automatically."
+                "<br>You can change this option in the configuration panel at a later date."
+            )
+            if answer == QMessageBox.Yes:
+                self.settings.setValue("check_updates", True)
+            if answer == QMessageBox.No:
+                self.settings.setValue("check_updates", False)
+        elif self.settings.value("check_updates", True, type=bool):
+            res = requests.get("https://api.github.com/repos/FreeLanguageTools/vocabsieve/releases")
+            data = res.json()
+            latest_version = (current:=data[0])['tag_name'].strip('v')
+            current_version = importlib.metadata.version('vocabsieve')
+            print(current_version, latest_version)
+            if version.parse(latest_version) > version.parse(current_version):
+                answer2 = QMessageBox.information(
+                    self,
+                    "New version",
+                    "<h2>There is a new version available!</h2>"\
+                        + f"<h3>Version {latest_version}</h3>"\
+                        + markdown(current['body']),
+                    buttons=QMessageBox.Open | QMessageBox.Ignore
+                )
+                if answer2 == QMessageBox.Open:
+                    QDesktopServices.openUrl(QUrl(current['html_url']))
+        else:
+            pass
+
 
     def initWidgets(self):
         if os.environ.get("VOCABSIEVE_DEBUG"):
