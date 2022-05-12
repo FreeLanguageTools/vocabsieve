@@ -18,20 +18,6 @@ from .dictformats import removeprefix
 dictdb = LocalDictionary()
 langdata = simplemma.load_data('en')
 
-
-# Currently, all languages with two letter codes can be set
-langcodes = bidict(dict(zip([l.alpha_2 for l in list(pycountry.languages) if getattr(
-    l, 'alpha_2', None)], [l.name for l in list(pycountry.languages) if getattr(l, 'alpha_2', None)])))
-# Apply patches
-langcodes['el'] = "Greek"
-for item in langcodes:
-    langcodes[item] = re.sub(r'\s?\([^)]*\)$', '', langcodes[item])
-langcodes['zh_HANT'] = "Chinese (Traditional)"
-langcodes['haw'] = "Hawaiian"
-langcodes['ceb'] = "Cebuano"
-langcodes['hmn'] = "Hmong"
-
-
 gtrans_languages = [ 'af', 'sq', 'am', 'ar', 'hy', 'az', 'eu', 'be', 'bn',
         'bs', 'bg', 'ca', 'ceb', 'ny', 'zh', 'zh_HANT', 'co', 'hr', 'cs',
         'da', 'nl', 'en', 'eo', 'et', 'tl', 'fi', 'fr', 'fy', 'gl', 'ka',
@@ -55,8 +41,6 @@ simplemma_languages = [
     'gd', 'gl', 'gv', 'hu', 'id', 'it', 'ka', 'la', 'lb', 'lt', 'lv', 'nl',
     'pt', 'ro', 'ru', 'sk', 'sl', 'sv', 'tr', 'uk', 'ur'
     ]
-dictionaries = bidict({"Wiktionary (English)": "wikt-en",
-                       "Google Translate": "gtrans"})
 pronunciation_sources = ["Forvo (all)", "Forvo (best)"]
 
 # On Windows frozen build, there is no pymorphy2 support for Russian due

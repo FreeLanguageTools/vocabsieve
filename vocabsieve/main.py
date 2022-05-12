@@ -406,10 +406,12 @@ class DictionaryWindow(QMainWindow):
             self.toanki_button.setEnabled(True)
 
     def configure(self):
+        api = self.settings.value('anki_api', 'http://127.0.0.1:8765')
         if self.settings.value('enable_anki', True, type=bool):
             try:
                 _ = getVersion(api)
-            except Exception:
+            except Exception as e:
+                print(e)
                 answer = QMessageBox.question(
                     self, 
                     "Could not reach AnkiConnect", 
@@ -671,16 +673,13 @@ class DictionaryWindow(QMainWindow):
                     item['definition'],
                     TL,
                     lemmatize,
-                    dictionaries.get(
-                        dictname,
-                        dictname),
+                    dictname,
                     True)
         except Exception as e:
             if record:
                 self.status(str(e))
                 self.rec.recordLookup(
-                    word, None, TL, lemmatize, dictionaries.get(
-                        dictname, dictname), False)
+                    word, None, TL, lemmatize, dictname, False)
                 self.updateAnkiButtonState(True)
             item = {
                 "word": word,
@@ -698,16 +697,13 @@ class DictionaryWindow(QMainWindow):
                     item['definition'],
                     TL,
                     lemmatize,
-                    dictionaries.get(
-                        dict2name,
-                        dict2name),
+                    dict2name,
                     True)
         except Exception as e:
             self.status("Dict-2 failed" + str(e))
             if record:
                 self.rec.recordLookup(
-                    word, None, TL, lemmatize, dictionaries.get(
-                        dict2name, dict2name), False)
+                    word, None, TL, lemmatize, dict2name, False)
             self.definition2.clear()
             return item
         return {

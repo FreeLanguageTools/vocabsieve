@@ -3,11 +3,27 @@ from PyQt5.QtCore import QStandardPaths, QCoreApplication
 from os import path
 from pathlib import Path
 import time
+from bidict import bidict
+import pycountry
+import re
 from datetime import datetime, timedelta
 datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
 Path(datapath).mkdir(parents=True, exist_ok=True)
 print(datapath)
+# Currently, all languages with two letter codes can be set
+langcodes = bidict(dict(zip([l.alpha_2 for l in list(pycountry.languages) if getattr(
+    l, 'alpha_2', None)], [l.name for l in list(pycountry.languages) if getattr(l, 'alpha_2', None)])))
+# Apply patches
+langcodes['el'] = "Greek"
+for item in langcodes:
+    langcodes[item] = re.sub(r'\s?\([^)]*\)$', '', langcodes[item])
+langcodes['zh_HANT'] = "Chinese (Traditional)"
+langcodes['haw'] = "Hawaiian"
+langcodes['ceb'] = "Cebuano"
+langcodes['hmn'] = "Hmong"
 
+dictionaries = bidict({"Wiktionary (English)": "wikt-en",
+                       "Google Translate": "gtrans"})
 
 class Record():
     def __init__(self):
@@ -18,6 +34,7 @@ class Record():
             check_same_thread=False)
         self.c = self.conn.cursor()
         self.createTables()
+        self.fixOld()
 
     def createTables(self):
         self.c.execute("""
@@ -39,6 +56,34 @@ class Record():
         )
         """)
         self.conn.commit()
+
+    def fixOld(self):
+        """
+        1. In the past language name rather than code was recorded
+        2. In the past some dictonaries had special names.
+        """
+        self.c.execute("""
+        SELECT DISTINCT language FROM lookups
+        """)
+        for languagename, in self.c.fetchall(): # comma unpacks a single value tuple
+            if not langcodes.get(languagename) and langcodes.inverse.get(languagename):
+                print(f"Replacing {languagename} with {langcodes.inverse[languagename]}")
+                self.c.execute("""
+                UPDATE lookups SET language=? WHERE language=?
+                """, (langcodes.inverse[languagename], languagename))
+                self.conn.commit()
+        self.c.execute("""
+        SELECT DISTINCT source FROM lookups
+        """)
+        for source, in self.c.fetchall(): # comma unpacks a single value tuple
+            if source in dictionaries.inverse:
+                print(f"Replacing {source} with {dictionaries.inverse[source]}")
+                self.c.execute("""
+                UPDATE lookups SET source=? WHERE source=?
+                """, (dictionaries.inverse[source], source))
+                self.conn.commit()
+
+
 
     def recordLookup(
             self,
