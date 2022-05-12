@@ -406,28 +406,29 @@ class DictionaryWindow(QMainWindow):
             self.toanki_button.setEnabled(True)
 
     def configure(self):
-        try:
-            _ = getVersion(api)
-        except Exception:
-            answer = QMessageBox.question(
-                self, 
-                "Could not reach AnkiConnect", 
-                "<h2>Could not reach AnkiConnect</h2>"
-                "AnkiConnect is required for changing Anki-related settings."
-                "<br>Choose 'Ignore' to not change Anki settings this time"
-                "<br>Choose 'Abort' to not open the configuration window"
-                "<br><br>If you have AnkiConnect listening to a non-default port or address, "
-                "select 'Ignore and change the Anki API option on the Anki tab, and "
-                "reopen the configuration window."
-                "<br><br>If you do not wish to use Anki with this program, select 'Ignore' "
-                "and then uncheck the 'Enable Anki' checkbox on the Anki tab.",
-                buttons=QMessageBox.Ignore | QMessageBox.Abort,
-                defaultButton=QMessageBox.Ignore
-                )
-            if answer == QMessageBox.Ignore:
-                pass
-            if answer == QMessageBox.Abort:
-                return
+        if self.settings.value('enable_anki', True, type=bool):
+            try:
+                _ = getVersion(api)
+            except Exception:
+                answer = QMessageBox.question(
+                    self, 
+                    "Could not reach AnkiConnect", 
+                    "<h2>Could not reach AnkiConnect</h2>"
+                    "AnkiConnect is required for changing Anki-related settings."
+                    "<br>Choose 'Ignore' to not change Anki settings this time"
+                    "<br>Choose 'Abort' to not open the configuration window"
+                    "<br><br>If you have AnkiConnect listening to a non-default port or address, "
+                    "select 'Ignore and change the Anki API option on the Anki tab, and "
+                    "reopen the configuration window."
+                    "<br><br>If you do not wish to use Anki with this program, select 'Ignore' "
+                    "and then uncheck the 'Enable Anki' checkbox on the Anki tab.",
+                    buttons=QMessageBox.Ignore | QMessageBox.Abort,
+                    defaultButton=QMessageBox.Ignore
+                    )
+                if answer == QMessageBox.Ignore:
+                    pass
+                if answer == QMessageBox.Abort:
+                    return
         self.settings_dialog = SettingsDialog(self)
         self.settings_dialog.exec()
 
@@ -783,8 +784,11 @@ class DictionaryWindow(QMainWindow):
         self.status("Adding note")
         api = self.settings.value("anki_api")
         try:
-            addNote(api, content)
-            self.rec.recordNote(str(content), True)
+            if self.settings.value("enable_anki", True, type=bool):
+                addNote(api, content)
+                self.rec.recordNote(str(content), True)
+            else:
+                self.rec.recordNote(str(content), False)
             self.sentence.clear()
             self.word.clear()
             self.definition.clear()
@@ -793,7 +797,7 @@ class DictionaryWindow(QMainWindow):
         except Exception as e:
             self.rec.recordNote(str(content), False)
             self.status(f"Failed to add note: {word}")
-            answer = QMessageBox.warning(
+            QMessageBox.warning(
                 self,
                 f"Failed to add note: {word}",
                 "<h2>Failed to add note</h2>"

@@ -121,6 +121,8 @@ class SettingsDialog(QDialog):
         self.nuke_button = QPushButton("Delete data")
         self.nuke_button.setStyleSheet('QPushButton {color: red;}')
 
+        self.enable_anki = QCheckBox("Enable sending notes to Anki")
+
     def dictmanager(self):
         importer = DictManager(self)
         importer.exec()
@@ -231,6 +233,11 @@ class SettingsDialog(QDialog):
         self.tab_d.layout.addRow(self.importdict)
 
         self.tab_a.layout.addRow(QLabel("<h3>Anki settings</h3>"))
+        self.tab_a.layout.addRow(self.enable_anki)
+        self.tab_a.layout.addRow(
+            QLabel("<i>◊ If disabled, notes will not be sent to Anki, but only stored in a local database.</i>")
+        )
+        self.tab_a.layout.addRow(QLabel("<hr>"))
         self.tab_a.layout.addRow(QLabel('AnkiConnect API'), self.anki_api)
         self.tab_a.layout.addRow(QLabel("Deck name"), self.deck_name)
         self.tab_a.layout.addRow(QLabel('Default tags'), self.tags)
@@ -361,6 +368,9 @@ class SettingsDialog(QDialog):
             code_translate=True)
 
 
+        self.register_config_handler(self.enable_anki, 'enable_anki', True)
+        self.enable_anki.clicked.connect(self.toggle_anki_settings)
+        self.toggle_anki_settings(self.enable_anki.isChecked())
         api = self.anki_api.text()
         try:
             _ = getVersion(api)
@@ -458,6 +468,17 @@ class SettingsDialog(QDialog):
         self.api_port.setEnabled(self.api_enabled.isChecked())
         self.reader_host.setEnabled(self.reader_enabled.isChecked())
         self.reader_port.setEnabled(self.reader_enabled.isChecked())
+
+    def toggle_anki_settings(self, value: bool):
+        self.anki_api.setEnabled(value)
+        self.tags.setEnabled(value)
+        self.note_type.setEnabled(value)
+        self.deck_name.setEnabled(value)
+        self.sentence_field.setEnabled(value)
+        self.word_field.setEnabled(value)
+        self.definition_field.setEnabled(value)
+        self.definition2_field.setEnabled(value)
+        self.pronunciation_field.setEnabled(value)
 
     def loadAudioDictionaries(self):
         custom_dicts = json.loads(self.settings.value("custom_dicts", '[]'))
