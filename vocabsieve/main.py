@@ -1,3 +1,18 @@
+import os
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.Qt import QDesktopServices, QUrl
+from PyQt5.QtCore import *
+
+DEBUGGING = None
+if os.environ.get("VOCABSIEVE_DEBUG"):
+    DEBUGGING = True
+    QCoreApplication.setApplicationName(
+        "VocabSieve" + os.environ.get("VOCABSIEVE_DEBUG", ""))
+else:
+    QCoreApplication.setApplicationName("VocabSieve")
+QCoreApplication.setOrganizationName("FreeLanguageTools")
+
 from .config import *
 from .tools import *
 from .db import *
@@ -7,11 +22,6 @@ from . import __version__
 from .ext.reader import ReaderServer
 from .ext.importer import KindleImporter
 import sys
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from PyQt5.Qt import QDesktopServices, QUrl
-from PyQt5.QtCore import *
-import os
 import importlib
 import functools
 import requests
@@ -23,14 +33,6 @@ from markdown import markdown
 from markdownify import markdownify
 from datetime import datetime
 import re
-DEBUGGING = None
-if os.environ.get("VOCABSIEVE_DEBUG"):
-    DEBUGGING = True
-    QCoreApplication.setApplicationName(
-        "VocabSieve" + os.environ.get("VOCABSIEVE_DEBUG", ""))
-else:
-    QCoreApplication.setApplicationName("VocabSieve")
-QCoreApplication.setOrganizationName("FreeLanguageTools")
 
 # If on macOS, display the modifier key as "Cmd", else display it as "Ctrl".
 # For whatever reason, Qt automatically uses Cmd key when Ctrl is specified on Mac
@@ -250,7 +252,7 @@ class DictionaryWindow(QMainWindow):
             QLabel("<h3 style=\"font-weight: normal;\">Sentence</h3>"), 2, 0)
         self.layout.addWidget(self.read_button, 2, 2)
 
-        self.layout.addWidget(self.sentence, 3, 0, 1, 3)
+        self.layout.addWidget(self.sentence, 3, 0, 1, 2)
         self.layout.setRowStretch(3, 1)
         self.layout.addWidget(
             QLabel("<h3 style=\"font-weight: normal;\">Word</h3>"), 4, 0)
