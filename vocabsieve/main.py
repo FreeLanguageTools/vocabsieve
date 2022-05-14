@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.Qt import QDesktopServices, QUrl
 from PyQt5.QtCore import *
+from typing import Optional
 
 DEBUGGING = None
 if os.environ.get("VOCABSIEVE_DEBUG"):
@@ -26,6 +27,7 @@ import importlib
 import functools
 import requests
 import platform
+import time
 import json
 import csv
 from packaging import version
@@ -33,7 +35,7 @@ from markdown import markdown
 from markdownify import markdownify
 from datetime import datetime
 import re
-
+Path(os.path.join(datapath, "images")).mkdir(parents=True, exist_ok=True)
 # If on macOS, display the modifier key as "Cmd", else display it as "Ctrl".
 # For whatever reason, Qt automatically uses Cmd key when Ctrl is specified on Mac
 # so there is no need to change the keybind, only the display text
@@ -86,6 +88,7 @@ class DictionaryWindow(QMainWindow):
         self.setCentralWidget(self.widget)
         self.previousWord = ""
         self.audio_path = ""
+        self.image_path = None 
         self.scaleFont()
         self.initWidgets()
         if self.settings.value("orientation", "Vertical") == "Vertical":
@@ -174,15 +177,15 @@ class DictionaryWindow(QMainWindow):
         self.sentence.setPlaceholderText(
             "Sentence copied to the clipboard will show up here.")
         self.sentence.setMinimumHeight(50)
-        self.sentence.setMaximumHeight(300)
+        #self.sentence.setMaximumHeight(300)
         self.word = QLineEdit()
         self.word.setPlaceholderText("Word will appear here when looked up.")
         self.definition = MyTextEdit()
         self.definition.setMinimumHeight(70)
-        self.definition.setMaximumHeight(1800)
+        #self.definition.setMaximumHeight(1800)
         self.definition2 = MyTextEdit()
         self.definition2.setMinimumHeight(70)
-        self.definition2.setMaximumHeight(1800)
+        #self.definition2.setMaximumHeight(1800)
         self.tags = QLineEdit()
         self.tags.setPlaceholderText(
             "Type in a list of tags to be used, separated by spaces (same as in Anki).")
@@ -237,6 +240,17 @@ class DictionaryWindow(QMainWindow):
                     type=bool)))
         self.definition.setPlaceholderText(
             'You can look up any word in the "Sentence" box by double clicking it, or alternatively by selecting it, then press "Get definition".')
+        self.definition2.setPlaceholderText(
+            'You can look up any word in the "Sentence" box by double clicking it, or alternatively by selecting it, then press "Get definition".')
+
+        self.image_viewer = QLabel("<center><b>&lt;No image selected&gt;</center>")
+        self.image_viewer.setScaledContents(True)
+        self.image_viewer.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+        self.image_viewer.setStyleSheet(
+            '''
+                border: 1px solid black;
+            '''
+        )
 
     def play_audio(self, x):
         QCoreApplication.processEvents()
@@ -253,8 +267,8 @@ class DictionaryWindow(QMainWindow):
 
         self.layout.addWidget(
             QLabel("<h3 style=\"font-weight: normal;\">Sentence</h3>"), 2, 0)
-        self.layout.addWidget(self.read_button, 2, 2)
-
+        self.layout.addWidget(self.read_button, 2, 1)
+        self.layout.addWidget(self.image_viewer, 0, 2, 3, 1)
         self.layout.addWidget(self.sentence, 3, 0, 1, 3)
         self.layout.setRowStretch(3, 1)
         self.layout.addWidget(
@@ -408,17 +422,13 @@ class DictionaryWindow(QMainWindow):
     def setupWidgetsH(self):
         self.layout = QGridLayout(self.widget)
         # self.sentence.setMaximumHeight(99999)
-        self.layout.addWidget(self.namelabel, 0, 0, 1, 3)
+        self.layout.addWidget(self.namelabel, 0, 0, 1, 1)
+        self.layout.addWidget(self.image_viewer, 0, 1, 2, 1)
         self.layout.addWidget(self.single_word, 0, 3, 1, 2)
-        self.layout.setColumnStretch(0, 5)
-        self.layout.setColumnStretch(1, 5)
-        self.layout.setColumnStretch(2, 5)
-        self.layout.setColumnStretch(3, 5)
-        self.layout.setColumnStretch(4, 5)
 
         self.layout.addWidget(
             QLabel("<h3 style=\"font-weight: normal;\">Sentence</h3>"), 1, 0)
-        self.layout.addWidget(self.freq_display, 1, 1)
+        self.layout.addWidget(self.freq_display, 0, 2)
         self.layout.addWidget(self.read_button, 6, 1)
 
         self.layout.addWidget(self.sentence, 2, 0, 3, 2)
@@ -434,8 +444,8 @@ class DictionaryWindow(QMainWindow):
         self.layout.addWidget(self.web_button, 1, 4)
         self.layout.addWidget(self.word, 2, 2, 1, 1)
         if self.settings.value("dict_source2", "<disabled>") != "<disabled>":
-            self.layout.addWidget(self.definition, 2, 3, 2, 2)
-            self.layout.addWidget(self.definition2, 4, 3, 2, 2)
+            self.layout.addWidget(self.definition, 2, 3, 4, 1)
+            self.layout.addWidget(self.definition2, 2, 4, 4, 1)
         else:
             self.layout.addWidget(self.definition, 2, 3, 4, 2)
 
@@ -445,6 +455,18 @@ class DictionaryWindow(QMainWindow):
 
         self.layout.addWidget(self.toanki_button, 6, 3, 1, 1)
         self.layout.addWidget(self.config_button, 6, 4, 1, 1)
+        self.layout.setColumnStretch(0, 2)
+        self.layout.setColumnStretch(1, 2)
+        self.layout.setColumnStretch(2, 0)
+        self.layout.setColumnStretch(3, 5)
+        self.layout.setColumnStretch(4, 5)
+        self.layout.setRowStretch(0, 0)
+        #self.layout.setRowStretch(1, 5)
+        self.layout.setRowStretch(2, 5)
+        self.layout.setRowStretch(3, 5)
+        self.layout.setRowStretch(4, 5)
+        self.layout.setRowStretch(5, 5)
+        self.layout.setRowStretch(6, 0)
 
     def updateAnkiButtonState(self, forceDisable=False):
         if self.sentence.toPlainText() == "" or forceDisable:
@@ -621,6 +643,19 @@ class DictionaryWindow(QMainWindow):
     def setWord(self, content):
         self.word.setText(content)
 
+    def setImage(self, content: Optional[QPixmap]):
+        if content == None:
+            self.image_viewer.setPixmap(QPixmap())
+            self.image_viewer.setText("<center><b>&lt;No image selected&gt;</center>")
+            self.image_path = None
+            return
+        filename = str(int(time.time()*1000)) + '.' + self.settings.value("img_format", "jpg")
+        self.image_path = os.path.join(datapath, "images", filename)
+        content.save(
+            self.image_path, quality=self.settings.value("img_quality", -1, type=int)
+        )
+        self.image_viewer.setPixmap(content)
+
     def clipboardChanged(self, evenWhenFocused=False, selection=False):
         """
         If the input is just a single word, we look it up right away.
@@ -634,6 +669,14 @@ class DictionaryWindow(QMainWindow):
             text = QApplication.clipboard().text(QClipboard.Selection)
         else:
             text = QApplication.clipboard().text()
+        
+        if not selection: 
+            # I am not sure how you can copy an image to PRIMARY
+            # so here we go
+            if QApplication.clipboard().mimeData().hasImage():
+                self.setImage(QApplication.clipboard().pixmap())
+                return
+
         remove_spaces = self.settings.value("remove_spaces")
         lang = self.settings.value("target_language", "en")
         if self.isActiveWindow() and not evenWhenFocused:
@@ -768,12 +811,7 @@ class DictionaryWindow(QMainWindow):
                 sentence)
         if self.settings.value("remove_spaces", False, type=bool):
             sentence = re.sub("\\s", "", sentence)
-        tags = (
-            self.settings.value(
-                "tags",
-                "vocabsieve").strip() +
-            " " +
-            self.tags.text().strip()).split(" ")
+        tags = (self.settings.value("tags", "vocabsieve").strip() + " " + self.tags.text().strip()).split(" ")
         word = self.word.text()
         content = {
             "deckName": self.settings.value("deck_name"),
@@ -824,6 +862,16 @@ class DictionaryWindow(QMainWindow):
                     self.settings.value("pronunciation_field")
                 ]
             }
+            self.audio_selector.clear()
+        if self.settings.value("image_field", "<disabled>") != '<disabled>' and self.image_path:
+            content['picture'] = {
+                "path": self.image_path,
+                "filename": os.path.basename(self.image_path),
+                "fields": [
+                    self.settings.value("image_field")
+                ]
+            }
+            self.setImage(None)
 
         self.status("Adding note")
         api = self.settings.value("anki_api")

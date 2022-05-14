@@ -124,6 +124,23 @@ class SettingsDialog(QDialog):
         self.enable_anki = QCheckBox("Enable sending notes to Anki")
         self.check_updates = QCheckBox("Check for updates")
 
+        self.img_format = QComboBox()
+        self.img_format.addItems(
+            ['png', 'jpg', 'gif', 'bmp']
+        )
+        supported_img_formats = list(map(lambda s: bytes(s).decode(), QImageWriter.supportedImageFormats()))
+        # WebP requires a plugin, which is commonly but not always installed
+        if 'webp' in supported_img_formats:
+            self.img_format.addItem('webp')
+
+        self.img_quality = QSpinBox()
+        self.img_quality.setMinimum(-1)
+        self.img_quality.setMaximum(100)
+
+        self.image_field = QComboBox()
+
+
+
     def dictmanager(self):
         importer = DictManager(self)
         importer.exec()
@@ -143,8 +160,8 @@ class SettingsDialog(QDialog):
         self.tab_i.layout = QFormLayout(self.tab_i)
         self.tab_p = QWidget()  # Processing
         self.tab_p.layout = QFormLayout(self.tab_p)
-        self.tab_r = QWidget()  # Reset
-        self.tab_r.layout = QFormLayout(self.tab_r)
+        self.tab_m = QWidget()  # Miscellaneous
+        self.tab_m.layout = QFormLayout(self.tab_m)
 
         self.tabs.resize(250, 300)
 
@@ -157,7 +174,7 @@ class SettingsDialog(QDialog):
         self.tabs.addTab(self.tab_a, "Anki")
         self.tabs.addTab(self.tab_n, "Network")
         self.tabs.addTab(self.tab_i, "Interface")
-        self.tabs.addTab(self.tab_r, "Reset")
+        self.tabs.addTab(self.tab_m, "Misc")
 
     def save_color(self):
         color = QColorDialog.getColor()
@@ -257,6 +274,9 @@ class SettingsDialog(QDialog):
         self.tab_a.layout.addRow(
             QLabel('Field name for "Pronunciation"'),
             self.pronunciation_field)
+        self.tab_a.layout.addRow(
+            QLabel('Field name for "Image"'),
+            self.image_field)
         self.tab_a.layout.addRow(self.note_type_url)
 
         self.tab_n.layout.addRow(QLabel(
@@ -316,10 +336,16 @@ class SettingsDialog(QDialog):
                     self.text_scale.value() / 100,
                     "1.2f") + "x"))
 
-        self.tab_r.layout.addRow(QLabel("<h3>Reset</h3>"))
-        self.tab_r.layout.addRow(QLabel("Your data will be lost forever! There is NO cloud backup."))
-        self.tab_r.layout.addRow(QLabel("<strong>Reset all settings to defaults</strong>"), self.reset_button)
-        self.tab_r.layout.addRow(QLabel("<strong>Delete all user data</strong>"), self.nuke_button)
+        self.tab_m.layout.addRow(QLabel("<h3>Images</h3>"))
+        self.tab_m.layout.addRow(QLabel("Image format"), self.img_format)
+        self.tab_m.layout.addRow(QLabel("<i>◊ WebP, JPG, GIF are lossy, which create smaller files.</i>"))
+        self.tab_m.layout.addRow(QLabel("Image quality"), self.img_quality)
+        self.tab_m.layout.addRow(QLabel("<i>◊ Between 0 and 100. -1 uses the default value from Qt.</i>"))
+        self.tab_m.layout.addRow(QLabel("<h3>Reset</h3>"))
+        self.tab_m.layout.addRow(QLabel("Your data will be lost forever! There is NO cloud backup."))
+        self.tab_m.layout.addRow(QLabel("<strong>Reset all settings to defaults</strong>"), self.reset_button)
+        self.tab_m.layout.addRow(QLabel("<strong>Delete all user data</strong>"), self.nuke_button)
+
 
         self.reset_button.clicked.connect(self.reset_settings)
         self.nuke_button.clicked.connect(self.nuke_profile)
@@ -350,6 +376,7 @@ class SettingsDialog(QDialog):
                                      f"{curr_dict}/" + "collapse_newlines", 0)
         self.register_config_handler(self.cleanup_html,
                                      f"{curr_dict}/" + "cleanup_html", False)
+        self.deactivateProcessing()
 
     def deactivateProcessing(self):
         curr_display_mode = self.display_mode.currentText()
@@ -404,6 +431,7 @@ class SettingsDialog(QDialog):
                 self.pronunciation_field,
                 'pronunciation_field',
                 "<disabled>")
+            self.register_config_handler(self.image_field, 'image_field', "<disabled>")
 
         self.loadDictionaries()
         self.loadAudioDictionaries()
@@ -460,6 +488,9 @@ class SettingsDialog(QDialog):
             self.orientation, 'orientation', 'Vertical')
         self.register_config_handler(self.text_scale, 'text_scale', '100')
 
+        self.register_config_handler(self.img_format, 'img_format', 'jpg')
+        self.register_config_handler(self.img_quality, 'img_quality', -1)
+
         self.target_language.currentTextChanged.connect(self.loadDictionaries)
         self.target_language.currentTextChanged.connect(
             self.loadAudioDictionaries)
@@ -485,6 +516,7 @@ class SettingsDialog(QDialog):
         self.definition_field.setEnabled(value)
         self.definition2_field.setEnabled(value)
         self.pronunciation_field.setEnabled(value)
+        self.image_field.setEnabled(value)
 
     def loadAudioDictionaries(self):
         custom_dicts = json.loads(self.settings.value("custom_dicts", '[]'))
@@ -590,6 +622,7 @@ class SettingsDialog(QDialog):
         def1 = self.definition_field.currentText()
         def2 = self.definition2_field.currentText()
         pron = self.pronunciation_field.currentText()
+        img = self.image_field.currentText()
 
         # Block signals temporarily to avoid warning dialogs
         self.sentence_field.blockSignals(True)
@@ -597,6 +630,7 @@ class SettingsDialog(QDialog):
         self.definition_field.blockSignals(True)
         self.definition2_field.blockSignals(True)
         self.pronunciation_field.blockSignals(True)
+        self.image_field.blockSignals(True)
 
         self.sentence_field.clear()
         self.sentence_field.addItems(fields)
@@ -615,15 +649,16 @@ class SettingsDialog(QDialog):
         self.pronunciation_field.addItem("<disabled>")
         self.pronunciation_field.addItems(fields)
 
-        self.sentence_field.setCurrentText(
-            self.settings.value("sentence_field"))
+        self.image_field.clear()
+        self.image_field.addItem("<disabled>")
+        self.image_field.addItems(fields)
+
+        self.sentence_field.setCurrentText(self.settings.value("sentence_field"))
         self.word_field.setCurrentText(self.settings.value("word_field"))
-        self.definition_field.setCurrentText(
-            self.settings.value("definition_field"))
-        self.definition2_field.setCurrentText(
-            self.settings.value("definition2_field"))
-        self.pronunciation_field.setCurrentText(
-            self.settings.value("pronunciation_field"))
+        self.definition_field.setCurrentText(self.settings.value("definition_field"))
+        self.definition2_field.setCurrentText(self.settings.value("definition2_field"))
+        self.pronunciation_field.setCurrentText(self.settings.value("pronunciation_field"))
+        self.image_field.setCurrentText(self.settings.value("image_field"))
 
         if self.sentence_field.findText(sent) != -1:
             self.sentence_field.setCurrentText(sent)
@@ -635,12 +670,15 @@ class SettingsDialog(QDialog):
             self.definition2_field.setCurrentText(def2)
         if self.pronunciation_field.findText(pron) != -1:
             self.pronunciation_field.setCurrentText(pron)
+        if self.image_field.findText(img) != -1:
+            self.image_field.setCurrentText(img)
 
         self.sentence_field.blockSignals(False)
         self.word_field.blockSignals(False)
         self.definition_field.blockSignals(False)
         self.definition2_field.blockSignals(False)
         self.pronunciation_field.blockSignals(False)
+        self.image_field.blockSignals(False)
         self.status("Done")
 
     def errorNoConnection(self, error):
@@ -667,9 +705,9 @@ class SettingsDialog(QDialog):
             else:
                 self.parent.layout.removeWidget(self.parent.definition)
                 self.parent.layout.addWidget(
-                    self.parent.definition, 2, 3, 2, 2)
+                    self.parent.definition, 2, 3, 4, 1)
                 self.parent.layout.addWidget(
-                    self.parent.definition2, 4, 3, 2, 2)
+                    self.parent.definition2, 2, 4, 4, 1)
                 self.parent.definition2.setVisible(True)
         else:
             self.parent.layout.removeWidget(self.parent.definition)
