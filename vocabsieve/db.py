@@ -59,7 +59,14 @@ class Record():
         CREATE TABLE IF NOT EXISTS notes (
             timestamp FLOAT,
             data TEXT,
-            success INTEGER
+            success INTEGER,
+            sentence TEXT,
+            word TEXT,
+            definition TEXT,
+            definition2 TEXT,
+            pronunciation TEXT,
+            image TEXT,
+            tags TEXT
         )
         """)
         self.conn.commit()
@@ -68,6 +75,7 @@ class Record():
         """
         1. In the past language name rather than code was recorded
         2. In the past some dictonaries had special names.
+        3. Add proper columns in the notes table rather than just a json dump
         """
         self.c.execute("""
         SELECT DISTINCT language FROM lookups
@@ -89,6 +97,18 @@ class Record():
                 UPDATE lookups SET source=? WHERE source=?
                 """, (dictionaries.inverse[source], source))
                 self.conn.commit()
+        try:
+            self.c.executescript("""
+                ALTER TABLE notes ADD COLUMN sentence TEXT;
+                ALTER TABLE notes ADD COLUMN word TEXT;
+                ALTER TABLE notes ADD COLUMN definition TEXT;
+                ALTER TABLE notes ADD COLUMN definition2 TEXT;
+                ALTER TABLE notes ADD COLUMN pronunciation TEXT;
+                ALTER TABLE notes ADD COLUMN image TEXT;
+                ALTER TABLE notes ADD COLUMN tags TEXT;
+            """)
+        except sqlite3.OperationalError:
+            pass
 
     def recordLookup(
             self,
@@ -115,10 +135,26 @@ class Record():
         except sqlite3.ProgrammingError:
             return
 
-    def recordNote(self, data, success):
+    def recordNote(self, data, sentence, word, definition, definition2, pronunciation, image, tags, success):
         timestamp = time.time()
-        sql = "INSERT INTO notes(timestamp, data, success) VALUES(?,?,?)"
-        self.c.execute(sql, (timestamp, data, success))
+        sql = """INSERT INTO notes(
+            timestamp, data, sentence, word, definition, definition2, pronunciation, image, tags, success
+            ) 
+            VALUES(?,?,?,?,?,?,?,?,?,?)"""
+        self.c.execute(sql, 
+            (
+                timestamp, 
+                data, 
+                sentence or "", 
+                word or "", 
+                definition or "", 
+                definition2 or "", 
+                pronunciation or "", 
+                image or "", 
+                tags or "",
+                success
+            )
+        )
         self.conn.commit()
 
     def getAllLookups(self):

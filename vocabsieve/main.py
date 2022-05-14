@@ -374,7 +374,7 @@ class DictionaryWindow(QMainWindow):
             "Save CSV to file",
             os.path.join(
                 QStandardPaths.writableLocation(QStandardPaths.DesktopLocation),
-                f"vocabsieve-lookups-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.csv"
+                f"vocabsieve-notes-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.csv"
             ),
             "CSV (*.csv)"
         )
@@ -382,7 +382,8 @@ class DictionaryWindow(QMainWindow):
             with open(path, 'w') as file:
                 writer = csv.writer(file)
                 writer.writerow(
-                    ['timestamp', 'content', 'anki_export_success']
+                    ['timestamp', 'content', 'anki_export_success', 'sentence', 'word', 
+                    'definition', 'definition2', 'pronunciation', 'image', 'tags']
                 )
                 writer.writerows(self.rec.getAllNotes())
         else:
@@ -831,6 +832,7 @@ class DictionaryWindow(QMainWindow):
             )
         )
         content['fields'][self.settings.value('definition_field')] = definition
+        definition2 = None
         if self.settings.value("dict_source2", "<disabled>") != '<disabled>':
             try:
                 if self.settings.value(
@@ -871,23 +873,52 @@ class DictionaryWindow(QMainWindow):
                     self.settings.value("image_field")
                 ]
             }
-            self.setImage(None)
 
         self.status("Adding note")
         api = self.settings.value("anki_api")
         try:
             if self.settings.value("enable_anki", True, type=bool):
                 addNote(api, content)
-                self.rec.recordNote(str(content), True)
+                self.rec.recordNote(
+                    json.dumps(content), 
+                    sentence,
+                    word,
+                    definition,
+                    definition2,
+                    self.audio_path,
+                    self.image_path,
+                    " ".join(tags),
+                    True
+                )
             else:
-                self.rec.recordNote(str(content), False)
+                self.rec.recordNote(
+                    json.dumps(content), 
+                    sentence,
+                    word,
+                    definition,
+                    definition2,
+                    self.audio_path,
+                    self.image_path,
+                    " ".join(tags),
+                    False
+                )
             self.sentence.clear()
             self.word.clear()
             self.definition.clear()
             self.definition2.clear()
             self.status(f"Note added: '{word}'")
         except Exception as e:
-            self.rec.recordNote(str(content), False)
+            self.rec.recordNote(
+                json.dumps(content), 
+                sentence,
+                word,
+                definition,
+                definition2,
+                self.audio_path,
+                self.image_path,
+                " ".join(tags),
+                False
+            )
             self.status(f"Failed to add note: {word}")
             QMessageBox.warning(
                 self,
@@ -900,7 +931,7 @@ class DictionaryWindow(QMainWindow):
                 " Anki' on the Anki tab."
 
             )
-            return
+        self.setImage(None)
 
     def process_defi_anki(self, w: MyTextEdit, display_mode):
         "Process definitions before sending to Anki"
