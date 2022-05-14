@@ -136,8 +136,11 @@ class DictionaryWindow(QMainWindow):
             if answer == QMessageBox.No:
                 self.settings.setValue("check_updates", False)
         elif self.settings.value("check_updates", True, type=bool):
-            res = requests.get("https://api.github.com/repos/FreeLanguageTools/vocabsieve/releases")
-            data = res.json()
+            try:
+                res = requests.get("https://api.github.com/repos/FreeLanguageTools/vocabsieve/releases")
+                data = res.json()
+            except Exception:
+                return
             latest_version = (current := data[0])['tag_name'].strip('v')
             current_version = importlib.metadata.version('vocabsieve')
             print(current_version, latest_version)
@@ -188,13 +191,13 @@ class DictionaryWindow(QMainWindow):
             ", then press \"Get definition\".")
 
         self.lookup_button = QPushButton(f"Define [{MOD}-D]")
-        self.lookup_exact_button = QPushButton("Define (Direct)")
+        self.lookup_exact_button = QPushButton(f"Define Direct [Shift-{MOD}-D]")
         self.lookup_exact_button.setToolTip(
             "This will look up the word without lemmatization.")
         self.toanki_button = QPushButton(f"Add note [{MOD}-S]")
 
         self.config_button = QPushButton("Configure..")
-        self.read_button = QPushButton("Read clipboard")
+        self.read_button = QPushButton(f"Read clipboard [{MOD}-V]")
         self.bar = QStatusBar()
         self.setStatusBar(self.bar)
         self.stats_label = QLabel()
@@ -205,7 +208,7 @@ class DictionaryWindow(QMainWindow):
             "This can potentially send your clipboard contents over the network if an online dictionary service is used.\n"
             "This is INSECURE if you use password managers that copy passwords to the clipboard.")
 
-        self.web_button = QPushButton("Open webpage")
+        self.web_button = QPushButton(f"Open webpage [{MOD}-1]")
         self.freq_display = QLCDNumber()
         self.freq_display.setSegmentStyle(QLCDNumber.Flat)
         self.freq_display.display(0)
@@ -252,7 +255,7 @@ class DictionaryWindow(QMainWindow):
             QLabel("<h3 style=\"font-weight: normal;\">Sentence</h3>"), 2, 0)
         self.layout.addWidget(self.read_button, 2, 2)
 
-        self.layout.addWidget(self.sentence, 3, 0, 1, 2)
+        self.layout.addWidget(self.sentence, 3, 0, 1, 3)
         self.layout.setRowStretch(3, 1)
         self.layout.addWidget(
             QLabel("<h3 style=\"font-weight: normal;\">Word</h3>"), 4, 0)
@@ -493,8 +496,14 @@ class DictionaryWindow(QMainWindow):
     def setupShortcuts(self):
         self.shortcut_toanki = QShortcut(QKeySequence('Ctrl+S'), self)
         self.shortcut_toanki.activated.connect(self.toanki_button.animateClick)
+        self.shortcut_getdef = QShortcut(QKeySequence('Ctrl+Shift+D'), self)
+        self.shortcut_getdef.activated.connect(self.lookup_exact_button.animateClick)
         self.shortcut_getdef = QShortcut(QKeySequence('Ctrl+D'), self)
         self.shortcut_getdef.activated.connect(self.lookup_button.animateClick)
+        self.shortcut_getdef = QShortcut(QKeySequence('Ctrl+V'), self)
+        self.shortcut_getdef.activated.connect(self.read_button.animateClick)
+        self.shortcut_getdef = QShortcut(QKeySequence('Ctrl+1'), self)
+        self.shortcut_getdef.activated.connect(self.web_button.animateClick)
 
     def getCurrentWord(self):
         cursor = self.sentence.textCursor()
