@@ -9,7 +9,7 @@ from difflib import SequenceMatcher
 from sentence_splitter import split_text_into_sentences
 from vocabsieve.tools import addNotes
 from datetime import datetime
-
+from .utils import *
 
 def get_section(bdata: bytes, loc_start, loc_end):
     start = max((loc_start - 15) * 150, 0)
@@ -55,6 +55,9 @@ class KindleImporter(QDialog):
 
         self.layout = QFormLayout(self)
         self.layout.addRow(QLabel(
+            "<h2>Import Kindle notes</h2>"
+        ))
+        self.layout.addRow(QLabel(
             "<strong>Your Kindle must be set to English (US) for this feature to work. </strong>"
         ))
         self.layout.addRow(
@@ -75,8 +78,7 @@ class KindleImporter(QDialog):
 
         dates = list(map(lambda x: datetime.strptime(
             " ".join(x.split("|")[1].split()[3:6]), "%B %d, %Y"), self.notes[1::5]))
-        # self.datewidget.setMinimumDate(min(dates))
-        # self.datewidget.setMaximumDate(max(dates))
+
         self.layout.addRow(
             QLabel("Import sentences starting from (use scroll wheel)"),
             self.datewidget)
@@ -246,3 +248,4 @@ class KindleImporter(QDialog):
                                   " notes have been exported, of which " +
                                   str(len([i for i in res if i])) +
                                   " were successfully added to your collection."))
+        self.anki_button.setEnabled(False)

@@ -21,7 +21,7 @@ from .dictionary import *
 from .api import LanguageServer
 from . import __version__
 from .ext.reader import ReaderServer
-from .ext.importer import KindleImporter
+from .ext.importer import KindleImporter, KoreaderImporter
 import sys
 import importlib
 import functools
@@ -342,7 +342,6 @@ class DictionaryWindow(QMainWindow):
         helpmenu.addAction(self.about_action)
 
         self.import_koreader_action = QAction("Import K&OReader")
-        self.import_koreader_action.setEnabled(False)
         self.import_kindle_action = QAction("Import &Kindle")
 
         self.export_notes_csv_action = QAction("Export &notes to CSV")
@@ -351,6 +350,7 @@ class DictionaryWindow(QMainWindow):
         self.help_action.triggered.connect(self.onHelp)
         self.about_action.triggered.connect(self.onAbout)
         self.open_reader_action.triggered.connect(self.onReaderOpen)
+        self.import_koreader_action.triggered.connect(self.importkoreader)
         self.import_kindle_action.triggered.connect(self.importkindle)
         self.export_notes_csv_action.triggered.connect(self.exportNotes)
         self.export_lookups_csv_action.triggered.connect(self.exportLookups)
@@ -513,8 +513,20 @@ class DictionaryWindow(QMainWindow):
         if not fname:
             return
         else:
-            self.import_kindle = KindleImporter(self, fname)
-            self.import_kindle.exec()
+            import_kindle = KindleImporter(self, fname)
+            import_kindle.exec()
+
+    def importkoreader(self):
+        path = QFileDialog.getExistingDirectory(
+            parent=self,
+            caption="Select the directory containers ebook files",
+            directory=QStandardPaths.writableLocation(QStandardPaths.HomeLocation)
+        )
+        if not path:
+            return
+        else:
+            import_koreader = KoreaderImporter(self, path)
+            import_koreader.exec()
 
     def setupShortcuts(self):
         self.shortcut_toanki = QShortcut(QKeySequence('Ctrl+S'), self)
