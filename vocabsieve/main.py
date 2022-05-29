@@ -531,14 +531,14 @@ class DictionaryWindow(QMainWindow):
     def setupShortcuts(self):
         self.shortcut_toanki = QShortcut(QKeySequence('Ctrl+S'), self)
         self.shortcut_toanki.activated.connect(self.toanki_button.animateClick)
-        self.shortcut_getdef = QShortcut(QKeySequence('Ctrl+Shift+D'), self)
-        self.shortcut_getdef.activated.connect(self.lookup_exact_button.animateClick)
+        self.shortcut_getdef_e = QShortcut(QKeySequence('Ctrl+Shift+D'), self)
+        self.shortcut_getdef_e.activated.connect(self.lookup_exact_button.animateClick)
         self.shortcut_getdef = QShortcut(QKeySequence('Ctrl+D'), self)
         self.shortcut_getdef.activated.connect(self.lookup_button.animateClick)
-        self.shortcut_getdef = QShortcut(QKeySequence('Ctrl+V'), self)
-        self.shortcut_getdef.activated.connect(self.read_button.animateClick)
-        self.shortcut_getdef = QShortcut(QKeySequence('Ctrl+1'), self)
-        self.shortcut_getdef.activated.connect(self.web_button.animateClick)
+        self.shortcut_paste = QShortcut(QKeySequence('Ctrl+V'), self)
+        self.shortcut_paste.activated.connect(self.read_button.animateClick)
+        self.shortcut_web = QShortcut(QKeySequence('Ctrl+1'), self)
+        self.shortcut_web.activated.connect(self.web_button.animateClick)
 
     def getCurrentWord(self):
         cursor = self.sentence.textCursor()

@@ -5,6 +5,7 @@ from typing import Dict
 import os
 import re
 import csv
+import json
 
 supported_dict_formats = bidict({
     "stardict": "StarDict",
@@ -33,22 +34,19 @@ def dictinfo(path) -> Dict[str, str]:
         raise NotImplementedError("Unsupported format")
     elif ext == ".json":
         with open(path, encoding="utf-8") as f:
-            try:
-                d = json.load(f)
-                if isinstance(d, list):
-                    if isinstance(d[0], str):
-                        return {
-                            "type": "freq",
-                            "basename": basename,
-                            "path": path}
+            d = json.load(f)
+            if isinstance(d, list):
+                if isinstance(d[0], str):
                     return {
-                        "type": "migaku",
+                        "type": "freq",
                         "basename": basename,
                         "path": path}
-                elif isinstance(d, dict):
-                    return {"type": "json", "basename": basename, "path": path}
-            except Exception:
-                raise IOError("Reading failed")
+                return {
+                    "type": "migaku",
+                    "basename": basename,
+                    "path": path}
+            elif isinstance(d, dict):
+                return {"type": "json", "basename": basename, "path": path}
     elif ext == ".ifo":
         return {"type": "stardict", "basename": basename, "path": path}
     elif ext == ".mdx":

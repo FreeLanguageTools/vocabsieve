@@ -4,10 +4,13 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import os
 import re
+import json
 from pathlib import Path
 from difflib import SequenceMatcher
 from sentence_splitter import split_text_into_sentences
 from vocabsieve.tools import addNotes
+from vocabsieve.dictionary import getAudio
+from itertools import compress
 from datetime import datetime
 from .utils import *
 
@@ -76,7 +79,7 @@ class KindleImporter(QDialog):
         self.find_context = QPushButton("Get context")
         self.find_context.clicked.connect(self.get_sents)
 
-        dates = list(map(lambda x: datetime.strptime(
+        self.dates = list(map(lambda x: datetime.strptime(
             " ".join(x.split("|")[1].split()[3:6]), "%B %d, %Y"), self.notes[1::5]))
 
         self.layout.addRow(
@@ -86,7 +89,7 @@ class KindleImporter(QDialog):
             str(len(self.notes[::5])) + " entries found in the file."), self.find_context)
 
         self.datewidget.addItems(uniq_preserve_order(
-            [date.strftime("%Y-%m-%d") for date in dates]))
+            [date.strftime("%Y-%m-%d") for date in self.dates]))
 
     def get_titles(self):
         titles = get_uniques(self.notes[0::5])
@@ -109,24 +112,17 @@ class KindleImporter(QDialog):
         self.find_context.setEnabled(False)
         locs = self.notes[1::5]
         titles = self.notes[0::5]
-        self.highlights = self.notes[3::5]
-        maxlen = min(len(self.highlights), len(locs))
-        self.highlights = self.highlights[:maxlen]
+        self.lookup_terms = self.notes[3::5]
+        maxlen = min(len(self.lookup_terms), len(locs))
+        self.lookup_terms = self.lookup_terms[:maxlen]
+        
         locs = locs[:maxlen]
         starts = list(
             map(lambda x: int(x.split("|")[0].split()[-1].split("-")[0]), locs))
         ends = list(
             map(lambda x: int(x.split("|")[0].split()[-1].split("-")[-1]), locs))
-        dates = list(map(lambda x: datetime.strptime(
+        self.dates = list(map(lambda x: datetime.strptime(
             " ".join(x.split("|")[1].split()[3:6]), "%B %d, %Y"), self.notes[1::5]))
-        start_at = datetime.strptime(self.datewidget.currentText(), "%Y-%m-%d")
-        start_at_index = 0
-        for index, date in enumerate(dates):
-            if date > start_at:
-                start_at_index = index
-                break
-
-        # Cut out items prior to the date
 
         book2file = {}
         for i in range(len(self.comboboxes)):
@@ -161,16 +157,21 @@ class KindleImporter(QDialog):
         count = 0
         self.sents = []
 
+        start_at = datetime.strptime(self.datewidget.currentText(), "%Y-%m-%d")
+        start_at_index = 0
+        for index, date in enumerate(self.dates):
+            if date > start_at:
+                start_at_index = index
+                break
+
         for i in range(maxlen):
             if i < start_at_index:
-                # Skip the ones before the date, insert an empty string to keep
-                # the length
                 self.sents.append("")
                 continue
             sec = get_section(bdata[titles[i]], starts[i], ends[i])
             sent = extract_sentence(
                 sec,
-                self.highlights[i],
+                self.lookup_terms[i],
                 self.parent.settings.value("target_language"))
             if sent:
                 count += 1
@@ -179,22 +180,25 @@ class KindleImporter(QDialog):
             self.sents.append(sent)
         self.lookup_button.setEnabled(True)
 
+
     def define_words(self):
         self.lookup_button.setEnabled(False)
         self.words = []
         self.definitions = []
         self.definition2s = []
         self.definition_count_label = QLabel("0 definitions found")
+        self.audio_paths = []
         self.anki_button = QPushButton("Add notes to Anki")
         self.anki_button.setEnabled(False)
         self.anki_button.clicked.connect(self.to_anki)
         self.layout.addRow(self.definition_count_label, self.anki_button)
-
+        self.lookup_terms = self.lookup_terms
         count = 0
-        for i in range(len(self.highlights)):
-            word = re.sub('[\\?\\.!«»…,()\\[\\]]*', "", self.highlights[i])
+        for i in range(len(self.lookup_terms)):
+            # Remove punctuations
+            word = re.sub('[\\?\\.!«»…,()\\[\\]]*', "", self.lookup_terms[i])
+        
             if self.sents[i]:
-
                 item = self.parent.lookup(word, record=False)
                 if not item['definition'].startswith("<b>Definition for"):
                     count += 1
@@ -207,20 +211,43 @@ class KindleImporter(QDialog):
                     self.words.append(word)
                     self.definitions.append("")
                 self.definition2s.append(item.get('definition2', ""))
+
+                audio_path = ""
+                if self.settings.value("audio_dict", "Forvo (all)") != "<disabled>":
+                    try:
+                        audios = getAudio(
+                                word,
+                                self.settings.value("target_language", 'en'),
+                                dictionary=self.settings.value("audio_dict", "Forvo (all)"),
+                                custom_dicts=json.loads(
+                                    self.settings.value("custom_dicts", '[]')))
+                    except Exception:
+                        audios = {}
+                    if audios:
+                        # First item
+                        audio_path = audios[next(iter(audios))]
+                self.audio_paths.append(audio_path)
+        
             else:
+                print("no sentence")
                 self.definitions.append("")
                 self.words.append("")
                 self.definition2s.append("")
+                self.audio_paths.append("")
 
+        #print(self.audio_paths)
         self.anki_button.setEnabled(True)
 
     def to_anki(self):
         notes = []
-        for word, sentence, definition, definition2 in zip(
-                self.words, self.sents, self.definitions, self.definition2s):
+        print(len(self.words), len(self.sents), len(self.definitions), len(self.definition2s), len(self.audio_paths))
+        for word, sentence, definition, definition2, audio_path in zip(
+                self.words, self.sents, self.definitions, self.definition2s, self.audio_paths):
+            print(word, sentence, definition)
             if word and sentence and definition:
+                print("Adding note")
                 tags = self.parent.settings.value(
-                    "tags", "vocabsieve").strip() + " kindle"
+                    "tags", "vocabsieve").strip() + " koreader"
                 content = {
                     "deckName": self.parent.settings.value("deck_name"),
                     "modelName": self.parent.settings.value("note_type"),
@@ -233,15 +260,18 @@ class KindleImporter(QDialog):
                 definition = definition.replace("\n", "<br>")
                 content['fields'][self.parent.settings.value(
                     'definition_field')] = definition
-                if self.settings.value(
-                    "dict_source2",
-                        "<disabled>") != '<disabled>':
-                    try:
-                        definition2 = definition2.replace("\n", "<br>")
-                        content['fields'][self.parent.settings.value(
-                            'definition2_field')] = definition2
-                    except Exception as e:
-                        return
+                if self.settings.value("dict_source2", "<disabled>") != '<disabled>':
+                    definition2 = definition2.replace("\n", "<br>")
+                    content['fields'][self.parent.settings.value('definition2_field')] = definition2
+                if self.settings.value("audio_dict", "<disabled>") != '<disabled>' and audio_path:
+                    content['audio'] = {}
+                    if audio_path.startswith("https://") or audio_path.startswith("http://"):
+                        content['audio']['url'] = audio_path
+                    else:
+                        content['audio']['path'] = audio_path
+                    content['audio']['filename'] = audio_path.replace("\\", "/").split("/")[-1]
+                    content['audio']['fields'] = [self.settings.value('pronunciation_field')]
+
                 notes.append(content)
         res = addNotes(self.parent.settings.value("anki_api"), notes)
         self.layout.addRow(QLabel(str(len(notes)) +
