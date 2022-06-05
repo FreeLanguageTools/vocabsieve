@@ -56,6 +56,7 @@ class SettingsDialog(QDialog):
         self.reader_hlcolor.clicked.connect(self.save_color)
 
         self.word_field = QComboBox()
+        self.frequency_stars_field = QComboBox()
         self.definition_field = QComboBox()
         self.definition2_field = QComboBox()
         self.pronunciation_field = QComboBox()
@@ -266,6 +267,9 @@ class SettingsDialog(QDialog):
             QLabel('Field name for "Word"'),
             self.word_field)
         self.tab_a.layout.addRow(
+            QLabel('Field name for "Frequency Stars"'),
+            self.frequency_stars_field)
+        self.tab_a.layout.addRow(
             QLabel('Field name for "Definition"'),
             self.definition_field)
         self.tab_a.layout.addRow(
@@ -421,6 +425,7 @@ class SettingsDialog(QDialog):
             self.register_config_handler(
                 self.sentence_field, 'sentence_field', 'Sentence')
             self.register_config_handler(self.word_field, 'word_field', 'Word')
+            self.register_config_handler(self.frequency_stars_field, 'frequency_stars_field', 'Frequency Stars')
             self.register_config_handler(
                 self.definition_field, 'definition_field', 'Definition')
             self.register_config_handler(
@@ -513,6 +518,7 @@ class SettingsDialog(QDialog):
         self.deck_name.setEnabled(value)
         self.sentence_field.setEnabled(value)
         self.word_field.setEnabled(value)
+        self.frequency_stars_field.setEnabled(value)
         self.definition_field.setEnabled(value)
         self.definition2_field.setEnabled(value)
         self.pronunciation_field.setEnabled(value)
@@ -619,6 +625,7 @@ class SettingsDialog(QDialog):
         # Temporary store fields
         sent = self.sentence_field.currentText()
         word = self.word_field.currentText()
+        freq_stars = self.frequency_stars_field.currentText()
         def1 = self.definition_field.currentText()
         def2 = self.definition2_field.currentText()
         pron = self.pronunciation_field.currentText()
@@ -627,6 +634,7 @@ class SettingsDialog(QDialog):
         # Block signals temporarily to avoid warning dialogs
         self.sentence_field.blockSignals(True)
         self.word_field.blockSignals(True)
+        self.frequency_stars_field.blockSignals(True)
         self.definition_field.blockSignals(True)
         self.definition2_field.blockSignals(True)
         self.pronunciation_field.blockSignals(True)
@@ -637,6 +645,10 @@ class SettingsDialog(QDialog):
 
         self.word_field.clear()
         self.word_field.addItems(fields)
+
+        self.frequency_stars_field.clear()
+        self.frequency_stars_field.addItem("<disabled>")
+        self.frequency_stars_field.addItems(fields)
 
         self.definition_field.clear()
         self.definition_field.addItems(fields)
@@ -655,6 +667,7 @@ class SettingsDialog(QDialog):
 
         self.sentence_field.setCurrentText(self.settings.value("sentence_field"))
         self.word_field.setCurrentText(self.settings.value("word_field"))
+        self.frequency_stars_field.setCurrentText(self.settings.value("frequency_stars_field"))
         self.definition_field.setCurrentText(self.settings.value("definition_field"))
         self.definition2_field.setCurrentText(self.settings.value("definition2_field"))
         self.pronunciation_field.setCurrentText(self.settings.value("pronunciation_field"))
@@ -664,6 +677,8 @@ class SettingsDialog(QDialog):
             self.sentence_field.setCurrentText(sent)
         if self.word_field.findText(word) != -1:
             self.word_field.setCurrentText(word)
+        if self.frequency_stars_field.findText(freq_stars) != -1:
+            self.frequency_stars_field.setCurrentText(freq_stars)
         if self.definition_field.findText(def1) != -1:
             self.definition_field.setCurrentText(def1)
         if self.definition2_field.findText(def2) != -1:
@@ -675,6 +690,7 @@ class SettingsDialog(QDialog):
 
         self.sentence_field.blockSignals(False)
         self.word_field.blockSignals(False)
+        self.frequency_stars_field.blockSignals(False)
         self.definition_field.blockSignals(False)
         self.definition2_field.blockSignals(False)
         self.pronunciation_field.blockSignals(False)

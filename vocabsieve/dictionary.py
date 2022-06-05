@@ -39,7 +39,7 @@ gdict_languages = [
 simplemma_languages = [
     'bg', 'ca', 'cy', 'da', 'de', 'en', 'es', 'et', 'fa', 'fi', 'fr', 'ga',
     'gd', 'gl', 'gv', 'hu', 'id', 'it', 'ka', 'la', 'lb', 'lt', 'lv', 'nl',
-    'pt', 'ro', 'ru', 'sk', 'sl', 'sv', 'tr', 'uk', 'ur'
+    'pl', 'pt', 'ro', 'ru', 'sk', 'sl', 'sv', 'tr', 'uk', 'ur'
 ]
 pronunciation_sources = ["Forvo (all)", "Forvo (best)"]
 
@@ -51,6 +51,9 @@ try:
     PYMORPHY_SUPPORT = True
 except ValueError:
     morph = None
+    pass
+
+class WordNotFoundException(Exception):
     pass
 
 
@@ -242,10 +245,12 @@ def lookupin(
     raise Exception("Word not found")
 
 
-def getFreq(word, language, lemfreq, dictionary):
+def getFreq(word, language, lemfreq, dictionary) -> (int, int):
     if lemfreq:
         word = lem_word(word, language)
-    return int(dictdb.define(word.lower(), language, dictionary))
+    freq = dictdb.define(word.lower(), language, dictionary)
+    max_freq = dictdb.countEntriesDict(dictionary)
+    return int(freq), int(max_freq)
 
 
 def getDictsForLang(lang: str, dicts: list):
