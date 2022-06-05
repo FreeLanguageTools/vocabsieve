@@ -53,9 +53,6 @@ except ValueError:
     morph = None
     pass
 
-class WordNotFoundException(Exception):
-    pass
-
 
 def preprocess_clipboard(s: str, lang: str) -> str:
     """

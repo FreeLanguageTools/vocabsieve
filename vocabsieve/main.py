@@ -796,7 +796,6 @@ class DictionaryWindow(QMainWindow):
                     dictname,
                     True)
         except Exception as e:
-            print(e)
             if record:
                 self.status(str(e))
                 self.rec.recordLookup(
