@@ -109,7 +109,7 @@ class DictionaryWindow(QMainWindow):
         if self.settings.value("primary", False, type=bool)\
                 and QClipboard.supportsSelection(QApplication.clipboard()):
             QApplication.clipboard().selectionChanged.connect(
-                lambda: self.clipboardChanged(False, True))
+                lambda: self.clipboardChanged(True))
         QApplication.clipboard().dataChanged.connect(self.clipboardChanged)
 
     def scaleFont(self):
@@ -120,7 +120,7 @@ class DictionaryWindow(QMainWindow):
 
     def focusInEvent(self, event):
         if platform.system() == "Darwin":
-            self.clipboardChanged(evenWhenFocused=True)
+            self.clipboardChanged()
         super().focusInEvent(event)
 
     def checkUpdates(self):
@@ -328,7 +328,7 @@ class DictionaryWindow(QMainWindow):
 
         self.config_button.clicked.connect(self.configure)
         self.toanki_button.clicked.connect(self.createNote)
-        self.read_button.clicked.connect(lambda: self.clipboardChanged(True))
+        self.read_button.clicked.connect(lambda: self.clipboardChanged())
 
         self.sentence.textChanged.connect(self.updateAnkiButtonState)
 
@@ -676,7 +676,7 @@ class DictionaryWindow(QMainWindow):
         )
         self.image_viewer.setPixmap(content)
 
-    def clipboardChanged(self, evenWhenFocused=False, selection=False):
+    def clipboardChanged(self, selection=False):
         """
         If the input is just a single word, we look it up right away.
         If it's a json and has the required fields, we use these fields to
@@ -699,14 +699,14 @@ class DictionaryWindow(QMainWindow):
 
         remove_spaces = self.settings.value("remove_spaces")
         lang = self.settings.value("target_language", "en")
-        if self.isActiveWindow() and not evenWhenFocused:
-            return
         if is_json(text):
             copyobj = json.loads(text)
             target = copyobj['word']
             target = re.sub('[\\?\\.!«»…()\\[\\]]*', "", target)
-            self.previousWord = target
             sentence = preprocess_clipboard(copyobj['sentence'], lang)
+            if self.isActiveWindow() and sentence == self.sentence.toPlainText().replace("_", ""):
+                return
+            self.previousWord = target
             self.setSentence(sentence)
             self.setWord(target)
             self.lookupSet(target)
