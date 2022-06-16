@@ -7,7 +7,7 @@ simplemma
 pystardict
 bidict
 flask
-sqlalchemy==1.4.31
+sqlalchemy
 flask-sqlalchemy
 charset-normalizer
 slpp
