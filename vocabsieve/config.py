@@ -8,7 +8,7 @@ from .dictmanager import *
 
 
 class SettingsDialog(QDialog):
-    def __init__(self, parent):
+    def __init__(self, parent, ):
         super().__init__(parent)
         self.settings = parent.settings
         self.parent = parent
@@ -56,7 +56,7 @@ class SettingsDialog(QDialog):
         self.reader_hlcolor.clicked.connect(self.save_color)
 
         self.word_field = QComboBox()
-        self.frequency_stars_field = QComboBox()
+        self.frequency_field = QComboBox()
         self.definition_field = QComboBox()
         self.definition2_field = QComboBox()
         self.pronunciation_field = QComboBox()
@@ -140,7 +140,14 @@ class SettingsDialog(QDialog):
 
         self.image_field = QComboBox()
 
-
+        self.freq_display_mode = QComboBox()
+        self.freq_display_mode.addItems([
+            "Stars",
+            "Rank"
+            #"Rank (LCD number)", # TODO implement these
+            #"Zipf scale (text field)",
+            #"Zipf scale (LCD number)"
+        ])
 
     def dictmanager(self):
         importer = DictManager(self)
@@ -266,9 +273,9 @@ class SettingsDialog(QDialog):
         self.tab_a.layout.addRow(
             QLabel('Field name for "Word"'),
             self.word_field)
-        self.tab_a.layout.addRow(
-            QLabel('Field name for "Frequency Stars"'),
-            self.frequency_stars_field)
+        #self.tab_a.layout.addRow(
+        #    QLabel('Field name for "Frequency Stars"'),
+        #    self.frequency_field)
         self.tab_a.layout.addRow(
             QLabel('Field name for "Definition"'),
             self.definition_field)
@@ -310,6 +317,7 @@ class SettingsDialog(QDialog):
             # Primary selection is only available on Linux
             self.tab_i.layout.addRow(self.primary)
         self.tab_i.layout.addRow(self.allow_editing)
+        self.tab_i.layout.addRow(QLabel("Frequency display mode"), self.freq_display_mode)
         self.tab_i.layout.addRow(QLabel("Interface layout orientation"), self.orientation)
         self.tab_i.layout.addRow(QLabel("Text scale"), self.text_scale_box)
         self.tab_i.layout.addRow(
@@ -392,7 +400,8 @@ class SettingsDialog(QDialog):
             self.collapse_newlines.setEnabled(True)
 
     def setupAutosave(self):
-        if self.settings.value("config_ver") is None:
+        if self.settings.value("config_ver") is None \
+            and self.settings.value("target_language") is not None:
             # if old config is copied to new location, nuke it
             self.settings.clear()
         self.settings.setValue("config_ver", 1)
@@ -404,7 +413,7 @@ class SettingsDialog(QDialog):
             'en',
             code_translate=True)
 
-        self.register_config_handler(self.check_updates, 'check_updates', True)
+        self.register_config_handler(self.check_updates, 'check_updates', False, True)
 
         self.register_config_handler(self.enable_anki, 'enable_anki', True)
         self.enable_anki.clicked.connect(self.toggle_anki_settings)
@@ -425,7 +434,7 @@ class SettingsDialog(QDialog):
             self.register_config_handler(
                 self.sentence_field, 'sentence_field', 'Sentence')
             self.register_config_handler(self.word_field, 'word_field', 'Word')
-            self.register_config_handler(self.frequency_stars_field, 'frequency_stars_field', 'Frequency Stars')
+            self.register_config_handler(self.frequency_field, 'frequency_field', 'Frequency Stars')
             self.register_config_handler(
                 self.definition_field, 'definition_field', 'Definition')
             self.register_config_handler(
@@ -486,7 +495,7 @@ class SettingsDialog(QDialog):
 
         self.register_config_handler(self.reader_font, "reader_font", "serif")
         self.register_config_handler(self.reader_fontsize, "reader_fontsize", 14)
-
+        self.register_config_handler(self.freq_display_mode, "freq_display", "Stars (like Migaku)")
         self.register_config_handler(self.allow_editing, 'allow_editing', True)
         self.register_config_handler(self.primary, 'primary', False)
         self.register_config_handler(
@@ -518,7 +527,7 @@ class SettingsDialog(QDialog):
         self.deck_name.setEnabled(value)
         self.sentence_field.setEnabled(value)
         self.word_field.setEnabled(value)
-        self.frequency_stars_field.setEnabled(value)
+        self.frequency_field.setEnabled(value)
         self.definition_field.setEnabled(value)
         self.definition2_field.setEnabled(value)
         self.pronunciation_field.setEnabled(value)
@@ -625,7 +634,7 @@ class SettingsDialog(QDialog):
         # Temporary store fields
         sent = self.sentence_field.currentText()
         word = self.word_field.currentText()
-        freq_stars = self.frequency_stars_field.currentText()
+        freq_stars = self.frequency_field.currentText()
         def1 = self.definition_field.currentText()
         def2 = self.definition2_field.currentText()
         pron = self.pronunciation_field.currentText()
@@ -634,7 +643,7 @@ class SettingsDialog(QDialog):
         # Block signals temporarily to avoid warning dialogs
         self.sentence_field.blockSignals(True)
         self.word_field.blockSignals(True)
-        self.frequency_stars_field.blockSignals(True)
+        self.frequency_field.blockSignals(True)
         self.definition_field.blockSignals(True)
         self.definition2_field.blockSignals(True)
         self.pronunciation_field.blockSignals(True)
@@ -646,9 +655,9 @@ class SettingsDialog(QDialog):
         self.word_field.clear()
         self.word_field.addItems(fields)
 
-        self.frequency_stars_field.clear()
-        self.frequency_stars_field.addItem("<disabled>")
-        self.frequency_stars_field.addItems(fields)
+        self.frequency_field.clear()
+        self.frequency_field.addItem("<disabled>")
+        self.frequency_field.addItems(fields)
 
         self.definition_field.clear()
         self.definition_field.addItems(fields)
@@ -667,7 +676,7 @@ class SettingsDialog(QDialog):
 
         self.sentence_field.setCurrentText(self.settings.value("sentence_field"))
         self.word_field.setCurrentText(self.settings.value("word_field"))
-        self.frequency_stars_field.setCurrentText(self.settings.value("frequency_stars_field"))
+        self.frequency_field.setCurrentText(self.settings.value("frequency_field"))
         self.definition_field.setCurrentText(self.settings.value("definition_field"))
         self.definition2_field.setCurrentText(self.settings.value("definition2_field"))
         self.pronunciation_field.setCurrentText(self.settings.value("pronunciation_field"))
@@ -677,8 +686,8 @@ class SettingsDialog(QDialog):
             self.sentence_field.setCurrentText(sent)
         if self.word_field.findText(word) != -1:
             self.word_field.setCurrentText(word)
-        if self.frequency_stars_field.findText(freq_stars) != -1:
-            self.frequency_stars_field.setCurrentText(freq_stars)
+        if self.frequency_field.findText(freq_stars) != -1:
+            self.frequency_field.setCurrentText(freq_stars)
         if self.definition_field.findText(def1) != -1:
             self.definition_field.setCurrentText(def1)
         if self.definition2_field.findText(def2) != -1:
@@ -690,7 +699,7 @@ class SettingsDialog(QDialog):
 
         self.sentence_field.blockSignals(False)
         self.word_field.blockSignals(False)
-        self.frequency_stars_field.blockSignals(False)
+        self.frequency_field.blockSignals(False)
         self.definition_field.blockSignals(False)
         self.definition2_field.blockSignals(False)
         self.pronunciation_field.blockSignals(False)
@@ -744,7 +753,8 @@ class SettingsDialog(QDialog):
             widget,
             key,
             default,
-            code_translate=False):
+            code_translate=False,
+            no_initial_update=False):
         name = widget.objectName()
         def update(v): return self.settings.setValue(key, v)
 
@@ -753,7 +763,8 @@ class SettingsDialog(QDialog):
         if type(widget) == QCheckBox:
             widget.setChecked(self.settings.value(key, default, type=bool))
             widget.clicked.connect(update)
-            update(widget.isChecked())
+            if not no_initial_update:
+                update(widget.isChecked())
         if type(widget) == QLineEdit:
             widget.setText(self.settings.value(key, default))
             widget.textChanged.connect(update)

@@ -92,17 +92,33 @@ def failed_lookup(word, settings) -> str:
 def is_oneword(s) -> bool:
     return len(s.split()) == 1
 
-def freq_to_stars(freq_num):
-    if freq_num <= 1000:
-        return "★★★★★"
-    elif freq_num <= 2500:
-        return "★★★★☆"
-    elif freq_num <= 5000:
-        return "★★★☆☆"
-    elif freq_num <= 10000:
-        return "★★☆☆☆"
+def freq_to_stars(freq_num, lemmatize):
+    if lemmatize:
+        if freq_num <= 1000:
+            return "★★★★★"
+        elif freq_num <= 3000:
+            return "★★★★☆"
+        elif freq_num <= 8000:
+            return "★★★☆☆"
+        elif freq_num <= 20000:
+            return "★★☆☆☆"
+        elif freq_num <= 40000:
+            return "★☆☆☆☆"
+        else:
+            return "☆☆☆☆☆"
     else:
-        return "★☆☆☆☆"
+        if freq_num <= 1500:
+            return "★★★★★"
+        elif freq_num <= 5000:
+            return "★★★★☆"
+        elif freq_num <= 15000:
+            return "★★★☆☆"
+        elif freq_num <= 30000:
+            return "★★☆☆☆"
+        elif freq_num <= 60000:
+            return "★☆☆☆☆"
+        else:
+            return "☆☆☆☆☆"
 
 def dictimport(path, dicttype, lang, name) -> None:
     "Import dictionary from file to database"
