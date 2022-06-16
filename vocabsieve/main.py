@@ -775,12 +775,12 @@ class DictionaryWindow(QMainWindow):
                 if freq_display == "Rank":
                     self.freq_display.setText(f'{str(freq)}/{str(max_freq)}')
                 elif freq_display == "Stars":
-                    self.freq_display.setText(freq_to_stars(freq, lemmatize))
+                    self.freq_display.setText(freq_to_stars(freq, lemfreq))
             else:
                 if freq_display == "Rank":
                     self.freq_display.setText('-1')
                 elif freq_display == "Stars":
-                    self.freq_display.setText(freq_to_stars(1e6, lemmatize))
+                    self.freq_display.setText(freq_to_stars(1e6, lemfreq))
         if record:
             self.status(
                 f"L: '{word}' in '{language}', lemma: {short_sign}, from {dictionaries.get(dictname, dictname)}")
