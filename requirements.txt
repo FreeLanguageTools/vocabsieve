@@ -1,6 +1,7 @@
 lxml
 PyQt5
 requests
+soupsieve==2.3.1
 beautifulsoup4
 simplemma
 pystardict
