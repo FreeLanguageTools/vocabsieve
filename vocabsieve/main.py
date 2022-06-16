@@ -88,6 +88,7 @@ class DictionaryWindow(QMainWindow):
         self.setCentralWidget(self.widget)
         self.previousWord = ""
         self.audio_path = ""
+        self.prev_clipboard = ""
         self.image_path = None 
         self.scaleFont()
         self.initWidgets()
@@ -120,7 +121,9 @@ class DictionaryWindow(QMainWindow):
 
     def focusInEvent(self, event):
         if platform.system() == "Darwin":
-            self.clipboardChanged(evenWhenFocused=True)
+            if self.prev_clipboard != QApplication.clipboard().text():
+                self.clipboardChanged(evenWhenFocused=True)
+            self.prev_clipboard = QApplication.clipboard().text()
         super().focusInEvent(event)
 
     def checkUpdates(self):
