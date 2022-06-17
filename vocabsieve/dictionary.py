@@ -16,7 +16,6 @@ from playsound import playsound
 from .forvo import *
 from .dictformats import removeprefix
 dictdb = LocalDictionary()
-langdata = simplemma.load_data('en')
 
 gtrans_languages = ['af', 'sq', 'am', 'ar', 'hy', 'az', 'eu', 'be', 'bn',
                     'bs', 'bg', 'ca', 'ceb', 'ny', 'zh', 'zh_HANT', 'co', 'hr', 'cs',
@@ -111,12 +110,7 @@ def lem_word(word, language):
     if language == 'ru' and PYMORPHY_SUPPORT:
         return morph.parse(word)[0].normal_form
     elif language in simplemma_languages:
-        global langdata
-        if langdata[0][0] != language:
-            langdata = simplemma.load_data(language)
-            return lem_word(word, language)
-        else:
-            return simplemma.lemmatize(word, langdata)
+        return simplemma.lemmatize(word, lang=language)
     else:
         return word
 
