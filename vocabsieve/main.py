@@ -386,7 +386,7 @@ class DictionaryWindow(QMainWindow):
             "CSV (*.csv)"
         )
         if path:
-            with open(path, 'w') as file:
+            with open(path, 'w', encoding='utf-8') as file:
                 writer = csv.writer(file)
                 writer.writerow(
                     ['timestamp', 'content', 'anki_export_success', 'sentence', 'word', 
@@ -410,7 +410,7 @@ class DictionaryWindow(QMainWindow):
             "CSV (*.csv)"
         )
         if path:
-            with open(path, 'w') as file:
+            with open(path, 'w', encoding='utf-8') as file:
                 writer = csv.writer(file)
                 writer.writerow(
                     ['timestamp', 'word', 'definition', 'language', 'lemmatize', 'dictionary', 'success']

@@ -281,6 +281,7 @@ def play_audio(name: str, data: dict, lang: str):
         return
     if audiopath.startswith("https://"):
         fpath = os.path.join(forvopath, lang, name) + audiopath[-4:]
+        fpath = fpath.encode(sys.getfilesystemencoding())
         if not os.path.exists(fpath):
             res = requests.get(audiopath, headers=HEADERS)
             if res.status_code == 200:
@@ -292,6 +293,7 @@ def play_audio(name: str, data: dict, lang: str):
         playsound(os.path.abspath(fpath))
         return fpath
     else:
+        audiopath = audiopath.encode( sys.getfilesystemencoding() )
         playsound(os.path.abspath(audiopath))
         return audiopath
 
