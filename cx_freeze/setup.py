@@ -21,7 +21,6 @@ build_exe_options = {
         "pystardict",
         "flask",
         "pymorphy2",
-        "playsound",
         "flask_sqlalchemy",
         "jinja2.ext",
         "sqlalchemy",

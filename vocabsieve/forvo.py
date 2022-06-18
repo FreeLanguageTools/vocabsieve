@@ -2,7 +2,6 @@ from __future__ import annotations
 from bs4 import BeautifulSoup
 from typing import List, Dict
 import requests
-from playsound import PlaysoundException, playsound
 from os import path
 import os
 import re
