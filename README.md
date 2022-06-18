@@ -10,18 +10,17 @@ VocabSieve (formerly Simple Sentence Mining, `ssmtool`) is a program for sentenc
 ![Demo](https://i.postimg.cc/vTc8dcZ0/out.gif?)
 
 ## Features
-- Double-click lookups from copied sentences and even faster lookups from integrated applications
-- Lemmatization of words on lookup
-- No internet is required at all if you use downloaded resources
-- Online and local dictionaries in multiple formats (StarDict, Migaku, plain JSON)
-- Frequency lists and pronunciations
-- Web reader for ebooks and long articles (epub, fb2, plaintext), allowing one-click lookup
-- Kindle highlights to Anki sentence cards (KOReader support is planned)
-
-For a detailed list of features and language support data, please consult the [wiki page](https://wiki.freelanguagetools.org/vocabsieve_setup).
+- Quick word lookups: Getting definition, pronunciation, and frequency within one or two keypresses/clicks
+- Wide language support: supports all languages listed on Google Translate, though it is currently optimized for European languages
+- Lemmatization: automatically remove inflections to enhance dictionary experience ("books" -> "book", "ran" -> "run")
+- Local first: No internet is required if you use downloaded resources
+- Sane defaults: Little configuration is needed other than settings for Anki. It comes with two dictionary sources by default for most languages and one pronunciation source that should cover most needs.
+- Local resource support: Dictionaries in StarDict, Migaku, plain JSON, MDX, Lingvo (.dsl), CSV, frequency lists, and audio libraries
+- Web reader: Read epub and fb2 books or plain articles with one-click word lookups and Anki export.
+- eReader integration: Batch-import [KOReader](https://github.com/koreader/koreader) and Kindle highlights to Anki sentence cards
 
 ## Tutorials
-[wiki page](https://wiki.freelanguagetools.org/vocabsieve_setup)
+[Wiki page](https://wiki.freelanguagetools.org/vocabsieve_setup)
 (The text originally on this document or the blog post has since been moved there, with some updates)
 
 [New video tutorial](https://www.youtube.com/watch?v=EHW-kBLmuHU)
@@ -62,6 +61,8 @@ Alternatively, you can also install a live version to your python package librar
 For debugging purposes, set the environmental variable `VOCABSIEVE_DEBUG` to any value. This will create a separate profile (settings and databases for records and dictionaries) so you may perform tests without affecting your normal profile. For each different value of `VOCABSIEVE_DEBUG`, a separate profile is generated. This can be any number or string.
 
 Note that VocabSieve is unable to delete old profiles. You must do so yourself based on your operating system's locations.  
+
+Pull requests are welcome! If you want to implement a significant feature, be sure to first ask by creating an issue so that no effort is wasting on doing the same work twice.
 
 ## API documentation
 If you want to leverage VocabSieve to build your own plugins/apps, you can refer to the [API Documentation](API.md)
