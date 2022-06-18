@@ -12,10 +12,10 @@ VocabSieve (formerly Simple Sentence Mining, `ssmtool`) is a program for sentenc
 ## Features
 - Quick word lookups: Getting definition, pronunciation, and frequency within one or two keypresses/clicks
 - Wide language support: supports all languages listed on Google Translate, though it is currently optimized for European languages
-- Lemmatization: automatically remove inflections to enhance dictionary experience ("books" -> "book", "ran" -> "run")
+- Lemmatization: automatically remove inflections to enhance dictionary experience ("books" -> `book`, `ran` -> `run`)
 - Local first: No internet is required if you use downloaded resources
 - Sane defaults: Little configuration is needed other than settings for Anki. It comes with two dictionary sources by default for most languages and one pronunciation source that should cover most needs.
-- Local resource support: Dictionaries in StarDict, Migaku, plain JSON, MDX, Lingvo (.dsl), CSV, frequency lists, and audio libraries
+- Local resource support: Dictionaries in StarDict, Migaku, plain JSON, MDX, Lingvo (.dsl), CSV; frequency lists; and audio libraries
 - Web reader: Read epub and fb2 books or plain articles with one-click word lookups and Anki export.
 - eReader integration: Batch-import [KOReader](https://github.com/koreader/koreader) and Kindle highlights to Anki sentence cards
 
