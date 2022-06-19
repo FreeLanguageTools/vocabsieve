@@ -7,7 +7,7 @@ Join our chat on [Matrix](https://webchat.kde.org/#/room/#flt:midov.pl) or [Tele
 
 VocabSieve (formerly Simple Sentence Mining, `ssmtool`) is a program for sentence mining, in which sentences with target vocabulary words are collected and added into a spaced repetition system (SRS, e.g. Anki) for language learning.
 
-![Demo](https://i.postimg.cc/vTc8dcZ0/out.gif?)
+[![out.gif](https://i.postimg.cc/vm7frv7p/out.gif)](https://postimg.cc/xkCXYM4R)
 
 ## Features
 - **Quick word lookups**: Getting definition, pronunciation, and frequency within one or two keypresses/clicks
