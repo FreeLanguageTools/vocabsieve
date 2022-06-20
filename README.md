@@ -5,7 +5,7 @@
 
 Join our chat on [Matrix](https://webchat.kde.org/#/room/#flt:midov.pl) or [Telegram](https://t.me/fltchat)
 
-VocabSieve (formerly Simple Sentence Mining, `ssmtool`) is a program for sentence mining, in which sentences with target vocabulary words are collected and added into a spaced repetition system (SRS, e.g. Anki) for language learning.
+VocabSieve (formerly Simple Sentence Mining, `ssmtool`) is a program for sentence mining, in which sentences with target vocabulary words are collected and added into a spaced repetition system (SRS, e.g. Anki) for language learning. It is meant to help intermediate learners gain vocabulary efficiently by allowing card creation without interruption the flow of content immersion.
 
 [![out.gif](https://i.postimg.cc/vm7frv7p/out.gif)](https://postimg.cc/xkCXYM4R)
 
@@ -13,7 +13,7 @@ VocabSieve (formerly Simple Sentence Mining, `ssmtool`) is a program for sentenc
 - **Quick word lookups**: Getting definition, pronunciation, and frequency within one or two keypresses/clicks
 - **Wide language support**: supports all languages listed on Google Translate, though it is currently optimized for European languages
 - **Lemmatization**: automatically remove inflections to enhance dictionary experience (`books` -> `book`, `ran` -> `run`)
-- **Local first**: No internet is required if you use downloaded resources
+- **Local-first**: No internet is required if you use downloaded resources. Without a central server, there is also no subscription fees I need to take from you to keep it running. 
 - **Sane defaults**: Little configuration is needed other than settings for Anki. It comes with two dictionary sources by default for most languages and one pronunciation source that should cover most needs.
 - **Local resource support**: Dictionaries in StarDict, Migaku, plain JSON, MDX, Lingvo (.dsl), CSV; frequency lists; and audio libraries
 - **Web reader**: Read epub and fb2 books or plain articles with one-click word lookups and Anki export.
@@ -30,6 +30,9 @@ VocabSieve (formerly Simple Sentence Mining, `ssmtool`) is a program for sentenc
 
 ## Linux distro packages
 [![Packaging status](https://repology.org/badge/vertical-allrepos/vocabsieve.svg)](https://repology.org/project/vocabsieve/versions)
+
+<details>
+  <summary>Click to show distro-specific installation instructions</summary>
 
 ### Gentoo
 
@@ -52,7 +55,8 @@ At this time, there are no packages for other distributions. If you are able to 
 In the meantime, users should simply use `pip3` to install VocabSieve: `pip3 install --user vocabsieve`.
 
 This should install an executable and a desktop icon and behave like any other GUI application you may have.
-
+</details>
+  
 ## Development
 To run from source, simply use `pip3 -r requirements.txt` and then `python3 vocabsieve.py`.
 
