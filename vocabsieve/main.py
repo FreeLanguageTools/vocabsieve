@@ -193,7 +193,7 @@ class DictionaryWindow(QMainWindow):
         self.tags.setPlaceholderText(
             "Type in a list of tags to be used, separated by spaces (same as in Anki).")
         self.sentence.setToolTip(
-            "You can look up any word in this box by double clicking it, or alternatively by selecting it"
+            "Look up a word by double clicking it. Or, select it"
             ", then press \"Get definition\".")
 
         self.lookup_button = QPushButton(f"Define [{MOD}-D]")
@@ -244,9 +244,9 @@ class DictionaryWindow(QMainWindow):
                     True,
                     type=bool)))
         self.definition.setPlaceholderText(
-            'You can look up any word in the "Sentence" box by double clicking it, or alternatively by selecting it, then press "Get definition".')
+            'Look up a word by double clicking it. Or, select it, then press "Get definition".')
         self.definition2.setPlaceholderText(
-            'You can look up any word in the "Sentence" box by double clicking it, or alternatively by selecting it, then press "Get definition".')
+            'Look up a word by double clicking it. Or, select it, then press "Get definition".')
 
         self.image_viewer = QLabel("<center><b>&lt;No image selected&gt;</center>")
         self.image_viewer.setScaledContents(True)
@@ -494,8 +494,8 @@ class DictionaryWindow(QMainWindow):
                     "Could not reach AnkiConnect",
                     "<h2>Could not reach AnkiConnect</h2>"
                     "AnkiConnect is required for changing Anki-related settings."
-                    "<br>Choose 'Ignore' to not change Anki settings this time"
-                    "<br>Choose 'Abort' to not open the configuration window"
+                    "<br>Choose 'Ignore' to not change Anki settings this time."
+                    "<br>Choose 'Abort' to not open the configuration window."
                     "<br><br>If you have AnkiConnect listening to a non-default port or address, "
                     "select 'Ignore and change the Anki API option on the Anki tab, and "
                     "reopen the configuration window."
