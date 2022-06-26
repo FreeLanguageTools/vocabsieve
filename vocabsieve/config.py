@@ -292,7 +292,7 @@ class SettingsDialog(QDialog):
 
         self.tab_n.layout.addRow(QLabel(
             '<h3>Network settings</h3>'
-            '◊ All settings on this tab requires restart to take effect.'
+            '◊ All settings on this tab require a restart to take effect.'
             '<br>◊ Most users should not need to change these settings.</i>'
         ))
         self.tab_n.layout.addRow(self.check_updates)
@@ -312,7 +312,7 @@ class SettingsDialog(QDialog):
             QLabel("<h3>Interface settings</h3>")
         )
         self.tab_i.layout.addRow(
-            QLabel("<h4>These settings requires restart to take effect</h4>"))
+            QLabel("<h4>These settings require a restart to take effect.</h4>"))
         if platform.system() == "Linux":
             # Primary selection is only available on Linux
             self.tab_i.layout.addRow(self.primary)
@@ -321,7 +321,7 @@ class SettingsDialog(QDialog):
         self.tab_i.layout.addRow(QLabel("Interface layout orientation"), self.orientation)
         self.tab_i.layout.addRow(QLabel("Text scale"), self.text_scale_box)
         self.tab_i.layout.addRow(
-            QLabel("<h4>These settings requires page refresh to take effect</h4>"))
+            QLabel("<h4>These settings require a page refresh to take effect.</h4>"))
         self.tab_i.layout.addRow(QLabel("Reader font"), self.reader_font)
         self.tab_i.layout.addRow(QLabel("Reader font size"), self.reader_fontsize)
         self.tab_i.layout.addRow(QLabel("Reader highlight color"), self.reader_hlcolor)
@@ -713,7 +713,7 @@ class SettingsDialog(QDialog):
         msg.setInformativeText(
             str(error) + "\nAnkiConnect must be running to set Anki-related options."
             "\nIf you have AnkiConnect set up at a different endpoint, set that now "
-            "and reopen the config tool")
+            "and reopen the config tool.")
         msg.exec()
 
     def changeMainLayout(self):
