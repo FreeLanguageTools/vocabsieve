@@ -37,7 +37,7 @@ class DictManager(QDialog):
         self.rebuild = QPushButton("Rebuild dictionary database")
         self.rebuild.setToolTip("""\
 This will regenerate the database containing dictionary entries.
-This program store all dictionary entries into a single database in order to
+This program stores all dictionary entries in a single database to
 improve performance during lookups. The files must be in their original location
 to be reimported, otherwise this operation will fail.\
         """)
@@ -198,7 +198,7 @@ class AddDictDialog(QDialog):
         self.layout.addRow(self.commit_button)
 
     def commit(self):
-        "Make sure there are no name conflicts, then add dictionary"
+        "Give it a name, then add dictionary"
         name = self.name.text()
         dicts = json.loads(self.settings.value("custom_dicts", '[]'))
         lang = langcodes.inverse[self.lang.currentText()]
