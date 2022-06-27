@@ -5,23 +5,23 @@
 
 Join our chat on [Matrix](https://webchat.kde.org/#/room/#flt:midov.pl) or [Telegram](https://t.me/fltchat)
 
-VocabSieve (formerly Simple Sentence Mining, `ssmtool`) is a program for sentence mining, in which sentences with target vocabulary words are collected and added into a spaced repetition system (SRS, e.g. Anki) for language learning. It is meant to help intermediate learners gain vocabulary efficiently by allowing card creation without interruption the flow of content immersion.
+VocabSieve (formerly Simple Sentence Mining, `ssmtool`) is a program for sentence mining, in which sentences with target vocabulary words are collected and added into a spaced repetition system (SRS, e.g. Anki) for language learning. It is meant to help intermediate learners gain vocabulary efficiently by allowing card creation without interrupting the flow of content immersion.
 
 [![out.gif](https://i.postimg.cc/vm7frv7p/out.gif)](https://postimg.cc/xkCXYM4R)
 
 ## Features
-- **Quick word lookups**: Getting definition, pronunciation, and frequency within one or two keypresses/clicks
-- **Wide language support**: supports all languages listed on Google Translate, though it is currently optimized for European languages
-- **Lemmatization**: automatically remove inflections to enhance dictionary experience (`books` -> `book`, `ran` -> `run`)
-- **Local-first**: No internet is required if you use downloaded resources. Without a central server, there is also no subscription fees I need to take from you to keep it running. 
+- **Quick word lookups**: Getting definition, pronunciation, and frequency within one or two keypresses/clicks.
+- **Wide language support**: Supports all languages listed on Google Translate, though it is currently optimized for European languages.
+- **Lemmatization**: Automatically remove inflections to enhance dictionary experience (`books` -> `book`, `ran` -> `run`)
+- **Local-first**: No internet is required if you use downloaded resources. VocabSieve has no central server, so there are no fees to keep it running. 
 - **Sane defaults**: Little configuration is needed other than settings for Anki. It comes with two dictionary sources by default for most languages and one pronunciation source that should cover most needs.
-- **Local resource support**: Dictionaries in StarDict, Migaku, plain JSON, MDX, Lingvo (.dsl), CSV; frequency lists; and audio libraries
-- **Web reader**: Read epub and fb2 books or plain articles with one-click word lookups and Anki export.
-- **eReader integration**: Batch-import [KOReader](https://github.com/koreader/koreader) and Kindle highlights to Anki sentence cards
+- **Local resource support**: Dictionaries in StarDict, Migaku, plain JSON, MDX, Lingvo (.dsl), CSV; frequency lists; and audio libraries.
+- **Web reader**: Read epub, fb2 books, or plain articles with one-click word lookups and Anki export.
+- **eReader integration**: Batch-import [KOReader](https://github.com/koreader/koreader) and Kindle highlights to Anki sentence cards.
 
 ## Tutorials
 [Wiki page](https://wiki.freelanguagetools.org/vocabsieve_setup)
-(The text originally on this document or the blog post has since been moved there, with some updates)
+(The text originally on this document or the blog post has since been moved there, with some updates.)
 
 [New video tutorial](https://www.youtube.com/watch?v=EHW-kBLmuHU)
 
@@ -36,7 +36,7 @@ VocabSieve (formerly Simple Sentence Mining, `ssmtool`) is a program for sentenc
 
 ### Gentoo
 
-First, you need to add the ::guru overlay. Skip this section if you already had done so.
+First, you need to add the ::guru overlay. Skip this section if you have already done so.
 ```
 # eselect repository enable guru
 # emaint -r guru sync
@@ -46,7 +46,7 @@ Install the package:
 
 ### Arch
 
-Use your favorite AUR helper (or manually) to install the pacakge `vocabsieve`
+Use your favorite AUR helper (or manually) to install the pacakge `vocabsieve`.
 
 ### Other distros
 
@@ -69,7 +69,7 @@ Note that VocabSieve is unable to delete old profiles. You must do so yourself b
 Pull requests are welcome! If you want to implement a significant feature, be sure to first ask by creating an issue so that no effort is wasting on doing the same work twice.
 
 ## API documentation
-If you want to leverage VocabSieve to build your own plugins/apps, you can refer to the [API Documentation](API.md)
+If you want to leverage VocabSieve to build your own plugins/apps, you can refer to the [API Documentation](API.md).
 
 Note that VocabSieve is still alpha software. API is not guaranteed to be stable at this point.
 
