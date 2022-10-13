@@ -33,6 +33,11 @@ class SettingsDialog(QDialog):
         self.lemmatization.setToolTip(
             "Lemmatization means to get the original form of words." +
             "\nFor example, 'books' will be converted to 'book' during lookup if this option is set.")
+        self.lem_greedily = QCheckBox(
+            "Lemmatize words greedily")
+        self.lem_greedily.setToolTip(
+            "Try a bit harder to lemmatize words. In Spanish for example, this results "
+            "\nin the successful lemmatization 'conocer' of 'conocerlo'.")
         self.lemfreq = QCheckBox("Lemmatize before looking up frequency")
         self.lemfreq.setToolTip(
             "Lemmatize words before trying to find them in the frequency list." +
@@ -235,6 +240,7 @@ class SettingsDialog(QDialog):
         self.display_mode.addItems(["Raw", "Plaintext", "Markdown", "HTML", "Markdown-HTML"])
         self.tab_d.layout.addRow(QLabel("<h3>Dictionary sources</h3>"))
         self.tab_d.layout.addRow(self.lemmatization)
+        self.tab_d.layout.addRow(self.lem_greedily)
         self.tab_d.layout.addRow(self.lemfreq)
         self.tab_d.layout.addRow(self.bold_word)
         self.tab_d.layout.addRow(
@@ -457,6 +463,7 @@ class SettingsDialog(QDialog):
         self.api_enabled.clicked.connect(self.setAvailable)
         self.reader_enabled.clicked.connect(self.setAvailable)
         self.register_config_handler(self.lemmatization, 'lemmatization', True)
+        self.register_config_handler(self.lem_greedily, 'lem_greedily', False)
         self.register_config_handler(self.lemfreq, 'lemfreq', True)
         self.register_config_handler(self.bold_word, 'bold_word', True)
 

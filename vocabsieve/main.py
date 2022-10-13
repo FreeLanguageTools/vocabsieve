@@ -39,7 +39,6 @@ if platform.system() == "Darwin":
 else:
     MOD = "Ctrl"
 
-
 @functools.lru_cache()
 class GlobalObject(QObject):
     """
@@ -742,6 +741,7 @@ class DictionaryWindow(QMainWindow):
         TL = self.settings.value("target_language", "en")
         lemmatize = use_lemmatize and self.settings.value(
             "lemmatization", True, type=bool)
+        lem_greedily = self.settings.value("lem_greedily", False, type=bool)
         lemfreq = self.settings.value("lemfreq", True, type=bool)
         short_sign = "Y" if lemmatize else "N"
         language = TL  # This is in two letter code
@@ -776,6 +776,7 @@ class DictionaryWindow(QMainWindow):
                 word,
                 language,
                 lemmatize,
+                lem_greedily,
                 dictname,
                 gtrans_lang,
                 self.settings.value("gtrans_api", "https://lingva.ml"))
@@ -802,7 +803,13 @@ class DictionaryWindow(QMainWindow):
         if dict2name == "<disabled>":
             return item
         try:
-            item2 = lookupin(word, language, lemmatize, dict2name, gtrans_lang)
+            item2 = lookupin(
+                word,
+                language,
+                lemmatize,
+                lem_greedily,
+                dict2name,
+                gtrans_lang)
             if record:
                 self.rec.recordLookup(
                     word,

@@ -104,18 +104,18 @@ def fmt_result(definitions):
     return "<br>".join(lines)
 
 
-def lem_word(word, language):
+def lem_word(word, language, greedy=False):
     """Lemmatize a word. We will use PyMorphy for RU, simplemma for others,
     and if that isn't supported , we give up."""
     if language == 'ru' and PYMORPHY_SUPPORT:
         return morph.parse(word)[0].normal_form
     elif language in simplemma_languages:
-        return simplemma.lemmatize(word, lang=language)
+        return simplemma.lemmatize(word, lang=language, greedy=greedy)
     else:
         return word
 
 
-def wiktionary(word, language, lemmatize=True) -> Optional[dict]:
+def wiktionary(word, language) -> Optional[dict]:
     "Get definitions from Wiktionary"
     try:
         res = requests.get(
@@ -203,6 +203,7 @@ def lookupin(
         word,
         language,
         lemmatize=True,
+        greedy_lemmatize=False,
         dictionary="Wiktionary (English)",
         gtrans_lang="en",
         gtrans_api="https://lingva.ml"):
@@ -212,14 +213,14 @@ def lookupin(
     if language == 'ru':
         word = removeAccents(word)
     if lemmatize:
-        word = lem_word(word, language)
+        word = lem_word(word, language, greedy_lemmatize)
     # The lemmatizer would always turn words lowercase, which can cause
     # lookups to fail if not recovered.
     candidates = [word, word.capitalize()] if IS_UPPER else [word]
     for word in candidates:
         try:
             if dictionary == "Wiktionary (English)":
-                item = wiktionary(word, language, lemmatize)
+                item = wiktionary(word, language)
                 item['definition'] = fmt_result(item['definition'])
                 return item
             elif dictionary == "Google Translate":
