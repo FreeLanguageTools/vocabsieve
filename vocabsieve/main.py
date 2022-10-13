@@ -4,22 +4,17 @@ from PyQt5.QtGui import *
 from PyQt5.Qt import QDesktopServices, QUrl
 from PyQt5.QtCore import *
 from typing import Optional
+from . import __version__
+from .app_text import *
 
-DEBUGGING = None
-if os.environ.get("VOCABSIEVE_DEBUG"):
-    DEBUGGING = True
-    QCoreApplication.setApplicationName(
-        "VocabSieve" + os.environ.get("VOCABSIEVE_DEBUG", ""))
-else:
-    QCoreApplication.setApplicationName("VocabSieve")
-QCoreApplication.setOrganizationName("FreeLanguageTools")
+QCoreApplication.setApplicationName(app_title(True))
+QCoreApplication.setOrganizationName(app_organization)
 
 from .config import *
 from .tools import *
 from .db import *
 from .dictionary import *
 from .api import LanguageServer
-from . import __version__
 from .ext.reader import ReaderServer
 from .ext.importer import KindleImporter, KoreaderImporter
 import sys
@@ -80,7 +75,7 @@ class MyTextEdit(QTextEdit):
 class DictionaryWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("VocabSieve" + os.environ.get("VOCABSIEVE_DEBUG", ""))
+        self.setWindowTitle(app_title(True))
         self.setFocusPolicy(Qt.StrongFocus)
         self.widget = QWidget()
         self.settings = QSettings()
@@ -165,16 +160,8 @@ class DictionaryWindow(QMainWindow):
             pass
 
     def initWidgets(self):
-        if os.environ.get("VOCABSIEVE_DEBUG"):
-            self.namelabel = QLabel(
-                "<h2 style=\"font-weight: normal;\">VocabSieve"
-                " (debug=" + os.environ.get("VOCABSIEVE_DEBUG", "")
-                + ")</h2>")
-        else:
-            self.namelabel = QLabel(
-                "<h2 style=\"font-weight: normal;\">VocabSieve v" +
-                __version__ +
-                "</h2>")
+        self.namelabel = QLabel(
+            "<h2 style=\"font-weight: normal;\">" + app_title(False) + "</h2>")
         self.menu = QMenuBar(self)
         self.sentence = MyTextEdit()
         self.sentence.setPlaceholderText(
