@@ -17,6 +17,7 @@ from .dictionary import *
 from .api import LanguageServer
 from .ext.reader import ReaderServer
 from .ext.importer import KindleImporter, KoreaderImporter
+from .text_manipulation import *
 import sys
 import importlib
 import functools
@@ -705,11 +706,18 @@ class DictionaryWindow(QMainWindow):
             self.setSentence(preprocess_clipboard(text, lang))
 
     def lookupSet(self, word, use_lemmatize=True):
+        # Bold text
         sentence_text = self.sentence.toPlainText()
         if self.settings.value("bold_word", True, type=bool):
-            sentence_text = sentence_text.replace(
-                "_", "").replace(word, f"__{word}__")
+            without_bold = remove_bold(sentence_text)
+            sentence_text = bold_word_in_text(
+                word, 
+                without_bold, 
+                self.getLanguage(), 
+                use_lemmatize, 
+                self.getLemGreedy())
         self.sentence.setText(sentence_text)
+
         QCoreApplication.processEvents()
         result = self.lookup(word, use_lemmatize)
         self.setState(result)
@@ -733,18 +741,23 @@ class DictionaryWindow(QMainWindow):
                     self.audio_selector.item(0)
                 )
 
+    def getLanguage(self):
+        return self.settings.value("target_language", "en")
+    def getLemGreedy(self):
+        return self.settings.value("lem_greedily", False, type=bool)
+
     def lookup(self, word, use_lemmatize=True, record=True):
         """
         Look up a word and return a dict with the lemmatized form (if enabled)
         and definition
         """
-        TL = self.settings.value("target_language", "en")
         lemmatize = use_lemmatize and self.settings.value(
             "lemmatization", True, type=bool)
-        lem_greedily = self.settings.value("lem_greedily", False, type=bool)
+        lem_greedily = self.getLemGreedy()
         lemfreq = self.settings.value("lemfreq", True, type=bool)
         short_sign = "Y" if lemmatize else "N"
-        language = TL  # This is in two letter code
+        language = self.getLanguage()
+        TL = language  # Handy synonym
         gtrans_lang = self.settings.value("gtrans_lang", "en")
         dictname = self.settings.value("dict_source", "Wiktionary (English)")
         freqname = self.settings.value("freq_source", "<disabled>")
@@ -834,7 +847,7 @@ class DictionaryWindow(QMainWindow):
         sentence = self.sentence.toPlainText().replace("\n", "<br>")
         if self.settings.value("bold_word", True, type=bool):
             sentence = re.sub(
-                r"__([ \w]+)__",
+                re_bolded,
                 r"<strong>\1</strong>",
                 sentence)
         if self.settings.value("remove_spaces", False, type=bool):
