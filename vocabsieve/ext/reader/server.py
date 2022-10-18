@@ -24,31 +24,37 @@ Path(datapath).mkdir(parents=True, exist_ok=True)
 UPLOAD_FOLDER = os.path.join(datapath, "uploads")
 Path(UPLOAD_FOLDER).mkdir(parents=True, exist_ok=True)
 
-app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['SECRET_KEY'] = "abc"
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{datapath}/reader.db"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+
+def create_flaskapp():
+    app = Flask(__name__)
+    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+    app.config['SECRET_KEY'] = "abc"
+    app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{datapath}/reader.db"
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    return app
+
+app = create_flaskapp()
 
 
-class Text(db.Model):  # type: ignore[name-defined]
-    added = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    last = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    id = db.Column(db.Integer, primary_key=True)
-    archived = db.Column(db.Boolean, nullable=False, default=False)
-    title = db.Column(db.String(180), nullable=False)
-    author = db.Column(db.String(180))
-    content = db.Column(db.Text, nullable=False)
-    progress = db.Column(db.Integer, nullable=False, default=0)
-    length = db.Column(db.Integer, nullable=False)
+with app.app_context():
+    db = SQLAlchemy(app)
 
-    def __repr__(self):
-        return f"Text(ID={self.id}, Title={self.title})"
+    class Text(db.Model):  # type: ignore[name-defined]
+        added = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+        last = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+        id = db.Column(db.Integer, primary_key=True)
+        archived = db.Column(db.Boolean, nullable=False, default=False)
+        title = db.Column(db.String(180), nullable=False)
+        author = db.Column(db.String(180))
+        content = db.Column(db.Text, nullable=False)
+        progress = db.Column(db.Integer, nullable=False, default=0)
+        length = db.Column(db.Integer, nullable=False)
 
+        def __repr__(self):
+            return f"Text(ID={self.id}, Title={self.title})"
 
-db.create_all()
-
+    db.create_all()
 
 class ReaderServer(QObject):
     def __init__(self, parent, host, port):
