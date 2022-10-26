@@ -589,7 +589,7 @@ class DictionaryWindow(QMainWindow):
         display_mode1 = self.settings.value(
             self.settings.value("dict_source", "Wiktionary (English)")
             + "/display_mode",
-            "Markdown-HTML"
+            "Markdown"
         )
         skip_top1 = self.settings.value(
             self.settings.value("dict_source", "Wiktionary (English)")
@@ -625,7 +625,7 @@ class DictionaryWindow(QMainWindow):
             display_mode2 = self.settings.value(
                 self.settings.value("dict_source2", "Wiktionary (English)")
                 + "/display_mode",
-                "Markdown-HTML"
+                "Markdown"
             )
             skip_top2 = self.settings.value(
                 self.settings.value("dict_source2", "Wiktionary (English)")
@@ -859,9 +859,9 @@ class DictionaryWindow(QMainWindow):
         definition = self.process_defi_anki(
             self.definition,
             self.settings.value(
-                self.settings.value("dict_source1", "Wiktionary (English)")
+                self.settings.value("dict_source", "Wiktionary (English)")
                 + "/display_mode",
-                "Markdown-HTML"
+                "Markdown"
             )
         )
         content['fields'][self.settings.value('definition_field')] = definition
@@ -879,7 +879,7 @@ class DictionaryWindow(QMainWindow):
                     self.settings.value(
                         self.settings.value("dict_source2", "Wiktionary (English)")
                         + "/display_mode",
-                        "Markdown-HTML"
+                        "Markdown"
                     )
                 )
                 content['fields'][self.settings.value(
@@ -968,11 +968,13 @@ class DictionaryWindow(QMainWindow):
 
     def process_defi_anki(self, w: MyTextEdit, display_mode):
         "Process definitions before sending to Anki"
+        print("display mode is", display_mode)
         if display_mode in ["Raw", "Plaintext"]:
-            return w.toPlainText()
+            return w.toPlainText().replace("\n", "<br>") # Anki needs <br>s
         elif display_mode == "Markdown":
             return markdown_nop(w.toPlainText())
-        elif display_mode == "Markdown-HTML":
+        elif display_mode == "Markdown":
+            print(w.toMarkdown())
             return markdown_nop(w.toMarkdown())
         elif display_mode == "HTML":
             return w.original

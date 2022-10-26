@@ -327,6 +327,7 @@ def is_html(s: str) -> bool:
 
 def skip_lines(entry: str, number: int) -> str:
     if is_html(entry):
+        print("this is html")
         # Try to replace all the weird <br> tags with the standard one
         entry = entry.replace("<BR>", "<br>")\
                      .replace("<br/>", "<br>")\
@@ -350,7 +351,14 @@ def collapse_newlines(entry: str, number: int) -> str:
 
 
 def markdown_nop(s: str) -> str:
+    print(removeprefix(
+        markdown(s.replace("\n", "\n\n").replace(".", "\.")).\
+                   replace("<p>", "<br>").\
+                   replace("</p>", ""),
+        "<br>"))
     return removeprefix(
-        markdown(s).replace("<p>", "<br>").replace("</p>", ""),
+        markdown(s.replace("\n", "\n\n").replace(".", "\.")).\
+                   replace("<p>", "<br>").\
+                   replace("</p>", ""),
         "<br>"
     )

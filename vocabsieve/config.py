@@ -378,7 +378,7 @@ class SettingsDialog(QDialog):
             pass
         # Reestablish config handlers
         self.register_config_handler(self.display_mode,
-                                     f"{curr_dict}/" + "display_mode", "Markdown-HTML")
+                                     f"{curr_dict}/" + "display_mode", "Markdown")
         self.display_mode.currentTextChanged.connect(
             self.deactivateProcessing
         )
