@@ -58,17 +58,13 @@ class Forvo:
                 lang.attrs["id"])[0] == self.language][0]
         pronunciations_els = lang_container.find_all(class_="pronunciations")
         pronunciation_items = pronunciations_els[0].find_all(
-            class_="show-all-pronunciations")[0].find_all("li")
-        word = self.url.rsplit('/', 2)[-2]
-        headword_el = pronunciation_items[0].find_all('span')[0]
-        headword = re.findall(
-            "(.*)pronunciation$",
-            headword_el.contents[0],
-            re.S)[0].strip().replace(
-            "/",
-            "[SLASH]")
-        if not headword:
-            headword = '--ERROR--'
+            class_="pronunciations-list")[0].find_all("li")
+        
+        word = self.url.rsplit('/', 2)[-1]
+        headword_el = pronunciations_els[0].find_all('em')[0]
+        headword = headword_el.find_all(text=True)[0].text
+        headword = " ".join(headword.split()[:-2])
+
         for pronunciation_item in pronunciation_items:
             if len(pronunciation_item.find_all(class_="more")) == 0:
                 continue
@@ -102,21 +98,21 @@ class Forvo:
                 pronunciation_dl = pronunciation_dls[0]
                 dl_url = "https://audio00.forvo.com/audios/mp3/" + \
                     str(base64.b64decode(pronunciation_dl), "utf-8")
-            data_id = int(
-                pronunciation_item.find_all(
-                    class_="more")[0].find_all(
-                    class_="main_actions")[0].find_all(
-                    class_="share")[0].attrs["data-id"])
+            #data_id = int(
+            #    pronunciation_item.find_all(
+            #        class_="more")[0].find_all(
+            #        class_="main_actions")[0].find_all(
+            #        class_="share")[0].attrs["data-id"])
             username = pronunciation_item.find_all(
-                class_="ofLink", recursive=False)
+                class_="info", recursive=False)[0].find_all(
+                    class_="ofLink")
             if len(username) == 0:
-                username = re.findall(
+                origin = re.findall(
                     "Pronunciation by(.*)",
                     pronunciation_item.contents[2],
                     re.S)[0].strip()
             else:
-                username = username[0].contents[0]
-            origin = username
+                origin = username[0].contents[0]
             pronunciation_object = Pronunciation(self.language,
                                                  headword,
                                                  word,
@@ -124,7 +120,7 @@ class Forvo:
                                                  origin,
                                                  dl_url,
                                                  is_ogg,
-                                                 data_id,
+                                                 -1, #data_id, can't obtain anymore
                                                  )
 
             self.pronunciations.append(pronunciation_object)
@@ -153,5 +149,5 @@ def fetch_audio_best(word: str, lang: str) -> Dict[str, str]:
 
 
 if __name__ == "__main__":
-    print(fetch_audio_all("what", "en"))
-    print(fetch_audio_best("goodbye", "en"))
+    print(fetch_audio_all("delicate", "en"))
+    #print(fetch_audio_best("goodbye", "en"))
