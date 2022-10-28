@@ -50,16 +50,19 @@ def koreader_parse_fb2(file, lang):
     root = etree.parse(file).getroot()
     ns = {'f': "http://www.gribuser.ru/xml/fictionbook/2.0"}
     for _, item in notes:
-        xpath = fb2_xpathconvert(item['page'])
-        word_start = int(item['pos0'].split(".")[-1])
-        word_end = int(item['pos1'].split(".")[-1])
-        if root.xpath(xpath, namespaces=ns):
-            ctx = root.xpath(xpath, namespaces=ns)[0].text
-            for sentence in split_text_into_sentences(ctx, language=lang):
-                if item['notes'] in sentence:
-                    if ctx.find(sentence) < word_start \
-                        and ctx.find(sentence) + len(sentence) > word_end: 
-                        result.append((item['notes'], sentence, item['datetime']))
+        try:
+            xpath = fb2_xpathconvert(item['page'])
+            word_start = int(item['pos0'].split(".")[-1])
+            word_end = int(item['pos1'].split(".")[-1])
+            if root.xpath(xpath, namespaces=ns):
+                ctx = root.xpath(xpath, namespaces=ns)[0].text
+                for sentence in split_text_into_sentences(ctx, language=lang):
+                    if item['notes'] in sentence:
+                        if ctx.find(sentence) < word_start \
+                            and ctx.find(sentence) + len(sentence) > word_end: 
+                            result.append((item['notes'], sentence, item['datetime']))
+        except KeyError:
+            continue
     return result
 
 
@@ -78,17 +81,20 @@ def koreader_parse_epub(file, lang):
         )
     ns = {'f': 'http://www.w3.org/1999/xhtml'}
     for _, item in notes:
-        index, xpath = epub_xpathconvert(item['page'])
-        word_start = int(item['pos0'].split(".")[-1])
-        word_end = int(item['pos1'].split(".")[-1])
-        if docs[index].xpath(xpath, namespaces=ns):
-            ctx = docs[index].xpath(xpath, namespaces=ns)[0].text
-            for sentence in split_text_into_sentences(ctx, language=lang):
-                if item['notes'] in sentence:
-                    if ctx.find(sentence) < word_start \
-                        and ctx.find(sentence) + len(sentence) > word_end: 
-                        result.append((item['notes'], sentence, item['datetime']))
-                        break
+        try:
+            index, xpath = epub_xpathconvert(item['page'])
+            word_start = int(item['pos0'].split(".")[-1])
+            word_end = int(item['pos1'].split(".")[-1])
+            if docs[index].xpath(xpath, namespaces=ns):
+                ctx = docs[index].xpath(xpath, namespaces=ns)[0].text
+                for sentence in split_text_into_sentences(ctx, language=lang):
+                    if item['notes'] in sentence:
+                        if ctx.find(sentence) < word_start \
+                            and ctx.find(sentence) + len(sentence) > word_end: 
+                            result.append((item['notes'], sentence, item['datetime']))
+                            break
+        except KeyError:
+            continue
     return result
 
 def koreader_scandir(path):
@@ -178,6 +184,7 @@ class KoreaderImporter(QDialog):
 
     def define_words(self):
         self.lookup_button.setEnabled(False)
+        self.sentences = []
         self.words = []
         self.definitions = []
         self.definition2s = []
@@ -195,6 +202,11 @@ class KoreaderImporter(QDialog):
             word = re.sub('[\\?\\.!«»…,()\\[\\]]*', "", self.lookup_terms[i])
 
             if self.sents[i]:
+                if self.settings.value("bold_word", True, type=bool):
+                    self.sentences.append(self.sents[i].replace("_", "").replace(word, f"__{word}__"))
+                    
+                else:
+                    self.sentences.append(self.sents[i])
                 item = self.parent.lookup(word, record=False)
                 if not item['definition'].startswith("<b>Definition for"):
                     count += 1
@@ -226,18 +238,25 @@ class KoreaderImporter(QDialog):
         
             else:
                 print("no sentence")
-                self.definitions.append("")
-                self.words.append("")
-                self.definition2s.append("")
-                self.audio_paths.append("")
+                #self.sentences.append("")
+                #self.definitions.append("")
+                #self.words.append("")
+                #self.definition2s.append("")
+                #self.audio_paths.append("")
 
         self.anki_button.setEnabled(True)
 
     def to_anki(self):
         notes = []
         for word, sentence, definition, definition2, audio_path in zip(
-                self.words, self.sents, self.definitions, self.definition2s, self.audio_paths):
+                self.words, self.sentences, self.definitions, self.definition2s, self.audio_paths):
             if word and sentence and definition:
+                if self.settings.value("bold_word", True, type=bool):
+                    sentence = re.sub(
+                        r"__([ \w]+)__",
+                        r"<strong>\1</strong>",
+                        sentence
+                        )
                 tags = self.parent.settings.value(
                     "tags", "vocabsieve").strip() + " koreader"
                 content = {
