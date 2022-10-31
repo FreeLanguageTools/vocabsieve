@@ -183,6 +183,7 @@ class KindleImporter(QDialog):
 
     def define_words(self):
         self.lookup_button.setEnabled(False)
+        self.sentences = []
         self.words = []
         self.definitions = []
         self.definition2s = []
@@ -199,6 +200,11 @@ class KindleImporter(QDialog):
             word = re.sub('[\\?\\.!«»…,()\\[\\]]*', "", self.lookup_terms[i])
         
             if self.sents[i]:
+                if self.settings.value("bold_word", True, type=bool):
+                    self.sentences.append(self.sents[i].replace("_", "").replace(word, f"__{word}__"))
+                    
+                else:
+                    self.sentences.append(self.sents[i])
                 item = self.parent.lookup(word, record=False)
                 if not item['definition'].startswith("<b>Definition for"):
                     count += 1
@@ -229,25 +235,28 @@ class KindleImporter(QDialog):
                 self.audio_paths.append(audio_path)
         
             else:
-                print("no sentence")
-                self.definitions.append("")
-                self.words.append("")
-                self.definition2s.append("")
-                self.audio_paths.append("")
+                QApplication.processEvents()
 
         #print(self.audio_paths)
         self.anki_button.setEnabled(True)
 
     def to_anki(self):
+        print(
+            len(self.words)
+        )
         notes = []
-        print(len(self.words), len(self.sents), len(self.definitions), len(self.definition2s), len(self.audio_paths))
         for word, sentence, definition, definition2, audio_path in zip(
-                self.words, self.sents, self.definitions, self.definition2s, self.audio_paths):
-            print(word, sentence, definition)
+                self.words, self.sentences, self.definitions, self.definition2s, self.audio_paths):
+            print(word,sentence,definition)
             if word and sentence and definition:
-                print("Adding note")
+                if self.settings.value("bold_word", True, type=bool):
+                    sentence = re.sub(
+                        r"__([ \w]+)__",
+                        r"<strong>\1</strong>",
+                        sentence
+                        )
                 tags = self.parent.settings.value(
-                    "tags", "vocabsieve").strip() + " koreader"
+                    "tags", "vocabsieve").strip() + " kindle"
                 content = {
                     "deckName": self.parent.settings.value("deck_name"),
                     "modelName": self.parent.settings.value("note_type"),
@@ -272,6 +281,7 @@ class KindleImporter(QDialog):
                     content['audio']['filename'] = audio_path.replace("\\", "/").split("/")[-1]
                     content['audio']['fields'] = [self.settings.value('pronunciation_field')]
 
+                print(content)
                 notes.append(content)
         res = addNotes(self.parent.settings.value("anki_api"), notes)
         self.layout.addRow(QLabel(str(len(notes)) +
