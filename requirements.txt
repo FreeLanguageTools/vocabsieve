@@ -1,3 +1,4 @@
+.
 lxml
 PyQt5
 requests
@@ -21,4 +22,4 @@ markdown
 markdownify
 readmdict
 python-lzo; sys_platform == 'linux'
-
+packaging
