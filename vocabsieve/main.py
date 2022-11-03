@@ -800,7 +800,7 @@ class DictionaryWindow(QMainWindow):
                 use_lemmatize, 
                 self.getLemGreedy())
 
-        self.sentence.setText(sentence_text)
+        self.sentence.setHtml(sentence_text)
 
         QCoreApplication.processEvents()
         result = self.lookup(word, use_lemmatize)
