@@ -18,6 +18,7 @@ from .api import LanguageServer
 from .ext.reader import ReaderServer
 from .ext.importer import KindleImporter, KoreaderImporter
 from .text_manipulation import *
+from .settings import *
 import sys
 import importlib
 import functools
@@ -78,7 +79,7 @@ class DictionaryWindow(QMainWindow):
         self.setWindowTitle(app_title(True))
         self.setFocusPolicy(Qt.StrongFocus)
         self.widget = QWidget()
-        self.settings = QSettings()
+        self.settings = settings
         self.rec = Record()
         self.setCentralWidget(self.widget)
         self.previousWord = ""
