@@ -5,7 +5,13 @@ from shutil import rmtree
 from .tools import *
 from .dictionary import *
 from .dictmanager import *
+from .settings import *
 
+BoldStyle_to_display_str = bidict()
+b = settings.value("bold_char")
+BoldStyle_to_display_str[BoldStyle.BOLDCHAR.value] = \
+    f"By surrounding with underscore, ie. {b}{b}{{word}}{b}{b}"
+BoldStyle_to_display_str[BoldStyle.FONTWEIGHT.value] = "Using font weight"
 
 class SettingsDialog(QDialog):
     def __init__(self, parent, ):
@@ -66,7 +72,12 @@ class SettingsDialog(QDialog):
         self.definition2_field = QComboBox()
         self.pronunciation_field = QComboBox()
         self.audio_dict = QComboBox()
-        self.bold_word = QCheckBox("Bold word in sentence on lookup")
+        self.bold_style = QComboBox()
+        self.bold_style.setToolTip(
+            '"Anki" bolds words as you\'ll see them in Anki.\n'
+            '"Character" bolds words by surrounding them with "bold Character", eg. __amigo__\n'
+            '"<disabled>" disables bolding words in both Vocabsieve and Anki')
+
         self.note_type_url = QLabel("For a suitable note type, \
             download <a href=\"https://freelanguagetools.org/sample.apkg\">this file</a> \
                 and import it to your Anki collection.")
@@ -236,13 +247,17 @@ class SettingsDialog(QDialog):
             "Tatoeba",
             "Custom (Enter below)"
         ])
+        self.bold_style.addItems([
+            BoldStyle_to_display_str[BoldStyle.BOLDCHAR.value],
+            BoldStyle_to_display_str[BoldStyle.FONTWEIGHT.value],
+            "<disabled>"
+        ])
         self.gtrans_lang.addItems(langs_supported.values())
         self.display_mode.addItems(["Raw", "Plaintext", "Markdown", "HTML", "Markdown-HTML"])
         self.tab_d.layout.addRow(QLabel("<h3>Dictionary sources</h3>"))
         self.tab_d.layout.addRow(self.lemmatization)
         self.tab_d.layout.addRow(self.lem_greedily)
         self.tab_d.layout.addRow(self.lemfreq)
-        self.tab_d.layout.addRow(self.bold_word)
         self.tab_d.layout.addRow(
             QLabel("Target language"),
             self.target_language)
@@ -252,6 +267,9 @@ class SettingsDialog(QDialog):
         self.tab_d.layout.addRow(
             QLabel("Dictionary source 2"),
             self.dict_source2)
+
+        self.tab_d.layout.addRow(QLabel("Bold words"), self.bold_style)
+
         self.tab_d.layout.addRow(
             QLabel("Pronunciation source"),
             self.audio_dict)
@@ -465,7 +483,12 @@ class SettingsDialog(QDialog):
         self.register_config_handler(self.lemmatization, 'lemmatization', True)
         self.register_config_handler(self.lem_greedily, 'lem_greedily', False)
         self.register_config_handler(self.lemfreq, 'lemfreq', True)
-        self.register_config_handler(self.bold_word, 'bold_word', True)
+
+        self.bold_style.setCurrentText(BoldStyle_to_display_str[
+            settings.value("bold_style", type=int)])
+        self.bold_style.currentTextChanged.connect(
+            lambda t: settings.setValue(
+                "bold_style", BoldStyle_to_display_str.inverse.get(t, t)))
 
         self.register_config_handler(
             self.gtrans_lang,

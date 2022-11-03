@@ -62,8 +62,11 @@ class GlobalObject(QObject):
         for func in functions:
             QTimer.singleShot(0, func)
 
-
 class MyTextEdit(QTextEdit):
+
+    def __init__(self):
+        super(MyTextEdit, self).__init__()
+        self.currentCharFormatChanged.connect(self.handleCurrentCharFormatChanged)
 
     @pyqtSlot()
     def mouseDoubleClickEvent(self, e):
@@ -72,6 +75,86 @@ class MyTextEdit(QTextEdit):
         self.textCursor().clearSelection()
         self.original = ""
 
+    @property
+    def textBoldedByTags(self):
+        """
+        Current text content with bolded words defined by <b/>, irrespective of 
+        `settings.value("bold_style")`.
+        """
+        if settings.value("bold_style", type=int) == BoldStyle.FONTWEIGHT.value:
+            return markdown_boldings_to_bold_tag_boldings(
+                # toMarkdown() includes erroneous newlines
+                self.toMarkdown()[:-2])
+        elif settings.value("bold_style", type=int) == BoldStyle.BOLDCHAR.value:
+            return bold_char_boldings_to_bold_tag_boldings(self.toPlainText())[0]
+        else: return self.toPlainText()
+
+    def keyPressEvent(self, e):
+        super().keyPressEvent(e)
+
+        # Every time the user writes "_", check if we need to perform the 
+        # substitution "__{word}__" -> "<b>{word}</b>"
+        if settings.value("bold_style", type=int) == BoldStyle.FONTWEIGHT.value \
+            and e.text() == settings.value("bold_char"):
+            self.performBoldSubstitutions()
+
+    def performBoldSubstitutions(self):
+        bold_tags_substituted, subs_performed = \
+            bold_char_boldings_to_bold_tag_boldings(self.toPlainText())
+
+        if subs_performed:
+            def rebold_previously_bolded_words(string: str):
+                for should_bold in set(re.findall(r"\*\*(.+?)\*\*", self.toMarkdown())):
+                    string = re.sub(
+                        re.escape(should_bold), 
+                        lambda match: apply_bold_tags(match.group(0)), 
+                        string)
+                return string
+
+            bold_tags_substituted = rebold_previously_bolded_words(
+                bold_tags_substituted)
+
+            # Save cursor position
+            old_cursor_pos = self.textCursor().position()
+            # Set text
+            self.setText(bold_tags_substituted)
+
+            # Move back by the 4 characters removed when substituting 
+            # "__{word}__" => "<b>{word}</b>" (note that `cursor` does not 
+            # consider "<b/>" when calling `cursor.setPosition()`
+            cursor = self.textCursor()
+            cursor.setPosition(old_cursor_pos - 4 * subs_performed)
+            self.setTextCursor(cursor)
+
+    @pyqtSlot()
+    def handleCurrentCharFormatChanged(self):
+        """ 
+        If `settings.value("bold_style") == BoldStyle.FONTWEIGHT.value`, bolded characters are
+        added to the text editor. By default, the user cannot type in non-bold
+        font adjacent to these characters, so we reset the font weight to 
+        non-bold every time it changes.
+        """
+
+        def ensureNormalFontWeight():
+            cursor = self.textCursor()
+            fmt = cursor.charFormat()
+            if fmt.fontWeight() != QFont.Weight.Normal:
+                fmt.setFontWeight(QFont.Weight.Normal)
+                cursor.setCharFormat(fmt)
+                self.setTextCursor(cursor)
+        ensureNormalFontWeight()
+
+    @property
+    def unboldedText(self):
+        if settings.value("bold_style", type=int) == BoldStyle.FONTWEIGHT.value:
+            # `.toPlainText()` strips <b/> for us
+            return self.toPlainText()
+        elif settings.value("bold_style", type=int) == BoldStyle.BOLDCHAR.value:
+            # Remove bolds using bold_char
+            return remove_bold_char_boldings(self.toPlainText())
+        elif settings.value("bold_style", type=int) == "<disabled>":
+            # Text was never bolded in the first place
+            return self.toPlainText()
 
 class DictionaryWindow(QMainWindow):
     def __init__(self):
@@ -589,24 +672,15 @@ class DictionaryWindow(QMainWindow):
             + "/collapse_newlines",
             0, type=int
         )
-        if display_mode1 in ['Raw', 'Plaintext', 'Markdown']:
-            self.definition.setPlainText(
-                process_definition(
-                    state['definition'].strip(),
-                    display_mode1,
-                    skip_top1,
-                    collapse_newlines1
-                )
+
+        self.definition.setText(
+            process_definition(
+                state['definition'].strip(),
+                display_mode1,
+                skip_top1,
+                collapse_newlines1
             )
-        else:
-            self.definition.setHtml(
-                process_definition(
-                    state['definition'].strip(),
-                    display_mode1,
-                    skip_top1,
-                    collapse_newlines1
-                )
-            )
+        )
 
         if state.get('definition2'):
             self.definition2.original = state['definition2']
@@ -686,7 +760,6 @@ class DictionaryWindow(QMainWindow):
                 self.setImage(QApplication.clipboard().pixmap())
                 return
 
-        remove_spaces = self.settings.value("remove_spaces")
         lang = self.settings.value("target_language", "en")
         if self.isActiveWindow() and not evenWhenFocused:
             return
@@ -707,16 +780,26 @@ class DictionaryWindow(QMainWindow):
             self.setSentence(preprocess_clipboard(text, lang))
 
     def lookupSet(self, word, use_lemmatize=True):
-        # Bold text
-        sentence_text = self.sentence.toPlainText()
-        if self.settings.value("bold_word", True, type=bool):
-            without_bold = remove_bold(sentence_text)
+
+        sentence_text = self.sentence.unboldedText
+
+        if settings.value("bold_style", type=int) != "<disabled>":
+            # Bold word that was clicked on, either with "<b>{word}</b>" or 
+            # "__{word}__".
+
+            apply_bold = \
+                apply_bold_tags \
+                if settings.value("bold_style", type=int) == BoldStyle.FONTWEIGHT.value \
+                else apply_bold_char
+
             sentence_text = bold_word_in_text(
                 word, 
-                without_bold, 
+                sentence_text, 
+                apply_bold,
                 self.getLanguage(), 
                 use_lemmatize, 
                 self.getLemGreedy())
+
         self.sentence.setText(sentence_text)
 
         QCoreApplication.processEvents()
@@ -845,14 +928,9 @@ class DictionaryWindow(QMainWindow):
             'definition2': item2['definition']}
 
     def createNote(self):
-        sentence = self.sentence.toPlainText().replace("\n", "<br>")
-        if self.settings.value("bold_word", True, type=bool):
-            sentence = re.sub(
-                re_bolded,
-                r"<strong>\1</strong>",
-                sentence)
-        if self.settings.value("remove_spaces", False, type=bool):
-            sentence = re.sub("\\s", "", sentence)
+        sentence = self.sentence.boldedText
+        sentence = sentence.replace("\n", "<br>")
+
         tags = (self.settings.value("tags", "vocabsieve").strip() + " " + self.tags.text().strip()).split(" ")
         word = self.word.text()
         content = {
