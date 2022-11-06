@@ -814,7 +814,7 @@ class DictionaryWindow(QMainWindow):
             'definition2': item2['definition']}
 
     def createNote(self):
-        sentence = self.sentence.boldedText
+        sentence = self.sentence.textBoldedByTags
         sentence = sentence.replace("\n", "<br>")
 
         tags = (self.settings.value("tags", "vocabsieve").strip() + " " + self.tags.text().strip()).split(" ")
