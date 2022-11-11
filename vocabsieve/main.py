@@ -7,9 +7,6 @@ from typing import Optional
 from . import __version__
 from .app_text import *
 
-QCoreApplication.setApplicationName(app_title(True))
-QCoreApplication.setOrganizationName(app_organization)
-
 from .config import *
 from .tools import *
 from .db import *
@@ -41,6 +38,9 @@ if platform.system() == "Darwin":
     MOD = "Cmd"
 else:
     MOD = "Ctrl"
+
+QCoreApplication.setApplicationName(settings_app_title)
+QCoreApplication.setOrganizationName(app_organization)
 
 class DictionaryWindow(QMainWindow):
     def __init__(self):
