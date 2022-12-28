@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QObject, QTimer
+from PySide6.QtCore import QObject, QTimer
 import functools
 
 @functools.lru_cache()

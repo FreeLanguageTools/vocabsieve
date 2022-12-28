@@ -273,7 +273,7 @@ def getFreqlistsForLang(lang: str, dicts: list):
 
 forvopath = os.path.join(
     QStandardPaths.writableLocation(
-        QStandardPaths.DataLocation), "forvo")
+        QStandardPaths.AppDataLocation), "forvo")
 
 
 def play_audio(name: str, data: dict, lang: str):

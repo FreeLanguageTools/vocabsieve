@@ -1,8 +1,7 @@
 import os
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from PyQt5.Qt import QDesktopServices, QUrl
-from PyQt5.QtCore import *
+from PySide6.QtWidgets import *
+from PySide6.QtGui import *
+from PySide6.QtCore import *
 from typing import Optional
 from . import __version__
 from .app_text import *
@@ -485,7 +484,7 @@ class DictionaryWindow(QMainWindow):
         path = QFileDialog.getExistingDirectory(
             parent=self,
             caption="Select the directory containers ebook files",
-            directory=QStandardPaths.writableLocation(QStandardPaths.HomeLocation)
+            dir=QStandardPaths.writableLocation(QStandardPaths.HomeLocation)
         )
         if not path:
             return

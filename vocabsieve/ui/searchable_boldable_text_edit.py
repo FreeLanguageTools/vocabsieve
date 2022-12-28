@@ -1,4 +1,4 @@
-from PyQt5.QtGui import *
+from PySide6.QtGui import *
 from .searchable_text_edit import SearchableTextEdit
 from ..text_manipulation import *
 from ..settings import *
@@ -59,7 +59,7 @@ class SearchableBoldableTextEdit(SearchableTextEdit):
             cursor.setPosition(old_cursor_pos - 4 * subs_performed)
             self.setTextCursor(cursor)
 
-    @pyqtSlot()
+    @Slot()
     def handleCurrentCharFormatChanged(self):
         """ 
         If `settings.value("bold_style") == BoldStyle.FONTWEIGHT.value`, bolded characters are

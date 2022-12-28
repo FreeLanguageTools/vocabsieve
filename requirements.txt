@@ -1,6 +1,6 @@
 .
 lxml
-PyQt5
+PySide6
 requests
 soupsieve==2.3.1
 beautifulsoup4

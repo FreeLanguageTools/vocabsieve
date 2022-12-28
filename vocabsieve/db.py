@@ -1,5 +1,5 @@
 import sqlite3
-from PyQt5.QtCore import QStandardPaths, QCoreApplication
+from PySide6.QtCore import QStandardPaths, QCoreApplication
 from os import path
 from pathlib import Path
 import time
@@ -7,7 +7,7 @@ from bidict import bidict
 import pycountry
 import re
 from datetime import datetime, timedelta
-datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
+datapath = QStandardPaths.writableLocation(QStandardPaths.AppDataLocation)
 Path(datapath).mkdir(parents=True, exist_ok=True)
 print(datapath)
 # Currently, all languages with two letter codes can be set

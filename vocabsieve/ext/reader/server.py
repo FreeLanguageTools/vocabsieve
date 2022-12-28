@@ -6,7 +6,7 @@ from markdown import markdown
 import os
 import re
 from .utils import *
-from PyQt5.QtCore import QStandardPaths, QCoreApplication, QObject
+from PySide6.QtCore import QStandardPaths, QCoreApplication, QObject
 from pathlib import Path
 # The following import is to avoid cxfreeze error
 import sqlalchemy.sql.default_comparator
@@ -19,7 +19,7 @@ else:
     QCoreApplication.setApplicationName("VocabSieve")
 QCoreApplication.setOrganizationName("FreeLanguageTools")
 
-datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
+datapath = QStandardPaths.writableLocation(QStandardPaths.AppDataLocation)
 Path(datapath).mkdir(parents=True, exist_ok=True)
 UPLOAD_FOLDER = os.path.join(datapath, "uploads")
 Path(UPLOAD_FOLDER).mkdir(parents=True, exist_ok=True)
