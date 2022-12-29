@@ -20,7 +20,7 @@ The Mac OS build is likely broken, but I can't do anything about it because I ha
 - **Sane defaults**: Little configuration is needed other than settings for Anki. It comes with two dictionary sources by default for most languages and one pronunciation source that should cover most needs.
 - **Local resource support**: Dictionaries in StarDict, Migaku, plain JSON, MDX, Lingvo (.dsl), CSV; frequency lists; and audio libraries.
 - **Web reader**: Read epub, fb2 books, or plain articles with one-click word lookups and Anki export.
-- **eReader integration**: Batch-import [KOReader](https://github.com/koreader/koreader) and Kindle highlights to Anki sentence cards.
+- **eReader integration**: Batch-import [KOReader](https://github.com/koreader/koreader) and Kindle highlights to Anki sentence cards to build vocabulary efficiently without interrupting your reading.
 
 ## Tutorials
 [Wiki page](https://wiki.freelanguagetools.org/vocabsieve_setup)
@@ -28,7 +28,7 @@ The Mac OS build is likely broken, but I can't do anything about it because I ha
 
 [New video tutorial](https://www.youtube.com/watch?v=EHW-kBLmuHU)
 
-**Windows and Mac users**: If you want to install this program, go to [Releases](https://github.com/FreeLanguageTools/vocabsieve/releases/) and from the latest release, download the appropriate file for your operating system. 
+**Windows users**: If you want to install this program, go to [Releases](https://github.com/FreeLanguageTools/vocabsieve/releases/) and from the latest release, download the appropriate file for your operating system. 
 
 
 ## Linux distro packages
@@ -80,7 +80,8 @@ Note that VocabSieve is still alpha software. API is not guaranteed to be stable
 You are welcome to report bugs, suggest features/enhancements, or ask for clarifications by opening a GitHub issue.
 
 ## Donations
-Send me some Monero to support this work!
+
+Send me some Monero to support this work! If you can [prove](https://www.getmonero.org/resources/user-guides/prove-payment.html) a payment of more than 0.05 XMR, you can receive prioritized support and and consideration for feature requests.
 
 XMR Address: `89AZiqM7LD66XE9s5G7iBu4CU3i6qUu2ieCq4g3JKacn7e1xKuwe2tvWApLFvhaMR47kwNzjC4B5VL3N32MCokE2U9tGXzX`
 
@@ -92,6 +93,6 @@ If you do not have any Monero, a good way to get it is through [ChangeNow](https
 
 
 ## Credits
-The definitions provided by the program by default come from English Wiktionary, without which this program would never have been created.
+The definitions provided by the program by default come from English Wiktionary, without which this program would never have been created. [LingvaTranslate](https://github.com/thedaviddelta/lingva-translate) is used to obtain Google Translate results. Fоrvо scraping code is inspired by this [repository](https://github.com/Rascalov/Anki-Simple-Forvo-Audio). Lemmatization capabilities come from [simplemma](https://github.com/adbar/simplemma) and [pymorphy2](https://github.com/kmike/pymorphy2).
 
 App icon is made from icons by Freepik available on Flaticon.
