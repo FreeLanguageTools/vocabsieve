@@ -39,7 +39,7 @@ for:
       path: cx_freeze/dist/*.msi
       name: Windows App
         
-  -
+#  -
 #    matrix:
 #      only:
 #        - image: macOS
