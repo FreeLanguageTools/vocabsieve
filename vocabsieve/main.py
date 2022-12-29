@@ -1,8 +1,7 @@
 import os
-from PySide6.QtWidgets import *
-from PySide6.QtGui import *
-from PySide6.QtCore import *
-from PySide6 import __version__ as qtversion
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 from typing import Optional
 from . import __version__
 from .app_text import *
@@ -485,7 +484,7 @@ class DictionaryWindow(QMainWindow):
         path = QFileDialog.getExistingDirectory(
             parent=self,
             caption="Select the directory containers ebook files",
-            dir=QStandardPaths.writableLocation(QStandardPaths.HomeLocation)
+            directory=QStandardPaths.writableLocation(QStandardPaths.HomeLocation)
         )
         if not path:
             return
@@ -998,7 +997,7 @@ class DictionaryWindow(QMainWindow):
                 self.worker = LanguageServer(self, host, port)
                 self.worker.moveToThread(self.thread)
                 self.thread.started.connect(self.worker.start_api)
-                self.worker.note_signal.connect(self.onNoteSignal)
+                self.worker.note_signal.connect(self.onNotepyqtSignal)
                 self.thread.start()
             except Exception as e:
                 print(e)
@@ -1016,7 +1015,7 @@ class DictionaryWindow(QMainWindow):
                 print(e)
                 self.status("Failed to start reader server")
 
-    def onNoteSignal(
+    def onNotepyqtSignal(
             self,
             sentence: str,
             word: str,
@@ -1045,7 +1044,7 @@ class AboutDialog(QDialog):
             f'''
 VocabSieve version: {__version__}<br>
 Python version: {sys.version}<br>
-PySide6 (Qt bindings) version: {qtversion}<br><br>
+PyQt5 (Qt bindings) version: {version('PyQt5')}<br><br>
 © 2022 FreeLanguageTools<br><br>
 Visit <a href="https://wiki.freelanguagetools.org">FreeLanguageTools Wiki</a> for more info on how to use this tool.<br>
 You can also talk to us on <a href="https://webchat.kde.org/#/room/#flt:midov.pl">Matrix</a>

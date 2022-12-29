@@ -19,7 +19,7 @@ sys.stdin = dummyStream()
 sys.__stdout__ = dummyStream()
 sys.__stderr__ = dummyStream()
 sys.__stdin__ = dummyStream()
-from PySide6.QtWidgets import QApplication
+from PyQt5.QtWidgets import QApplication
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

@@ -1,5 +1,5 @@
 import sqlite3
-from PySide6.QtCore import QStandardPaths, QCoreApplication
+from PyQt5.QtCore import QStandardPaths, QCoreApplication
 from os import path
 from pathlib import Path
 import time

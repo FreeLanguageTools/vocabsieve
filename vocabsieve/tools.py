@@ -11,7 +11,7 @@ from pystardict import Dictionary
 from .dictionary import *
 from .dictformats import *
 from .xdxftransform import xdxf2html
-from PySide6.QtCore import QCoreApplication
+from PyQt5.QtCore import QCoreApplication
 
 
 def request(action, **params):

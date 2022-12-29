@@ -1,5 +1,5 @@
-from PySide6.QtWidgets import *
-from PySide6.QtCore import Qt
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import Qt
 import platform
 from shutil import rmtree
 from .tools import *
@@ -397,9 +397,9 @@ class SettingsDialog(QDialog):
             self.skip_top.valueChanged.disconnect()
             self.collapse_newlines.valueChanged.disconnect()
             self.cleanup_html.clicked.disconnect()
-        except RuntimeError:
+        except TypeError:
             # When there are no connected functions, it raises a TypeError
-            # 2022-12-28 Apparently now in PySide6 it returns RuntimeError instead
+            # 2022-12-28 Apparently now in PyQt5 it returns RuntimeError instead
             pass
         # Reestablish config handlers
         self.register_config_handler(self.display_mode,

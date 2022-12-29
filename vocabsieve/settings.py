@@ -1,4 +1,4 @@
-from PySide6.QtCore import *
+from PyQt5.QtCore import *
 from enum import Enum
 from .app_text import settings_app_title, app_organization
 

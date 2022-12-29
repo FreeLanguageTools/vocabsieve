@@ -6,7 +6,7 @@ from markdown import markdown
 import os
 import re
 from .utils import *
-from PySide6.QtCore import QStandardPaths, QCoreApplication, QObject
+from PyQt5.QtCore import QStandardPaths, QCoreApplication, QObject
 from pathlib import Path
 # The following import is to avoid cxfreeze error
 import sqlalchemy.sql.default_comparator

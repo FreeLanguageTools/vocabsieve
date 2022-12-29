@@ -13,7 +13,7 @@ build_exe_options = {
     "includes": [
         "vocabsieve",
         "setuptools",
-        "PySide6",
+        "PyQt5",
         "bs4",
         "lxml",
         "simplemma",

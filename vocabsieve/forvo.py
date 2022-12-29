@@ -6,7 +6,7 @@ from os import path
 import os
 import re
 import base64
-from PySide6.QtCore import QStandardPaths, QCoreApplication
+from PyQt5.QtCore import QStandardPaths, QCoreApplication
 from pathlib import Path
 from urllib.parse import quote, unquote
 from dataclasses import dataclass

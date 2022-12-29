@@ -1,5 +1,5 @@
 from flask import Flask, request
-from PySide6.QtCore import *
+from PyQt5.QtCore import *
 from .dictionary import *
 from .db import Record
 import logging
@@ -12,7 +12,7 @@ def str2bool(v):
 
 
 class LanguageServer(QObject):
-    note_signal = Signal(str, str, str, list)
+    note_signal = pyqtSignal(str, str, str, list)
 
     def __init__(self, parent, host, port):
         super(LanguageServer, self).__init__()
