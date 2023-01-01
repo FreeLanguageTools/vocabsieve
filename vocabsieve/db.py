@@ -7,7 +7,7 @@ from bidict import bidict
 import pycountry
 import re
 from datetime import datetime, timedelta
-datapath = QStandardPaths.writableLocation(QStandardPaths.AppDataLocation)
+datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
 Path(datapath).mkdir(parents=True, exist_ok=True)
 print(datapath)
 # Currently, all languages with two letter codes can be set

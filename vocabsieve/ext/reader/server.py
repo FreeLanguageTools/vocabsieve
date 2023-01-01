@@ -19,7 +19,7 @@ else:
     QCoreApplication.setApplicationName("VocabSieve")
 QCoreApplication.setOrganizationName("FreeLanguageTools")
 
-datapath = QStandardPaths.writableLocation(QStandardPaths.AppDataLocation)
+datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
 Path(datapath).mkdir(parents=True, exist_ok=True)
 UPLOAD_FOLDER = os.path.join(datapath, "uploads")
 Path(UPLOAD_FOLDER).mkdir(parents=True, exist_ok=True)
