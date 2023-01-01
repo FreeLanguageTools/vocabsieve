@@ -46,7 +46,7 @@ build_exe_options = {
 base = None
 
 setup(
-    name="VocabSieve",
+    name="VocabSieve-DEBUG",
     version=__version__,
     description="A simple sentence mining tool",
     options={"build_exe": build_exe_options},

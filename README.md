@@ -30,6 +30,8 @@ The Mac OS build is likely broken, but I can't do anything about it because I ha
 
 **Windows users**: If you want to install this program, go to [Releases](https://github.com/FreeLanguageTools/vocabsieve/releases/) and from the latest release, download the appropriate file for your operating system. 
 
+For a nightly build, please check the [CI artifacts page](https://ci.appveyor.com/project/1over137/vocabsieve/build/artifacts). These are not considered ready for release and likely contain bugs. It is recommended to use the debug version to get more details when things go wrong.
+
 
 ## Linux distro packages
 [![Packaging status](https://repology.org/badge/vertical-allrepos/vocabsieve.svg)](https://repology.org/project/vocabsieve/versions)
