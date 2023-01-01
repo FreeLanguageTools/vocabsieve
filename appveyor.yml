@@ -35,7 +35,7 @@ for:
       - "cd prod"
       - "%PYTHON_WIN%\\python.exe setup.py bdist_msi"
       - "cd ..\\debug"
-      - "%PYTHON_WIN%\\python.exe setup_debug.py bdist_msi"
+      - "%PYTHON_WIN%\\python.exe setup.py bdist_msi"
       - ps: "ls"
 
     artifacts:
