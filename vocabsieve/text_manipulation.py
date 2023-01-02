@@ -4,9 +4,8 @@ from typing import Callable, Iterable
 import string
 import re
 from itertools import chain, dropwhile
-from .settings import settings
 
-b = settings.value("bold_char")
+b = "_"
 apply_bold_tags = lambda word: f"<b>{word}</b>"
 apply_bold_char = lambda word: f"{b}{b}{word}{b}{b}"
 bolded_by_char_re = f"{b}{b}(.+?){b}{b}"
@@ -53,6 +52,7 @@ def bold_word_in_text(
     language,
     use_lemmatize=True, 
     greedy_lemmatize=False):
+    print(text)
     if not use_lemmatize:
         return re.sub(word, lambda match: apply_bold(match.group(0)), text)
     else:

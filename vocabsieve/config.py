@@ -5,13 +5,8 @@ from shutil import rmtree
 from .tools import *
 from .dictionary import *
 from .dictmanager import *
-from .settings import *
 
-BoldStyle_to_display_str = bidict()
-b = settings.value("bold_char")
-BoldStyle_to_display_str[BoldStyle.BOLDCHAR.value] = \
-    f"By surrounding with underscore, ie. {b}{b}{{word}}{b}{b}"
-BoldStyle_to_display_str[BoldStyle.FONTWEIGHT.value] = "Using font weight"
+BoldStyles = ["<disabled>", "Font weight", "Underscores"]
 
 class SettingsDialog(QDialog):
     def __init__(self, parent, ):
@@ -21,12 +16,21 @@ class SettingsDialog(QDialog):
         self.setWindowTitle("Configure VocabSieve")
         self.initWidgets()
         self.initTabs()
-        self.setupWidgets()
-        self.setupAutosave()
-        self.setupProcessing()
-        self.deactivateProcessing()
-        self.twodictmode = self.settings.value(
-            "dict_source2", "<disabled>") != "<disabled>"
+        try:
+            self.setupWidgets()
+            self.setupAutosave()
+            self.setupProcessing()
+            self.deactivateProcessing()
+            self.twodictmode = self.settings.value(
+                "dict_source2", "<disabled>") != "<disabled>"
+        except TypeError as e:
+            print(e)
+            print(
+                "TypeError encountered while trying to setup settings dialog,",
+                "resetting all settings to default")
+            self.settings.clear()
+            self.close()
+
 
     def initWidgets(self):
         self.bar = QStatusBar()
@@ -74,8 +78,9 @@ class SettingsDialog(QDialog):
         self.audio_dict = QComboBox()
         self.bold_style = QComboBox()
         self.bold_style.setToolTip(
-            '"Anki" bolds words as you\'ll see them in Anki.\n'
-            '"Character" bolds words by surrounding them with "bold Character", eg. __amigo__\n'
+            '"Font weight" bolds words directly on the textbox.\n'
+            '"Underscores" displays bolded words in double underscores, __word__\n'
+            '(Both will look the same in Anki)\n'
             '"<disabled>" disables bolding words in both Vocabsieve and Anki')
 
         self.note_type_url = QLabel("For a suitable note type, \
@@ -248,9 +253,9 @@ class SettingsDialog(QDialog):
             "Custom (Enter below)"
         ])
         self.bold_style.addItems([
-            BoldStyle_to_display_str[BoldStyle.BOLDCHAR.value],
-            BoldStyle_to_display_str[BoldStyle.FONTWEIGHT.value],
-            "<disabled>"
+            BoldStyles[1],
+            BoldStyles[2],
+            BoldStyles[0]
         ])
         self.gtrans_lang.addItems(langs_supported.values())
         self.display_mode.addItems(["Raw", "Plaintext", "Markdown", "HTML", "Markdown-HTML"])
@@ -485,11 +490,11 @@ class SettingsDialog(QDialog):
         self.register_config_handler(self.lem_greedily, 'lem_greedily', False)
         self.register_config_handler(self.lemfreq, 'lemfreq', True)
 
-        self.bold_style.setCurrentText(BoldStyle_to_display_str[
-            settings.value("bold_style", type=int)])
+        self.bold_style.setCurrentText(BoldStyles[
+            self.settings.value("bold_style", 1, type=int)])
         self.bold_style.currentTextChanged.connect(
-            lambda t: settings.setValue(
-                "bold_style", BoldStyle_to_display_str.inverse.get(t, t)))
+            lambda t: self.settings.setValue(
+                "bold_style", BoldStyles.index(t) if t in BoldStyles else 1))
 
         self.register_config_handler(
             self.gtrans_lang,

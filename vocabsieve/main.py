@@ -8,6 +8,7 @@ from .app_text import *
 
 QCoreApplication.setApplicationName(settings_app_title)
 QCoreApplication.setOrganizationName(app_organization)
+settings = QSettings(app_organization, settings_app_title)
 
 from .config import *
 from .tools import *
@@ -20,6 +21,7 @@ from .global_events import GlobalObject
 from .ui.searchable_text_edit import SearchableTextEdit
 from .ui.searchable_boldable_text_edit import SearchableBoldableTextEdit
 from .text_manipulation import *
+
 import sys
 import importlib
 import requests
@@ -668,14 +670,17 @@ class DictionaryWindow(QMainWindow):
 
         sentence_text = self.sentence.unboldedText
 
-        if settings.value("bold_style", type=int) != "<disabled>":
+        if settings.value("bold_style", type=int):
             # Bold word that was clicked on, either with "<b>{word}</b>" or 
             # "__{word}__".
 
-            apply_bold = \
-                apply_bold_tags \
-                if settings.value("bold_style", type=int) == BoldStyle.FONTWEIGHT.value \
-                else apply_bold_char
+
+            if self.settings.value("bold_style", type=int) == 1:
+                apply_bold = apply_bold_tags
+            elif self.settings.value("bold_style", type=int) == 2:
+                apply_bold = apply_bold_char
+            else:
+                print(f"BoldStyle={self.settings.value('bold_style', type=int)} is not implemented")
 
             sentence_text = bold_word_in_text(
                 word, 

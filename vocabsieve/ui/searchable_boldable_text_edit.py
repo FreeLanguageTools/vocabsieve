@@ -1,7 +1,10 @@
 from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 from .searchable_text_edit import SearchableTextEdit
 from ..text_manipulation import *
-from ..settings import *
+from ..app_text import settings_app_title, app_organization
+
+settings = QSettings(app_organization, settings_app_title)
 
 class SearchableBoldableTextEdit(SearchableTextEdit):
     def __init__(self):
@@ -14,11 +17,11 @@ class SearchableBoldableTextEdit(SearchableTextEdit):
         Current text content with bolded words defined by <b/>, irrespective of 
         `settings.value("bold_style")`.
         """
-        if settings.value("bold_style", type=int) == BoldStyle.FONTWEIGHT.value:
+        if settings.value("bold_style", type=int) == 1:
             return markdown_boldings_to_bold_tag_boldings(
                 # toMarkdown() includes erroneous newlines
                 self.toMarkdown()[:-2])
-        elif settings.value("bold_style", type=int) == BoldStyle.BOLDCHAR.value:
+        elif settings.value("bold_style", type=int) == 2:
             return bold_char_boldings_to_bold_tag_boldings(self.toPlainText())[0]
         else: return self.toPlainText()
 
@@ -27,7 +30,7 @@ class SearchableBoldableTextEdit(SearchableTextEdit):
 
         # Every time the user writes "_", check if we need to perform the 
         # substitution "__{word}__" -> "<b>{word}</b>"
-        if settings.value("bold_style", type=int) == BoldStyle.FONTWEIGHT.value \
+        if settings.value("bold_style", type=int) == 1 \
             and e.text() == settings.value("bold_char"):
             self.performBoldSubstitutions()
 
@@ -79,12 +82,12 @@ class SearchableBoldableTextEdit(SearchableTextEdit):
 
     @property
     def unboldedText(self):
-        if settings.value("bold_style", type=int) == BoldStyle.FONTWEIGHT.value:
+        if settings.value("bold_style", type=int) == 1:
             # `.toPlainText()` strips <b/> for us
             return self.toPlainText()
-        elif settings.value("bold_style", type=int) == BoldStyle.BOLDCHAR.value:
+        elif settings.value("bold_style", type=int) == 2:
             # Remove bolds using bold_char
             return remove_bold_char_boldings(self.toPlainText())
-        elif settings.value("bold_style", type=int) == "<disabled>":
+        elif settings.value("bold_style", type=int) == 0:
             # Text was never bolded in the first place
             return self.toPlainText()
