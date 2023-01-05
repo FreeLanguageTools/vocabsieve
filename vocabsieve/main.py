@@ -638,14 +638,13 @@ class DictionaryWindow(QMainWindow):
         if selection:
             text = QApplication.clipboard().text(QClipboard.Selection)
         else:
-            text = QApplication.clipboard().text()
-        
-        if not selection: 
             # I am not sure how you can copy an image to PRIMARY
             # so here we go
             if QApplication.clipboard().mimeData().hasImage():
                 self.setImage(QApplication.clipboard().pixmap())
                 return
+            
+            text = QApplication.clipboard().text()
 
         lang = self.settings.value("target_language", "en")
         if self.isActiveWindow() and not evenWhenFocused:
