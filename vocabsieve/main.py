@@ -435,7 +435,7 @@ class DictionaryWindow(QMainWindow):
         self.layout.setRowStretch(6, 0)
 
     def updateAnkiButtonState(self, forceDisable=False):
-        if self.sentence.toPlainText() == "" or forceDisable:
+        if not self.sentence.toPlainText().strip() or forceDisable:
             self.toanki_button.setEnabled(False)
         else:
             self.toanki_button.setEnabled(True)
