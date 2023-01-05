@@ -6,7 +6,7 @@ import time
 from bidict import bidict
 import pycountry
 import re
-from datetime import datetime, timedelta
+from datetime import datetime
 datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
 Path(datapath).mkdir(parents=True, exist_ok=True)
 print(datapath)
@@ -112,12 +112,12 @@ class Record():
 
     def recordLookup(
             self,
-            word,
-            definition,
-            language,
-            lemmatization,
-            source,
-            success):
+            word: str,
+            definition: str,
+            language: str,
+            lemmatization: bool,
+            source: str,
+            success: bool):
         try:
             timestamp = time.time()
             sql = """INSERT INTO lookups(timestamp, word, definition, language, lemmatization, source, success)

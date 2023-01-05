@@ -1,20 +1,24 @@
 import json
-import unicodedata
-import simplemma
 import re
-import requests
-import pycountry
+import unicodedata
+from threading import Thread
 from urllib.parse import quote
 from typing import Optional
-from bs4 import BeautifulSoup
-from bidict import bidict
+
 import pymorphy2
-from markdownify import markdownify
+import requests
+import simplemma
+from bidict import bidict
+from bs4 import BeautifulSoup
 from markdown import markdown
+from markdownify import markdownify
+from playsound import playsound
+
+from .constants import DefinitionDisplayModes, LookUpResults
 from .db import *
-from .playsound import playsound
-from .forvo import *
 from .dictformats import removeprefix
+from .forvo import *
+
 dictdb = LocalDictionary()
 
 gtrans_languages = ['af', 'sq', 'am', 'ar', 'hy', 'az', 'eu', 'be', 'bn',
@@ -115,7 +119,7 @@ def lem_word(word, language, greedy=False):
         return word
 
 
-def wiktionary(word, language) -> Optional[dict]:
+def wiktionary(word, language: str) -> Optional[dict]:
     "Get definitions from Wiktionary"
     try:
         res = requests.get(
@@ -141,17 +145,22 @@ def wiktionary(word, language) -> Optional[dict]:
     return {"word": word, "definition": definitions}
 
 
-def googletranslate(word, language, gtrans_lang, gtrans_api):
+def googletranslate(word, language, gtrans_lang, gtrans_api) -> Optional[LookUpResults]:
     "Google translation, through the googletrans python library"
     url = f"{gtrans_api}/api/v1/{language}/{gtrans_lang}/{quote(word)}"
     res = requests.get(url)
     if res.status_code == 200:
         return {"word": word, "definition": res.json()['translation']}
-    else:
-        return
+    return None
 
 
-def getAudio(word, language, dictionary="Forvo (all)", custom_dicts=[]) -> Optional[Dict[str, str]]:
+def getAudio(word: str, 
+             language: str, 
+             dictionary: str="Forvo (all)", 
+             custom_dicts:Optional[list]=None) -> dict[str, str]:
+    if custom_dicts is None:
+        custom_dicts = []
+    
     # should return a dict of audio names and paths to audio
     if dictionary == "Forvo (all)":
         return fetch_audio_all(word, language)
@@ -179,34 +188,33 @@ def getAudio(word, language, dictionary="Forvo (all)", custom_dicts=[]) -> Optio
                 except Exception:
                     pass
         return result
-    else:
-        # We are using a local dictionary here.
-        data = lookupin(
-            word.lower(),
-            language,
-            lemmatize=False,
-            dictionary=dictionary)
-        data['definition'] = json.loads(data['definition'])
-        for d in custom_dicts:
-            if d['name'] == dictionary and d['lang'] == language and d['type'] == 'audiolib':
-                rootpath = d['path']
-                break
-        result = {}
-        for item in data['definition']:
-            qualified_name = dictionary + ":" + os.path.splitext(item)[0]
-            result[qualified_name] = os.path.join(rootpath, item)
-        return result
-    return
+
+    # We are using a local dictionary here.
+    data = lookupin(
+        word.lower(),
+        language,
+        lemmatize=False,
+        dictionary=dictionary)
+    data['definition'] = json.loads(data['definition'])
+    for d in custom_dicts:
+        if d['name'] == dictionary and d['lang'] == language and d['type'] == 'audiolib':
+            rootpath = d['path']
+            break
+    result = {}
+    for item in data['definition']:
+        qualified_name = dictionary + ":" + os.path.splitext(item)[0]
+        result[qualified_name] = os.path.join(rootpath, item)
+    return result
 
 
 def lookupin(
-        word,
-        language,
-        lemmatize=True,
-        greedy_lemmatize=False,
-        dictionary="Wiktionary (English)",
-        gtrans_lang="en",
-        gtrans_api="https://lingva.ml"):
+        word: str,
+        language: str,
+        lemmatize: bool=True,
+        greedy_lemmatize: bool=False,
+        dictionary: str="Wiktionary (English)",
+        gtrans_lang: str="en",
+        gtrans_api: str="https://lingva.ml") -> Optional[LookUpResults]:
     # Remove any punctuation other than a hyphen
     # @language is code
     IS_UPPER = word[0].isupper()
@@ -221,6 +229,9 @@ def lookupin(
         try:
             if dictionary == "Wiktionary (English)":
                 item = wiktionary(word, language)
+                if item is None:
+                    return None 
+
                 item['definition'] = fmt_result(item['definition'])
                 return item
             elif dictionary == "Google Translate":
@@ -237,7 +248,7 @@ def lookupin(
     raise Exception("Word not found")
 
 
-def getFreq(word, language, lemfreq, dictionary) -> (int, int):
+def getFreq(word, language, lemfreq, dictionary) -> tuple[int, int]:
     if lemfreq:
         word = lem_word(word, language)
     freq = dictdb.define(word.lower(), language, dictionary)
@@ -271,33 +282,38 @@ def getFreqlistsForLang(lang: str, dicts: list):
             for item in dicts if item['lang'] == lang and item['type'] == "freq"]
 
 
-forvopath = os.path.join(
-    QStandardPaths.writableLocation(
-        QStandardPaths.DataLocation), "forvo")
+forvopath = os.path.join(QStandardPaths.writableLocation(QStandardPaths.DataLocation), "forvo")
 
 
-def play_audio(name: str, data: dict, lang: str):
-    audiopath = data.get(name)
-    if audiopath is None:
-        return
-    if audiopath.startswith("https://"):
-        fpath = os.path.join(forvopath, lang, name) + audiopath[-4:]
-        if not os.path.exists(fpath):
-            res = requests.get(audiopath, headers=HEADERS)
-            if res.status_code == 200:
-                os.makedirs(os.path.dirname(fpath), exist_ok=True)
-                with open(fpath, 'bw') as file:
-                    file.write(res.content)
-            else:
-                return
-        playsound(os.path.abspath(fpath))
-        return fpath
-    else:
-        playsound(os.path.abspath(audiopath))
+def play_audio(name: str, data: dict[str, str], lang: str) -> str:
+    def crossplatform_playsound(relative_audio_path: str):
+        Thread(target=lambda: playsound(relative_audio_path)).start()
+
+    audiopath: str = data.get(name, "")
+    if not audiopath:
+        return ""
+
+    if not audiopath.startswith("https://"):
+        crossplatform_playsound(audiopath)
         return audiopath
 
+    fpath = os.path.join(forvopath, lang, name) + audiopath[-4:]
+    if not os.path.exists(fpath):
+        res = requests.get(audiopath, headers=HEADERS)
 
-def process_definition(entry: str, mode: str, skip: int, newlines: str) -> str:
+        if res.status_code != 200:
+            # /TODO: Maybe display error to the user?
+            return ""
+        
+        os.makedirs(os.path.dirname(fpath), exist_ok=True)
+        with open(fpath, 'bw') as file:
+            file.write(res.content)
+    
+    crossplatform_playsound(fpath)
+    return fpath
+
+
+def process_definition(entry: str, mode: DefinitionDisplayModes, skip: int, newlines: int) -> str:
     result = entry
     result = convert_display_mode(result, mode)
     result = skip_lines(result, skip)
@@ -305,11 +321,11 @@ def process_definition(entry: str, mode: str, skip: int, newlines: str) -> str:
     return result
 
 
-def convert_display_mode(entry: str, mode: str):
+def convert_display_mode(entry: str, mode: DefinitionDisplayModes) -> str:
     if mode in ['Raw', 'HTML']:
         return entry
     elif mode == 'Markdown':
-        return markdownify(entry)
+        return markdownify(entry)  # type: ignore
     elif mode == "Markdown-HTML":
         return markdown_nop(markdownify(entry))
     elif mode == 'Plaintext':

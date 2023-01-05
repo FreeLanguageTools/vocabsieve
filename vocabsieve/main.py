@@ -1,39 +1,37 @@
+import csv
+import importlib
 import os
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
+import platform
+import sys
+from datetime import datetime
 from typing import Optional
+import requests
+from markdown import markdown
+from packaging import version
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+
 from . import __version__
+from .api import LanguageServer
 from .app_text import *
+from .config import *
+from .db import *
+from .dictionary import *
+from .ext.importer import KindleImporter, KoreaderImporter
+from .ext.reader import ReaderServer
+from .global_events import GlobalObject
+from .text_manipulation import *
+from .tools import *
+from .ui.searchable_boldable_text_edit import SearchableBoldableTextEdit
+from .ui.searchable_text_edit import SearchableTextEdit
+from .constants import LookUpResults, DefinitionDisplayModes
+
 
 QCoreApplication.setApplicationName(settings_app_title)
 QCoreApplication.setOrganizationName(app_organization)
 settings = QSettings(app_organization, settings_app_title)
 
-from .config import *
-from .tools import *
-from .db import *
-from .dictionary import *
-from .api import LanguageServer
-from .ext.reader import ReaderServer
-from .ext.importer import KindleImporter, KoreaderImporter
-from .global_events import GlobalObject
-from .ui.searchable_text_edit import SearchableTextEdit
-from .ui.searchable_boldable_text_edit import SearchableBoldableTextEdit
-from .text_manipulation import *
-
-import sys
-import importlib
-import requests
-import platform
-import time
-import json
-import csv
-from packaging import version
-from markdown import markdown
-from markdownify import markdownify
-from datetime import datetime
-import re
 Path(os.path.join(datapath, "images")).mkdir(parents=True, exist_ok=True)
 # If on macOS, display the modifier key as "Cmd", else display it as "Ctrl".
 # For whatever reason, Qt automatically uses Cmd key when Ctrl is specified on Mac
@@ -43,8 +41,9 @@ if platform.system() == "Darwin":
 else:
     MOD = "Ctrl"
 
+
 class DictionaryWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle(app_title(True))
         self.setFocusPolicy(Qt.StrongFocus)
@@ -55,15 +54,15 @@ class DictionaryWindow(QMainWindow):
         self.previousWord = ""
         self.audio_path = ""
         self.prev_clipboard = ""
-        self.image_path = None 
+        self.image_path = "" 
         self.scaleFont()
         self.initWidgets()
         if self.settings.value("orientation", "Vertical") == "Vertical":
             self.resize(400, 700)
-            self.setupWidgetsV()
+            self.widget.setLayout(self.setupWidgetsV())
         else:
             self.resize(1000, 300)
-            self.setupWidgetsH()
+            self.widget.setLayout(self.setupWidgetsH())
         self.setupMenu()
         self.setupButtons()
         self.startServer()
@@ -79,20 +78,20 @@ class DictionaryWindow(QMainWindow):
                 lambda: self.clipboardChanged(False, True))
         QApplication.clipboard().dataChanged.connect(self.clipboardChanged)
 
-    def scaleFont(self):
+    def scaleFont(self) -> None:
         font = QApplication.font()
         font.setPointSize(
             int(font.pointSize() * self.settings.value("text_scale", type=int) / 100))
         self.setFont(font)
 
-    def focusInEvent(self, event):
+    def focusInEvent(self, event: QFocusEvent) -> None:
         if platform.system() == "Darwin":
             if self.prev_clipboard != QApplication.clipboard().text():
                 self.clipboardChanged(evenWhenFocused=True)
             self.prev_clipboard = QApplication.clipboard().text()
         super().focusInEvent(event)
 
-    def checkUpdates(self):
+    def checkUpdates(self) -> None:
         if self.settings.value("check_updates") is None:
             answer = QMessageBox.question(
                 self,
@@ -127,10 +126,8 @@ class DictionaryWindow(QMainWindow):
                 )
                 if answer2 == QMessageBox.Open:
                     QDesktopServices.openUrl(QUrl(current['html_url']))
-        else:
-            pass
 
-    def initWidgets(self):
+    def initWidgets(self) -> None:
         self.namelabel = QLabel(
             "<h2 style=\"font-weight: normal;\">" + app_title(False) + "</h2>")
         self.menu = QMenuBar(self)
@@ -215,70 +212,72 @@ class DictionaryWindow(QMainWindow):
             '''
         )
 
-    def play_audio(self, x):
+    def play_audio(self, x: Optional[str]) -> None:
         QCoreApplication.processEvents()
-        if x is not None:
-            self.audio_path = play_audio(
-                x, self.audios, self.settings.value(
-                    "target_language", "en"))
+        if x is None:
+            return
 
-    
-    def setupWidgetsV(self):
-        self.layout = QGridLayout(self.widget)
-        self.layout.addWidget(self.namelabel, 0, 0, 1, 2)
+        self.audio_path = play_audio(x, self.audios, self.settings.value("target_language", "en"))
 
-        self.layout.addWidget(self.single_word, 1, 0, 1, 3)
+    def setupWidgetsV(self) -> QGridLayout:
+        """Prepares vertical layout"""
 
-        self.layout.addWidget(
+        layout = QGridLayout(self.widget)
+        layout.addWidget(self.namelabel, 0, 0, 1, 2)
+
+        layout.addWidget(self.single_word, 1, 0, 1, 3)
+
+        layout.addWidget(
             QLabel("<h3 style=\"font-weight: normal;\">Sentence</h3>"), 2, 0)
-        self.layout.addWidget(self.read_button, 2, 1)
-        self.layout.addWidget(self.image_viewer, 0, 2, 3, 1)
-        self.layout.addWidget(self.sentence, 3, 0, 1, 3)
-        self.layout.setRowStretch(3, 1)
-        self.layout.addWidget(
+        layout.addWidget(self.read_button, 2, 1)
+        layout.addWidget(self.image_viewer, 0, 2, 3, 1)
+        layout.addWidget(self.sentence, 3, 0, 1, 3)
+        layout.setRowStretch(3, 1)
+        layout.addWidget(
             QLabel("<h3 style=\"font-weight: normal;\">Word</h3>"), 4, 0)
 
         if self.settings.value("lemmatization", True, type=bool):
-            self.layout.addWidget(self.lookup_button, 4, 1)
-            self.layout.addWidget(self.lookup_exact_button, 4, 2)
+            layout.addWidget(self.lookup_button, 4, 1)
+            layout.addWidget(self.lookup_exact_button, 4, 2)
         else:
-            self.layout.addWidget(self.lookup_button, 4, 1, 1, 2)
+            layout.addWidget(self.lookup_button, 4, 1, 1, 2)
 
-        self.layout.addWidget(
+        layout.addWidget(
             QLabel("<h3 style=\"font-weight: normal;\">Definition</h3>"), 6, 0)
-        self.layout.addWidget(self.freq_display, 6, 1)
-        self.layout.addWidget(self.web_button, 6, 2)
-        self.layout.addWidget(self.word, 5, 0, 1, 3)
-        self.layout.setRowStretch(7, 2)
-        self.layout.setRowStretch(9, 2)
+        layout.addWidget(self.freq_display, 6, 1)
+        layout.addWidget(self.web_button, 6, 2)
+        layout.addWidget(self.word, 5, 0, 1, 3)
+        layout.setRowStretch(7, 2)
+        layout.setRowStretch(9, 2)
         if self.settings.value("dict_source2", "<disabled>") != "<disabled>":
-            self.layout.addWidget(self.definition, 7, 0, 2, 3)
-            self.layout.addWidget(self.definition2, 9, 0, 2, 3)
+            layout.addWidget(self.definition, 7, 0, 2, 3)
+            layout.addWidget(self.definition2, 9, 0, 2, 3)
         else:
-            self.layout.addWidget(self.definition, 7, 0, 4, 3)
+            layout.addWidget(self.definition, 7, 0, 4, 3)
 
-        self.layout.addWidget(
+        layout.addWidget(
             QLabel("<h3 style=\"font-weight: normal;\">Pronunciation</h3>"),
             11,
             0,
             1,
             3)
-        self.layout.addWidget(self.audio_selector, 12, 0, 1, 3)
-        self.layout.setRowStretch(12, 1)
-        self.layout.addWidget(
+        layout.addWidget(self.audio_selector, 12, 0, 1, 3)
+        layout.setRowStretch(12, 1)
+        layout.addWidget(
             QLabel("<h3 style=\"font-weight: normal;\">Additional tags</h3>"),
             13,
             0,
             1,
             3)
 
-        self.layout.addWidget(self.tags, 14, 0, 1, 3)
+        layout.addWidget(self.tags, 14, 0, 1, 3)
 
-        self.layout.addWidget(self.toanki_button, 15, 0, 1, 3)
-        self.layout.addWidget(self.config_button, 16, 0, 1, 3)
+        layout.addWidget(self.toanki_button, 15, 0, 1, 3)
+        layout.addWidget(self.config_button, 16, 0, 1, 3)
 
+        return layout
 
-    def setupButtons(self):
+    def setupButtons(self) -> None:
         self.lookup_button.clicked.connect(lambda: self.lookupClicked(True))
         self.lookup_exact_button.clicked.connect(
             lambda: self.lookupClicked(False))
@@ -293,7 +292,7 @@ class DictionaryWindow(QMainWindow):
 
         self.bar.addPermanentWidget(self.stats_label)
 
-    def setupMenu(self):
+    def setupMenu(self) -> None:
         self.open_reader_action = QAction("&Reader")
         self.menu.addAction(self.open_reader_action)
         if not self.settings.value("reader_enabled", True, type=bool):
@@ -330,7 +329,7 @@ class DictionaryWindow(QMainWindow):
 
         self.setMenuBar(self.menu)
 
-    def exportNotes(self):
+    def exportNotes(self) -> None:
         """
         First ask for a file path, then save a CSV there.
         """
@@ -343,18 +342,18 @@ class DictionaryWindow(QMainWindow):
             ),
             "CSV (*.csv)"
         )
-        if path:
-            with open(path, 'w', encoding='utf-8') as file:
-                writer = csv.writer(file)
-                writer.writerow(
-                    ['timestamp', 'content', 'anki_export_success', 'sentence', 'word', 
-                    'definition', 'definition2', 'pronunciation', 'image', 'tags']
-                )
-                writer.writerows(self.rec.getAllNotes())
-        else:
+        if not path:
             return
+        
+        with open(path, 'w', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow(
+                ['timestamp', 'content', 'anki_export_success', 'sentence', 'word', 
+                'definition', 'definition2', 'pronunciation', 'image', 'tags']
+            )
+            writer.writerows(self.rec.getAllNotes())
 
-    def exportLookups(self):
+    def exportLookups(self) -> None:
         """
         First ask for a file path, then save a CSV there.
         """
@@ -367,80 +366,86 @@ class DictionaryWindow(QMainWindow):
             ),
             "CSV (*.csv)"
         )
-        if path:
-            with open(path, 'w', encoding='utf-8') as file:
-                writer = csv.writer(file)
-                writer.writerow(
-                    ['timestamp', 'word', 'definition', 'language', 'lemmatize', 'dictionary', 'success']
-                )
-                writer.writerows(self.rec.getAllLookups())
-        else:
+        if not path:
             return
 
-    def onHelp(self):
+        with open(path, 'w', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow(
+                ['timestamp', 'word', 'definition', 'language', 'lemmatize', 'dictionary', 'success']
+            )
+            writer.writerows(self.rec.getAllLookups())
+
+    def onHelp(self) -> None:
         url = f"https://wiki.freelanguagetools.org/vocabsieve_setup"
         QDesktopServices.openUrl(QUrl(url))
 
-    def onAbout(self):
+    def onAbout(self) -> None:
         self.about_dialog = AboutDialog()
         self.about_dialog.exec_()
 
-    def setupWidgetsH(self):
-        self.layout = QGridLayout(self.widget)
+    def setupWidgetsH(self) -> QGridLayout:
+        """Prepares horizontal layout"""
+
+        layout = QGridLayout(self.widget)
         # self.sentence.setMaximumHeight(99999)
-        self.layout.addWidget(self.namelabel, 0, 0, 1, 1)
-        self.layout.addWidget(self.image_viewer, 0, 1, 2, 1)
-        self.layout.addWidget(self.single_word, 0, 3, 1, 2)
+        layout.addWidget(self.namelabel, 0, 0, 1, 1)
+        layout.addWidget(self.image_viewer, 0, 1, 2, 1)
+        layout.addWidget(self.single_word, 0, 3, 1, 2)
 
-        self.layout.addWidget(
+        layout.addWidget(
             QLabel("<h3 style=\"font-weight: normal;\">Sentence</h3>"), 1, 0)
-        self.layout.addWidget(self.freq_display, 0, 2)
-        self.layout.addWidget(self.read_button, 6, 1)
+        layout.addWidget(self.freq_display, 0, 2)
+        layout.addWidget(self.read_button, 6, 1)
 
-        self.layout.addWidget(self.sentence, 2, 0, 3, 2)
-        self.layout.addWidget(self.audio_selector, 5, 0, 1, 2)
-        self.layout.addWidget(
+        layout.addWidget(self.sentence, 2, 0, 3, 2)
+        layout.addWidget(self.audio_selector, 5, 0, 1, 2)
+        layout.addWidget(
             QLabel("<h3 style=\"font-weight: normal;\">Word</h3>"), 1, 2)
 
-        self.layout.addWidget(self.lookup_button, 3, 2)
-        self.layout.addWidget(self.lookup_exact_button, 4, 2)
+        layout.addWidget(self.lookup_button, 3, 2)
+        layout.addWidget(self.lookup_exact_button, 4, 2)
 
-        self.layout.addWidget(
+        layout.addWidget(
             QLabel("<h3 style=\"font-weight: normal;\">Definition</h3>"), 1, 3)
-        self.layout.addWidget(self.web_button, 1, 4)
-        self.layout.addWidget(self.word, 2, 2, 1, 1)
+        layout.addWidget(self.web_button, 1, 4)
+        layout.addWidget(self.word, 2, 2, 1, 1)
         if self.settings.value("dict_source2", "<disabled>") != "<disabled>":
-            self.layout.addWidget(self.definition, 2, 3, 4, 1)
-            self.layout.addWidget(self.definition2, 2, 4, 4, 1)
+            layout.addWidget(self.definition, 2, 3, 4, 1)
+            layout.addWidget(self.definition2, 2, 4, 4, 1)
         else:
-            self.layout.addWidget(self.definition, 2, 3, 4, 2)
+            layout.addWidget(self.definition, 2, 3, 4, 2)
 
-        self.layout.addWidget(QLabel("Additional tags"), 5, 2, 1, 1)
+        layout.addWidget(QLabel("Additional tags"), 5, 2, 1, 1)
 
-        self.layout.addWidget(self.tags, 6, 2)
+        layout.addWidget(self.tags, 6, 2)
 
-        self.layout.addWidget(self.toanki_button, 6, 3, 1, 1)
-        self.layout.addWidget(self.config_button, 6, 4, 1, 1)
-        self.layout.setColumnStretch(0, 2)
-        self.layout.setColumnStretch(1, 2)
-        self.layout.setColumnStretch(2, 0)
-        self.layout.setColumnStretch(3, 5)
-        self.layout.setColumnStretch(4, 5)
-        self.layout.setRowStretch(0, 0)
-        #self.layout.setRowStretch(1, 5)
-        self.layout.setRowStretch(2, 5)
-        self.layout.setRowStretch(3, 5)
-        self.layout.setRowStretch(4, 5)
-        self.layout.setRowStretch(5, 5)
-        self.layout.setRowStretch(6, 0)
+        layout.addWidget(self.toanki_button, 6, 3, 1, 1)
+        layout.addWidget(self.config_button, 6, 4, 1, 1)
+        layout.setColumnStretch(0, 2)
+        layout.setColumnStretch(1, 2)
+        layout.setColumnStretch(2, 0)
+        layout.setColumnStretch(3, 5)
+        layout.setColumnStretch(4, 5)
+        layout.setRowStretch(0, 0)
+        #layout.setRowStretch(1, 5)
+        layout.setRowStretch(2, 5)
+        layout.setRowStretch(3, 5)
+        layout.setRowStretch(4, 5)
+        layout.setRowStretch(5, 5)
+        layout.setRowStretch(6, 0)
 
-    def updateAnkiButtonState(self, forceDisable=False):
+        return layout
+
+    def updateAnkiButtonState(self, forceDisable=False) -> None:  
+        """Disables self.toanki_button if sentence field is empty"""
+
         if not self.sentence.toPlainText().strip() or forceDisable:
             self.toanki_button.setEnabled(False)
         else:
             self.toanki_button.setEnabled(True)
 
-    def configure(self):
+    def configure(self) -> None:
         api = self.settings.value('anki_api', 'http://127.0.0.1:8765')
         if self.settings.value('enable_anki', True, type=bool):
             try:
@@ -470,7 +475,7 @@ class DictionaryWindow(QMainWindow):
         self.settings_dialog = SettingsDialog(self)
         self.settings_dialog.exec()
 
-    def importkindle(self):
+    def importkindle(self) -> None:
         fname = QFileDialog.getOpenFileName(
             parent=self,
             caption="Select a file",
@@ -478,11 +483,11 @@ class DictionaryWindow(QMainWindow):
         )[0]
         if not fname:
             return
-        else:
-            import_kindle = KindleImporter(self, fname)
-            import_kindle.exec()
+        
+        import_kindle = KindleImporter(self, fname)
+        import_kindle.exec()
 
-    def importkoreader(self):
+    def importkoreader(self) -> None:
         path = QFileDialog.getExistingDirectory(
             parent=self,
             caption="Select the directory containers ebook files",
@@ -490,11 +495,11 @@ class DictionaryWindow(QMainWindow):
         )
         if not path:
             return
-        else:
-            import_koreader = KoreaderImporter(self, path)
-            import_koreader.exec()
 
-    def setupShortcuts(self):
+        import_koreader = KoreaderImporter(self, path)
+        import_koreader.exec()
+
+    def setupShortcuts(self) -> None:
         self.shortcut_toanki = QShortcut(QKeySequence('Ctrl+S'), self)
         self.shortcut_toanki.activated.connect(self.toanki_button.animateClick)
         self.shortcut_getdef_e = QShortcut(QKeySequence('Ctrl+Shift+D'), self)
@@ -506,7 +511,9 @@ class DictionaryWindow(QMainWindow):
         self.shortcut_web = QShortcut(QKeySequence('Ctrl+1'), self)
         self.shortcut_web.activated.connect(self.web_button.animateClick)
 
-    def getCurrentWord(self):
+    def getCurrentWord(self) -> str:
+        """Returns currently selected word. If there isn't any, last selected word is returned"""
+
         # defines word only if widget have focus on it
         for text_field in (self.sentence, self.definition, self.definition2):
             if text_field.hasFocus() and (selected_text := text_field.textCursor().selectedText().strip()):
@@ -517,25 +524,25 @@ class DictionaryWindow(QMainWindow):
             self.previousWord = self.word.text().strip()
         return self.previousWord
 
-    def onWebButton(self):
-        url = self.settings.value("custom_url",
-                                  "https://en.wiktionary.org/wiki/@@@@").replace(
-            "@@@@", self.word.text()
-        )
+    def onWebButton(self) -> None:
+        """Shows definitions of self.word.text() in wiktionoary in browser"""
+
+        url = self.settings.value("custom_url", f"https://en.wiktionary.org/wiki/{self.word.text()}")
         QDesktopServices.openUrl(QUrl(url))
 
-    def onReaderOpen(self):
+    def onReaderOpen(self) -> None:
+        """Opens reader in browser"""
+
         url = f"http://{self.settings.value('reader_host', '127.0.0.1', type=str)}:{self.settings.value('reader_port', '39285', type=str)}"
         QDesktopServices.openUrl(QUrl(url))
 
-    def lookupClicked(self, use_lemmatize=True):
+    def lookupClicked(self, use_lemmatize=True) -> None:
         target = self.getCurrentWord()
         self.updateAnkiButtonState()
-        if target == "":
-            return
-        self.lookupSet(target, use_lemmatize)
+        if target:
+            self.lookupSet(target, use_lemmatize)
 
-    def setState(self, state):
+    def setState(self, state: LookUpResults) -> None:
         self.word.setText(state['word'])
         self.definition.original = state['definition']
         display_mode1 = self.settings.value(
@@ -601,18 +608,19 @@ class DictionaryWindow(QMainWindow):
         cursor.clearSelection()
         self.sentence.setTextCursor(cursor)
 
-    def setSentence(self, content):
+    def setSentence(self, content) -> None:
         self.sentence.setText(str.strip(content))
 
-    def setWord(self, content):
+    def setWord(self, content) -> None:
         self.word.setText(content)
 
-    def setImage(self, content: Optional[QPixmap]):
-        if content == None:
+    def setImage(self, content: Optional[QPixmap]) -> None:
+        if content is None:
             self.image_viewer.setPixmap(QPixmap())
             self.image_viewer.setText("<center><b>&lt;No image selected&gt;</center>")
-            self.image_path = None
+            self.image_path = ""
             return
+        
         filename = str(int(time.time()*1000)) + '.' + self.settings.value("img_format", "jpg")
         self.image_path = os.path.join(datapath, "images", filename)
         content.save(
@@ -659,14 +667,12 @@ class DictionaryWindow(QMainWindow):
         else:
             self.setSentence(preprocess_clipboard(text, lang))
 
-    def lookupSet(self, word, use_lemmatize=True):
-
+    def lookupSet(self, word, use_lemmatize=True) -> None:
         sentence_text = self.sentence.unboldedText
 
         if settings.value("bold_style", type=int):
             # Bold word that was clicked on, either with "<b>{word}</b>" or 
             # "__{word}__".
-
 
             if self.settings.value("bold_style", type=int) == 1:
                 apply_bold = apply_bold_tags
@@ -689,35 +695,45 @@ class DictionaryWindow(QMainWindow):
         result = self.lookup(word, use_lemmatize)
         self.setState(result)
         QCoreApplication.processEvents()
-        self.audio_path = None
-        if self.settings.value("audio_dict", "Forvo (all)") != "<disabled>":
-            try:
-                self.audios = getAudio(
-                    word,
-                    self.settings.value("target_language", 'en'),
-                    dictionary=self.settings.value("audio_dict", "Forvo (all)"),
-                    custom_dicts=json.loads(
-                        self.settings.value("custom_dicts", '[]')))
-            except Exception:
-                self.audios = {}
-            self.audio_selector.clear()
-            if len(self.audios) > 0:
-                for item in self.audios:
-                    self.audio_selector.addItem("🔊 " + item)
-                self.audio_selector.setCurrentItem(
-                    self.audio_selector.item(0)
-                )
+        self.audio_path = ""
 
-    def getLanguage(self):
-        return self.settings.value("target_language", "en")
-    def getLemGreedy(self):
-        return self.settings.value("lem_greedily", False, type=bool)
+        if self.settings.value("audio_dict", "Forvo (all)") == "<disabled>":
+            return
 
-    def lookup(self, word, use_lemmatize=True, record=True):
+        try:
+            self.audios = getAudio(
+                word,
+                self.settings.value("target_language", 'en'),
+                dictionary=self.settings.value("audio_dict", "Forvo (all)"),
+                custom_dicts=json.loads(
+                    self.settings.value("custom_dicts", '[]')))
+        except Exception:
+            self.audios = {}
+        
+        self.audio_selector.clear()
+
+        if len(self.audios):
+            for item in self.audios:
+                self.audio_selector.addItem("🔊 " + item)
+            self.audio_selector.setCurrentItem(
+                self.audio_selector.item(0)
+            )
+
+    def getLanguage(self) -> str:
+        return self.settings.value("target_language", "en")  # type: ignore
+
+    def getLemGreedy(self) -> bool:
+        return self.settings.value("lem_greedily", False, type=bool)  # type: ignore
+
+    def lookup(self, word: str, use_lemmatize: bool=True, record:bool = True) -> LookUpResults:
         """
         Look up a word and return a dict with the lemmatized form (if enabled)
         and definition
         """
+
+        word = re.sub('[«»…,()\\[\\]_]*', "", word)
+        # TODO
+        # why manually check "lemmatization" in settings when you can pass it through parameter?
         lemmatize = use_lemmatize and self.settings.value(
             "lemmatization", True, type=bool)
         lem_greedily = self.getLemGreedy()
@@ -725,10 +741,9 @@ class DictionaryWindow(QMainWindow):
         short_sign = "Y" if lemmatize else "N"
         language = self.getLanguage()
         TL = language  # Handy synonym
-        gtrans_lang = self.settings.value("gtrans_lang", "en")
-        dictname = self.settings.value("dict_source", "Wiktionary (English)")
-        freqname = self.settings.value("freq_source", "<disabled>")
-        word = re.sub('[«»…,()\\[\\]_]*', "", word)
+        gtrans_lang: str = self.settings.value("gtrans_lang", "en")
+        dictname: str = self.settings.value("dict_source", "Wiktionary (English)")
+        freqname: str = self.settings.value("freq_source", "<disabled>")
         if freqname != "<disabled>":
             freq_found = False
             freq_display = self.settings.value("freq_display", "Rank")
@@ -772,7 +787,7 @@ class DictionaryWindow(QMainWindow):
             if record:
                 self.status(str(e))
                 self.rec.recordLookup(
-                    word, None, TL, lemmatize, dictname, False)
+                    word, "", TL, lemmatize, dictname, False)
                 self.updateAnkiButtonState(True)
             item = {
                 "word": word,
@@ -783,7 +798,7 @@ class DictionaryWindow(QMainWindow):
         if dict2name == "<disabled>":
             return item
         try:
-            item2 = lookupin(
+            item2: LookUpResults = lookupin(
                 word,
                 language,
                 lemmatize,
@@ -793,7 +808,7 @@ class DictionaryWindow(QMainWindow):
             if record:
                 self.rec.recordLookup(
                     word,
-                    item['definition'],
+                    item2['definition'],
                     TL,
                     lemmatize,
                     dict2name,
@@ -802,7 +817,7 @@ class DictionaryWindow(QMainWindow):
             self.status("Dict-2 failed" + str(e))
             if record:
                 self.rec.recordLookup(
-                    word, None, TL, lemmatize, dict2name, False)
+                    word, "", TL, lemmatize, dict2name, False)
             self.definition2.clear()
             return item
         return {
@@ -810,9 +825,8 @@ class DictionaryWindow(QMainWindow):
             'definition': item['definition'],
             'definition2': item2['definition']}
 
-    def createNote(self):
-        sentence = self.sentence.textBoldedByTags
-        sentence = sentence.replace("\n", "<br>")
+    def createNote(self) -> None:
+        sentence = self.sentence.textBoldedByTags.replace("\n", "<br>")
 
         tags = (self.settings.value("tags", "vocabsieve").strip() + " " + self.tags.text().strip()).split(" ")
         word = self.word.text()
@@ -878,10 +892,12 @@ class DictionaryWindow(QMainWindow):
 
         self.status("Adding note")
         api = self.settings.value("anki_api")
+        enable_anki_flag = self.settings.value("enable_anki", True, type=bool)
         try:
-            if self.settings.value("enable_anki", True, type=bool):
+            if enable_anki_flag:
                 addNote(api, content)
-                self.rec.recordNote(
+
+            self.rec.recordNote(
                     json.dumps(content), 
                     sentence,
                     word,
@@ -890,20 +906,9 @@ class DictionaryWindow(QMainWindow):
                     self.audio_path,
                     self.image_path,
                     " ".join(tags),
-                    True
-                )
-            else:
-                self.rec.recordNote(
-                    json.dumps(content), 
-                    sentence,
-                    word,
-                    definition,
-                    definition2,
-                    self.audio_path,
-                    self.image_path,
-                    " ".join(tags),
-                    False
-                )
+                    enable_anki_flag
+                    )
+
             self.sentence.clear()
             self.word.clear()
             self.definition.clear()
@@ -935,8 +940,11 @@ class DictionaryWindow(QMainWindow):
             )
         self.setImage(None)
 
-    def process_defi_anki(self, w: SearchableTextEdit, display_mode):
-        "Process definitions before sending to Anki"
+    def process_defi_anki(self, 
+                          w: SearchableTextEdit, 
+                          display_mode: DefinitionDisplayModes) -> str:
+        """Process definitions before sending to Anki"""
+
         print("display mode is", display_mode)
         if display_mode in ["Raw", "Plaintext"]:
             return w.toPlainText().replace("\n", "<br>") # Anki needs <br>s
@@ -946,14 +954,16 @@ class DictionaryWindow(QMainWindow):
             print(w.toMarkdown())
             return markdown_nop(w.toMarkdown())
         elif display_mode == "HTML":
-            return w.original
+            return w.original  # type: ignore
+        else:
+            return ""
 
-    def errorNoConnection(self, error):
+    def errorNoConnection(self, error) -> None:
         """
         Dialog window sent when something goes wrong in configuration step
         """
         msg = QMessageBox()
-        msg.setIcon(QMessageBox.Critical)
+        msg.setIcon(QMessageBox.Icon.Critical)
         msg.setText("Error")
         msg.setInformativeText(
             str(error) +
@@ -963,30 +973,30 @@ class DictionaryWindow(QMainWindow):
             "\nbe sure to change it in the configuration.")
         msg.exec()
 
-    def initTimer(self):
+    def initTimer(self) -> None:
         self.showStats()
         self.timer = QTimer()
         self.timer.timeout.connect(self.showStats)
         self.timer.start(2000)
 
-    def showStats(self):
+    def showStats(self) -> None:
         lookups = self.rec.countLookupsToday()
         notes = self.rec.countNotesToday()
         self.stats_label.setText(f"L:{str(lookups)} N:{str(notes)}")
 
-    def time(self):
+    def time(self) -> str:
         return QDateTime.currentDateTime().toString('[hh:mm:ss]')
 
-    def status(self, msg):
+    def status(self, msg: str) -> None:
         self.bar.showMessage(self.time() + " " + msg, 4000)
 
-    def warn(self, text):
+    def warn(self, text: str) -> None:
         msg = QMessageBox()
-        msg.setIcon(QMessageBox.Warning)
+        msg.setIcon(QMessageBox.Icon.Warning)
         msg.setText(text)
         msg.exec()
 
-    def startServer(self):
+    def startServer(self) -> None:
         if self.settings.value("api_enabled", True, type=bool):
             try:
                 self.thread = QThread()
@@ -1000,6 +1010,7 @@ class DictionaryWindow(QMainWindow):
             except Exception as e:
                 print(e)
                 self.status("Failed to start API server")
+        
         if self.settings.value("reader_enabled", True, type=bool):
             try:
                 self.thread2 = QThread()
@@ -1018,7 +1029,7 @@ class DictionaryWindow(QMainWindow):
             sentence: str,
             word: str,
             definition: str,
-            tags: list):
+            tags: list) -> None:
         self.setSentence(sentence)
         self.setWord(word)
         self.definition.setText(definition)
