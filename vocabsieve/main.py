@@ -54,15 +54,17 @@ class DictionaryWindow(QMainWindow):
         self.previousWord = ""
         self.audio_path = ""
         self.prev_clipboard = ""
-        self.image_path = "" 
+        self.image_path = ""
+
         self.scaleFont()
         self.initWidgets()
+
         if self.settings.value("orientation", "Vertical") == "Vertical":
             self.resize(400, 700)
-            self.widget.setLayout(self.setupWidgetsV())
+            self.layout = self.setupWidgetsV()  # type: ignore
         else:
             self.resize(1000, 300)
-            self.widget.setLayout(self.setupWidgetsH())
+            self.layout = self.setupWidgetsH()  # type: ignore
         self.setupMenu()
         self.setupButtons()
         self.startServer()
