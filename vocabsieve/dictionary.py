@@ -229,9 +229,6 @@ def lookupin(
         try:
             if dictionary == "Wiktionary (English)":
                 item = wiktionary(word, language)
-                if item is None:
-                    return None 
-
                 item['definition'] = fmt_result(item['definition'])
                 return item
             elif dictionary == "Google Translate":
