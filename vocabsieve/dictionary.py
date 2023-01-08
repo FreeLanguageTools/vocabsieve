@@ -12,7 +12,7 @@ from bidict import bidict
 from bs4 import BeautifulSoup
 from markdown import markdown
 from markdownify import markdownify
-from playsound import playsound
+from .playsound import playsound
 
 from .constants import DefinitionDisplayModes, LookUpResults
 from .db import *
