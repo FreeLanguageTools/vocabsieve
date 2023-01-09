@@ -23,3 +23,4 @@ markdownify
 readmdict
 python-lzo; sys_platform == 'linux'
 packaging
+typing_extensions

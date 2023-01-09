@@ -12,9 +12,13 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+from .app_text import *
+QCoreApplication.setApplicationName(settings_app_title)
+QCoreApplication.setOrganizationName(app_organization)
+settings = QSettings(app_organization, settings_app_title)
+
 from . import __version__
 from .api import LanguageServer
-from .app_text import *
 from .config import *
 from .db import *
 from .dictionary import *
@@ -28,9 +32,6 @@ from .ui.searchable_text_edit import SearchableTextEdit
 from .constants import LookUpResults, DefinitionDisplayModes
 
 
-QCoreApplication.setApplicationName(settings_app_title)
-QCoreApplication.setOrganizationName(app_organization)
-settings = QSettings(app_organization, settings_app_title)
 
 Path(os.path.join(datapath, "images")).mkdir(parents=True, exist_ok=True)
 # If on macOS, display the modifier key as "Cmd", else display it as "Ctrl".
