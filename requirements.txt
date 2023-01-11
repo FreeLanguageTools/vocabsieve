@@ -17,7 +17,6 @@ sentence_splitter
 pymorphy2
 pymorphy2-dicts-ru
 ebooklib
-pycountry
 markdown
 markdownify
 readmdict

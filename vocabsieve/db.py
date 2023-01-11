@@ -4,29 +4,13 @@ from os import path
 from pathlib import Path
 import time
 from bidict import bidict
-import pycountry
 import re
 from datetime import datetime
+from .constants import langcodes
 datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
 Path(datapath).mkdir(parents=True, exist_ok=True)
 print(datapath)
-# Currently, all languages with two letter codes can be set
-langcodes = bidict(
-    dict(
-        zip(
-            [langcode.alpha_2 for langcode in list(pycountry.languages) if getattr(langcode, 'alpha_2', None)],
-            [langcode.name for langcode in list(pycountry.languages) if getattr(langcode, 'alpha_2', None)]
-        )
-    )
-)
-# Apply patches
-langcodes['el'] = "Greek"
-for item in langcodes:
-    langcodes[item] = re.sub(r'\s?\([^)]*\)$', '', langcodes[item])
-langcodes['zh_HANT'] = "Chinese (Traditional)"
-langcodes['haw'] = "Hawaiian"
-langcodes['ceb'] = "Cebuano"
-langcodes['hmn'] = "Hmong"
+
 
 dictionaries = bidict({"Wiktionary (English)": "wikt-en",
                        "Google Translate": "gtrans"})

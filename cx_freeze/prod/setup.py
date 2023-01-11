@@ -30,7 +30,6 @@ build_exe_options = {
         "charset_normalizer",
         "slpp",
         "ebooklib",
-        "pycountry",
         "markdown",
         "markdownify",
         "lzo",
