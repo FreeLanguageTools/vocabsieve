@@ -19,6 +19,7 @@ from lxml import etree
 from ebooklib import epub, ITEM_DOCUMENT
 
 from .utils import *
+from .BatchNotePreviewer import BatchNotePreviewer
 
 class GenericImporter(QDialog):
     """
@@ -32,7 +33,7 @@ class GenericImporter(QDialog):
         self.setWindowTitle(f"Import {src_name} highlights")
         self.parent = parent
         self.selected_highlight_items = []
-        self.resize(700, 500)
+        self.resize(600, 600)
         self.src_name = src_name
         self.orig_lookup_terms, self.orig_sentences, self.orig_dates, self.orig_book_names = self.getNotes()
         self.orig_dates_day = [date[:10] for date in self.orig_dates]
@@ -46,6 +47,7 @@ class GenericImporter(QDialog):
         self.layout.addRow(QLabel(
             f"<h2>Import {src_name} highlights</h2>"
         ))
+        self.lookup_button.setEnabled(False)
         # Source selector, for selecting which books to include
         self.src_selector = QWidget()
         self.src_checkboxes = []
@@ -62,12 +64,19 @@ class GenericImporter(QDialog):
         self.layout.addRow("Use notes starting from: ", self.datewidget)
         self.notes_count_label = QLabel()
         self.layout.addRow(self.notes_count_label, self.lookup_button)
-
+        self.progressbar = QProgressBar()
+        self.progressbar.setMinimum(0)
         self.definition_count_label = QLabel()
         self.anki_button = QPushButton("Add notes to Anki")
         self.anki_button.setEnabled(False)
         self.anki_button.clicked.connect(self.to_anki)
+
+        self.preview_widget = BatchNotePreviewer()
+        self.layout.addRow(QLabel("Preview cards"), self.preview_widget)
+        self.layout.addRow(self.progressbar)
         self.layout.addRow(self.definition_count_label, self.anki_button)
+
+
 
     def getNotes(self):
         """
@@ -84,7 +93,12 @@ class GenericImporter(QDialog):
             if checkbox.isChecked():
                 selected_book_names.append(checkbox.text())
         self.selected_highlight_items = self.filterHighlights(start_date, selected_book_names)
-        
+        if self.selected_highlight_items:
+            self.lookup_button.setEnabled(True)
+            self.progressbar.setMaximum(len(self.selected_highlight_items)) 
+        else:
+            self.lookup_button.setEnabled(False)
+        self.progressbar.setValue(0)
         self.notes_count_label.setText(f"{len(self.selected_highlight_items)} highlights selected")
 
     def filterHighlights(self, start_date, book_names):
@@ -105,13 +119,15 @@ class GenericImporter(QDialog):
         self.definition2s = []
         self.audio_paths = []
         self.book_names = []
-    
 
+        # No using any of these buttons to prevent race conditions
+        self.lookup_button.setEnabled(False)
+        self.anki_button.setEnabled(False)
+        self.preview_widget.reset()
         count = 0
-        for lookup_term, sentence, book_name in self.selected_highlight_items:
+        for n_looked_up, (lookup_term, sentence, book_name) in enumerate(self.selected_highlight_items):
             # Remove punctuations
             word = re.sub('[\\?\\.!«»…,()\\[\\]]*', "", lookup_term)
-
             if sentence:
                 if self.settings.value("bold_word", True, type=bool):
                     self.sentences.append(sentence.replace("_", "").replace(word, f"__{word}__"))
@@ -125,11 +141,12 @@ class GenericImporter(QDialog):
                     self.definitions.append(item['definition'])
                     self.definition_count_label.setText(
                         str(count) + " definitions found")
+                    self.definition2s.append(item.get('definition2', ""))
+                    self.preview_widget.appendNoteItem(sentence, item, word)
                     QApplication.processEvents()
                 else:
                     self.words.append(word)
                     self.definitions.append("")
-                self.definition2s.append(item.get('definition2', ""))
 
                 audio_path = ""
                 if self.settings.value("audio_dict", "Forvo (all)") != "<disabled>":
@@ -154,7 +171,10 @@ class GenericImporter(QDialog):
                 #self.words.append("")
                 #self.definition2s.append("")
                 #self.audio_paths.append("")
+            self.progressbar.setValue(n_looked_up+1)
 
+        # Unlock buttons again now
+        self.lookup_button.setEnabled(True)
         self.anki_button.setEnabled(True)
         print("Lengths", len(self.sentences), len(self.words), len(self.definitions), len(self.audio_paths))
     def to_anki(self):

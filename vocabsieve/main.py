@@ -481,7 +481,7 @@ class DictionaryWindow(QMainWindow):
     def importkindle(self) -> None:
         fname = QFileDialog.getOpenFileName(
             parent=self,
-            caption="Select a file",
+            caption="Select your clippings.txt file",
             filter='Kindle clippings files (*.txt)',
         )[0]
         if not fname:
@@ -493,7 +493,7 @@ class DictionaryWindow(QMainWindow):
     def importkoreader(self) -> None:
         path = QFileDialog.getExistingDirectory(
             parent=self,
-            caption="Select the directory containers ebook files",
+            caption="Select the directory containing ebook files",
             directory=QStandardPaths.writableLocation(QStandardPaths.HomeLocation)
         )
         if not path:

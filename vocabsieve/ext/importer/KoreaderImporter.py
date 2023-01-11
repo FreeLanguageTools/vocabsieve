@@ -6,6 +6,7 @@ import os
 import re
 import glob
 import json
+from zipfile import ZipFile
 from pathlib import Path
 from difflib import SequenceMatcher
 from sentence_splitter import split_text_into_sentences
@@ -66,6 +67,35 @@ def koreader_parse_fb2(file, lang):
             continue
     return result
 
+def koreader_parse_fb2zip(file, lang):
+    result = []
+    notepath = os.path.join(
+        os.path.dirname(file), removesuffix(os.path.basename(file), "zip") + "sdr", "metadata.zip.lua"
+    )
+    with open(notepath) as f:
+        notes = slpp.decode(" ".join("\n".join(f.readlines()[1:]).split(" ")[1:]))['bookmarks'].items()
+    print(notepath)
+    with ZipFile(file, 'r') as f:
+        for file_in_zip in f.namelist():
+            if file_in_zip.endswith(".fb2"):
+                content = f.read(file_in_zip)
+    root = etree.ElementTree(etree.fromstring(content)).getroot()
+    ns = {'f': "http://www.gribuser.ru/xml/fictionbook/2.0"}
+    for _, item in notes:
+        try:
+            xpath = fb2_xpathconvert(item['page'])
+            word_start = int(item['pos0'].split(".")[-1])
+            word_end = int(item['pos1'].split(".")[-1])
+            if root.xpath(xpath, namespaces=ns):
+                ctx = root.xpath(xpath, namespaces=ns)[0].text
+                for sentence in split_text_into_sentences(ctx, language=lang):
+                    if item['notes'] in sentence:
+                        if ctx.find(sentence) < word_start \
+                            and ctx.find(sentence) + len(sentence) > word_end: 
+                            result.append((item['notes'], sentence, item['datetime'], removesuffix(os.path.basename(file), ".fb2.zip")))
+        except KeyError:
+            continue
+    return result
 
 
 def koreader_parse_epub(file, lang):
@@ -112,6 +142,12 @@ def koreader_scandir(path):
                           removesuffix(filename, "fb2") + "sdr", 
                           "metadata.fb2.lua")):
             filelist.append(filename)
+    fb2zips = glob.glob(os.path.join(path, "**/*.fb2.zip"), recursive=True)
+    for filename in fb2zips:
+        if os.path.exists(os.path.join(os.path.dirname(filename), 
+                          removesuffix(filename, "zip") + "sdr", 
+                          "metadata.zip.lua")):
+            filelist.append(filename)
     return filelist
 
 
@@ -132,6 +168,10 @@ class KoreaderImporter(GenericImporter):
             elif bookfile.endswith("epub"):
                 items.extend(
                     koreader_parse_epub(bookfile, self.lang)
+                )
+            elif bookfile.endswith("fb2.zip"):
+                items.extend(
+                    koreader_parse_fb2zip(bookfile, self.lang)
                 )
         return zip(*items)
 
