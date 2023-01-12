@@ -164,7 +164,7 @@ def koreader_scandir(path):
 class KoreaderImporter(GenericImporter):
     def __init__(self, parent, path):
         self.path = path
-        super().__init__(parent, "KOReader")
+        super().__init__(parent, "KOReader highlights")
 
     def getNotes(self):
         self.bookfiles = koreader_scandir(self.path)

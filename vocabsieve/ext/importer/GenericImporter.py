@@ -30,7 +30,7 @@ class GenericImporter(QDialog):
         super().__init__(parent)
         self.settings = parent.settings
         self.lang = parent.settings.value('target_language')
-        self.setWindowTitle(f"Import {src_name} highlights")
+        self.setWindowTitle(f"Import {src_name}")
         self.parent = parent
         self.selected_highlight_items = []
         self.resize(600, 600)
@@ -45,7 +45,7 @@ class GenericImporter(QDialog):
         self.lookup_button = QPushButton("Look up currently selected")
         self.lookup_button.clicked.connect(self.defineWords)
         self.layout.addRow(QLabel(
-            f"<h2>Import {src_name} highlights</h2>"
+            f"<h2>Import {src_name}</h2>"
         ))
         self.lookup_button.setEnabled(False)
         # Source selector, for selecting which books to include

@@ -22,7 +22,7 @@ from .api import LanguageServer
 from .config import *
 from .db import *
 from .dictionary import *
-from .ext.importer import KindleImporter, KoreaderImporter
+from .ext.importer import KindleClippingsImporter, KoreaderImporter, KindleVocabImporter
 from .ext.reader import ReaderServer
 from .global_events import GlobalObject
 from .text_manipulation import *
@@ -308,8 +308,10 @@ class DictionaryWindow(QMainWindow):
         helpmenu.addAction(self.help_action)
         helpmenu.addAction(self.about_action)
 
-        self.import_koreader_action = QAction("Import K&OReader")
-        self.import_kindle_action = QAction("Import &Kindle")
+        self.repeat_last_import_action = QAction("Repeat last import")
+        self.import_koreader_action = QAction("K&OReader highlights")
+        self.import_kindle_old_action = QAction("&Kindle highlights (clippings.txt)")
+        self.import_kindle_new_action = QAction("K&indle lookups (vocab.db)")
 
         self.export_notes_csv_action = QAction("Export &notes to CSV")
         self.export_lookups_csv_action = QAction("Export &lookup data to CSV")
@@ -317,13 +319,20 @@ class DictionaryWindow(QMainWindow):
         self.help_action.triggered.connect(self.onHelp)
         self.about_action.triggered.connect(self.onAbout)
         self.open_reader_action.triggered.connect(self.onReaderOpen)
+        self.repeat_last_import_action.triggered.connect(self.repeatLastImport)
         self.import_koreader_action.triggered.connect(self.importkoreader)
-        self.import_kindle_action.triggered.connect(self.importkindle)
+        self.import_kindle_old_action.triggered.connect(self.importkindleOld)
+        self.import_kindle_new_action.triggered.connect(self.importkindleNew)
         self.export_notes_csv_action.triggered.connect(self.exportNotes)
         self.export_lookups_csv_action.triggered.connect(self.exportLookups)
 
         importmenu.addActions(
-            [self.import_koreader_action, self.import_kindle_action]
+            [
+                self.repeat_last_import_action,
+                self.import_koreader_action, 
+                self.import_kindle_new_action,
+                self.import_kindle_old_action
+            ]
         )
 
         exportmenu.addActions(
@@ -331,6 +340,9 @@ class DictionaryWindow(QMainWindow):
         )
 
         self.setMenuBar(self.menu)
+
+    def repeatLastImport(self):
+        pass
 
     def exportNotes(self) -> None:
         """
@@ -478,7 +490,7 @@ class DictionaryWindow(QMainWindow):
         self.settings_dialog = SettingsDialog(self)
         self.settings_dialog.exec()
 
-    def importkindle(self) -> None:
+    def importkindleOld(self) -> None:
         fname = QFileDialog.getOpenFileName(
             parent=self,
             caption="Select your clippings.txt file",
@@ -487,7 +499,19 @@ class DictionaryWindow(QMainWindow):
         if not fname:
             return
         
-        import_kindle = KindleImporter(self, fname)
+        import_kindle = KindleClippingsImporter(self, fname)
+        import_kindle.exec()
+
+    def importkindleNew(self):
+        fname = QFileDialog.getOpenFileName(
+            parent=self,
+            caption="Select your vocab.db file",
+            filter='Sqlite3 databases (*.db)',
+        )[0]
+        if not fname:
+            return
+        
+        import_kindle = KindleVocabImporter(self, fname)
         import_kindle.exec()
 
     def importkoreader(self) -> None:

@@ -15,9 +15,11 @@ def truncate_middle(s, n):
     return '{0}...{1}'.format(s[:n_1], s[-n_2:])
 
 def genPreviewHTML(sentence: str, item: LookUpResults, word_original: str = "") -> str:
-    return f'''<center>{sentence.replace(word_original, f"<b>{word_original}</b>")}</center>
+    result = f'''<center>{sentence.replace(word_original, f"<b>{word_original}</b>")}</center>
         <hr>
         <center>
             <b>{item.get('word', '')}</b>:
-            <br>{item.get('definition', '')}
-            <br>{item.get('definition2', '')}</center>'''
+            <br>{item.get('definition', '')}</center>'''
+    if item.get('definition2', ''):
+        result += f"<hr><center>{item.get('definition2', '')}</center>"
+    return result
