@@ -6,8 +6,7 @@ from ...dictformats import removeprefix
 
 class KindleVocabImporter(GenericImporter):
     def __init__(self, parent, path):
-        self.path = path
-        super().__init__(parent, "Kindle vocab.db lookups")
+        super().__init__(parent, "Kindle vocab.db lookups", path, "kindle_vocabdb")
 
     def getNotes(self):
         con = sqlite3.connect(self.path)

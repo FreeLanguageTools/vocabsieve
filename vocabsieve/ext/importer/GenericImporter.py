@@ -12,10 +12,11 @@ from difflib import SequenceMatcher
 from sentence_splitter import split_text_into_sentences
 from vocabsieve.tools import addNotes
 from vocabsieve.dictionary import getAudio
-from datetime import datetime
+from datetime import datetime as dt
 from itertools import compress
 from slpp import slpp
 from lxml import etree
+
 from ebooklib import epub, ITEM_DOCUMENT
 
 from .utils import *
@@ -26,20 +27,28 @@ class GenericImporter(QDialog):
     This class implements the UI for extracting highlights.
     Subclass it and override getNotes to have a new importer
     """
-    def __init__(self, parent, src_name="Generic"):
+    def __init__(self, parent, src_name="Generic", path=None, methodname="generic"):
         super().__init__(parent)
         self.settings = parent.settings
         self.lang = parent.settings.value('target_language')
+        self.methodname = methodname
         self.setWindowTitle(f"Import {src_name}")
         self.parent = parent
+        self.path = path
         self.selected_highlight_items = []
         self.resize(600, 600)
         self.src_name = src_name
         self.orig_lookup_terms, self.orig_sentences, self.orig_dates, self.orig_book_names = self.getNotes()
         self.orig_dates_day = [date[:10] for date in self.orig_dates]
+        possible_start_dates = sorted(set(self.orig_dates_day))
         self.datewidget = QComboBox()
-        self.datewidget.addItems(sorted(set(self.orig_dates_day)))
+        self.datewidget.addItems(possible_start_dates)
         self.datewidget.currentTextChanged.connect(self.updateHighlightCount)
+        # Source selector, for selecting which books to include
+        self.src_selector = QWidget()
+        self.src_checkboxes = []
+        self.src_selector.layout = QVBoxLayout(self.src_selector)
+        self.src_selector.layout.addWidget(QLabel("<h3>Select books to extract highlights from</h3>"))
 
         self.layout = QFormLayout(self)
         self.lookup_button = QPushButton("Look up currently selected")
@@ -48,11 +57,6 @@ class GenericImporter(QDialog):
             f"<h2>Import {src_name}</h2>"
         ))
         self.lookup_button.setEnabled(False)
-        # Source selector, for selecting which books to include
-        self.src_selector = QWidget()
-        self.src_checkboxes = []
-        self.src_selector.layout = QVBoxLayout(self.src_selector)
-        self.src_selector.layout.addWidget(QLabel("<h3>Select books to extract highlights from</h3>"))
     
         for book_name in set(self.orig_book_names):
             self.src_checkboxes.append(
@@ -75,6 +79,9 @@ class GenericImporter(QDialog):
         self.layout.addRow(QLabel("Preview cards"), self.preview_widget)
         self.layout.addRow(self.progressbar)
         self.layout.addRow(self.definition_count_label, self.anki_button)
+
+        last_import_date = self.parent.settings.value(f'last_import_date_{self.methodname}', possible_start_dates[0])
+        self.datewidget.setCurrentText(max(d for d in possible_start_dates if d <= last_import_date))
 
 
 
@@ -221,6 +228,11 @@ class GenericImporter(QDialog):
                 print(content)
                 notes.append(content)
         res = addNotes(self.parent.settings.value("anki_api"), notes)
+        # Record last import data
+        self.parent.settings.setValue("last_import_method", self.methodname)
+        self.parent.settings.setValue("last_import_path", self.path)
+        self.parent.settings.setValue(f"last_import_date_{self.methodname}", str(dt.now())[:10])
+
         self.layout.addRow(QLabel(
             QDateTime.currentDateTime().toString('[hh:mm:ss]') + " "
             + str(len(notes)) 

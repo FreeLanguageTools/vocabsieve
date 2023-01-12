@@ -341,8 +341,6 @@ class DictionaryWindow(QMainWindow):
 
         self.setMenuBar(self.menu)
 
-    def repeatLastImport(self):
-        pass
 
     def exportNotes(self) -> None:
         """
@@ -499,8 +497,7 @@ class DictionaryWindow(QMainWindow):
         if not fname:
             return
         
-        import_kindle = KindleClippingsImporter(self, fname)
-        import_kindle.exec()
+        KindleClippingsImporter(self, fname).exec()
 
     def importkindleNew(self):
         fname = QFileDialog.getOpenFileName(
@@ -511,8 +508,7 @@ class DictionaryWindow(QMainWindow):
         if not fname:
             return
         
-        import_kindle = KindleVocabImporter(self, fname)
-        import_kindle.exec()
+        KindleVocabImporter(self, fname).exec()
 
     def importkoreader(self) -> None:
         path = QFileDialog.getExistingDirectory(
@@ -523,8 +519,20 @@ class DictionaryWindow(QMainWindow):
         if not path:
             return
 
-        import_koreader = KoreaderImporter(self, path)
-        import_koreader.exec()
+        KoreaderImporter(self, path).exec()
+
+    def repeatLastImport(self):
+        method = self.settings.value("last_import_method")
+        path = self.settings.value("last_import_path")
+        if not (method and path):
+            QMessageBox.warning("You have not imported notes before. Use any one of the other three buttons on the menu, and use this button next time.")
+            return
+        if method == "kindle_vocabdb":
+            KindleVocabImporter(self, path).exec()
+        elif method == "kindle_clippings":
+            KindleClippingsImporter(self, path).exec()
+        elif method == "koreader_highlights":
+            KoreaderImporter(self, path).exec()
 
     def setupShortcuts(self) -> None:
         self.shortcut_toanki = QShortcut(QKeySequence('Ctrl+S'), self)
