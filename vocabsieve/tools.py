@@ -3,6 +3,7 @@ import urllib.request
 import requests
 import os
 import re
+import unicodedata
 import time
 from bs4 import BeautifulSoup
 from typing import List, Dict

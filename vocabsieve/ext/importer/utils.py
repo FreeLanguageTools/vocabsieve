@@ -19,7 +19,7 @@ def genPreviewHTML(sentence: str, item: LookUpResults, word_original: str = "") 
         <hr>
         <center>
             <b>{item.get('word', '')}</b>:
-            <br>{item.get('definition', '')}</center>'''
+            <br>{item.get('definition', '').strip()}</center>'''
     if item.get('definition2', ''):
         result += f"<hr><center>{item.get('definition2', '')}</center>"
     return result

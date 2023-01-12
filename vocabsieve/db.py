@@ -7,10 +7,40 @@ from bidict import bidict
 import re
 from datetime import datetime
 from .constants import langcodes
+import unicodedata
+
 datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
 Path(datapath).mkdir(parents=True, exist_ok=True)
 print(datapath)
 
+def removeAccents(word):
+    #print("Removing accent marks from query ", word)
+    ACCENT_MAPPING = {
+        '́': '',
+        '̀': '',
+        'а́': 'а',
+        'а̀': 'а',
+        'е́': 'е',
+        'ѐ': 'е',
+        'и́': 'и',
+        'ѝ': 'и',
+        'о́': 'о',
+        'о̀': 'о',
+        'у́': 'у',
+        'у̀': 'у',
+        'ы́': 'ы',
+        'ы̀': 'ы',
+        'э́': 'э',
+        'э̀': 'э',
+        'ю́': 'ю',
+        '̀ю': 'ю',
+        'я́́': 'я',
+        'я̀': 'я',
+    }
+    word = unicodedata.normalize('NFKC', word)
+    for old, new in ACCENT_MAPPING.items():
+        word = word.replace(old, new)
+    return word
 
 dictionaries = bidict({"Wiktionary (English)": "wikt-en",
                        "Google Translate": "gtrans"})
@@ -229,7 +259,7 @@ class LocalDictionary():
                 VALUES(?, ?, ?, ?)
                 """,
                            (
-                               item[0].lower() if item[0].isupper() else item[0],  # no caps
+                               removeAccents(item[0].lower() if item[0].isupper() else item[0]),  # no caps
                                item[1].replace("\\n", "\n"),
                                lang,
                                name
