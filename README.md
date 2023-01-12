@@ -69,8 +69,6 @@ Alternatively, you can also install a live version to your python package librar
 
 For debugging purposes, set the environmental variable `VOCABSIEVE_DEBUG` to any value. This will create a separate profile (settings and databases for records and dictionaries) so you may perform tests without affecting your normal profile. For each different value of `VOCABSIEVE_DEBUG`, a separate profile is generated. This can be any number or string.
 
-Note that VocabSieve is unable to delete old profiles. You must do so yourself based on your operating system's locations.  
-
 Pull requests are welcome! If you want to implement a significant feature, be sure to first ask by creating an issue so that no effort is wasting on doing the same work twice.
 
 ## API documentation
@@ -82,8 +80,8 @@ Note that VocabSieve is still alpha software. API is not guaranteed to be stable
 You are welcome to report bugs, suggest features/enhancements, or ask for clarifications by opening a GitHub issue.
 
 ## Donations
-
-Send me some Monero to support this work! If you can [prove](https://www.getmonero.org/resources/user-guides/prove-payment.html) a payment of more than 0.05 XMR, you can receive prioritized support and and consideration for feature requests.
+<details><summary>Click to show donation information</summary>
+Send me some Monero to support this work! If you can [prove](https://www.getmonero.org/resources/user-guides/prove-payment.html) a payment of more than 0.05 XMR, you can receive prioritized support and consideration for feature requests (still, no guarantees!).
 
 XMR Address: `89AZiqM7LD66XE9s5G7iBu4CU3i6qUu2ieCq4g3JKacn7e1xKuwe2tvWApLFvhaMR47kwNzjC4B5VL3N32MCokE2U9tGXzX`
 
@@ -92,7 +90,7 @@ Monero is a private, censorship-resistant cryptocurrency. Transactions are anony
 [Learn more about Monero](https://www.getmonero.org/)
 
 If you do not have any Monero, a good way to get it is through [ChangeNow](https://changenow.io/) or [SimpleSwap](https://simpleswap.io/).
-
+</details>
 
 ## Credits
 The definitions provided by the program by default come from English Wiktionary, without which this program would never have been created. [LingvaTranslate](https://github.com/thedaviddelta/lingva-translate) is used to obtain Google Translate results. Fоrvо scraping code is inspired by this [repository](https://github.com/Rascalov/Anki-Simple-Forvo-Audio). Lemmatization capabilities come from [simplemma](https://github.com/adbar/simplemma) and [pymorphy2](https://github.com/kmike/pymorphy2).
