@@ -29,6 +29,8 @@ class BatchNotePreviewer(QTextEdit):
         buttons_box_layout.addWidget(last_button)
         prev_button.clicked.connect(self.back)
         next_button.clicked.connect(self.forward)
+        first_button.clicked.connect(self.first)
+        last_button.clicked.connect(self.last)
 
 
     def appendNoteItem(self, sentence: str, item: LookUpResults, word_original: str):
@@ -47,6 +49,12 @@ class BatchNotePreviewer(QTextEdit):
     def forward(self):
         if self.currentIndex < len(self.note_items) - 1:
             self.setCurrentIndex(self.currentIndex + 1)
+
+    def first(self):
+        self.setCurrentIndex(0)
+
+    def last(self):
+        self.setCurrentIndex(len(self.note_items) - 1)
 
     def reset(self):
         self.note_items = []

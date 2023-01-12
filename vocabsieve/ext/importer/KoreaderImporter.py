@@ -51,6 +51,10 @@ def koreader_parse_fb2(file, lang):
     print(notepath)
     root = etree.parse(file).getroot()
     ns = {'f': "http://www.gribuser.ru/xml/fictionbook/2.0"}
+    try:
+        booktitle = root.xpath("f:description/f:title-info/f:book-title", namespaces=ns)[0].text
+    except Exception:
+        booktitle = removesuffix(os.path.basename(file), ".fb2")
     for _, item in notes:
         try:
             xpath = fb2_xpathconvert(item['page'])
@@ -62,10 +66,11 @@ def koreader_parse_fb2(file, lang):
                     if item['notes'] in sentence:
                         if ctx.find(sentence) < word_start \
                             and ctx.find(sentence) + len(sentence) > word_end: 
-                            result.append((item['notes'], sentence, item['datetime'], removesuffix(os.path.basename(file), ".fb2")))
+                            result.append((item['notes'], sentence, item['datetime'], booktitle))
         except KeyError:
             continue
     return result
+
 
 def koreader_parse_fb2zip(file, lang):
     result = []
@@ -81,6 +86,10 @@ def koreader_parse_fb2zip(file, lang):
                 content = f.read(file_in_zip)
     root = etree.ElementTree(etree.fromstring(content)).getroot()
     ns = {'f': "http://www.gribuser.ru/xml/fictionbook/2.0"}
+    try:
+        booktitle = root.xpath("f:description/f:title-info/f:book-title", namespaces=ns)[0].text
+    except Exception:
+        booktitle = removesuffix(os.path.basename(file), ".fb2.zip")
     for _, item in notes:
         try:
             xpath = fb2_xpathconvert(item['page'])
@@ -92,7 +101,7 @@ def koreader_parse_fb2zip(file, lang):
                     if item['notes'] in sentence:
                         if ctx.find(sentence) < word_start \
                             and ctx.find(sentence) + len(sentence) > word_end: 
-                            result.append((item['notes'], sentence, item['datetime'], removesuffix(os.path.basename(file), ".fb2.zip")))
+                            result.append((item['notes'], sentence, item['datetime'], booktitle))
         except KeyError:
             continue
     return result
@@ -106,6 +115,7 @@ def koreader_parse_epub(file, lang):
     with open(notepath) as f:
         notes = slpp.decode(" ".join("\n".join(f.readlines()[1:]).split(" ")[1:]))['bookmarks'].items()
     docs = []
+    booktitle = epub.read_epub(file).get_metadata('DC', 'title')[0][0].strip() or removesuffix(os.path.basename(file), "epub")
     for doc in epub.read_epub(file).get_items_of_type(ITEM_DOCUMENT):
         docs.append(
             etree.parse(BytesIO(doc.get_content())).getroot()
@@ -122,7 +132,7 @@ def koreader_parse_epub(file, lang):
                     if item['notes'] in sentence:
                         if ctx.find(sentence) < word_start \
                             and ctx.find(sentence) + len(sentence) > word_end: 
-                            result.append((item['notes'], sentence, item['datetime'], removesuffix(os.path.basename(file), ".epub")))
+                            result.append((item['notes'], sentence, item['datetime'], booktitle))
                             break
         except KeyError:
             continue
