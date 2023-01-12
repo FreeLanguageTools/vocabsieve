@@ -308,7 +308,7 @@ class DictionaryWindow(QMainWindow):
         helpmenu.addAction(self.help_action)
         helpmenu.addAction(self.about_action)
 
-        self.repeat_last_import_action = QAction("Repeat last import")
+        self.repeat_last_import_action = QAction("&Repeat last import")
         self.import_koreader_action = QAction("K&OReader highlights")
         self.import_kindle_old_action = QAction("&Kindle highlights (clippings.txt)")
         self.import_kindle_new_action = QAction("K&indle lookups (vocab.db)")
@@ -525,7 +525,9 @@ class DictionaryWindow(QMainWindow):
         method = self.settings.value("last_import_method")
         path = self.settings.value("last_import_path")
         if not (method and path):
-            QMessageBox.warning("You have not imported notes before. Use any one of the other three buttons on the menu, and use this button next time.")
+            QMessageBox.warning("You have not imported notes before.\n"
+                "Use any one of the other three buttons on the menu, and use this button next time.\n"
+                "(Currently, only KOReader and Kindle vocab.db are supported for this. Ability to repeat Kindle clippings import will be implemented later.)")
             return
         if method == "kindle_vocabdb":
             KindleVocabImporter(self, path).exec()
