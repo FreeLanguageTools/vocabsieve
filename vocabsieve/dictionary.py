@@ -3,7 +3,7 @@ import re
 import unicodedata
 from threading import Thread
 from urllib.parse import quote
-from typing import Optional
+from typing import Optional, Dict
 
 import pymorphy2
 import requests
@@ -157,7 +157,7 @@ def googletranslate(word, language, gtrans_lang, gtrans_api) -> Optional[LookUpR
 def getAudio(word: str, 
              language: str, 
              dictionary: str="Forvo (all)", 
-             custom_dicts:Optional[list]=None) -> dict[str, str]:
+             custom_dicts:Optional[list]=None) -> Dict[str, str]:
     if custom_dicts is None:
         custom_dicts = []
     
