@@ -79,9 +79,11 @@ class GenericImporter(QDialog):
         self.layout.addRow(QLabel("Preview cards"), self.preview_widget)
         self.layout.addRow(self.progressbar)
         self.layout.addRow(self.definition_count_label, self.anki_button)
-
-        last_import_date = self.parent.settings.value(f'last_import_date_{self.methodname}', possible_start_dates[0])
-        self.datewidget.setCurrentText(max(d for d in possible_start_dates if d <= last_import_date))
+        try:
+            last_import_date = self.parent.settings.value(f'last_import_date_{self.methodname}', possible_start_dates[0])
+            self.datewidget.setCurrentText(max(d for d in possible_start_dates if d <= last_import_date))
+        except Exception:
+            pass
 
 
 
