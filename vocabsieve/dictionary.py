@@ -3,7 +3,7 @@ import re
 import unicodedata
 from threading import Thread
 from urllib.parse import quote
-from typing import Optional, Dict
+from typing import Optional, Dict, Tuple
 
 import pymorphy2
 import requests
@@ -245,7 +245,7 @@ def lookupin(
     raise Exception("Word not found")
 
 
-def getFreq(word, language, lemfreq, dictionary) -> tuple[int, int]:
+def getFreq(word, language, lemfreq, dictionary) -> Tuple[int, int]:
     if lemfreq:
         word = lem_word(word, language)
     freq = dictdb.define(word.lower(), language, dictionary)
@@ -282,7 +282,7 @@ def getFreqlistsForLang(lang: str, dicts: list):
 forvopath = os.path.join(QStandardPaths.writableLocation(QStandardPaths.DataLocation), "forvo")
 
 
-def play_audio(name: str, data: dict[str, str], lang: str) -> str:
+def play_audio(name: str, data: Dict[str, str], lang: str) -> str:
     def crossplatform_playsound(relative_audio_path: str):
         Thread(target=lambda: playsound(relative_audio_path)).start()
 
