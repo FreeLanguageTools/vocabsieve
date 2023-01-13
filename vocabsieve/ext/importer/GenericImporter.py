@@ -22,6 +22,9 @@ from ebooklib import epub, ITEM_DOCUMENT
 from .utils import *
 from .BatchNotePreviewer import BatchNotePreviewer
 
+def date_to_timestamp(datestr: str):
+    return dt.strptime(datestr, "%Y-%m-%d %H:%M:%S").timestamp()
+
 class GenericImporter(QDialog):
     """
     This class implements the UI for extracting highlights.
@@ -92,6 +95,8 @@ class GenericImporter(QDialog):
         Returns a tuple of four tuples of equal length
         Respectively, lookup terms (highlights), sentences, dates, and book names
         All the file parsing should happen here.
+        dates should be strings to the second, such as "1970-01-01 00:00:00".
+        Using T in place of the space is NOT allowed.
         """
         return ((), (), (), ())
 
@@ -112,13 +117,13 @@ class GenericImporter(QDialog):
 
     def filterHighlights(self, start_date, book_names):
         try:
-            lookup_terms, sentences, book_names = zip(*compress(
-                zip(self.orig_lookup_terms, self.orig_sentences, self.orig_book_names), 
+            lookup_terms, sentences, dates, book_names = zip(*compress(
+                zip(self.orig_lookup_terms, self.orig_sentences, self.orig_dates, self.orig_book_names), 
                 map(lambda b, d: d[:10] >= start_date and b in book_names, self.orig_book_names, self.orig_dates)
                 ))
         except ValueError:
-            lookup_terms, sentences, book_names = [],[],[]
-        return list(zip(lookup_terms, sentences, book_names))
+            lookup_terms, sentences, dates, book_names = [],[],[],[]
+        return list(zip(lookup_terms, sentences, dates, book_names))
 
 
     def defineWords(self):
@@ -134,7 +139,7 @@ class GenericImporter(QDialog):
         self.anki_button.setEnabled(False)
         self.preview_widget.reset()
         count = 0
-        for n_looked_up, (lookup_term, sentence, book_name) in enumerate(self.selected_highlight_items):
+        for n_looked_up, (lookup_term, sentence, date, book_name) in enumerate(self.selected_highlight_items):
             # Remove punctuations
             word = re.sub('[\\?\\.!«»…,()\\[\\]]*', "", lookup_term)
             if sentence:
@@ -143,7 +148,7 @@ class GenericImporter(QDialog):
                     
                 else:
                     self.sentences.append(sentence)
-                item = self.parent.lookup(word, record=False)
+                item = self.parent.lookup(word, True, date_to_timestamp(date))
                 if not item['definition'].startswith("<b>Definition for"):
                     count += 1
                     self.words.append(item['word'])

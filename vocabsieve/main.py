@@ -762,12 +762,13 @@ class DictionaryWindow(QMainWindow):
     def getLemGreedy(self) -> bool:
         return self.settings.value("lem_greedily", False, type=bool)  # type: ignore
 
-    def lookup(self, word: str, use_lemmatize: bool=True, record:bool = True) -> LookUpResults:
+    def lookup(self, word: str, use_lemmatize: bool, recordDate: Optional[float] = None) -> LookUpResults:
         """
         Look up a word and return a dict with the lemmatized form (if enabled)
         and definition
         """
-
+        if not recordDate:
+            recordDate = time.time()
         word = re.sub('[«»…,()\\[\\]_]*', "", word)
         # TODO
         # why manually check "lemmatization" in settings when you can pass it through parameter?
@@ -800,9 +801,8 @@ class DictionaryWindow(QMainWindow):
                     self.freq_display.setText('-1')
                 elif freq_display == "Stars":
                     self.freq_display.setText(freq_to_stars(1e6, lemfreq))
-        if record:
-            self.status(
-                f"L: '{word}' in '{language}', lemma: {short_sign}, from {dictionaries.get(dictname, dictname)}")
+        self.status(
+            f"L: '{word}' in '{language}', lemma: {short_sign}, from {dictionaries.get(dictname, dictname)}")
         try:
             item = lookupin(
                 word,
@@ -812,20 +812,18 @@ class DictionaryWindow(QMainWindow):
                 dictname,
                 gtrans_lang,
                 self.settings.value("gtrans_api", "https://lingva.ml"))
-            if record:
-                self.rec.recordLookup(
-                    word,
-                    item['definition'],
-                    TL,
-                    lemmatize,
-                    dictname,
-                    True)
+            self.rec.recordLookup(
+                word,
+                item['definition'],
+                TL,
+                lemmatize,
+                dictname,
+                True, recordDate)
         except Exception as e:
-            if record:
-                self.status(str(e))
-                self.rec.recordLookup(
-                    word, "", TL, lemmatize, dictname, False)
-                self.updateAnkiButtonState(True)
+            self.status(str(e))
+            self.rec.recordLookup(
+                word, "", TL, lemmatize, dictname, False, recordDate)
+            self.updateAnkiButtonState(True)
             item = {
                 "word": word,
                 "definition": failed_lookup(word, self.settings)
@@ -842,19 +840,17 @@ class DictionaryWindow(QMainWindow):
                 lem_greedily,
                 dict2name,
                 gtrans_lang)
-            if record:
-                self.rec.recordLookup(
-                    word,
-                    item2['definition'],
-                    TL,
-                    lemmatize,
-                    dict2name,
-                    True)
+            self.rec.recordLookup(
+                word,
+                item2['definition'],
+                TL,
+                lemmatize,
+                dict2name,
+                True, recordDate)
         except Exception as e:
             self.status("Dict-2 failed" + str(e))
-            if record:
-                self.rec.recordLookup(
-                    word, "", TL, lemmatize, dict2name, False)
+            self.rec.recordLookup(
+                word, "", TL, lemmatize, dict2name, False, recordDate)
             self.definition2.clear()
             return item
         return {

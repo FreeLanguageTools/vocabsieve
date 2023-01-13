@@ -131,9 +131,9 @@ class Record():
             language: str,
             lemmatization: bool,
             source: str,
-            success: bool):
+            success: bool,
+            timestamp: float):
         try:
-            timestamp = time.time()
             sql = """INSERT INTO lookups(timestamp, word, definition, language, lemmatization, source, success)
                     VALUES(?,?,?,?,?,?,?)"""
             self.c.execute(
@@ -172,8 +172,7 @@ class Record():
         self.conn.commit()
 
     def getAllLookups(self):
-        self.c.execute("SELECT * FROM lookups")
-        return self.c.fetchall()
+        return self.c.execute("SELECT * FROM lookups")
 
     def getAllNotes(self):
         self.c.execute("SELECT * FROM notes")

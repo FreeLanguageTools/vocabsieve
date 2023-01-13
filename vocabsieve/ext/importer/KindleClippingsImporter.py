@@ -205,7 +205,7 @@ class KindleClippingsImporter(QDialog):
                     
                 else:
                     self.sentences.append(self.sents[i])
-                item = self.parent.lookup(word, record=False)
+                item = self.parent.lookup(word, use_lemmatize=True)
                 if not item['definition'].startswith("<b>Definition for"):
                     count += 1
                     self.words.append(item['word'])
