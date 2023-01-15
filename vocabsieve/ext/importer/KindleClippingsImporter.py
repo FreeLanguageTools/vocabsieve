@@ -15,8 +15,8 @@ from datetime import datetime
 from .utils import *
 
 def get_section(bdata: bytes, loc_start, loc_end):
-    start = max((loc_start - 15) * 150, 0)
-    end = min((15 + loc_end) * 150, len(bdata)) + 1
+    start = max((loc_start - 10) * 150, 0)
+    end = min((10 + loc_end) * 150, len(bdata)) + 1
     return bdata[start:end].decode('utf8', 'ignore')
 
 
@@ -80,7 +80,7 @@ class KindleClippingsImporter(QDialog):
         self.find_context.clicked.connect(self.get_sents)
 
         self.dates = list(map(lambda x: datetime.strptime(
-            " ".join(x.split("|")[1].split()[3:6]), "%B %d, %Y"), self.notes[1::5]))
+            " ".join(x.split("|")[1].split()[3:]), "%B %d, %Y %I:%M:%S %p"), self.notes[1::5]))
 
         self.layout.addRow(
             QLabel("Import sentences starting from (use scroll wheel)"),
@@ -121,8 +121,6 @@ class KindleClippingsImporter(QDialog):
             map(lambda x: int(x.split("|")[0].split()[-1].split("-")[0]), locs))
         ends = list(
             map(lambda x: int(x.split("|")[0].split()[-1].split("-")[-1]), locs))
-        self.dates = list(map(lambda x: datetime.strptime(
-            " ".join(x.split("|")[1].split()[3:6]), "%B %d, %Y"), self.notes[1::5]))
 
         book2file = {}
         for i in range(len(self.comboboxes)):
@@ -163,7 +161,7 @@ class KindleClippingsImporter(QDialog):
             if date > start_at:
                 start_at_index = index
                 break
-
+        
         for i in range(maxlen):
             if i < start_at_index:
                 self.sents.append("")
@@ -205,7 +203,8 @@ class KindleClippingsImporter(QDialog):
                     
                 else:
                     self.sentences.append(self.sents[i])
-                item = self.parent.lookup(word, use_lemmatize=True)
+                print(self.dates[i])
+                item = self.parent.lookup(word, use_lemmatize=True, recordDate=self.dates[i].timestamp())
                 if not item['definition'].startswith("<b>Definition for"):
                     count += 1
                     self.words.append(item['word'])

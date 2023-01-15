@@ -1,4 +1,5 @@
 from ...constants import LookUpResults
+from datetime import datetime as dt
 
 def get_uniques(l: list):
     return list(set(l) - set([""]))
@@ -23,3 +24,6 @@ def genPreviewHTML(sentence: str, item: LookUpResults, word_original: str = "") 
     if item.get('definition2', ''):
         result += f"<hr><center>{item.get('definition2', '')}</center>"
     return result
+
+def date_to_timestamp(datestr: str):
+    return dt.strptime(datestr, "%Y-%m-%d %H:%M:%S").timestamp()

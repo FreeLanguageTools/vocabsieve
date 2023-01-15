@@ -64,6 +64,7 @@ to be reimported, otherwise this operation will fail.\
         dicts = json.loads(self.settings.value("custom_dicts", '[]'))
         dictdb.purge()
         n_dicts = len(dicts)
+        failed_reads = []
         for (i, item) in enumerate(dicts):
             try:
                 self.status(f"Rebuilding database: dictionary ({i+1}/{n_dicts})"
@@ -71,10 +72,15 @@ to be reimported, otherwise this operation will fail.\
                 QCoreApplication.processEvents()
                 dictimport(item['path'], item['type'], item['lang'], item['name'])
             except Exception as e:
+                # Delete dictionary if read fails
+                failed_reads.append(item['name'])
+                del dicts[i]
+                self.settings.setValue("custom_dicts", json.dumps(dicts))
                 print(e)
-
+        
+        failed_msg = ("\nThe following dictionaries could not be found, and have been removed: \n" + "\n\t- ".join(failed_reads)) if failed_reads else ""
         QMessageBox.information(self, "Database rebuilt",
-                                f"Database rebuilt in {format(time.time()-start, '.3f')} seconds.")
+                                f"Database rebuilt in {format(time.time()-start, '.3f')} seconds.{failed_msg}")
         self.refresh()
         self.showStats()
 
