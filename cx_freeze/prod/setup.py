@@ -41,6 +41,10 @@ build_exe_options = {
     "bin_includes": ["liblzo2.so"],
     "include_msvcr": True}
 
+bdist_msi_options = {
+    "upgrade_code": "{F10E2AE2-7629-3CA2-AA85-498478E708D7}"
+}
+
 # base="Win32GUI" should be used only for Windows GUI app
 base = None
 if sys.platform == "win32":
@@ -50,7 +54,7 @@ setup(
     name="VocabSieve",
     version=__version__,
     description="A simple sentence mining tool",
-    options={"build_exe": build_exe_options},
+    options={"build_exe": build_exe_options, "bdist_msi": bdist_msi_options},
     executables=[Executable("app.py",
                             base=base,
                             icon="../icon.ico",
