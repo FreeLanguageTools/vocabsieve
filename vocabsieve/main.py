@@ -50,7 +50,7 @@ class DictionaryWindow(QMainWindow):
         self.setFocusPolicy(Qt.StrongFocus)
         self.widget = QWidget()
         self.settings = settings
-        self.rec = Record()
+        self.rec = Record(self)
         self.setCentralWidget(self.widget)
         self.previousWord = ""
         self.audio_path = ""
@@ -214,6 +214,8 @@ class DictionaryWindow(QMainWindow):
                 border: 1px solid black;
             '''
         )
+        self.lookup_hist_label = QLabel("")
+
 
     def play_audio(self, x: Optional[str]) -> None:
         QCoreApplication.processEvents()
@@ -249,7 +251,8 @@ class DictionaryWindow(QMainWindow):
             QLabel("<h3 style=\"font-weight: normal;\">Definition</h3>"), 6, 0)
         layout.addWidget(self.freq_display, 6, 1)
         layout.addWidget(self.web_button, 6, 2)
-        layout.addWidget(self.word, 5, 0, 1, 3)
+        layout.addWidget(self.word, 5, 0, 1, 2)
+        layout.addWidget(self.lookup_hist_label, 5, 2)
         layout.setRowStretch(7, 2)
         layout.setRowStretch(9, 2)
         if self.settings.value("dict_source2", "<disabled>") != "<disabled>":
@@ -385,7 +388,7 @@ class DictionaryWindow(QMainWindow):
         with open(path, 'w', encoding='utf-8') as file:
             writer = csv.writer(file)
             writer.writerow(
-                ['timestamp', 'word', 'definition', 'language', 'lemmatize', 'dictionary', 'success']
+                ['timestamp', 'word', 'lemma', 'definition', 'language', 'lemmatize', 'dictionary', 'success']
             )
             writer.writerows(self.rec.getAllLookups())
 
@@ -731,6 +734,11 @@ class DictionaryWindow(QMainWindow):
         QCoreApplication.processEvents()
         result = self.lookup(word, use_lemmatize)
         self.setState(result)
+        past_lookups_count = self.rec.countLemmaLookups(word, self.settings.value("target_language",'en'))
+        if past_lookups_count <= 1:
+            self.lookup_hist_label.setText("<b>new word</b>")
+        else:
+            self.lookup_hist_label.setText(f"<b>{past_lookups_count} prev. lookups</b>")
         QCoreApplication.processEvents()
         self.audio_path = ""
 

@@ -8,10 +8,13 @@ import re
 from datetime import datetime
 from .constants import langcodes
 import unicodedata
+import simplemma
+from .lemmatizer import lem_word
 
 datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
 Path(datapath).mkdir(parents=True, exist_ok=True)
 print(datapath)
+
 
 def removeAccents(word):
     #print("Removing accent marks from query ", word)
@@ -47,7 +50,7 @@ dictionaries = bidict({"Wiktionary (English)": "wikt-en",
 
 
 class Record():
-    def __init__(self):
+    def __init__(self, parent):
         self.conn = sqlite3.connect(
             path.join(
                 datapath,
@@ -56,12 +59,17 @@ class Record():
         self.c = self.conn.cursor()
         self.createTables()
         self.fixOld()
+        if not parent.settings.value("internal/db_has_lemma"):
+            self.lemmatizeLookups()
+            parent.settings.setValue("internal/db_has_lemma", True)
+        self.conn.commit()
 
     def createTables(self):
         self.c.execute("""
         CREATE TABLE IF NOT EXISTS lookups (
             timestamp FLOAT,
             word TEXT,
+            lemma TEXT,
             definition TEXT,
             language TEXT,
             lemmatization INTEGER,
@@ -124,6 +132,41 @@ class Record():
         except sqlite3.OperationalError:
             pass
 
+    def lemmatizeLookups(self):
+        "In the past, lemmas were not recorded during lookups. This applies it to older rows"
+        try:
+            self.c.execute("ALTER TABLE lookups DROP COLUMN lemma")
+        except sqlite3.OperationalError:
+            print("Encountered error in dropping column, continuing")
+            pass
+        try:
+            print("Trying to add lemma column to lookups table..")
+            self.c.execute("""
+                ALTER TABLE lookups ADD COLUMN lemma TEXT;
+            """)
+            langiter = self.c.execute("""
+                SELECT DISTINCT language FROM lookups
+            """)
+            word_to_lemma = {}
+            for lang in langiter:
+                print("Found lang:", lang[0])
+                word_to_lemma[lang[0]] = {} #Make 2d dict
+
+            wordlangiter = self.c.execute("""
+                SELECT DISTINCT word, language FROM lookups
+            """)
+            for word, lang in wordlangiter:
+                print("lemma of", word, "in", lang, "is", lem_word(word, lang))
+                word_to_lemma[lang][word] = lem_word(word, lang)
+
+            for lang in word_to_lemma:
+                for word in word_to_lemma[lang]:
+                    self.c.execute('''UPDATE lookups SET lemma=? WHERE word=? AND language=?''',
+                        (word_to_lemma[lang][word], word, lang))
+            self.conn.commit()
+        except sqlite3.OperationalError:
+            print("encountered error, likely because column already exists")
+
     def recordLookup(
             self,
             word: str,
@@ -134,12 +177,14 @@ class Record():
             success: bool,
             timestamp: float):
         try:
-            sql = """INSERT INTO lookups(timestamp, word, definition, language, lemmatization, source, success)
-                    VALUES(?,?,?,?,?,?,?)"""
+            lemma = lem_word(word, language) # For statistics, so it is used even if lemmatization is off
+            sql = """INSERT INTO lookups(timestamp, word, lemma, definition, language, lemmatization, source, success)
+                    VALUES(?,?,?,?,?,?,?,?)"""
             self.c.execute(
                 sql,
                 (timestamp,
                  word,
+                 lemma,
                  definition,
                  language,
                  lemmatization,
@@ -172,11 +217,14 @@ class Record():
         self.conn.commit()
 
     def getAllLookups(self):
-        return self.c.execute("SELECT * FROM lookups")
+        return self.c.execute("SELECT timestamp, word, lemma, definition, language, lemmatization, source, success FROM lookups")
 
     def getAllNotes(self):
-        self.c.execute("SELECT * FROM notes")
-        return self.c.fetchall()
+        return self.c.execute("SELECT * FROM notes")
+
+    def countLemmaLookups(self, word, language):
+        self.c.execute('''SELECT COUNT (DISTINCT date(timestamp, "unixepoch")) FROM lookups WHERE lemma=?''', (lem_word(word, language),))
+        return self.c.fetchone()[0]
 
     def countLookupsToday(self):
         day = datetime.now()

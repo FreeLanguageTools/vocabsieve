@@ -5,9 +5,8 @@ from threading import Thread
 from urllib.parse import quote
 from typing import Optional, Dict, Tuple
 
-import pymorphy2
 import requests
-import simplemma
+
 from bidict import bidict
 from bs4 import BeautifulSoup
 from markdown import markdown
@@ -18,6 +17,7 @@ from .constants import DefinitionDisplayModes, LookUpResults
 from .db import *
 from .dictformats import removeprefix
 from .forvo import *
+from .lemmatizer import lem_word
 
 dictdb = LocalDictionary()
 
@@ -39,22 +39,9 @@ langs_supported = bidict(
 gdict_languages = [
     'en', 'hi', 'es', 'fr', 'ja', 'ru', 'de', 'it', 'ko', 'ar', 'tr', 'pt'
 ]
-simplemma_languages = [
-    'bg', 'ca', 'cy', 'da', 'de', 'en', 'es', 'et', 'fa', 'fi', 'fr', 'ga',
-    'gd', 'gl', 'gv', 'hu', 'id', 'it', 'ka', 'la', 'lb', 'lt', 'lv', 'nl',
-    'pl', 'pt', 'ro', 'ru', 'sk', 'sl', 'sv', 'tr', 'uk', 'ur'
-]
+
 pronunciation_sources = ["Forvo (all)", "Forvo (best)"]
 
-# On Windows frozen build, there is no pymorphy2 support for Russian due
-# to an issue with cxfreeze
-PYMORPHY_SUPPORT = False
-try:
-    morph = pymorphy2.MorphAnalyzer(lang="ru")
-    PYMORPHY_SUPPORT = True
-except ValueError:
-    morph = None
-    pass
 
 
 def preprocess_clipboard(s: str, lang: str) -> str:
@@ -106,17 +93,6 @@ def fmt_result(definitions):
         lines.extend([str(item[0] + 1) + ". " + item[1]
                      for item in list(enumerate(defn['meaning']))])
     return "<br>".join(lines)
-
-
-def lem_word(word, language, greedy=False):
-    """Lemmatize a word. We will use PyMorphy for RU, simplemma for others,
-    and if that isn't supported , we give up."""
-    if language == 'ru' and PYMORPHY_SUPPORT:
-        return morph.parse(word)[0].normal_form
-    elif language in simplemma_languages:
-        return simplemma.lemmatize(word, lang=language, greedy=greedy)
-    else:
-        return word
 
 
 def wiktionary(word, language: str) -> Optional[dict]:
