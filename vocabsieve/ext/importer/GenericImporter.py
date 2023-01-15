@@ -161,6 +161,7 @@ class GenericImporter(QDialog):
                 else:
                     self.words.append(word)
                     self.definitions.append("")
+                    self.definition2s.append("")
 
                 audio_path = ""
                 if self.settings.value("audio_dict", "Forvo (all)") != "<disabled>":

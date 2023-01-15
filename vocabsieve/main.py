@@ -528,7 +528,7 @@ class DictionaryWindow(QMainWindow):
         method = self.settings.value("last_import_method")
         path = self.settings.value("last_import_path")
         if not (method and path):
-            QMessageBox.warning("You have not imported notes before.\n"
+            QMessageBox.warning(self, "You have not imported notes before",
                 "Use any one of the other three buttons on the menu, and use this button next time.\n"
                 "(Currently, only KOReader and Kindle vocab.db are supported for this. Ability to repeat Kindle clippings import will be implemented later.)")
             return
@@ -972,8 +972,8 @@ class DictionaryWindow(QMainWindow):
                 self,
                 f"Failed to add note: {word}",
                 "<h2>Failed to add note</h2>"
-                + str(e)
-                + "AnkiConnect must be running to add notes."
+                + f"Error: {str(e)}"
+                + "\nHints: AnkiConnect must be running to add notes."
                 "<br>If you wish to only add notes to the database (and "
                 "export it as CSV), click Configure and uncheck 'Enable"
                 " Anki' on the Anki tab."

@@ -51,10 +51,12 @@ class BatchNotePreviewer(QTextEdit):
             self.setCurrentIndex(self.currentIndex + 1)
 
     def first(self):
-        self.setCurrentIndex(0)
+        if self.note_items:
+            self.setCurrentIndex(0)
 
     def last(self):
-        self.setCurrentIndex(len(self.note_items) - 1)
+        if self.note_items:
+            self.setCurrentIndex(len(self.note_items) - 1)
 
     def reset(self):
         self.note_items = []
