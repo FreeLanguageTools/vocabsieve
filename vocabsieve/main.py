@@ -525,19 +525,22 @@ class DictionaryWindow(QMainWindow):
         KoreaderImporter(self, path).exec()
 
     def repeatLastImport(self):
-        method = self.settings.value("last_import_method")
-        path = self.settings.value("last_import_path")
-        if not (method and path):
-            QMessageBox.warning(self, "You have not imported notes before",
-                "Use any one of the other three buttons on the menu, and use this button next time.\n"
-                "(Currently, only KOReader and Kindle vocab.db are supported for this. Ability to repeat Kindle clippings import will be implemented later.)")
-            return
-        if method == "kindle_vocabdb":
-            KindleVocabImporter(self, path).exec()
-        elif method == "kindle_clippings":
-            KindleClippingsImporter(self, path).exec()
-        elif method == "koreader_highlights":
-            KoreaderImporter(self, path).exec()
+        try:
+            method = self.settings.value("last_import_method")
+            path = self.settings.value("last_import_path")
+            if not (method and path):
+                QMessageBox.warning(self, "You have not imported notes before",
+                    "Use any one of the other three buttons on the menu, and use this button next time.\n"
+                    "(Currently, only KOReader and Kindle vocab.db are supported for this. Ability to repeat Kindle clippings import will be implemented later.)")
+                return
+            if method == "kindle_vocabdb":
+                KindleVocabImporter(self, path).exec()
+            elif method == "kindle_clippings":
+                KindleClippingsImporter(self, path).exec()
+            elif method == "koreader_highlights":
+                KoreaderImporter(self, path).exec()
+        except Exception as e:
+            print("Encountered error while repeating last import, aborting:", e)
 
     def setupShortcuts(self) -> None:
         self.shortcut_toanki = QShortcut(QKeySequence('Ctrl+S'), self)
