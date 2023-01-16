@@ -46,7 +46,7 @@ def koreader_parse_fb2(file, lang):
     notepath = os.path.join(
         os.path.dirname(file), removesuffix(os.path.basename(file), "fb2") + "sdr", "metadata.fb2.lua"
     )
-    with open(notepath) as f:
+    with open(notepath, encoding='utf-8') as f:
         notes = slpp.decode(" ".join("\n".join(f.readlines()[1:]).split(" ")[1:]))['bookmarks'].items()
     print(notepath)
     root = etree.parse(file).getroot()
@@ -77,7 +77,7 @@ def koreader_parse_fb2zip(file, lang):
     notepath = os.path.join(
         os.path.dirname(file), removesuffix(os.path.basename(file), "zip") + "sdr", "metadata.zip.lua"
     )
-    with open(notepath) as f:
+    with open(notepath, encoding='utf8') as f:
         notes = slpp.decode(" ".join("\n".join(f.readlines()[1:]).split(" ")[1:]))['bookmarks'].items()
     print(notepath)
     with ZipFile(file, 'r') as f:
@@ -112,7 +112,7 @@ def koreader_parse_epub(file, lang):
     notepath = os.path.join(
         os.path.dirname(file), removesuffix(os.path.basename(file), "epub") + "sdr", "metadata.epub.lua"
     )
-    with open(notepath) as f:
+    with open(notepath, encoding='utf8') as f:
         notes = slpp.decode(" ".join("\n".join(f.readlines()[1:]).split(" ")[1:]))['bookmarks'].items()
     docs = []
     booktitle = epub.read_epub(file).get_metadata('DC', 'title')[0][0].strip() or removesuffix(os.path.basename(file), "epub")
