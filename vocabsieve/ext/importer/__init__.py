@@ -1,3 +1,2 @@
-from .KindleClippingsImporter import KindleClippingsImporter
 from .KindleVocabImporter import KindleVocabImporter
 from .KoreaderImporter import KoreaderImporter

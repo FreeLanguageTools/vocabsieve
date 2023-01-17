@@ -22,7 +22,7 @@ from .api import LanguageServer
 from .config import *
 from .db import *
 from .dictionary import *
-from .ext.importer import KindleClippingsImporter, KoreaderImporter, KindleVocabImporter
+from .ext.importer import KoreaderImporter, KindleVocabImporter
 from .ext.reader import ReaderServer
 from .global_events import GlobalObject
 from .text_manipulation import *
