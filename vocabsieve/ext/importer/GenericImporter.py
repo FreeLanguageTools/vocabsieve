@@ -33,6 +33,7 @@ class GenericImporter(QDialog):
     def __init__(self, parent, src_name="Generic", path=None, methodname="generic"):
         super().__init__(parent)
         self.settings = parent.settings
+        self.notes = None # Used for filtering
         self.lang = parent.settings.value('target_language')
         self.methodname = methodname
         self.setWindowTitle(f"Import {src_name}")
@@ -41,6 +42,10 @@ class GenericImporter(QDialog):
         self.selected_highlight_items = []
         self.resize(600, 600)
         self.src_name = src_name
+        self.layout = QFormLayout(self)
+        self.layout.addRow(QLabel(
+            f"<h2>Import {src_name}</h2>"
+        ))
         self.orig_lookup_terms, self.orig_sentences, self.orig_dates, self.orig_book_names = self.getNotes()
         self.orig_dates_day = [date[:10] for date in self.orig_dates]
         possible_start_dates = sorted(set(self.orig_dates_day))
@@ -53,12 +58,8 @@ class GenericImporter(QDialog):
         self.src_selector.layout = QVBoxLayout(self.src_selector)
         self.src_selector.layout.addWidget(QLabel("<h3>Select books to extract highlights from</h3>"))
 
-        self.layout = QFormLayout(self)
         self.lookup_button = QPushButton("Look up currently selected")
         self.lookup_button.clicked.connect(self.defineWords)
-        self.layout.addRow(QLabel(
-            f"<h2>Import {src_name}</h2>"
-        ))
         self.lookup_button.setEnabled(False)
     
         for book_name in set(self.orig_book_names):
@@ -106,7 +107,7 @@ class GenericImporter(QDialog):
         for checkbox in self.src_checkboxes:
             if checkbox.isChecked():
                 selected_book_names.append(checkbox.text())
-        self.selected_highlight_items = self.filterHighlights(start_date, selected_book_names)
+        self.selected_highlight_items = self.filterHighlights(start_date, selected_book_names, self.notes)
         if self.selected_highlight_items:
             self.lookup_button.setEnabled(True)
             self.progressbar.setMaximum(len(self.selected_highlight_items)) 
@@ -115,11 +116,11 @@ class GenericImporter(QDialog):
         self.progressbar.setValue(0)
         self.notes_count_label.setText(f"{len(self.selected_highlight_items)} highlights selected")
 
-    def filterHighlights(self, start_date, book_names):
+    def filterHighlights(self, start_date, book_names, notes=None):
         try:
             lookup_terms, sentences, dates, book_names = zip(*compress(
                 zip(self.orig_lookup_terms, self.orig_sentences, self.orig_dates, self.orig_book_names), 
-                map(lambda b, d: d[:10] >= start_date and b in book_names, self.orig_book_names, self.orig_dates)
+                map(lambda w, b, d: (d[:10] >= start_date and b in book_names) and ((w,b) in notes if notes else True), self.orig_lookup_terms, self.orig_book_names, self.orig_dates)
                 ))
         except ValueError:
             lookup_terms, sentences, dates, book_names = [],[],[],[]
@@ -205,7 +206,7 @@ class GenericImporter(QDialog):
                         )
                 tags = " ".join([
                     self.parent.settings.value("tags", "vocabsieve").strip(),
-                    self.src_name.lower(),
+                    self.methodname,
                     book_name.replace(" ","_")
                     ]
                     )

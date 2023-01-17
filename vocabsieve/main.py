@@ -313,8 +313,7 @@ class DictionaryWindow(QMainWindow):
 
         self.repeat_last_import_action = QAction("&Repeat last import")
         self.import_koreader_action = QAction("K&OReader highlights")
-        self.import_kindle_old_action = QAction("&Kindle highlights (clippings.txt)")
-        self.import_kindle_new_action = QAction("K&indle lookups (vocab.db)")
+        self.import_kindle_new_action = QAction("K&indle lookups")
 
         self.export_notes_csv_action = QAction("Export &notes to CSV")
         self.export_lookups_csv_action = QAction("Export &lookup data to CSV")
@@ -324,7 +323,6 @@ class DictionaryWindow(QMainWindow):
         self.open_reader_action.triggered.connect(self.onReaderOpen)
         self.repeat_last_import_action.triggered.connect(self.repeatLastImport)
         self.import_koreader_action.triggered.connect(self.importkoreader)
-        self.import_kindle_old_action.triggered.connect(self.importkindleOld)
         self.import_kindle_new_action.triggered.connect(self.importkindleNew)
         self.export_notes_csv_action.triggered.connect(self.exportNotes)
         self.export_lookups_csv_action.triggered.connect(self.exportLookups)
@@ -334,7 +332,6 @@ class DictionaryWindow(QMainWindow):
                 self.repeat_last_import_action,
                 self.import_koreader_action, 
                 self.import_kindle_new_action,
-                self.import_kindle_old_action
             ]
         )
 
@@ -491,23 +488,12 @@ class DictionaryWindow(QMainWindow):
         self.settings_dialog = SettingsDialog(self)
         self.settings_dialog.exec()
 
-    def importkindleOld(self) -> None:
-        fname = QFileDialog.getOpenFileName(
-            parent=self,
-            caption="Select your clippings.txt file",
-            filter='Kindle clippings files (*.txt)',
-        )[0]
-        if not fname:
-            return
-        
-        KindleClippingsImporter(self, fname).exec()
 
     def importkindleNew(self):
-        fname = QFileDialog.getOpenFileName(
+        fname = QFileDialog.getExistingDirectory(
             parent=self,
-            caption="Select your vocab.db file",
-            filter='Sqlite3 databases (*.db)',
-        )[0]
+            caption="Select your Kindle root (top-level) directory",
+        )
         if not fname:
             return
         
@@ -530,15 +516,18 @@ class DictionaryWindow(QMainWindow):
             path = self.settings.value("last_import_path")
             if not (method and path):
                 QMessageBox.warning(self, "You have not imported notes before",
-                    "Use any one of the other three buttons on the menu, and use this button next time.\n"
-                    "(Currently, only KOReader and Kindle vocab.db are supported for this. Ability to repeat Kindle clippings import will be implemented later.)")
+                    "Use any one of the other two options on the menu, and you will be able to use this one next time.")
                 return
-            if method == "kindle_vocabdb":
+            if method == "kindle":
                 KindleVocabImporter(self, path).exec()
-            elif method == "kindle_clippings":
-                KindleClippingsImporter(self, path).exec()
-            elif method == "koreader_highlights":
+            elif method == "koreader":
                 KoreaderImporter(self, path).exec()
+            else:
+                # Nightly users, clear it for them
+                self.settings.setValue("last_import_method", "") 
+                self.settings.setValue("last_import_path", "") 
+                QMessageBox.warning(self, "You have not imported notes before",
+                    "Use any one of the other two options on the menu, and you will be able to use this one next time.")
         except Exception as e:
             print("Encountered error while repeating last import, aborting:", e)
 
