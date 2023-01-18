@@ -983,8 +983,7 @@ class DictionaryWindow(QMainWindow):
             return w.toPlainText().replace("\n", "<br>") # Anki needs <br>s
         elif display_mode == "Markdown":
             return markdown_nop(w.toPlainText())
-        elif display_mode == "Markdown":
-            print(w.toMarkdown())
+        elif display_mode == "Markdown-HTML":
             return markdown_nop(w.toMarkdown())
         elif display_mode == "HTML":
             return w.original  # type: ignore

@@ -202,7 +202,7 @@ class GenericImporter(QDialog):
         for word, sentence, definition, definition2, audio_path, book_name in zip(
                 self.words, self.sentences, self.definitions, self.definition2s, self.audio_paths, self.book_names):
             if word and sentence and definition:
-                if self.settings.value("bold_word", True, type=bool):
+                if self.settings.value("bold_word", 1, type=int):
                     sentence = re.sub(
                         r"__([ \w]+)__",
                         r"<strong>\1</strong>",

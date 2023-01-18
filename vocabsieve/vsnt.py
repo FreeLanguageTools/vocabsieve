@@ -31,6 +31,8 @@ BACK = '''{{FrontSide}}
 	
 		{{#Pronunciation}}<div class="box targetLang">{{Pronunciation}}</div>{{/Pronunciation}}
 
+{{#Tags}}<div class="tags">{{Tags}}</div>{{/Tags}}
+
 </div>'''
 
 CSS = '''.card {
@@ -145,14 +147,13 @@ img {
 /******** elements styling *******************/
 .box {
   color: var(--text-box-color);
-  display: grid;
-	grid-auto-flow: column;
-	grid-column-gap: .5rem;
+  max-width: 60rem;
   align-items: center;
   margin: 0.3rem;
   padding: 0.5rem 1rem;
   min-height: 2.5rem; /* min height for boxed questions/answers */	
 }
+
 
 .targetLang {
 	background-color: var(--targetLang-color);
@@ -165,13 +166,12 @@ img {
 }
 
 .question {
-  padding: 0rem 1rem;
+  padding: 0rem 0.5rem;
   font-style: normal;
-	font-size: 1.2em;
+	font-size: 1.4em;
 }
 
 .answer {
-  width: 80%;
   font-size: 1.2em;
   padding: .6rem 1rem;
   font-style: normal;
