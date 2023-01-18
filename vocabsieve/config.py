@@ -12,6 +12,7 @@ class SettingsDialog(QDialog):
     def __init__(self, parent, ):
         super().__init__(parent)
         self.settings = parent.settings
+        user_note_type = self.settings.value("note_type")
         self.parent = parent
         self.setWindowTitle("Configure VocabSieve")
         self.initWidgets()
@@ -30,7 +31,7 @@ class SettingsDialog(QDialog):
                 "resetting all settings to default")
             self.settings.clear()
             self.close()
-        if not self.settings.value("internal/added_default_note_type"):
+        if not user_note_type and not self.settings.value("internal/added_default_note_type"):
             try:
                 self.onDefaultNoteType()
                 self.settings.setValue("internal/added_default_note_type", True)
