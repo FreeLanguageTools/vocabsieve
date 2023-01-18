@@ -33,7 +33,7 @@ class SettingsDialog(QDialog):
         if not self.settings.value("internal/added_default_note_type"):
             try:
                 self.onDefaultNoteType()
-                self.settings.value("internal/added_default_note_type", True)
+                self.settings.setValue("internal/added_default_note_type", True)
             except Exception:
                 pass
 
