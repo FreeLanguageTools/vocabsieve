@@ -5,6 +5,7 @@ import os
 import re
 import unicodedata
 import time
+from .vsnt import *
 from bs4 import BeautifulSoup
 from typing import List, Dict
 from .db import *
@@ -65,6 +66,14 @@ def getVersion(server) -> str:
     result = invoke('version', server)
     return str(result)
 
+def addDefaultModel(server):
+    return invoke('createModel', 
+        server, 
+        modelName="vocabsieve-notes", 
+        inOrderFields=FIELDS, 
+        css=CSS, 
+        cardTemplates=CARDS
+        )
 
 def is_json(myjson) -> bool:
     if not myjson.startswith("{"):

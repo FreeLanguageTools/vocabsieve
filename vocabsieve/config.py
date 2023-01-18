@@ -30,6 +30,12 @@ class SettingsDialog(QDialog):
                 "resetting all settings to default")
             self.settings.clear()
             self.close()
+        if not self.settings.value("internal/added_default_note_type"):
+            try:
+                self.onDefaultNoteType()
+                self.settings.value("internal/added_default_note_type", True)
+            except Exception:
+                pass
 
 
     def initWidgets(self):
@@ -83,10 +89,6 @@ class SettingsDialog(QDialog):
             '(Both will look the same in Anki)\n'
             '"<disabled>" disables bolding words in both Vocabsieve and Anki')
 
-        self.note_type_url = QLabel("For a suitable note type, \
-            download <a href=\"https://freelanguagetools.org/sample.apkg\">this file</a> \
-                and import it to your Anki collection.")
-        self.note_type_url.setOpenExternalLinks(True)
 
         self.web_preset = QComboBox()
         self.custom_url = QLineEdit()
@@ -170,6 +172,10 @@ class SettingsDialog(QDialog):
             #"Zipf scale (LCD number)"
         ])
 
+        self.default_notetype_button = QPushButton("Use default note type ('vocabsieve-notes', will be created if it does not exist)")
+        self.default_notetype_button.setToolTip("This will use the default note type provided by VocabSieve. It will be created if it does not exist.")
+        self.default_notetype_button.clicked.connect(self.onDefaultNoteType)
+
     def dictmanager(self):
         importer = DictManager(self)
         importer.exec()
@@ -243,6 +249,20 @@ class SettingsDialog(QDialog):
             os.mkdir(datapath)
             self.parent.close()
 
+    def onDefaultNoteType(self):
+        try:
+            addDefaultModel(self.settings.value("anki_api", 'http://127.0.0.1:8765'))
+        except Exception:
+            pass
+        self.loadFields()
+        self.note_type.setCurrentText("vocabsieve-notes")
+        self.sentence_field.setCurrentText("Sentence")
+        self.word_field.setCurrentText("Word")
+        self.definition_field.setCurrentText("Definition")
+        self.definition2_field.setCurrentText("Definition#2")
+        self.pronunciation_field.setCurrentText("Pronunciation")
+        self.image_field.setCurrentText("Image")
+
     def setupWidgets(self):
         self.target_language.addItems(langs_supported.values())
         self.web_preset.addItems([
@@ -295,6 +315,8 @@ class SettingsDialog(QDialog):
         self.tab_a.layout.addRow(QLabel('AnkiConnect API'), self.anki_api)
         self.tab_a.layout.addRow(QLabel("Deck name"), self.deck_name)
         self.tab_a.layout.addRow(QLabel('Default tags'), self.tags)
+        self.tab_a.layout.addRow(QLabel("<hr>"))
+        self.tab_a.layout.addRow(self.default_notetype_button)
         self.tab_a.layout.addRow(QLabel("Note type"), self.note_type)
         self.tab_a.layout.addRow(
             QLabel('Field name for "Sentence"'),
@@ -317,7 +339,7 @@ class SettingsDialog(QDialog):
         self.tab_a.layout.addRow(
             QLabel('Field name for "Image"'),
             self.image_field)
-        self.tab_a.layout.addRow(self.note_type_url)
+
 
         self.tab_n.layout.addRow(QLabel(
             '<h3>Network settings</h3>'
