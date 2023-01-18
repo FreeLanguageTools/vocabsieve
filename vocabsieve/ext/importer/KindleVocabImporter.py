@@ -4,13 +4,10 @@ from datetime import datetime as dt, timezone as tz
 import sqlite3
 import os
 import re
-from PyQt5.QtWidgets import QCheckBox
+from PyQt5.QtWidgets import QCheckBox, QLabel
 from typing import Tuple, Dict, Set
 from ...dictformats import removeprefix
 
-def item_is_in_clippings(word: str, bookname: str, clippings_items: Set[Tuple[str, str]]) -> bool:
-    return (word,bookname) in clippings_items
-    
 def remove_author(titleauthor):
     "Remove author, which is in the last parentheses"
     return re.sub(r'\s*\([^)]*\)$', "", titleauthor)
@@ -37,8 +34,8 @@ class KindleVocabImporter(GenericImporter):
         try:
             with open(clippings_path) as file:
                 clippings_titleauthors, _, _, clippings_words, _ = zip(*list(grouper(file.read().splitlines(), 5)))
-                clippings_words = [re.sub('[\\?\\.!«»…,()\\[\\]]*', "", word) for word in clippings_words]
-                clippings_titles = [remove_author(titleauthor) for titleauthor in clippings_titleauthors]
+                clippings_words = [re.sub('[\\?\\.!«»…,()\\[\\]]*', "", str(word)).lower() for word in clippings_words]
+                clippings_titles = [remove_author(titleauthor.strip("\ufeff")) for titleauthor in clippings_titleauthors]
                 self.clippings_items = set(zip(clippings_words, clippings_titles))
                 clippings_only = QCheckBox(f"Only select highlighted words ({str(len(clippings_words))} entries found)")
                 clippings_only.clicked.connect(self.toggleNotesFiltering)
@@ -46,8 +43,8 @@ class KindleVocabImporter(GenericImporter):
         except Exception as e:
             print(e)
             self.clippings_items = set()
-            self.layout.addRow(QLabel("Clippings file not found. Cannot read highlights."))
-        
+            self.layout.addRow(QLabel("Cannot read highlights. Make sure that your clippings file is in the right place, and its length is a multiple of 5."))
+
 
         bookdata = list(cur.execute("SELECT * FROM book_info"))
         bookid2name = dict(zip(list(zip(*bookdata))[2],list(zip(*bookdata))[4]))

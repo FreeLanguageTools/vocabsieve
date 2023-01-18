@@ -40,7 +40,7 @@ class GenericImporter(QDialog):
         self.parent = parent
         self.path = path
         self.selected_highlight_items = []
-        self.resize(600, 600)
+        self.setMinimumWidth(500)
         self.src_name = src_name
         self.layout = QFormLayout(self)
         self.layout.addRow(QLabel(
@@ -56,7 +56,7 @@ class GenericImporter(QDialog):
         self.src_selector = QWidget()
         self.src_checkboxes = []
         self.src_selector.layout = QVBoxLayout(self.src_selector)
-        self.src_selector.layout.addWidget(QLabel("<h3>Select books to extract highlights from</h3>"))
+        self.layout.addRow(QLabel("<h3>Select books to extract highlights from</h3>"))
 
         self.lookup_button = QPushButton("Look up currently selected")
         self.lookup_button.clicked.connect(self.defineWords)
@@ -68,7 +68,9 @@ class GenericImporter(QDialog):
             self.src_selector.layout.addWidget(self.src_checkboxes[-1])
             self.src_checkboxes[-1].clicked.connect(self.updateHighlightCount)
         
-        self.layout.addRow(self.src_selector)
+        self.src_selector_scrollarea = QScrollArea()
+        self.src_selector_scrollarea.setWidget(self.src_selector)
+        self.layout.addRow(self.src_selector_scrollarea)
         self.layout.addRow("Use notes starting from: ", self.datewidget)
         self.notes_count_label = QLabel()
         self.layout.addRow(self.notes_count_label, self.lookup_button)
@@ -80,6 +82,8 @@ class GenericImporter(QDialog):
         self.anki_button.clicked.connect(self.to_anki)
 
         self.preview_widget = BatchNotePreviewer()
+        self.preview_widget.setMinimumHeight(300)
+        self.preview_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.layout.addRow(QLabel("Preview cards"), self.preview_widget)
         self.layout.addRow(self.progressbar)
         self.layout.addRow(self.definition_count_label, self.anki_button)
@@ -120,7 +124,7 @@ class GenericImporter(QDialog):
         try:
             lookup_terms, sentences, dates, book_names = zip(*compress(
                 zip(self.orig_lookup_terms, self.orig_sentences, self.orig_dates, self.orig_book_names), 
-                map(lambda w, b, d: (d[:10] >= start_date and b in book_names) and ((w,b) in notes if notes else True), self.orig_lookup_terms, self.orig_book_names, self.orig_dates)
+                map(lambda w, b, d: (d[:10] >= start_date and b in book_names) and ((w.lower(),b) in notes if notes else True), self.orig_lookup_terms, self.orig_book_names, self.orig_dates)
                 ))
         except ValueError:
             lookup_terms, sentences, dates, book_names = [],[],[],[]
