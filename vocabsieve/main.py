@@ -496,8 +496,13 @@ class DictionaryWindow(QMainWindow):
         )
         if not fname:
             return
-        
-        KindleVocabImporter(self, fname).exec()
+        try:
+            KindleVocabImporter(self, fname).exec()
+        except ValueError:
+            QMessageBox.warning(self, "No notes are found",
+                "Check if you've picked the right directory: it should be your Kindle root folder")
+        except Exception as e:
+            QMessageBox.warning(self, "Something went wrong", "Error: "+str(e))
 
     def importkoreader(self) -> None:
         path = QFileDialog.getExistingDirectory(
@@ -507,8 +512,13 @@ class DictionaryWindow(QMainWindow):
         )
         if not path:
             return
-
-        KoreaderImporter(self, path).exec()
+        try:
+            KoreaderImporter(self, path).exec()
+        except ValueError:
+            QMessageBox.warning(self, "No notes are found", 
+                "Check if you've picked the right directory. It should be a folder containing all of your the ebooks you want to extract from")
+        except Exception as e:
+            QMessageBox.warning(self, "Something went wrong", "Error: "+str(e))
 
     def repeatLastImport(self):
         try:
