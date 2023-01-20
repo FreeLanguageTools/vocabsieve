@@ -19,13 +19,20 @@ simplemma_languages = [
 
 def lem_word(word, language, greedy=False):
     """Lemmatize a word. We will use PyMorphy for RU, simplemma for others,
-    and if that isn't supported , we give up."""
-    if not word:
+    and if that isn't supported , we give up. Should not fail under any circumstances"""
+    try:
+        if not word:
+            return word
+        word = re.sub('[\\?\\.!«»…,()\\[\\]]*', "", word)
+        if language == 'ru' and PYMORPHY_SUPPORT:
+            return morph.parse(word)[0].normal_form
+        elif language in simplemma_languages:
+            return simplemma.lemmatize(word, lang=language, greedy=greedy)
+        else:
+            return word
+    except ValueError:
+        print("encountered ValueError")
         return word
-    word = re.sub('[\\?\\.!«»…,()\\[\\]]*', "", word)
-    if language == 'ru' and PYMORPHY_SUPPORT:
-        return morph.parse(word)[0].normal_form
-    elif language in simplemma_languages:
-        return simplemma.lemmatize(word, lang=language, greedy=greedy)
-    else:
+    except Exception:
         return word
+    
