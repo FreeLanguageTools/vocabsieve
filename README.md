@@ -9,7 +9,6 @@ VocabSieve (originally Simple Sentence Mining, `ssmtool`) is a program for sente
 ## Workflow gallery
 
 [![out.gif](https://i.postimg.cc/vm7frv7p/out.gif)](https://postimg.cc/xkCXYM4R)
-[![out.gif](https://i.postimg.cc/htXHrtc7/out.gif)](https://postimg.cc/Yvwn2k4p)
 [![out.gif](https://i.postimg.cc/5yj3VjPB/out.gif)](https://postimg.cc/kR38NMPG)
 
 
