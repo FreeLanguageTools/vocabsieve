@@ -17,10 +17,10 @@ The Mac OS build is likely broken, but I can't do anything about it because I ha
 
 ## Features
 - **Quick word lookups**: Getting definition, pronunciation, and frequency within one or two keypresses/clicks.
-- **Wide language support**: Supports all languages listed on Google Translate, though it is currently optimized for European languages.
+- **Wide language support**: Supports all languages listed on Google Translate, though it is currently optimized for European languages. Spanish, English, and Russian are routinely tested, but all other languages with a similar morphology should work well.
 - **Lemmatization**: Automatically remove inflections to enhance dictionary experience (`books` -> `book`, `ran` -> `run`)
-- **Local-first**: No internet is required if you use downloaded resources. VocabSieve has no central server, so there are no fees to keep it running. 
-- **Sane defaults**: Little configuration is needed other than settings for Anki. It comes with two dictionary sources by default for most languages and one pronunciation source that should cover most needs.
+- **Local-first**: No internet is required if you use downloaded resources. VocabSieve has no central server, so there are no fees to keep it running, so you will never have to pay a subscription.
+- **Sane defaults**: Little configuration is needed other than settings for the Anki deck. It comes with two dictionary sources by default for most languages and one pronunciation source that should cover most needs. It comes with a working note type, saving you the effort of finding an appropriate one and/or styling it if you don't want to.
 - **Local resource support**: Dictionaries in StarDict, Migaku, plain JSON, MDX, Lingvo (.dsl), CSV; frequency lists; and audio libraries.
 - **Web reader**: Read epub, fb2 books, or plain articles with one-click word lookups and Anki export.
 - **eReader integration**: Batch-import [KOReader](https://github.com/koreader/koreader) and Kindle highlights to Anki sentence cards to build vocabulary efficiently without interrupting your reading.
