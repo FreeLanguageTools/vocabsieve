@@ -555,16 +555,21 @@ class DictionaryWindow(QMainWindow):
 
     def getCurrentWord(self) -> str:
         """Returns currently selected word. If there isn't any, last selected word is returned"""
+        cursor = self.sentence.textCursor()
+        selected = cursor.selectedText()
+        cursor2 = self.definition.textCursor()
+        selected2 = cursor2.selectedText()
+        cursor3 = self.definition2.textCursor()
+        selected3 = cursor3.selectedText()
+        target = str.strip(selected
+                           or selected2
+                           or selected3
+                           or self.previousWord
+                           or self.word.text()
+                           or "")
+        self.previousWord = target
 
-        # defines word only if widget have focus on it
-        for text_field in (self.sentence, self.definition, self.definition2):
-            if text_field.hasFocus() and (selected_text := text_field.textCursor().selectedText().strip()):
-                self.previousWord = selected_text
-                return selected_text
-
-        if not self.previousWord:
-            self.previousWord = self.word.text().strip()
-        return self.previousWord
+        return target
 
     def onWebButton(self) -> None:
         """Shows definitions of self.word.text() in wiktionoary in browser"""
