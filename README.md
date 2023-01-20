@@ -1,13 +1,17 @@
 # VocabSieve - a simple sentence mining tool
 ![https://ci.appveyor.com/api/projects/status/32r7s2skrgm9ubva?svg=true](https://ci.appveyor.com/api/projects/status/32r7s2skrgm9ubva?svg=true)
 ![https://img.shields.io/pypi/v/vocabsieve.svg](https://img.shields.io/pypi/v/vocabsieve.svg)
-[![Downloads](https://pepy.tech/badge/ssmtool)](https://pepy.tech/project/ssmtool)
 
 Join our chat on [Matrix](https://webchat.kde.org/#/room/#flt:midov.pl) or [Telegram](https://t.me/fltchat)
 
-VocabSieve (formerly Simple Sentence Mining, `ssmtool`) is a program for sentence mining, in which sentences with target vocabulary words are collected and added into a spaced repetition system (SRS, e.g. Anki) for language learning. It is meant to help intermediate learners gain vocabulary efficiently by allowing card creation without interrupting the flow of content immersion.
+VocabSieve (originally Simple Sentence Mining, `ssmtool`) is a program for sentence mining, in which sentences with target vocabulary words are collected and added into a spaced repetition system (SRS, e.g. Anki) for language learning. It is meant to help intermediate learners gain vocabulary efficiently by allowing card creation without interrupting the flow of content immersion. It can also import notes from Kindles or ereaders running KOReader, so you can effortlessly make cards with minimal interruption to your reading.
+
+## Workflow gallery
 
 [![out.gif](https://i.postimg.cc/vm7frv7p/out.gif)](https://postimg.cc/xkCXYM4R)
+[![out.gif](https://i.postimg.cc/htXHrtc7/out.gif)](https://postimg.cc/Yvwn2k4p)
+[![out.gif](https://i.postimg.cc/5yj3VjPB/out.gif)](https://postimg.cc/kR38NMPG)
+
 
 ## Note
 The Mac OS build is likely broken, but I can't do anything about it because I have no way of testing it or reproducing any of the bugs. If you have a Mac and basic Python skills, please don't hesitate to reach out and help me debug!
@@ -80,6 +84,8 @@ Note that VocabSieve is still alpha software. API is not guaranteed to be stable
 You are welcome to report bugs, suggest features/enhancements, or ask for clarifications by opening a GitHub issue.
 
 ## Donations
+I don't really need donations. If you appreciate this tool, consider making a donation to the [Free Software Foundation](https://www.fsf.org/) or the [Electronic Frontier Foundation](https://www.eff.org/) to protect our digital future and defend our freedom.
+
 <details><summary>Click to show donation information</summary>
 Send me some Monero to support this work! If you can [prove](https://www.getmonero.org/resources/user-guides/prove-payment.html) a payment of more than 0.05 XMR, you can receive prioritized support and consideration for feature requests (still, no guarantees!).
 
