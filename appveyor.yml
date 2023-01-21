@@ -2,7 +2,7 @@ build: off
 version: "{build}"
 
 image:
-#  - macOS
+  - macOS
   - Visual Studio 2019
 
 platform:
@@ -44,38 +44,46 @@ for:
       - path: cx_freeze/debug/dist/*.msi
         name: Windows App (debug)
         
-#  -
-#    matrix:
-#      only:
-#        - image: macOS
-#    
-#    init:
-#      - "ls"
-#      - "echo $PYTHON_MAC $PYTHON_VERSION $PYTHON_ARCH"
-#      - "$HOME/$PYTHON_MAC/bin/python --version"
-#    
-#    install:
-#      - "$HOME/$PYTHON_MAC/bin/python -m pip install wheel"
-#      - "brew install lzo"
-#      #- "brew install libiodbc libpq"
-#      #- "brew install postgres-unofficial"
-#      #- "mkdir -p /Applications/Postgres.app/Contents/Versions/9.6/lib/"
-#      #- "ln -s /Applications/Postgres.app/Contents/Versions/12/lib/libpq.5.12.dylib /Applications/Postgres.app/Contents/Versions/9.6/lib/libpq.5.dylib"
-#      - "$HOME/$PYTHON_MAC/bin/python -m pip install python-lzo"
-#      - "$HOME/$PYTHON_MAC/bin/python -m pip install -r requirements.txt"
-#      - "$HOME/$PYTHON_MAC/bin/python -m pip install cx_freeze==6.10"
-#      - "cd cx_freeze"
-#      - "$HOME/$PYTHON_MAC/bin/python setup.py bdist_mac --iconfile icon.icns --bundle-name=vocabsieve --custom-info-plist Info.plist -q"
-#      - "npm i -g create-dmg"
-#      - "cd build"
-#      - "create-dmg vocabsieve.app || true"
-#      - "mv \"vocabsieve undefined.dmg\" vocabsieve-$APPVEYOR_REPO_TAG_NAME-macos.dmg"
-#      - "ls"
-#      - "cd ../../"
-#
-#    artifacts:
-#      path: cx_freeze/build/*.dmg
-#      name: Mac App
+  -
+    matrix:
+      only:
+        - image: macOS
+    
+    init:
+      - "ls"
+      - "echo $PYTHON_MAC $PYTHON_VERSION $PYTHON_ARCH"
+      - "$HOME/$PYTHON_MAC/bin/python --version"
+    
+    install:
+      - "$HOME/$PYTHON_MAC/bin/python -m pip install wheel"
+      - "brew install lzo"
+      - "brew install libiodbc libpq"
+      - "brew install postgres-unofficial"
+      - "mkdir -p /Applications/Postgres.app/Contents/Versions/9.6/lib/"
+      - "ln -s /Applications/Postgres.app/Contents/Versions/12/lib/libpq.5.12.dylib /Applications/Postgres.app/Contents/Versions/9.6/lib/libpq.5.dylib"
+      - "$HOME/$PYTHON_MAC/bin/python -m pip install python-lzo"
+      - "$HOME/$PYTHON_MAC/bin/python -m pip install -r requirements.txt"
+      - "$HOME/$PYTHON_MAC/bin/python -m pip install cx_freeze==6.10"
+      - "cd cx_freeze/prod"
+      - "$HOME/$PYTHON_MAC/bin/python setup.py bdist_mac --iconfile ../icon.icns --bundle-name=vocabsieve --custom-info-plist ../Info.plist -q"
+      - "npm i -g create-dmg"
+      - "cd build"
+      - "create-dmg vocabsieve.app || true"
+      - "mv \"vocabsieve undefined.dmg\" vocabsieve-$APPVEYOR_REPO_TAG_NAME-macos.dmg"
+      - "cd ../../debug/"
+      - "$HOME/$PYTHON_MAC/bin/python setup.py bdist_mac --iconfile ../icon.icns --bundle-name=vocabsieve --custom-info-plist ../Info.plist -q"
+      - "npm i -g create-dmg"
+      - "cd build"
+      - "create-dmg vocabsieve.app || true"
+      - "mv \"vocabsieve undefined.dmg\" vocabsieve-$APPVEYOR_REPO_TAG_NAME-DEBUG-macos.dmg"
+      - "ls"
+      - "cd ../../"
+
+    artifacts:
+      - path: cx_freeze/prod/build/*.dmg
+        name: Mac App
+      - path: cx_freeze/debug/build/*.dmg
+        name: Mac App (debug)
 
 
 deploy:
@@ -83,7 +91,7 @@ deploy:
   provider: GitHub
   auth_token:
     secure: GMdaty/QRo0ATH06dsAQ2LtyUTQUuk45Pp23OTDKBevsBdnhCPW6iAGPcYO1Vyj3
-  artifact: Windows App
+  artifact: Windows App, Mac App
   draft: true
   on:
     APPVEYOR_REPO_TAG: true
