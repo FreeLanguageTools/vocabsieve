@@ -138,6 +138,7 @@ class GenericImporter(QDialog):
         self.definition2s = []
         self.audio_paths = []
         self.book_names = []
+        self.lastDate = "1970-01-01 00:00:00"
 
         # No using any of these buttons to prevent race conditions
         self.lookup_button.setEnabled(False)
@@ -146,6 +147,7 @@ class GenericImporter(QDialog):
         count = 0
         for n_looked_up, (lookup_term, sentence, date, book_name) in enumerate(self.selected_highlight_items):
             # Remove punctuations
+            self.lastDate = date
             word = re.sub('[\\?\\.!«»…,()\\[\\]]*', "", lookup_term)
             if sentence:
                 if self.settings.value("bold_word", True, type=bool):
@@ -192,7 +194,8 @@ class GenericImporter(QDialog):
                 #self.definition2s.append("")
                 #self.audio_paths.append("")
             self.progressbar.setValue(n_looked_up+1)
-
+            
+        
         # Unlock buttons again now
         self.lookup_button.setEnabled(True)
         self.anki_button.setEnabled(True)
@@ -238,13 +241,12 @@ class GenericImporter(QDialog):
                     content['audio']['filename'] = audio_path.replace("\\", "/").split("/")[-1]
                     content['audio']['fields'] = [self.settings.value('pronunciation_field')]
 
-                print(content)
                 notes.append(content)
         res = addNotes(self.parent.settings.value("anki_api"), notes)
         # Record last import data
         self.parent.settings.setValue("last_import_method", self.methodname)
         self.parent.settings.setValue("last_import_path", self.path)
-        self.parent.settings.setValue(f"last_import_date_{self.methodname}", str(dt.now())[:10])
+        self.parent.settings.setValue(f"last_import_date_{self.methodname}", self.lastDate[:10])
 
         self.layout.addRow(QLabel(
             QDateTime.currentDateTime().toString('[hh:mm:ss]') + " "
