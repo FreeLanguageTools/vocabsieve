@@ -107,10 +107,19 @@ class Forvo:
                 class_="info", recursive=False)[0].find_all(
                     class_="ofLink")
             if len(username) == 0:
-                origin = re.findall(
-                    "Pronunciation by(.*)",
-                    pronunciation_item.contents[2],
-                    re.S)[0].strip()
+                for pronunciation_item_content in pronunciation_item.contents:
+
+                    if not hasattr(pronunciation_item_content, "contents"):
+                        continue
+
+                    tempOrigin = re.findall(
+                                "Pronunciation by(.*)",
+                                pronunciation_item_content.contents[0],
+                                re.S)
+                                
+                    if len(tempOrigin) != 0:
+                        origin = tempOrigin[0].strip()
+                        break
             else:
                 origin = username[0].contents[0]
             pronunciation_object = Pronunciation(self.language,
