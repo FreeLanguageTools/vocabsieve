@@ -21,6 +21,8 @@ build_exe_options = {
         "pystardict",
         "flask",
         "pymorphy2",
+        "pymorphy2_dicts_ru",
+        "pymorphy2_dicts_uk",
         "flask_sqlalchemy",
         "jinja2.ext",
         "sqlalchemy",
@@ -39,7 +41,9 @@ build_exe_options = {
     "include_files": include_files,
     "excludes": ["tkinter"],
     "bin_includes": ["liblzo2.so"],
-    "include_msvcr": True}
+    "include_msvcr": True,
+    "silent_level": 1
+    }
 
 bdist_msi_options = {
     "upgrade_code": "{F10E2AE2-7629-3CA2-AA85-498478E708D7}"
@@ -47,15 +51,13 @@ bdist_msi_options = {
 
 # base="Win32GUI" should be used only for Windows GUI app
 base = None
-if sys.platform == "win32":
-    base = "Win32GUI"
 
 setup(
-    name="VocabSieve",
+    name="VocabSieve-DEBUG",
     version=__version__,
     description="A simple sentence mining tool",
     options={"build_exe": build_exe_options, "bdist_msi": bdist_msi_options},
-    executables=[Executable("app.py",
+    executables=[Executable("app_debug.py",
                             base=base,
                             icon="../icon.ico",
                             shortcut_name="VocabSieve",

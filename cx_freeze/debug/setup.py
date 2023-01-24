@@ -21,6 +21,8 @@ build_exe_options = {
         "pystardict",
         "flask",
         "pymorphy2",
+        "pymorphy2_dicts_ru",
+        "pymorphy2_dicts_uk",
         "flask_sqlalchemy",
         "jinja2.ext",
         "sqlalchemy",
@@ -39,7 +41,9 @@ build_exe_options = {
     "include_files": include_files,
     "excludes": ["tkinter"],
     "bin_includes": ["liblzo2.so"],
-    "include_msvcr": True}
+    "include_msvcr": True,
+    "silent_level": 1
+    }
 
 bdist_msi_options = {
     "upgrade_code": "{F10E2AE2-7629-3CA2-AA85-498478E708D7}"

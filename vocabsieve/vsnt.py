@@ -150,8 +150,7 @@ img {
   max-width: 60rem;
   align-items: center;
   margin: 0.3rem;
-  padding: 0.5rem 1rem;
-  min-height: 2.5rem; /* min height for boxed questions/answers */	
+  padding: 0.7rem 1.2rem;
 }
 
 

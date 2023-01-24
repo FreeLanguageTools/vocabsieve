@@ -50,6 +50,7 @@ class DictionaryWindow(QMainWindow):
         self.setFocusPolicy(Qt.StrongFocus)
         self.widget = QWidget()
         self.settings = settings
+
         self.rec = Record(self)
         self.setCentralWidget(self.widget)
         self.previousWord = ""
@@ -81,6 +82,10 @@ class DictionaryWindow(QMainWindow):
                 lambda: self.clipboardChanged(False, True))
         QApplication.clipboard().dataChanged.connect(self.clipboardChanged)
 
+        if not self.settings.value("internal/configured"):
+            self.configure()
+            self.settings.setValue("internal/configured", True)
+
     def scaleFont(self) -> None:
         font = QApplication.font()
         font.setPointSize(
@@ -99,11 +104,11 @@ class DictionaryWindow(QMainWindow):
             answer = QMessageBox.question(
                 self,
                 "Check updates",
-                "<h2>Would you like VocabSieve to check for updates automatically?</h2>"
+                "<h2>Would you like VocabSieve to check for updates automatically on launch?</h2>"
                 "Currently, the repository and releases are hosted on GitHub's servers, "
                 "which will be queried for checking updates. <br>VocabSieve cannot and "
                 "<strong>will not</strong> install any updates automatically."
-                "<br>You can change this option in the configuration panel at a later date."
+                "<br>You can change this option in the configuration panel at any time."
             )
             if answer == QMessageBox.Yes:
                 self.settings.setValue("check_updates", True)

@@ -60,7 +60,7 @@ Use your favorite AUR helper (or manually) to install the pacakge `vocabsieve`.
 
 At this time, there are no packages for other distributions. If you are able to create packages for them, please tell me!
 
-In the meantime, users should simply use `pip3` to install VocabSieve: `pip3 install --user vocabsieve`.
+In the meantime, users should simply use `pip3` to install VocabSieve: `pip3 install --user vocabsieve`. Depends on your system, you may need to install `gcc` and `liblzo2` with headers.
 
 This should install an executable and a desktop icon and behave like any other GUI application you may have.
 </details>
