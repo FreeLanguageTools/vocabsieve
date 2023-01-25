@@ -46,14 +46,15 @@ build_exe_options = {
     }
 
 bdist_msi_options = {
-    "upgrade_code": "{F10E2AE2-7629-3CA2-AA85-498478E708D7}"
+    "upgrade_code": "{F10E2AE2-7629-3CA2-AA85-498478E708D7}",
+    "target_name": f"VocabSieve-v{__version}-win64.msi"
 }
 
 # base="Win32GUI" should be used only for Windows GUI app
 base = None
 
 setup(
-    name="VocabSieve-DEBUG",
+    name="VocabSieve",
     version=__version__,
     description="A simple sentence mining tool",
     options={"build_exe": build_exe_options, "bdist_msi": bdist_msi_options},
