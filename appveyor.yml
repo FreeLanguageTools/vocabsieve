@@ -2,7 +2,7 @@ build: off
 version: "{build}"
 
 image:
-  - macOS
+  - macos-monterey
   - Visual Studio 2019
 
 platform:
