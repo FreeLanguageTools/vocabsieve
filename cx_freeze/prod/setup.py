@@ -57,7 +57,7 @@ setup(
     version=__version__,
     description="A simple sentence mining tool",
     options={"build_exe": build_exe_options, "bdist_msi": bdist_msi_options},
-    executables=[Executable("app_debug.py",
+    executables=[Executable("app.py",
                             base=base,
                             icon="../icon.ico",
                             shortcut_name="VocabSieve",
