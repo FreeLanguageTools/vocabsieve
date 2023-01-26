@@ -52,6 +52,9 @@ bdist_msi_options = {
 
 # base="Win32GUI" should be used only for Windows GUI app
 base = None
+if sys.platform == "win32":
+    base = "Win32GUI"
+
 
 setup(
     name="VocabSieve",
