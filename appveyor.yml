@@ -2,9 +2,9 @@ build: off
 version: "{build}"
 
 image:
+  - Ubuntu2004
   - macos-monterey
   - Visual Studio 2022
-  - Ubuntu2004
 
 platform:
   - x64
