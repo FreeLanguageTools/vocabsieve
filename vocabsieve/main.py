@@ -834,7 +834,6 @@ class DictionaryWindow(QMainWindow):
                 self.settings.value("gtrans_api", "https://lingva.ml"))
             self.rec.recordLookup(
                 word,
-                item['definition'],
                 TL,
                 lemmatize,
                 dictname,
@@ -842,7 +841,7 @@ class DictionaryWindow(QMainWindow):
         except Exception as e:
             self.status(str(e))
             self.rec.recordLookup(
-                word, "", TL, lemmatize, dictname, False, recordDate)
+                word, TL, lemmatize, dictname, False, recordDate)
             self.updateAnkiButtonState(True)
             item = {
                 "word": word,
@@ -862,7 +861,6 @@ class DictionaryWindow(QMainWindow):
                 gtrans_lang)
             self.rec.recordLookup(
                 word,
-                item2['definition'],
                 TL,
                 lemmatize,
                 dict2name,
@@ -870,7 +868,7 @@ class DictionaryWindow(QMainWindow):
         except Exception as e:
             self.status("Dict-2 failed" + str(e))
             self.rec.recordLookup(
-                word, "", TL, lemmatize, dict2name, False, recordDate)
+                word, TL, lemmatize, dict2name, False, recordDate)
             self.definition2.clear()
             return item
         return {

@@ -62,6 +62,9 @@ class Record():
         if not parent.settings.value("internal/db_has_lemma"):
             self.lemmatizeLookups()
             parent.settings.setValue("internal/db_has_lemma", True)
+        if not parent.settings.value("internal/db_no_definitions"):
+            self.dropDefinitions()
+            parent.settings.setValue("internal/db_no_definitions", True)
         self.conn.commit()
 
     def createTables(self):
@@ -70,7 +73,6 @@ class Record():
             timestamp FLOAT,
             word TEXT,
             lemma TEXT,
-            definition TEXT,
             language TEXT,
             lemmatization INTEGER,
             source TEXT,
@@ -132,6 +134,14 @@ class Record():
         except sqlite3.OperationalError:
             pass
 
+    def dropDefinitions(self):
+        print('dropping definition')
+        try:
+            self.c.execute("""ALTER TABLE lookups DROP COLUMN definition""")
+        except Exception as e:
+            print(e)
+        return
+
     def lemmatizeLookups(self):
         "In the past, lemmas were not recorded during lookups. This applies it to older rows"
         try:
@@ -170,7 +180,6 @@ class Record():
     def recordLookup(
             self,
             word: str,
-            definition: str,
             language: str,
             lemmatization: bool,
             source: str,
@@ -178,14 +187,13 @@ class Record():
             timestamp: float):
         try:
             lemma = lem_word(word, language) # For statistics, so it is used even if lemmatization is off
-            sql = """INSERT INTO lookups(timestamp, word, lemma, definition, language, lemmatization, source, success)
+            sql = """INSERT INTO lookups(timestamp, word, lemma, language, lemmatization, source, success)
                     VALUES(?,?,?,?,?,?,?,?)"""
             self.c.execute(
                 sql,
                 (timestamp,
                  word,
                  lemma,
-                 definition,
                  language,
                  lemmatization,
                  source,
@@ -217,7 +225,7 @@ class Record():
         self.conn.commit()
 
     def getAllLookups(self):
-        return self.c.execute("SELECT timestamp, word, lemma, definition, language, lemmatization, source, success FROM lookups")
+        return self.c.execute("SELECT timestamp, word, lemma, language, lemmatization, source, success FROM lookups")
 
     def getAllNotes(self):
         return self.c.execute("SELECT * FROM notes")
