@@ -1105,7 +1105,7 @@ class AboutDialog(QDialog):
             f'''
 VocabSieve version: {__version__}<br>
 Python version: {sys.version}<br>
-PyQt5 (Qt bindings) version: {importlib.metadata.version('PyQt5')}<br><br>
+PyQt5 (Qt bindings) version: {QT_VERSION_STR}, Qt {PYQT_VERSION_STR}<br><br>
 © 2022 FreeLanguageTools<br><br>
 Visit <a href="https://wiki.freelanguagetools.org">FreeLanguageTools Wiki</a> for more info on how to use this tool.<br>
 You can also talk to us on <a href="https://webchat.kde.org/#/room/#flt:midov.pl">Matrix</a>
