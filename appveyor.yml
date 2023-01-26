@@ -96,10 +96,11 @@ for:
       - "sudo apt install -y liblzo2-dev zlib1g-dev"
       - "$HOME/$PYTHON_UBU/bin/python -m pip install python-appimage"
       - "cp vocabsieve.{desktop,png} recipe/"
+      - "echo $pwd"
+      - "echo $pwd | cat - recipe/requirements.txt > tmpfile && mv tmpfile recipe/requirements.txt"
       - "$HOME/$PYTHON_UBU/bin/python -m python_appimage build app -p 3.10 recipe"
       - "ls"
       - "echo $(grep version setup.cfg | awk '{print $3}')"
-      - "echo $pwd | cat - recipe/requirements.txt > tmpfile && mv tmpfile recipe/requirements.txt"
       - "mv VocabSieve-x86_64.AppImage VocabSieve-v$(grep version setup.cfg | awk '{print $3}')-linux-amd64.AppImage"
 
     artifacts:
