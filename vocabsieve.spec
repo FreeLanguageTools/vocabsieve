@@ -9,12 +9,12 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-      ('env/lib/python3.8/site-packages/simplemma/data', 'simplemma/data'),
-      ('env/lib/python3.8/site-packages/pymorphy2_dicts_ru/data', 'pymorphy2_dicts_ru/data'),
-      ('env/lib/python3.8/site-packages/pymorphy2_dicts_uk/data', 'pymorphy2_dicts_uk/data'),
-      ('env/lib/python3.8/site-packages/vocabsieve/ext/reader/templates', 'vocabsieve/ext/reader/templates'),
-      ('env/lib/python3.8/site-packages/vocabsieve/ext/reader/static', 'vocabsieve/ext/reader/static'),
-      ('env/lib/python3.8/site-packages/sentence_splitter/non_breaking_prefixes', 'sentence_splitter/non_breaking_prefixes')
+      ('/home/appveyor/venv3.8/lib/python3.8/site-packages/simplemma/data', 'simplemma/data'),
+      ('/home/appveyor/venv3.8/lib/python3.8/site-packages/pymorphy2_dicts_ru/data', 'pymorphy2_dicts_ru/data'),
+      ('/home/appveyor/venv3.8/lib/python3.8/site-packages/pymorphy2_dicts_uk/data', 'pymorphy2_dicts_uk/data'),
+      ('/home/appveyor/venv3.8/lib/python3.8/site-packages/vocabsieve/ext/reader/templates', 'vocabsieve/ext/reader/templates'),
+      ('/home/appveyor/venv3.8/lib/python3.8/site-packages/vocabsieve/ext/reader/static', 'vocabsieve/ext/reader/static'),
+      ('/home/appveyor/venv3.8/lib/python3.8/site-packages/sentence_splitter/non_breaking_prefixes', 'sentence_splitter/non_breaking_prefixes')
       ],
     hiddenimports=[],
     hookspath=[],
