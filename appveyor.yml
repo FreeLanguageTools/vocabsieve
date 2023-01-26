@@ -101,7 +101,7 @@ for:
       - "mv dist/vocabsieve dist/vocabsieve-$(pip freeze | grep vocabsieve | cut -d \"=\" -f3)-linux"
 
     artifacts:
-      - path: dist/vocabsieve
+      - path: dist/vocabsieve*
         name: Linux App
 
 
