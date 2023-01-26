@@ -93,7 +93,7 @@ for:
       - "echo $PYTHON_UBU $PYTHON_VERSION $PYTHON_ARCH"
       - "$HOME/$PYTHON_UBU/bin/python --version"
     install:
-      - "sudo apt install liblzo2-dev zlib1g-dev"
+      - "sudo apt install -y liblzo2-dev zlib1g-dev"
       - "$HOME/$PYTHON_UBU/bin/python -m pip install python-lzo"
       - "$HOME/$PYTHON_UBU/bin/python -m pip install -r requirements.txt"
       - "$HOME/$PYTHON_UBU/bin/python -m pip install PyInstaller"
