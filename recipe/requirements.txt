@@ -1,4 +1,3 @@
-.
 lxml
 PyQt5
 requests
