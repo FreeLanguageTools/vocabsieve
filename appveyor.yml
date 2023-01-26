@@ -94,8 +94,6 @@ for:
       - "$HOME/$PYTHON_UBU/bin/python --version"
     install:
       - "sudo apt install -y liblzo2-dev zlib1g-dev"
-      - "$HOME/$PYTHON_UBU/bin/python -m pip install python-lzo"
-      - "$HOME/$PYTHON_UBU/bin/python -m pip install -r requirements.txt"
       - "$HOME/$PYTHON_UBU/bin/python -m pip install python-appimage"
       - "cp vocabsieve.{desktop,png} recipe/"
       - "$HOME/$PYTHON_UBU/bin/python -m python_appimage build app -p 3.10 recipe"
