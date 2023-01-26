@@ -12,9 +12,9 @@ platform:
 environment:
   matrix:
     - PYTHON_WIN: "C:\\Python38-x64"
-      PYTHON_MAC: "venv3.9"
-      PYTHON_UBU: "venv3.9"
-      PYTHON_VERSION: "3.9"
+      PYTHON_MAC: "venv3.8"
+      PYTHON_UBU: "venv3.8"
+      PYTHON_VERSION: "3.8"
       PYTHON_ARCH: "64"
 
 
