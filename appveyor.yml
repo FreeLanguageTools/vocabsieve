@@ -98,7 +98,7 @@ for:
       - "$HOME/$PYTHON_UBU/bin/python -m pip install -r requirements.txt"
       - "$HOME/$PYTHON_UBU/bin/python -m pip install PyInstaller"
       - "$HOME/$PYTHON_UBU/bin/python -m PyInstaller vocabsieve.spec"
-      - "mv dist/vocabsieve dist/vocabsieve-$(pip freeze | grep vocabsieve | cut -d \"=\" -f3)-linux"
+      - "mv dist/vocabsieve dist/vocabsieve-$($HOME/$PYTHON_UBU/bin/python -m pip freeze | grep vocabsieve | cut -d \"=\" -f3)-linux"
 
     artifacts:
       - path: dist/vocabsieve*
