@@ -3,7 +3,8 @@ version: "{build}"
 
 image:
   - macos-monterey
-  - Visual Studio 2019
+  - Visual Studio 2022
+  - Ubuntu2004
 
 platform:
   - x64
@@ -12,7 +13,7 @@ environment:
   matrix:
     - PYTHON_WIN: "C:\\Python38-x64"
       PYTHON_MAC: "venv3.9"
-      PYTHON_UBU: "venv3.9/bin/python"
+      PYTHON_UBU: "venv3.9"
       PYTHON_VERSION: "3.9"
       PYTHON_ARCH: "64"
 
@@ -84,6 +85,23 @@ for:
         name: Mac App
       - path: cx_freeze/debug/build/*.dmg
         name: Mac App (debug)
+  -
+    matrix:
+      only:
+        - image: Ubuntu2004
+    init:
+      - "echo $PYTHON_UBU $PYTHON_VERSION $PYTHON_ARCH"
+      - "$HOME/$PYTHON_UBU/bin/python --version"
+    install:
+      - "apt install liblzo2-dev zlib1g-dev"
+      - "$HOME/$PYTHON_UBU/bin/python -m pip install python-lzo"
+      - "$HOME/$PYTHON_UBU/bin/python -m pip install -r requirements.txt"
+      - "$HOME/$PYTHON_UBU/bin/python -m pip install PyInstaller"
+      - "$HOME/$PYTHON_UBU/bin/python -m PyInstaller vocabsieve.spec"
+
+    artifacts:
+      - path: dist/vocabsieve
+        name: Linux App
 
 
 deploy:
@@ -91,7 +109,7 @@ deploy:
   provider: GitHub
   auth_token:
     secure: GMdaty/QRo0ATH06dsAQ2LtyUTQUuk45Pp23OTDKBevsBdnhCPW6iAGPcYO1Vyj3
-  artifact: Windows App, Mac App
+  artifact: Windows App, Mac App, Linux App
   draft: true
   on:
     APPVEYOR_REPO_TAG: true
