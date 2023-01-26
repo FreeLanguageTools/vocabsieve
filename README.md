@@ -31,7 +31,7 @@ The Mac OS build is likely broken, but I can't do anything about it because I ha
 
 [New video tutorial](https://www.youtube.com/watch?v=EHW-kBLmuHU)
 
-**Windows users**: If you want to install this program, go to [Releases](https://github.com/FreeLanguageTools/vocabsieve/releases/) and from the latest release, download the appropriate file for your operating system. 
+**Windows and Mac users**: If you want to install this program, go to [Releases](https://github.com/FreeLanguageTools/vocabsieve/releases/) and from the latest release, download the appropriate file for your operating system. 
 
 For a nightly build, please check the [CI artifacts page](https://ci.appveyor.com/project/1over137/vocabsieve/build/artifacts). These are not considered ready for release and likely contain bugs. It is recommended to use the debug version to get more details when things go wrong.
 
@@ -60,19 +60,22 @@ Use your favorite AUR helper (or manually) to install the pacakge `vocabsieve`.
 
 At this time, there are no packages for other distributions. If you are able to create packages for them, please tell me!
 
-In the meantime, users should simply use `pip3` to install VocabSieve: `pip3 install --user vocabsieve`. Depends on your system, you may need to install `gcc` and `liblzo2` with headers.
+The easiest method is to download an AppImage from for a release from the Releases tab on the right. You may also download an AppImage for a nightly build on the [CI artifacts page](https://ci.appveyor.com/project/1over137/vocabsieve/build/artifacts). 
+
+Alternatively, users should simply use `pip3` to install VocabSieve: `pip3 install --user vocabsieve`. Depends on your system, you may need to install `gcc` and `liblzo2` with headers.
+
+Ubuntu: `apt install liblzo2-dev zlib1g-dev python3-pip python3-pyqt5`, then `pip3 install --user vocabsieve`
 
 This should install an executable and a desktop icon and behave like any other GUI application you may have.
+
 </details>
   
 ## Development
 To run from source, simply use `pip3 -r requirements.txt` and then `python3 vocabsieve.py`.
 
-Alternatively, you can also install a live version to your python package library with `pip3 install .` (Add --user if there is a permission error)
-
 For debugging purposes, set the environmental variable `VOCABSIEVE_DEBUG` to any value. This will create a separate profile (settings and databases for records and dictionaries) so you may perform tests without affecting your normal profile. For each different value of `VOCABSIEVE_DEBUG`, a separate profile is generated. This can be any number or string.
 
-Pull requests are welcome! If you want to implement a significant feature, be sure to first ask by creating an issue so that no effort is wasting on doing the same work twice.
+Pull requests are welcome! If you want to implement a significant feature, be sure to first ask by creating an issue so that no effort is wasted on doing the same work twice.
 
 ## API documentation
 If you want to leverage VocabSieve to build your own plugins/apps, you can refer to the [API Documentation](API.md).

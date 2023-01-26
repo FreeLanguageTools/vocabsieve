@@ -96,13 +96,15 @@ for:
       - "sudo apt install -y liblzo2-dev zlib1g-dev"
       - "$HOME/$PYTHON_UBU/bin/python -m pip install python-lzo"
       - "$HOME/$PYTHON_UBU/bin/python -m pip install -r requirements.txt"
-      - "$HOME/$PYTHON_UBU/bin/python -m pip install PyInstaller"
-      - "$HOME/$PYTHON_UBU/bin/python -m PyInstaller vocabsieve.spec"
+      - "$HOME/$PYTHON_UBU/bin/python -m pip install python-appimage"
+      - "cp vocabsieve.{desktop,png} recipe/"
+      - "$HOME/$PYTHON_UBU/bin/python -m python_appimage build app -p 3.10 recipe"
+      - "ls"
       - "echo $(grep version setup.cfg | awk '{print $3}')"
-      - "mv dist/vocabsieve dist/vocabsieve-$(grep version setup.cfg | awk '{print $3}')-linux"
+      - "mv VocabSieve-x86_64.AppImage VocabSieve-v$(grep version setup.cfg | awk '{print $3}')-linux-amd64.AppImage"
 
     artifacts:
-      - path: dist/vocabsieve*
+      - path: "*.AppImage"
         name: Linux App
 
 
