@@ -186,19 +186,22 @@ class Record():
             success: bool,
             timestamp: float):
         try:
-            lemma = lem_word(word, language) # For statistics, so it is used even if lemmatization is off
-            sql = """INSERT INTO lookups(timestamp, word, lemma, language, lemmatization, source, success)
-                    VALUES(?,?,?,?,?,?,?,?)"""
-            self.c.execute(
-                sql,
-                (timestamp,
-                 word,
-                 lemma,
-                 language,
-                 lemmatization,
-                 source,
-                 success))
-            self.conn.commit()
+            self.c.execute('SELECT * FROM lookups WHERE (lemma=? AND timestamp=?)')
+            exists = self.c.fetchone()
+            if not exists:
+                lemma = lem_word(word, language) # For statistics, so it is used even if lemmatization is off
+                sql = """INSERT INTO lookups(timestamp, word, lemma, language, lemmatization, source, success)
+                        VALUES(?,?,?,?,?,?,?,?)"""
+                self.c.execute(
+                    sql,
+                    (timestamp,
+                    word,
+                    lemma,
+                    language,
+                    lemmatization,
+                    source,
+                    success))
+                self.conn.commit()
         except sqlite3.ProgrammingError:
             return
 

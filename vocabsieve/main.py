@@ -390,7 +390,7 @@ class DictionaryWindow(QMainWindow):
         with open(path, 'w', encoding='utf-8') as file:
             writer = csv.writer(file)
             writer.writerow(
-                ['timestamp', 'word', 'lemma', 'definition', 'language', 'lemmatize', 'dictionary', 'success']
+                ['timestamp', 'word', 'lemma', 'language', 'lemmatize', 'dictionary', 'success']
             )
             writer.writerows(self.rec.getAllLookups())
 
