@@ -117,3 +117,15 @@ deploy:
   draft: true
   on:
     APPVEYOR_REPO_TAG: true
+
+deploy:
+  tag: latest nightly
+  description: latest nightly
+  provider: GitHub
+  auth_token:
+    secure: GMdaty/QRo0ATH06dsAQ2LtyUTQUuk45Pp23OTDKBevsBdnhCPW6iAGPcYO1Vyj3
+  artifact: Windows App, Mac App, Linux App
+  prerelease: false
+  force_update: true
+  on:
+    branch: master

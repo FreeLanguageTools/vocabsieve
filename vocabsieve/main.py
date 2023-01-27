@@ -471,7 +471,7 @@ class DictionaryWindow(QMainWindow):
             try:
                 _ = getVersion(api)
             except Exception as e:
-                print(e)
+                print(repr(e))
                 answer = QMessageBox.question(
                     self,
                     "Could not reach AnkiConnect",
@@ -509,7 +509,7 @@ class DictionaryWindow(QMainWindow):
             QMessageBox.warning(self, "No notes are found",
                 "Check if you've picked the right directory: it should be your Kindle root folder")
         except Exception as e:
-            QMessageBox.warning(self, "Something went wrong", "Error: "+str(e))
+            QMessageBox.warning(self, "Something went wrong", "Error: "+repr(e))
 
     def importkoreader(self) -> None:
         path = QFileDialog.getExistingDirectory(
@@ -525,7 +525,7 @@ class DictionaryWindow(QMainWindow):
             QMessageBox.warning(self, "No notes are found", 
                 "Check if you've picked the right directory. It should be a folder containing all of your the ebooks you want to extract from")
         except Exception as e:
-            QMessageBox.warning(self, "Something went wrong", "Error: "+str(e))
+            QMessageBox.warning(self, "Something went wrong", "Error: "+repr(e))
 
     def repeatLastImport(self):
         try:
@@ -546,7 +546,7 @@ class DictionaryWindow(QMainWindow):
                 QMessageBox.warning(self, "You have not imported notes before",
                     "Use any one of the other two options on the menu, and you will be able to use this one next time.")
         except Exception as e:
-            print("Encountered error while repeating last import, aborting:", e)
+            print("Encountered error while repeating last import, aborting:", repr(e))
 
     def setupShortcuts(self) -> None:
         self.shortcut_toanki = QShortcut(QKeySequence('Ctrl+S'), self)
@@ -841,7 +841,7 @@ class DictionaryWindow(QMainWindow):
                 dictname,
                 True, recordDate)
         except Exception as e:
-            self.status(str(e))
+            self.status(repr(e))
             self.rec.recordLookup(
                 word, TL, lemmatize, dictname, False, recordDate)
             self.updateAnkiButtonState(True)
@@ -868,7 +868,7 @@ class DictionaryWindow(QMainWindow):
                 dict2name,
                 True, recordDate)
         except Exception as e:
-            self.status("Dict-2 failed" + str(e))
+            self.status("Dict-2 failed" + repr(e))
             self.rec.recordLookup(
                 word, TL, lemmatize, dict2name, False, recordDate)
             self.definition2.clear()
@@ -984,7 +984,7 @@ class DictionaryWindow(QMainWindow):
                 self,
                 f"Failed to add note: {word}",
                 "<h2>Failed to add note</h2>"
-                + f"Error: {str(e)}"
+                + f"Error: {repr(e)}"
                 + "\nHints: AnkiConnect must be running to add notes."
                 "<br>If you wish to only add notes to the database (and "
                 "export it as CSV), click Configure and uncheck 'Enable"
@@ -1060,7 +1060,7 @@ class DictionaryWindow(QMainWindow):
                 self.worker.note_signal.connect(self.onNotepyqtSignal)
                 self.thread.start()
             except Exception as e:
-                print(e)
+                print(repr(e))
                 self.status("Failed to start API server")
         
         if self.settings.value("reader_enabled", True, type=bool):
@@ -1073,7 +1073,7 @@ class DictionaryWindow(QMainWindow):
                 self.thread2.started.connect(self.worker2.start_api)
                 self.thread2.start()
             except Exception as e:
-                print(e)
+                print(repr(e))
                 self.status("Failed to start reader server")
 
     def onNotepyqtSignal(
