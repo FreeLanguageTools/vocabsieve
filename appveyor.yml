@@ -109,23 +109,22 @@ for:
 
 
 deploy:
-  description: new release
-  provider: GitHub
-  auth_token:
-    secure: GMdaty/QRo0ATH06dsAQ2LtyUTQUuk45Pp23OTDKBevsBdnhCPW6iAGPcYO1Vyj3
-  artifact: Windows App, Mac App, Linux App
-  draft: true
-  on:
-    APPVEYOR_REPO_TAG: true
+  - provider: GitHub
+    description: new release
+    auth_token:
+      secure: GMdaty/QRo0ATH06dsAQ2LtyUTQUuk45Pp23OTDKBevsBdnhCPW6iAGPcYO1Vyj3
+    artifact: Windows App, Mac App, Linux App
+    draft: true
+    on:
+      APPVEYOR_REPO_TAG: true
 
-deploy:
-  tag: latest nightly
-  description: latest nightly
-  provider: GitHub
-  auth_token:
-    secure: GMdaty/QRo0ATH06dsAQ2LtyUTQUuk45Pp23OTDKBevsBdnhCPW6iAGPcYO1Vyj3
-  artifact: Windows App, Mac App, Linux App
-  prerelease: false
-  force_update: true
-  on:
-    branch: master
+  - provider: GitHub
+    release: latest nightly
+    description: latest nightly
+    auth_token:
+      secure: GMdaty/QRo0ATH06dsAQ2LtyUTQUuk45Pp23OTDKBevsBdnhCPW6iAGPcYO1Vyj3
+    artifact: Windows App, Mac App, Linux App
+    prerelease: false
+    force_update: true
+    on:
+      branch: master
