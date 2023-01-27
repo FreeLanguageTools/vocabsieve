@@ -6,6 +6,7 @@ import os
 import re
 import glob
 import json
+import sqlite3
 from zipfile import ZipFile
 from pathlib import Path
 from difflib import SequenceMatcher
@@ -47,7 +48,9 @@ def koreader_parse_fb2(file, lang):
         os.path.dirname(file), removesuffix(os.path.basename(file), "fb2") + "sdr", "metadata.fb2.lua"
     )
     with open(notepath, encoding='utf-8') as f:
-        notes = slpp.decode(" ".join("\n".join(f.readlines()[1:]).split(" ")[1:]))['bookmarks'].items()
+        data = slpp.decode(" ".join("\n".join(f.readlines()[1:]).split(" ")[1:]))
+        notes = data['bookmarks'].items()
+        booklang = data['doc_props']['language']
     print(notepath)
     root = etree.parse(file).getroot()
     ns = {'f': "http://www.gribuser.ru/xml/fictionbook/2.0"}
@@ -55,6 +58,8 @@ def koreader_parse_fb2(file, lang):
         booktitle = root.xpath("f:description/f:title-info/f:book-title", namespaces=ns)[0].text
     except Exception:
         booktitle = removesuffix(os.path.basename(file), ".fb2")
+    result.append(("", "", "1970-01-01 00:00:00", booktitle, booklang))
+
     for _, item in notes:
         try:
             xpath = fb2_xpathconvert(item['page'])
@@ -66,7 +71,7 @@ def koreader_parse_fb2(file, lang):
                     if item['notes'] in sentence:
                         if ctx.find(sentence) < word_start \
                             and ctx.find(sentence) + len(sentence) > word_end: 
-                            result.append((item['notes'], sentence, item['datetime'], booktitle))
+                            result.append((item['notes'], sentence, item['datetime'], booktitle, booklang))
         except KeyError:
             continue
     return result
@@ -78,7 +83,9 @@ def koreader_parse_fb2zip(file, lang):
         os.path.dirname(file), removesuffix(os.path.basename(file), "zip") + "sdr", "metadata.zip.lua"
     )
     with open(notepath, encoding='utf8') as f:
-        notes = slpp.decode(" ".join("\n".join(f.readlines()[1:]).split(" ")[1:]))['bookmarks'].items()
+        data = slpp.decode(" ".join("\n".join(f.readlines()[1:]).split(" ")[1:]))
+        notes = data['bookmarks'].items()
+        booklang = data['doc_props']['language']
     print(notepath)
     with ZipFile(file, 'r') as f:
         for file_in_zip in f.namelist():
@@ -90,6 +97,7 @@ def koreader_parse_fb2zip(file, lang):
         booktitle = root.xpath("f:description/f:title-info/f:book-title", namespaces=ns)[0].text
     except Exception:
         booktitle = removesuffix(os.path.basename(file), ".fb2.zip")
+    result.append(("", "", "1970-01-01 00:00:00", booktitle, booklang))
     for _, item in notes:
         try:
             xpath = fb2_xpathconvert(item['page'])
@@ -101,7 +109,7 @@ def koreader_parse_fb2zip(file, lang):
                     if item['notes'] in sentence:
                         if ctx.find(sentence) < word_start \
                             and ctx.find(sentence) + len(sentence) > word_end: 
-                            result.append((item['notes'], sentence, item['datetime'], booktitle))
+                            result.append((item['notes'], sentence, item['datetime'], booktitle, booklang))
         except KeyError:
             continue
     return result
@@ -113,9 +121,13 @@ def koreader_parse_epub(file, lang):
         os.path.dirname(file), removesuffix(os.path.basename(file), "epub") + "sdr", "metadata.epub.lua"
     )
     with open(notepath, encoding='utf8') as f:
-        notes = slpp.decode(" ".join("\n".join(f.readlines()[1:]).split(" ")[1:]))['bookmarks'].items()
+        data = slpp.decode(" ".join("\n".join(f.readlines()[1:]).split(" ")[1:]))
+        notes = data['bookmarks'].items()
+        booklang = data['doc_props']['language']
+    print(notepath)
     docs = []
     booktitle = epub.read_epub(file).get_metadata('DC', 'title')[0][0].strip() or removesuffix(os.path.basename(file), "epub")
+    result.append(("", "", "1970-01-01 00:00:00", booktitle, booklang))
     for doc in epub.read_epub(file).get_items_of_type(ITEM_DOCUMENT):
         docs.append(
             etree.parse(BytesIO(doc.get_content())).getroot()
@@ -132,7 +144,7 @@ def koreader_parse_epub(file, lang):
                     if item['notes'] in sentence:
                         if ctx.find(sentence) < word_start \
                             and ctx.find(sentence) + len(sentence) > word_end: 
-                            result.append((item['notes'], sentence, item['datetime'], booktitle))
+                            result.append((item['notes'], sentence, item['datetime'], booktitle, booklang))
                             break
         except KeyError:
             continue
@@ -160,6 +172,12 @@ def koreader_scandir(path):
             filelist.append(filename)
     return filelist
 
+def findDBpath(path):
+    # KOReader settings may be in a hidden directory
+    paths = glob.glob(os.path.join(path, "**/vocabulary_builder.sqlite3"), recursive=True)\
+        + glob.glob(os.path.join(path, ".*/**/vocabulary_builder.sqlite3"), recursive=True)
+    if paths:
+        return paths[0]
 
 class KoreaderImporter(GenericImporter):
     def __init__(self, parent, path):
@@ -167,7 +185,8 @@ class KoreaderImporter(GenericImporter):
 
     def getNotes(self):
         self.bookfiles = koreader_scandir(self.path)
-        # This applies book_selected as mask
+        print(self.bookfiles)
+        langcode = self.parent.settings.value("target_language", "en")
         items = []
         for bookfile in self.bookfiles:
             if bookfile.endswith("fb2"):
@@ -182,6 +201,38 @@ class KoreaderImporter(GenericImporter):
                 items.extend(
                     koreader_parse_fb2zip(bookfile, self.lang)
                 )
+        print(len(items))
+        notitems = [item[:4] for item in items if item[4] != langcode]
+        items = [item[:4] for item in items if item[4] == langcode]
+        print(len(items))
+        print(notitems)
+        books_in_lang = set(item[3] for item in items)
+        print("Books in", langcode, ":", books_in_lang)
+        try:
+            self.dbpath = findDBpath(self.path)
+            con = sqlite3.connect(self.dbpath)
+            cur = con.cursor()
+            bookids = []
+            count = 0
+            success_count = 0
+
+            for bookid, bookname in cur.execute("SELECT id, name FROM title"):
+                if bookname in books_in_lang:
+                    bookids.append(bookid)
+            print(bookids)
+            for timestamp, word, title_id in cur.execute("SELECT create_time, word, title_id FROM vocabulary"):
+                if title_id in bookids:
+                    count += 1
+                    success_count += self.parent.rec.recordLookup(word, langcode, True, "", True, timestamp, commit=False)
+            self.parent.rec.conn.commit()
+
+            self.layout.addRow(QLabel("Vocabulary database: " + self.dbpath))
+            self.layout.addRow(QLabel(f"Found {count} lookups in {langcode}, added {success_count} to lookup database."))
+        except Exception as e:
+            print(e)
+            self.layout.addRow(QLabel("Failed to find/read vocabulary_builder.sqlite3. Lookups will not be tracked this time."))
+
+        items = [item for item in items if item[2] > "1970-01-01 00:00:00"]
         return zip(*items)
 
 

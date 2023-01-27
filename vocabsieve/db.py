@@ -184,26 +184,31 @@ class Record():
             lemmatization: bool,
             source: str,
             success: bool,
-            timestamp: float):
-        try:
-            self.c.execute('SELECT * FROM lookups WHERE (lemma=? AND timestamp=?)')
-            exists = self.c.fetchone()
-            if not exists:
-                lemma = lem_word(word, language) # For statistics, so it is used even if lemmatization is off
-                sql = """INSERT INTO lookups(timestamp, word, lemma, language, lemmatization, source, success)
-                        VALUES(?,?,?,?,?,?,?,?)"""
-                self.c.execute(
-                    sql,
-                    (timestamp,
-                    word,
-                    lemma,
-                    language,
-                    lemmatization,
-                    source,
-                    success))
+            timestamp: float,
+            commit: bool = True):
+        #try:
+        lemma = lem_word(word, language) # For statistics, so it is used even if lemmatization is off
+        self.c.execute('SELECT * FROM lookups WHERE (lemma=? AND timestamp=?)', (lemma, timestamp))
+        exists = self.c.fetchone()
+        if not exists:
+            sql = """INSERT INTO lookups(timestamp, word, lemma, language, lemmatization, source, success)
+                    VALUES(?,?,?,?,?,?,?)"""
+            self.c.execute(
+                sql,
+                (timestamp,
+                word,
+                lemma,
+                language,
+                lemmatization,
+                source,
+                success))
+            if commit:
                 self.conn.commit()
-        except sqlite3.ProgrammingError:
-            return
+            return True
+        #print(word, "already exists")
+        return False
+        #except sqlite3.ProgrammingError:
+        #    return False
 
     def recordNote(self, data, sentence, word, definition, definition2, pronunciation, image, tags, success):
         timestamp = time.time()

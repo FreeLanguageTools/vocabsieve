@@ -53,13 +53,18 @@ class KindleVocabImporter(GenericImporter):
         sentences = []
         dates = []
         langcode = self.parent.settings.value("target_language", 'en')
-
+        count = 0
+        success_count = 0
         for _, lword, bookid, _, _, sentence, timestamp in cur.execute("SELECT * FROM lookups"):
             if lword.startswith(langcode):
-                words.append(removeprefix(lword, langcode+":"))
+                word = removeprefix(lword, langcode+":")
+                count += 1
+                success_count += self.parent.rec.recordLookup(word, langcode, True, "", True, timestamp, commit=False) # record everything first
+                words.append(word)
                 booknames.append(bookid2name[bookid])
                 sentences.append(sentence)
                 dates.append(str(dt.fromtimestamp(timestamp/1000).replace(tzinfo=tz.utc).astimezone())[:19])
-
-        print(set(booknames))
+        self.layout.addRow(QLabel("Vocabulary database: " + vocab_db_path))
+        self.layout.addRow(QLabel(f"Found {count} lookups in {langcode}, added {success_count} to lookup database."))
+        self.parent.rec.conn.commit()
         return words, sentences, dates, booknames

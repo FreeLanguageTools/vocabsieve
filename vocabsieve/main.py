@@ -310,8 +310,10 @@ class DictionaryWindow(QMainWindow):
             self.open_reader_action.setEnabled(False)
         importmenu = self.menu.addMenu("&Import")
         exportmenu = self.menu.addMenu("&Export")
+        analyzemenu = self.menu.addMenu("A&nalyze")
+        statsmenu = self.menu.addMenu("S&tatistics")
         helpmenu = self.menu.addMenu("&Help")
-        self.help_action = QAction("&Help")
+        self.help_action = QAction("&Setup guide")
         self.about_action = QAction("&About")
         helpmenu.addAction(self.help_action)
         helpmenu.addAction(self.about_action)
@@ -750,7 +752,7 @@ class DictionaryWindow(QMainWindow):
         if past_lookups_count <= 1:
             self.lookup_hist_label.setText("<b>new word</b>")
         else:
-            self.lookup_hist_label.setText(f"<b>{past_lookups_count} prev. lookups</b>")
+            self.lookup_hist_label.setText(f"<b>{past_lookups_count-1} prev. lookups</b>")
         QCoreApplication.processEvents()
         self.audio_path = ""
 
