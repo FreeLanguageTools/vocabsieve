@@ -242,6 +242,14 @@ class Record():
         self.c.execute('''SELECT COUNT (DISTINCT date(timestamp, "unixepoch")) FROM lookups WHERE lemma=?''', (lem_word(word, language),))
         return self.c.fetchone()[0]
 
+    def countAllLemmaLookups(self, language):
+        return self.c.execute(
+            '''SELECT lemma, COUNT (DISTINCT date(timestamp, "unixepoch"))
+               FROM lookups
+               WHERE language=?
+               GROUP BY lemma
+            ''', (language,))
+
     def countLookupsToday(self):
         day = datetime.now()
         return self.countLookupsDay(day)

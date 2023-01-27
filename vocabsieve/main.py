@@ -20,6 +20,7 @@ settings = QSettings(app_organization, settings_app_title)
 from . import __version__
 from .api import LanguageServer
 from .config import *
+from .stats import StatisticsWindow
 from .db import *
 from .dictionary import *
 from .ext.importer import KoreaderImporter, KindleVocabImporter
@@ -308,10 +309,11 @@ class DictionaryWindow(QMainWindow):
         self.menu.addAction(self.open_reader_action)
         if not self.settings.value("reader_enabled", True, type=bool):
             self.open_reader_action.setEnabled(False)
+        self.stats_action = QAction("S&tatistics")
         importmenu = self.menu.addMenu("&Import")
         exportmenu = self.menu.addMenu("&Export")
         analyzemenu = self.menu.addMenu("A&nalyze")
-        statsmenu = self.menu.addMenu("S&tatistics")
+        self.menu.addAction(self.stats_action)
         helpmenu = self.menu.addMenu("&Help")
         self.help_action = QAction("&Setup guide")
         self.about_action = QAction("&About")
@@ -333,6 +335,7 @@ class DictionaryWindow(QMainWindow):
         self.import_kindle_new_action.triggered.connect(self.importkindleNew)
         self.export_notes_csv_action.triggered.connect(self.exportNotes)
         self.export_lookups_csv_action.triggered.connect(self.exportLookups)
+        self.stats_action.triggered.connect(self.onStats)
 
         importmenu.addActions(
             [
@@ -348,6 +351,10 @@ class DictionaryWindow(QMainWindow):
 
         self.setMenuBar(self.menu)
 
+
+    def onStats(self):
+        stats_window = StatisticsWindow(self)
+        stats_window.exec()
 
     def exportNotes(self) -> None:
         """
