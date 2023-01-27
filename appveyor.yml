@@ -22,7 +22,7 @@ for:
   - 
     matrix:
       only:
-        - image: Visual Studio 2019
+        - image: Visual Studio 2022
     init:
       - "ECHO %PYTHON_WIN% %PYTHON_VERSION% %PYTHON_ARCH%"
       - "%PYTHON_WIN%\\python.exe --version"
@@ -33,16 +33,16 @@ for:
       - "%PYTHON_WIN%\\python.exe -m pip install -r requirements.txt"
       - "%PYTHON_WIN%\\python.exe -m pip install cx_freeze==6.13"
       - "cd cx_freeze"
-      - "cd prod"
+      - "cd win"
       - "%PYTHON_WIN%\\python.exe setup.py bdist_msi"
-      - "cd ..\\debug"
+      - "cd ..\\win_debug"
       - "%PYTHON_WIN%\\python.exe setup.py bdist_msi"
       - ps: "ls"
 
     artifacts:
-      - path: cx_freeze/prod/dist/*.msi
+      - path: cx_freeze/win/dist/*.msi
         name: Windows App
-      - path: cx_freeze/debug/dist/*.msi
+      - path: cx_freeze/win_debug/dist/*.msi
         name: Windows App (debug)
         
   -
@@ -65,26 +65,18 @@ for:
       - "$HOME/$PYTHON_MAC/bin/python -m pip install python-lzo"
       - "$HOME/$PYTHON_MAC/bin/python -m pip install -r requirements.txt"
       - "$HOME/$PYTHON_MAC/bin/python -m pip install cx_freeze==6.13"
-      - "cd cx_freeze/prod"
+      - "cd cx_freeze/mac"
       - "$HOME/$PYTHON_MAC/bin/python setup.py bdist_mac --iconfile ../icon.icns --bundle-name=vocabsieve --custom-info-plist ../Info.plist -q"
       - "npm i -g create-dmg"
       - "cd build"
       - "create-dmg vocabsieve.app || true"
       - "mv \"vocabsieve undefined.dmg\" vocabsieve-$APPVEYOR_REPO_TAG_NAME-macos.dmg"
-      - "cd ../../debug/"
-      - "$HOME/$PYTHON_MAC/bin/python setup.py bdist_mac --iconfile ../icon.icns --bundle-name=vocabsieve --custom-info-plist ../Info.plist -q"
-      - "npm i -g create-dmg"
-      - "cd build"
-      - "create-dmg vocabsieve.app || true"
-      - "mv \"vocabsieve undefined.dmg\" vocabsieve-$APPVEYOR_REPO_TAG_NAME-DEBUG-macos.dmg"
-      - "ls"
-      - "cd ../../"
+      - "cd ../.."
 
     artifacts:
-      - path: cx_freeze/prod/build/*.dmg
+      - path: cx_freeze/mac/build/*.dmg
         name: Mac App
-      - path: cx_freeze/debug/build/*.dmg
-        name: Mac App (debug)
+
   -
     matrix:
       only:
@@ -117,14 +109,3 @@ deploy:
     draft: true
     on:
       APPVEYOR_REPO_TAG: true
-
-  - provider: GitHub
-    release: latest nightly
-    description: latest nightly
-    auth_token:
-      secure: GMdaty/QRo0ATH06dsAQ2LtyUTQUuk45Pp23OTDKBevsBdnhCPW6iAGPcYO1Vyj3
-    artifact: Windows App, Mac App, Linux App
-    prerelease: false
-    force_update: true
-    on:
-      branch: master
