@@ -3,7 +3,7 @@ version: "{build}"
 
 image:
   - Ubuntu2004
-  - macos-monterey
+  - macos-bigsur
   - Visual Studio 2022
 
 platform:
@@ -48,7 +48,7 @@ for:
   -
     matrix:
       only:
-        - image: macos-monterey
+        - image: macos-bigsur
     
     init:
       - "ls"

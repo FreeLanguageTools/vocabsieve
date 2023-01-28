@@ -93,6 +93,26 @@ class Record():
             tags TEXT
         )
         """)
+        self.c.execute("""
+        CREATE TABLE IF NOT EXISTS seen_sync (
+            timestamp FLOAT,
+            word TEXT,
+            lemma TEXT
+        )
+        """)
+        self.c.execute("""
+        CREATE TABLE IF NOT EXISTS seen_async (
+            word TEXT,
+            lemma TEXT
+        )
+        """)
+        self.c.execute("""
+        CREATE TABLE IF NOT EXISTS contents_imported (
+            id INTEGER NOT NULL PRIMARY KEY,
+            name TEXT,
+            content TEXT
+        )
+        """)
         self.conn.commit()
 
     def fixOld(self):
