@@ -33,9 +33,9 @@ def lem_word(word, language, greedy=False):
     """Lemmatize a word. We will use PyMorphy for RU, simplemma for others,
     and if that isn't supported , we give up. Should not fail under any circumstances"""
     try:
-        if not word:
+        if not word.strip():
             return word
-        word = re.sub('[\\?\\.!«»…,()\\[\\]]*', "", word)
+        word = re.sub(r'[\?\.!«»”“"…,()\[\]]*', "", word).strip()
         if language in PYMORPHY_SUPPORT:
             if morph and morph.get(language):
                 return morph[language].parse(word)[0].normal_form

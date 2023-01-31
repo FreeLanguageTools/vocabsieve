@@ -11,10 +11,6 @@ VocabSieve (originally Simple Sentence Mining, `ssmtool`) is a program for sente
 [![out.gif](https://i.postimg.cc/vm7frv7p/out.gif)](https://postimg.cc/xkCXYM4R)
 [![out.gif](https://i.postimg.cc/5yj3VjPB/out.gif)](https://postimg.cc/kR38NMPG)
 
-
-## Note
-The Mac OS build is likely broken, but I can't do anything about it because I have no way of testing it or reproducing any of the bugs. If you have a Mac and basic Python skills, please don't hesitate to reach out and help me debug!
-
 ## Features
 - **Quick word lookups**: Getting definition, pronunciation, and frequency within one or two keypresses/clicks.
 - **Wide language support**: Supports all languages listed on Google Translate, though it is currently optimized for European languages. Spanish, English, and Russian are routinely tested, but all other languages with a similar morphology should work well.

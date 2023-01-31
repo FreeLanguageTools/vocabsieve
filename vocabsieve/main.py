@@ -25,6 +25,7 @@ from .db import *
 from .dictionary import *
 from .ext.importer import KoreaderImporter, KindleVocabImporter
 from .ext.reader import ReaderServer
+from .contentmanager import ContentManager
 from .global_events import GlobalObject
 from .text_manipulation import *
 from .tools import *
@@ -42,7 +43,6 @@ if platform.system() == "Darwin":
     MOD = "Cmd"
 else:
     MOD = "Ctrl"
-
 
 class DictionaryWindow(QMainWindow):
     def __init__(self) -> None:
@@ -305,20 +305,28 @@ class DictionaryWindow(QMainWindow):
         self.bar.addPermanentWidget(self.stats_label)
 
     def setupMenu(self) -> None:
-        self.open_reader_action = QAction("&Reader")
-        self.menu.addAction(self.open_reader_action)
-        if not self.settings.value("reader_enabled", True, type=bool):
-            self.open_reader_action.setEnabled(False)
-        self.stats_action = QAction("S&tatistics")
+        readermenu = self.menu.addMenu("&Reader")
         importmenu = self.menu.addMenu("&Import")
+        recordmenu = self.menu.addMenu("&Track")
         exportmenu = self.menu.addMenu("&Export")
         analyzemenu = self.menu.addMenu("A&nalyze")
-        self.menu.addAction(self.stats_action)
+        statsmenu = self.menu.addMenu("S&tatistics")
         helpmenu = self.menu.addMenu("&Help")
+
+        self.open_reader_action = QAction("&Reader")
+        self.stats_action = QAction("S&tatistics")
         self.help_action = QAction("&Setup guide")
         self.about_action = QAction("&About")
+        self.content_manager_action = QAction("Content Manager")
+
+        if not self.settings.value("reader_enabled", True, type=bool):
+            self.open_reader_action.setEnabled(False)
+
+        readermenu.addAction(self.open_reader_action)
+        statsmenu.addAction(self.stats_action)
         helpmenu.addAction(self.help_action)
         helpmenu.addAction(self.about_action)
+        recordmenu.addAction(self.content_manager_action)
 
         self.repeat_last_import_action = QAction("&Repeat last import")
         self.import_koreader_action = QAction("K&OReader highlights")
@@ -326,6 +334,8 @@ class DictionaryWindow(QMainWindow):
 
         self.export_notes_csv_action = QAction("Export &notes to CSV")
         self.export_lookups_csv_action = QAction("Export &lookup data to CSV")
+
+        self.content_manager_action.triggered.connect(self.onContentManager)
 
         self.help_action.triggered.connect(self.onHelp)
         self.about_action.triggered.connect(self.onAbout)
@@ -351,6 +361,8 @@ class DictionaryWindow(QMainWindow):
 
         self.setMenuBar(self.menu)
 
+    def onContentManager(self):
+        ContentManager(self).exec()
 
     def onStats(self):
         stats_window = StatisticsWindow(self)
@@ -526,13 +538,13 @@ class DictionaryWindow(QMainWindow):
         )
         if not path:
             return
-        try:
-            KoreaderImporter(self, path).exec()
-        except ValueError:
-            QMessageBox.warning(self, "No notes are found", 
-                "Check if you've picked the right directory. It should be a folder containing all of your the ebooks you want to extract from")
-        except Exception as e:
-            QMessageBox.warning(self, "Something went wrong", "Error: "+repr(e))
+        #try:
+        KoreaderImporter(self, path).exec()
+        #except ValueError:
+        #    QMessageBox.warning(self, "No notes are found", 
+        #        "Check if you've picked the right directory. It should be a folder containing all of your the ebooks you want to extract from")
+        #except Exception as e:
+        #    QMessageBox.warning(self, "Something went wrong", "Error: "+repr(e))
 
     def repeatLastImport(self):
         try:

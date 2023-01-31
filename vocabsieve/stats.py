@@ -63,6 +63,10 @@ class StatisticsWindow(QDialog):
             score[word] = score.get(word, 0) + count * w_lookup
 
         # TODO implement the other three scoring sources
+        seen_data = self.rec.getSeen(self.settings.value('target_language', 'en'))
+        for word, count in seen_data:
+            print(word,count)
+            score[word] = score.get(word, 0) + count * w_seen
 
         known_words = [word for word, score in score.items() if score >= threshold and not word.startswith("http")]
         self.known.layout.addWidget(QLabel(f"<h3>Known words (<i>{len(known_words)}</i>)</h3>"))

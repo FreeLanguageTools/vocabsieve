@@ -57,6 +57,7 @@ class Record():
                 "records.db"),
             check_same_thread=False)
         self.c = self.conn.cursor()
+        self.c.execute("PRAGMA foreign_keys = ON")
         self.createTables()
         self.fixOld()
         if not parent.settings.value("internal/db_has_lemma"):
@@ -94,22 +95,21 @@ class Record():
         )
         """)
         self.c.execute("""
-        CREATE TABLE IF NOT EXISTS seen_sync (
-            timestamp FLOAT,
+        CREATE TABLE IF NOT EXISTS seen (
+            language TEXT,
             word TEXT,
-            lemma TEXT
+            lemma TEXT,
+            jd INTEGER,
+            source INTEGER,
+            FOREIGN KEY(source) REFERENCES contents(id) ON DELETE CASCADE
         )
         """)
         self.c.execute("""
-        CREATE TABLE IF NOT EXISTS seen_async (
-            word TEXT,
-            lemma TEXT
-        )
-        """)
-        self.c.execute("""
-        CREATE TABLE IF NOT EXISTS contents_imported (
+        CREATE TABLE IF NOT EXISTS contents (
             id INTEGER NOT NULL PRIMARY KEY,
-            name TEXT,
+            language TEXT,
+            name TEXT UNIQUE,
+            jd INTEGER,
             content TEXT
         )
         """)
@@ -196,6 +196,69 @@ class Record():
             self.conn.commit()
         except sqlite3.OperationalError:
             print("encountered error, likely because column already exists")
+
+    def importContent(self, name: str, content: str, language: str, jd: int):
+        start = time.time()
+        self.c.execute('SELECT * FROM contents WHERE (name=?)', (name,))
+        exists = self.c.fetchone()
+        if not exists:
+            sql = """INSERT INTO contents(name, content, language, jd)
+                    VALUES(?,?,?,?)"""
+            self.c.execute(
+                sql,
+                (name, content, language, jd))
+
+            self.c.execute("SELECT last_insert_rowid()")
+            source = self.c.fetchone()[0]
+            print("ID for content", name, "is", source)
+            for word in content.split():
+                lemma = lem_word(word, language)
+                self.c.execute('INSERT INTO seen(source, language, word, lemma, jd) VALUES(?,?,?,?,?)', (source, language, word, lemma, jd))
+            self.conn.commit()
+            print("Recorded", name, "in", time.time() - start, "seconds")
+            return True
+        print(name, "already exists")
+        return False
+
+    def getContents(self, language):
+        return self.c.execute('''
+            SELECT name, content, jd
+            FROM contents
+            WHERE language=?''', (language,))
+
+    def rebuildSeen(self):
+        self.c.execute("DELETE FROM seen")
+        self.c.execute('SELECT id, name, content, language, jd FROM contents')
+        for cid, name, content, language, jd in self.c.fetchall():
+            print("Lemmatizing", name)
+            for word in content.decode('string_escape').split():
+                lemma = lem_word(word, language)
+                if "\\n" in lemma:
+                    print(word, lemma)
+                self.c.execute('INSERT INTO seen(source, language, word, lemma, jd) VALUES(?,?,?,?,?)', (cid, language, word, lemma, jd))
+        self.conn.commit()
+
+    def getSeen(self, language):
+        return self.c.execute('''
+            SELECT lemma, COUNT (lemma)
+            FROM seen
+            WHERE language=?
+            GROUP BY lemma''', (language,))
+
+    def countSeen(self, language):
+        self.c.execute('''
+            SELECT COUNT(lemma), COUNT (DISTINCT lemma)
+            FROM seen
+            WHERE language=?''', (language,))
+        return self.c.fetchone()
+
+    def deleteContent(self, name: str):
+        self.c.execute("""
+            DELETE FROM contents
+            WHERE name=?
+        """, (name,))
+        self.conn.commit()
+
 
     def recordLookup(
             self,
@@ -316,7 +379,7 @@ class Record():
 
     def purge(self):
         self.c.execute("""
-        DROP TABLE IF EXISTS lookups,notes
+        DROP TABLE IF EXISTS lookups,notes,contents
         """)
         self.createTables()
 

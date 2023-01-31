@@ -115,6 +115,21 @@ def koreader_parse_fb2zip(file, lang):
     return result
 
 
+
+def find_sentence_for_word(item, doc, lang):
+    ns = {'f': 'http://www.w3.org/1999/xhtml'}
+    index, xpath = epub_xpathconvert(item['page'])
+    word_start = int(item['pos0'].split(".")[-1])
+    word_end = int(item['pos1'].split(".")[-1])
+    if doc.xpath(xpath, namespaces=ns):
+        ctx = doc.xpath(xpath, namespaces=ns)[0].text
+        for sentence in split_text_into_sentences(ctx, language=lang):
+            if item['notes'] in sentence:
+                if ctx.find(sentence) < word_start \
+                    and ctx.find(sentence) + len(sentence) > word_end: 
+                    return sentence
+    
+
 def koreader_parse_epub(file, lang):
     result = []
     notepath = os.path.join(
@@ -134,18 +149,30 @@ def koreader_parse_epub(file, lang):
         )
     ns = {'f': 'http://www.w3.org/1999/xhtml'}
     for _, item in notes:
+        found = False
         try:
-            index, xpath = epub_xpathconvert(item['page'])
-            word_start = int(item['pos0'].split(".")[-1])
-            word_end = int(item['pos1'].split(".")[-1])
-            if docs[index].xpath(xpath, namespaces=ns):
-                ctx = docs[index].xpath(xpath, namespaces=ns)[0].text
-                for sentence in split_text_into_sentences(ctx, language=lang):
-                    if item['notes'] in sentence:
-                        if ctx.find(sentence) < word_start \
-                            and ctx.find(sentence) + len(sentence) > word_end: 
-                            result.append((item['notes'], sentence, item['datetime'], booktitle, booklang))
-                            break
+            index, _ = epub_xpathconvert(item['page'])
+            if sentence:=find_sentence_for_word(item, docs[index], lang):
+                result.append((
+                    item['notes'],
+                    sentence,
+                    item['datetime'],
+                    booktitle,
+                    booklang
+                ))
+                found = True
+            if not found: #Ordering is weird, loop through all docs
+                for doc in docs:
+                    if sentence:=find_sentence_for_word(item, doc, lang):
+                        result.append((
+                            item['notes'],
+                            sentence,
+                            item['datetime'],
+                            booktitle,
+                            booklang
+                        ))
+                        found = True
+                
         except KeyError:
             continue
     return result
