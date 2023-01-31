@@ -12,6 +12,7 @@ flask-sqlalchemy
 charset-normalizer
 slpp
 mobi
+pysubs2
 sentence_splitter
 pymorphy2
 pymorphy2-dicts-ru
