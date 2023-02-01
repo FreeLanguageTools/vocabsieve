@@ -211,7 +211,7 @@ class Record():
             self.c.execute("SELECT last_insert_rowid()")
             source = self.c.fetchone()[0]
             print("ID for content", name, "is", source)
-            for word in content.split():
+            for word in content.replace("\\n", "\n").replace("\\N", "\n").split():
                 lemma = lem_word(word, language)
                 self.c.execute('INSERT INTO seen(source, language, word, lemma, jd) VALUES(?,?,?,?,?)', (source, language, word, lemma, jd))
             self.conn.commit()
@@ -231,7 +231,7 @@ class Record():
         self.c.execute('SELECT id, name, content, language, jd FROM contents')
         for cid, name, content, language, jd in self.c.fetchall():
             print("Lemmatizing", name)
-            for word in content.decode('string_escape').split():
+            for word in content.replace("\\n", "\n").replace("\\N", "\n").split():
                 lemma = lem_word(word, language)
                 if "\\n" in lemma:
                     print(word, lemma)

@@ -53,8 +53,8 @@ class StatisticsWindow(QDialog):
         threshold = self.settings.value('known_threshold', 100) # Score needed to be considered known
         w_lookup = self.settings.value('w_lookup', 15) # Weight for each lookup, max 1 per day
         w_seen = self.settings.value('w_seen', 8) # W for seeing
-        w_anki_ctx = self.settings.value('w_anki_ctx', 35) # W for being on context field of a studied card
-        w_anki_word = self.settings.value('w_anki_word', 100) # W for being on the word field of a studied card
+        w_anki_ctx = self.settings.value('w_anki_ctx', 30) # W for being on context field of a studied card
+        w_anki_word = self.settings.value('w_anki_word', 70) # W for being on the word field of a studied card
         self.known.layout = QVBoxLayout(self.known)
         score = {}
 
@@ -68,7 +68,7 @@ class StatisticsWindow(QDialog):
             print(word,count)
             score[word] = score.get(word, 0) + count * w_seen
 
-        known_words = [word for word, score in score.items() if score >= threshold and not word.startswith("http")]
+        known_words = [word for word, score in score.items() if score >= threshold and word.isalpha()]
         self.known.layout.addWidget(QLabel(f"<h3>Known words (<i>{len(known_words)}</i>)</h3>"))
         known_words_widget = QPlainTextEdit(" ".join(known_words))
         known_words_widget.setReadOnly(True)

@@ -173,6 +173,9 @@ class SettingsDialog(QDialog):
             #"Zipf scale (LCD number)"
         ])
 
+        self.anki_query_mature = QLineEdit("prop:ivl>=21")
+        self.anki_query_young = QLineEdit("prop:ivl<21 is:review")
+
         self.default_notetype_button = QPushButton("Use default note type ('vocabsieve-notes', will be created if it does not exist)")
         self.default_notetype_button.setToolTip("This will use the default note type provided by VocabSieve. It will be created if it does not exist.")
         self.default_notetype_button.clicked.connect(self.onDefaultNoteType)
@@ -198,6 +201,9 @@ class SettingsDialog(QDialog):
         self.tab_p.layout = QFormLayout(self.tab_p)
         self.tab_m = QWidget()  # Miscellaneous
         self.tab_m.layout = QFormLayout(self.tab_m)
+        self.tab_t = QWidget()  # Tracking
+        self.tab_t.layout = QFormLayout(self.tab_t)
+
 
         self.tabs.resize(250, 300)
 
@@ -209,6 +215,7 @@ class SettingsDialog(QDialog):
         self.tabs.addTab(self.tab_p, "Processing")
         self.tabs.addTab(self.tab_a, "Anki")
         self.tabs.addTab(self.tab_n, "Network")
+        self.tabs.addTab(self.tab_t, "Tracking")
         self.tabs.addTab(self.tab_i, "Interface")
         self.tabs.addTab(self.tab_m, "Misc")
 
@@ -410,6 +417,11 @@ class SettingsDialog(QDialog):
         self.tab_m.layout.addRow(QLabel("<strong>Reset all settings to defaults</strong>"), self.reset_button)
         self.tab_m.layout.addRow(QLabel("<strong>Delete all user data</strong>"), self.nuke_button)
 
+        self.tab_t.layout.addRow(QLabel("<h3>Anki tracking</h3>"))
+        self.tab_t.layout.addRow(QLabel("Query string for 'mature' cards"), self.anki_query_mature)
+        self.tab_t.layout.addRow(QPushButton("Preview in Anki Browser"))
+        self.tab_t.layout.addRow(QLabel("Query string for 'young' cards"), self.anki_query_young)
+        self.tab_t.layout.addRow(QPushButton("Preview in Anki Browser"))
 
         self.reset_button.clicked.connect(self.reset_settings)
         self.nuke_button.clicked.connect(self.nuke_profile)

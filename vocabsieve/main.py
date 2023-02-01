@@ -618,6 +618,7 @@ class DictionaryWindow(QMainWindow):
     def setState(self, state: LookUpResults) -> None:
         self.word.setText(state['word'])
         self.definition.original = state['definition']
+
         display_mode1 = self.settings.value(
             self.settings.value("dict_source", "Wiktionary (English)")
             + "/display_mode",
@@ -742,7 +743,6 @@ class DictionaryWindow(QMainWindow):
 
     def lookupSet(self, word, use_lemmatize=True) -> None:
         sentence_text = self.sentence.unboldedText
-
         if settings.value("bold_style", type=int):
             # Bold word that was clicked on, either with "<b>{word}</b>" or 
             # "__{word}__".
@@ -765,8 +765,12 @@ class DictionaryWindow(QMainWindow):
         self.sentence.setHtml(sentence_text)
 
         QCoreApplication.processEvents()
+        TL = self.getLanguage()
+        lemmatize = self.settings.value("lemmatization", True, type=bool)
         result = self.lookup(word, use_lemmatize)
         self.setState(result)
+        if result.get("definition") or state.get("definition2"):
+            self.rec.recordLookup(word, TL, lemmatize, "vocabsieve", True, time.time())
         past_lookups_count = self.rec.countLemmaLookups(word, self.settings.value("target_language",'en'))
         if past_lookups_count <= 1:
             self.lookup_hist_label.setText("<b>new word</b>")
@@ -803,13 +807,11 @@ class DictionaryWindow(QMainWindow):
     def getLemGreedy(self) -> bool:
         return self.settings.value("lem_greedily", False, type=bool)  # type: ignore
 
-    def lookup(self, word: str, use_lemmatize: bool, recordDate: Optional[float] = None) -> LookUpResults:
+    def lookup(self, word: str, use_lemmatize: bool) -> LookUpResults:
         """
         Look up a word and return a dict with the lemmatized form (if enabled)
         and definition
         """
-        if not recordDate:
-            recordDate = time.time()
         word = re.sub('[«»…,()\\[\\]_]*', "", word)
         # TODO
         # why manually check "lemmatization" in settings when you can pass it through parameter?
@@ -853,16 +855,8 @@ class DictionaryWindow(QMainWindow):
                 dictname,
                 gtrans_lang,
                 self.settings.value("gtrans_api", "https://lingva.ml"))
-            self.rec.recordLookup(
-                word,
-                TL,
-                lemmatize,
-                dictname,
-                True, recordDate)
         except Exception as e:
             self.status(repr(e))
-            self.rec.recordLookup(
-                word, TL, lemmatize, dictname, False, recordDate)
             self.updateAnkiButtonState(True)
             item = {
                 "word": word,
@@ -880,16 +874,8 @@ class DictionaryWindow(QMainWindow):
                 lem_greedily,
                 dict2name,
                 gtrans_lang)
-            self.rec.recordLookup(
-                word,
-                TL,
-                lemmatize,
-                dict2name,
-                True, recordDate)
         except Exception as e:
             self.status("Dict-2 failed" + repr(e))
-            self.rec.recordLookup(
-                word, TL, lemmatize, dict2name, False, recordDate)
             self.definition2.clear()
             return item
         return {

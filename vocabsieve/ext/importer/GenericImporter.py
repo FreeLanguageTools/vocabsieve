@@ -155,7 +155,7 @@ class GenericImporter(QDialog):
                     
                 else:
                     self.sentences.append(sentence)
-                item = self.parent.lookup(word, True, date_to_timestamp(date))
+                item = self.parent.lookup(word, True)
                 if not item['definition'].startswith("<b>Definition for"):
                     count += 1
                     self.words.append(item['word'])
