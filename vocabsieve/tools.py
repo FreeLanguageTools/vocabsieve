@@ -61,6 +61,8 @@ def addNotes(server, content) -> List[int]:
     result = invoke('addNotes', server, notes=content)
     return list(result)
 
+def notesInfo(server, notes):
+    return invoke('notesInfo', server, notes=notes)
 
 def getVersion(server) -> str:
     result = invoke('version', server)

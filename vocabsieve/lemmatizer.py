@@ -41,6 +41,8 @@ def lemmatize(word, language, greedy=False):
     """Lemmatize a word. We will use PyMorphy for RU, UK, simplemma for others,
     and if that isn't supported , we give up. Should not fail under any circumstances"""
     try:
+        if language == 'ru':
+            word = removeAccents(word)
         if not word:
             return word
         if language in PYMORPHY_SUPPORT:

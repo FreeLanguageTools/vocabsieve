@@ -467,13 +467,18 @@ class SettingsDialog(QDialog):
         self.nuke_button.clicked.connect(self.nuke_profile)
 
     def getMatchedCards(self):
-        query_mature = self.anki_query_mature.text()
-        mature_notes = findNotes(self.settings.value("anki_api", 'http://127.0.0.1:8765'), query_mature)
-        self.mature_count_label.setText(f"Matched {str(len(mature_notes))} notes")
-        query_young = self.anki_query_young.text()
-        young_notes = findNotes(self.settings.value("anki_api", 'http://127.0.0.1:8765'), query_young)
-        young_notes = [note for note in young_notes if note not in mature_notes]
-        self.young_count_label.setText(f"Matched {str(len(young_notes))} notes")
+        if self.settings.value("enable_anki", True):
+            try:
+                _ = getVersion(api:=self.settings.value('anki_api', 'http://127.0.0.1:8765'))    
+                query_mature = self.anki_query_mature.text()
+                mature_notes = findNotes(api, query_mature)
+                self.mature_count_label.setText(f"Matched {str(len(mature_notes))} notes")
+                query_young = self.anki_query_young.text()
+                young_notes = findNotes(api, query_young)
+                young_notes = [note for note in young_notes if note not in mature_notes]
+                self.young_count_label.setText(f"Matched {str(len(young_notes))} notes")
+            except:
+                pass
 
     def setupProcessing(self):
         """This will allow per-dictionary configurations.
@@ -536,6 +541,7 @@ class SettingsDialog(QDialog):
         try:
             _ = getVersion(api)
         except Exception as e:
+            self.toggle_anki_settings(False)
             pass
             # self.errorNoConnection(e)
         else:
@@ -625,8 +631,8 @@ class SettingsDialog(QDialog):
         self.register_config_handler(self.img_format, 'img_format', 'jpg')
         self.register_config_handler(self.img_quality, 'img_quality', -1)
 
-        self.register_config_handler(self.anki_query_mature, 'anki_query_mature', "prop:ivl>=21")
-        self.register_config_handler(self.anki_query_young, 'anki_query_young', "prop:ivl<21 is:review")
+        self.register_config_handler(self.anki_query_mature, 'tracking/anki_query_mature', "prop:ivl>=14")
+        self.register_config_handler(self.anki_query_young, 'tracking/anki_query_young', "prop:ivl<14 is:review")
         self.register_config_handler(self.known_threshold, 'tracking/known_threshold', 100)
         self.register_config_handler(self.w_seen, 'tracking/w_seen', 8)
         self.register_config_handler(self.w_lookup, 'tracking/w_lookup', 15)
@@ -671,6 +677,11 @@ class SettingsDialog(QDialog):
         self.definition2_field.setEnabled(value)
         self.pronunciation_field.setEnabled(value)
         self.image_field.setEnabled(value)
+        self.anki_query_mature.setEnabled(value)
+        self.anki_query_young.setEnabled(value)
+        self.preview_mature_button.setEnabled(value)
+        self.preview_young_button.setEnabled(value)
+        self.open_fieldmatcher.setEnabled(value)
 
     def loadAudioDictionaries(self):
         custom_dicts = json.loads(self.settings.value("custom_dicts", '[]'))
@@ -725,10 +736,19 @@ class SettingsDialog(QDialog):
         self.freq_source.blockSignals(False)
 
     def previewMature(self):
-        guiBrowse(self.settings.value('anki_api', 'http://127.0.0.1:8765'), self.anki_query_mature.text())
+        try:
+            _ = getVersion(api:=self.settings.value('anki_api', 'http://127.0.0.1:8765'))
+            guiBrowse(api, self.anki_query_mature.text())
+        except Exception as e:
+            print(repr(e))
+
 
     def previewYoung(self):
-        guiBrowse(self.settings.value('anki_api', 'http://127.0.0.1:8765'), self.anki_query_young.text())
+        try:
+            _ = getVersion(api:=self.settings.value('anki_api', 'http://127.0.0.1:8765'))
+            guiBrowse(api, self.anki_query_young.text())
+        except Exception as e:
+            print(repr(e))
 
     def loadUrl(self):
         lang = self.settings.value("target_language", "en")

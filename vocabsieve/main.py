@@ -365,8 +365,9 @@ class DictionaryWindow(QMainWindow):
         ContentManager(self).exec()
 
     def onStats(self):
-        stats_window = StatisticsWindow(self)
-        stats_window.exec()
+        if self.checkAnkiConnect():
+            stats_window = StatisticsWindow(self)
+            stats_window.exec()
 
     def exportNotes(self) -> None:
         """
@@ -484,18 +485,19 @@ class DictionaryWindow(QMainWindow):
         else:
             self.toanki_button.setEnabled(True)
 
-    def configure(self) -> None:
+    def checkAnkiConnect(self):
         api = self.settings.value('anki_api', 'http://127.0.0.1:8765')
         if self.settings.value('enable_anki', True, type=bool):
             try:
                 _ = getVersion(api)
+                return 1
             except Exception as e:
                 print(repr(e))
                 answer = QMessageBox.question(
                     self,
                     "Could not reach AnkiConnect",
                     "<h2>Could not reach AnkiConnect</h2>"
-                    "AnkiConnect is required for changing Anki-related settings."
+                    "AnkiConnect is required for changing Anki-related settings or viewing statistics."
                     "<br>Choose 'Ignore' to not change Anki settings this time."
                     "<br>Choose 'Abort' to not open the configuration window."
                     "<br><br>If you have AnkiConnect listening to a non-default port or address, "
@@ -507,12 +509,16 @@ class DictionaryWindow(QMainWindow):
                     defaultButton=QMessageBox.Ignore
                 )
                 if answer == QMessageBox.Ignore:
-                    pass
+                    return 2
                 if answer == QMessageBox.Abort:
-                    return
+                    return 0
+        else:
+            return 3
 
-        self.settings_dialog = SettingsDialog(self)
-        self.settings_dialog.exec()
+    def configure(self) -> None:
+        if self.checkAnkiConnect():
+            self.settings_dialog = SettingsDialog(self)
+            self.settings_dialog.exec()
 
 
     def importkindleNew(self):
