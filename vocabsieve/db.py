@@ -227,6 +227,7 @@ class Record():
             WHERE language=?''', (language,))
 
     def rebuildSeen(self):
+        start = time.time()
         self.c.execute("DELETE FROM seen")
         self.c.execute('SELECT id, name, content, language, jd FROM contents')
         for cid, name, content, language, jd in self.c.fetchall():
@@ -236,6 +237,7 @@ class Record():
                 if "\\n" in lemma:
                     print(word, lemma)
                 self.c.execute('INSERT INTO seen(source, language, word, lemma, jd) VALUES(?,?,?,?,?)', (cid, language, word, lemma, jd))
+        print("Rebuilt seen database in", time.time() - start, "seconds")
         self.conn.commit()
 
     def getSeen(self, language):

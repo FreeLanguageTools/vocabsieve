@@ -14,6 +14,7 @@ class SettingsDialog(QDialog):
         self.settings = parent.settings
         user_note_type = self.settings.value("note_type")
         self.parent = parent
+        self.resize(500,400)
         self.setWindowTitle("Configure VocabSieve")
         self.initWidgets()
         self.initTabs()
@@ -22,6 +23,7 @@ class SettingsDialog(QDialog):
             self.setupAutosave()
             self.setupProcessing()
             self.deactivateProcessing()
+            self.getMatchedCards()
             self.twodictmode = self.settings.value(
                 "dict_source2", "<disabled>") != "<disabled>"
         except TypeError as e:
@@ -173,12 +175,34 @@ class SettingsDialog(QDialog):
             #"Zipf scale (LCD number)"
         ])
 
-        self.anki_query_mature = QLineEdit("prop:ivl>=21")
-        self.anki_query_young = QLineEdit("prop:ivl<21 is:review")
+        self.anki_query_mature = QLineEdit()
+        self.mature_count_label = QLabel("")
+        self.anki_query_young = QLineEdit()
+        self.young_count_label = QLabel("")
 
         self.default_notetype_button = QPushButton("Use default note type ('vocabsieve-notes', will be created if it does not exist)")
         self.default_notetype_button.setToolTip("This will use the default note type provided by VocabSieve. It will be created if it does not exist.")
         self.default_notetype_button.clicked.connect(self.onDefaultNoteType)
+
+        self.preview_young_button = QPushButton("Preview in Anki Browser")
+        self.preview_mature_button = QPushButton("Preview in Anki Browser")
+
+        self.known_threshold = QSpinBox()
+        self.known_threshold.setMinimum(1)
+        self.known_threshold.setMaximum(1000)
+        self.w_seen = QSpinBox()
+        self.w_seen.setMinimum(1)
+        self.w_lookup = QSpinBox()
+        self.w_lookup.setMinimum(0)
+        self.w_anki_ctx = QSpinBox()
+        self.w_anki_ctx.setMinimum(0)
+        self.w_anki_word = QSpinBox()
+        self.w_anki_word.setMinimum(0)
+        self.w_anki_ctx_y = QSpinBox()
+        self.w_anki_ctx_y.setMinimum(0)
+        self.w_anki_word_y = QSpinBox()
+        self.w_anki_word_y.setMinimum(0)
+
 
     def dictmanager(self):
         importer = DictManager(self)
@@ -205,7 +229,7 @@ class SettingsDialog(QDialog):
         self.tab_t.layout = QFormLayout(self.tab_t)
 
 
-        self.tabs.resize(250, 300)
+        self.tabs.resize(400, 400)
 
         self.layout = QVBoxLayout(self)
         self.layout.addWidget(self.tabs)
@@ -418,13 +442,36 @@ class SettingsDialog(QDialog):
         self.tab_m.layout.addRow(QLabel("<strong>Delete all user data</strong>"), self.nuke_button)
 
         self.tab_t.layout.addRow(QLabel("<h3>Anki tracking</h3>"))
+        self.tab_t.layout.addRow(QLabel("Use the Anki Card Browser to make a query string. "
+            "<br>Mature cards are excluded from the list of young cards automatically"))
+
         self.tab_t.layout.addRow(QLabel("Query string for 'mature' cards"), self.anki_query_mature)
-        self.tab_t.layout.addRow(QPushButton("Preview in Anki Browser"))
+        self.tab_t.layout.addRow(self.mature_count_label, self.preview_mature_button)
         self.tab_t.layout.addRow(QLabel("Query string for 'young' cards"), self.anki_query_young)
-        self.tab_t.layout.addRow(QPushButton("Preview in Anki Browser"))
+        self.tab_t.layout.addRow(self.young_count_label, self.preview_young_button)
+        self.tab_t.layout.addRow(QLabel("<h3>Word scoring</h3>"))
+        self.tab_t.layout.addRow(QLabel("Known threshold score"), self.known_threshold)
+        self.tab_t.layout.addRow(QLabel("Score: seen"), self.w_seen)
+        self.tab_t.layout.addRow(QLabel("Score: lookup (max 1 per day)"), self.w_lookup)
+        self.tab_t.layout.addRow(QLabel("Score: mature Anki target word"), self.w_anki_word)
+        self.tab_t.layout.addRow(QLabel("Score: mature Anki card context"), self.w_anki_ctx)
+        self.tab_t.layout.addRow(QLabel("Score: young Anki target word"), self.w_anki_word_y)
+        self.tab_t.layout.addRow(QLabel("Score: young Anki card context"), self.w_anki_ctx_y)
+
+
 
         self.reset_button.clicked.connect(self.reset_settings)
         self.nuke_button.clicked.connect(self.nuke_profile)
+
+    def getMatchedCards(self):
+        print("Got here")
+        query_mature = self.anki_query_mature.text()
+        mature_notes = findNotes(self.settings.value("anki_api", 'http://127.0.0.1:8765'), query_mature)
+        self.mature_count_label.setText(f"Matched {str(len(mature_notes))} notes")
+        query_young = self.anki_query_young.text()
+        young_notes = findNotes(self.settings.value("anki_api", 'http://127.0.0.1:8765'), query_young)
+        young_notes = [note for note in young_notes if note not in mature_notes]
+        self.young_count_label.setText(f"Matched {str(len(young_notes))} notes")
 
     def setupProcessing(self):
         """This will allow per-dictionary configurations.
@@ -576,6 +623,16 @@ class SettingsDialog(QDialog):
         self.register_config_handler(self.img_format, 'img_format', 'jpg')
         self.register_config_handler(self.img_quality, 'img_quality', -1)
 
+        self.register_config_handler(self.anki_query_mature, 'anki_query_mature', "prop:ivl>=21")
+        self.register_config_handler(self.anki_query_young, 'anki_query_young', "prop:ivl<21 is:review")
+        self.register_config_handler(self.known_threshold, 'tracking/known_threshold', 100)
+        self.register_config_handler(self.w_seen, 'tracking/w_seen', 8)
+        self.register_config_handler(self.w_lookup, 'tracking/w_lookup', 15)
+        self.register_config_handler(self.w_anki_word, 'tracking/w_anki_word', 70)
+        self.register_config_handler(self.w_anki_ctx, 'tracking/w_anki_ctx', 30)
+        self.register_config_handler(self.w_anki_word_y, 'tracking/w_anki_word_y', 40)
+        self.register_config_handler(self.w_anki_ctx_y, 'tracking/w_anki_ctx_y', 20)
+
         self.target_language.currentTextChanged.connect(self.loadDictionaries)
         self.target_language.currentTextChanged.connect(
             self.loadAudioDictionaries)
@@ -583,6 +640,10 @@ class SettingsDialog(QDialog):
         self.target_language.currentTextChanged.connect(self.loadUrl)
         self.web_preset.currentTextChanged.connect(self.loadUrl)
         self.gtrans_lang.currentTextChanged.connect(self.loadUrl)
+        self.anki_query_mature.editingFinished.connect(self.getMatchedCards)
+        self.anki_query_young.editingFinished.connect(self.getMatchedCards)
+        self.preview_young_button.clicked.connect(self.previewYoung)
+        self.preview_mature_button.clicked.connect(self.previewMature)
         self.loadUrl()
 
     def setAvailable(self):
@@ -655,6 +716,12 @@ class SettingsDialog(QDialog):
             self.settings.value(
                 "freq_source", "<disabled>"))
         self.freq_source.blockSignals(False)
+
+    def previewMature(self):
+        guiBrowse(self.settings.value('anki_api', 'http://127.0.0.1:8765'), self.anki_query_mature.text())
+
+    def previewYoung(self):
+        guiBrowse(self.settings.value('anki_api', 'http://127.0.0.1:8765'), self.anki_query_young.text())
 
     def loadUrl(self):
         lang = self.settings.value("target_language", "en")

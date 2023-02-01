@@ -50,11 +50,14 @@ class StatisticsWindow(QDialog):
             level_prev = level
 
     def initKnown(self):
-        threshold = self.settings.value('known_threshold', 100) # Score needed to be considered known
-        w_lookup = self.settings.value('w_lookup', 15) # Weight for each lookup, max 1 per day
-        w_seen = self.settings.value('w_seen', 8) # W for seeing
-        w_anki_ctx = self.settings.value('w_anki_ctx', 30) # W for being on context field of a studied card
-        w_anki_word = self.settings.value('w_anki_word', 70) # W for being on the word field of a studied card
+        threshold = self.settings.value('tracking/known_threshold', 100) # Score needed to be considered known
+        w_lookup = self.settings.value('tracking/w_lookup', 15) # Weight for each lookup, max 1 per day
+        w_seen = self.settings.value('tracking/w_seen', 8) # W for seeing
+        w_anki_ctx = self.settings.value('tracking/w_anki_ctx', 30) # W for being on context field of a mature card
+        w_anki_word = self.settings.value('tracking/w_anki_word', 70) # W for being on the word field of a mature card
+        w_anki_ctx_y = self.settings.value('tracking/w_anki_ctx_y', 20) # W for being on context field of a young card
+        w_anki_word_y = self.settings.value('tracking/w_anki_word_y', 40) # W for being on the word field of a young card
+        
         self.known.layout = QVBoxLayout(self.known)
         score = {}
 

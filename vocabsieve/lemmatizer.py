@@ -1,7 +1,7 @@
 import simplemma
 import pymorphy2
 import re
-
+from functools import lru_cache
 # On Windows frozen build, there is no pymorphy2 support for Russian due
 # to an issue with cxfreeze
 PYMORPHY_SUPPORT = []
@@ -29,13 +29,20 @@ simplemma_languages = ["ast", "bg", "ca", "cs", "cy", "da", "de", "el", "en",
                        "pl", "pt", "ro", "ru", "se", "sk", "sl", "sq", "sv",
                        "sw", "tl", "tr", "uk"]
 
+def lem_pre(word, language):
+    word = re.sub(r'[\?\.!«»”“"…,()\[\]]*', "", word).strip()
+    return word
+
 def lem_word(word, language, greedy=False):
-    """Lemmatize a word. We will use PyMorphy for RU, simplemma for others,
+    return lemmatize(lem_pre(word, language), language, greedy)
+
+@lru_cache
+def lemmatize(word, language, greedy=False):
+    """Lemmatize a word. We will use PyMorphy for RU, UK, simplemma for others,
     and if that isn't supported , we give up. Should not fail under any circumstances"""
     try:
-        if not word.strip():
+        if not word:
             return word
-        word = re.sub(r'[\?\.!«»”“"…,()\[\]]*', "", word).strip()
         if language in PYMORPHY_SUPPORT:
             if morph and morph.get(language):
                 return morph[language].parse(word)[0].normal_form

@@ -75,6 +75,13 @@ def addDefaultModel(server):
         cardTemplates=CARDS
         )
 
+def findNotes(server, query):
+    return invoke('findNotes', server, query=query)
+
+
+def guiBrowse(server, query):
+    return invoke('guiBrowse', server, query=query)
+
 def is_json(myjson) -> bool:
     if not myjson.startswith("{"):
         return False
