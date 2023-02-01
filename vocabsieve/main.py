@@ -538,13 +538,13 @@ class DictionaryWindow(QMainWindow):
         )
         if not path:
             return
-        #try:
-        KoreaderImporter(self, path).exec()
-        #except ValueError:
-        #    QMessageBox.warning(self, "No notes are found", 
-        #        "Check if you've picked the right directory. It should be a folder containing all of your the ebooks you want to extract from")
-        #except Exception as e:
-        #    QMessageBox.warning(self, "Something went wrong", "Error: "+repr(e))
+        try:
+            KoreaderImporter(self, path).exec()
+        except ValueError:
+            QMessageBox.warning(self, "No notes are found", 
+                "Check if you've picked the right directory. It should be a folder containing all of your the ebooks you want to extract from")
+        except Exception as e:
+            QMessageBox.warning(self, "Something went wrong", "Error: "+repr(e))
 
     def repeatLastImport(self):
         try:

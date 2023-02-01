@@ -5,6 +5,7 @@ from shutil import rmtree
 from .tools import *
 from .dictionary import *
 from .dictmanager import *
+from .fieldmatcher import FieldMatcher
 
 BoldStyles = ["<disabled>", "Font weight", "Underscores"]
 
@@ -203,6 +204,7 @@ class SettingsDialog(QDialog):
         self.w_anki_word_y = QSpinBox()
         self.w_anki_word_y.setMinimum(0)
 
+        self.open_fieldmatcher = QPushButton("Match fields (required for using Anki data)")
 
     def dictmanager(self):
         importer = DictManager(self)
@@ -449,6 +451,7 @@ class SettingsDialog(QDialog):
         self.tab_t.layout.addRow(self.mature_count_label, self.preview_mature_button)
         self.tab_t.layout.addRow(QLabel("Query string for 'young' cards"), self.anki_query_young)
         self.tab_t.layout.addRow(self.young_count_label, self.preview_young_button)
+        self.tab_t.layout.addRow(self.open_fieldmatcher)
         self.tab_t.layout.addRow(QLabel("<h3>Word scoring</h3>"))
         self.tab_t.layout.addRow(QLabel("Known threshold score"), self.known_threshold)
         self.tab_t.layout.addRow(QLabel("Score: seen"), self.w_seen)
@@ -464,7 +467,6 @@ class SettingsDialog(QDialog):
         self.nuke_button.clicked.connect(self.nuke_profile)
 
     def getMatchedCards(self):
-        print("Got here")
         query_mature = self.anki_query_mature.text()
         mature_notes = findNotes(self.settings.value("anki_api", 'http://127.0.0.1:8765'), query_mature)
         self.mature_count_label.setText(f"Matched {str(len(mature_notes))} notes")
@@ -644,6 +646,7 @@ class SettingsDialog(QDialog):
         self.anki_query_young.editingFinished.connect(self.getMatchedCards)
         self.preview_young_button.clicked.connect(self.previewYoung)
         self.preview_mature_button.clicked.connect(self.previewMature)
+        self.open_fieldmatcher.clicked.connect(self.openFieldMatcher)
         self.loadUrl()
 
     def setAvailable(self):
@@ -651,6 +654,10 @@ class SettingsDialog(QDialog):
         self.api_port.setEnabled(self.api_enabled.isChecked())
         self.reader_host.setEnabled(self.reader_enabled.isChecked())
         self.reader_port.setEnabled(self.reader_enabled.isChecked())
+
+    def openFieldMatcher(self):
+        fieldmatcher = FieldMatcher(self)
+        fieldmatcher.exec()
 
     def toggle_anki_settings(self, value: bool):
         self.anki_api.setEnabled(value)

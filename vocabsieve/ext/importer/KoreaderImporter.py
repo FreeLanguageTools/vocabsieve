@@ -152,15 +152,17 @@ def koreader_parse_epub(file, lang):
         found = False
         try:
             index, _ = epub_xpathconvert(item['page'])
-            if sentence:=find_sentence_for_word(item, docs[index], lang):
-                result.append((
-                    item['notes'],
-                    sentence,
-                    item['datetime'],
-                    booktitle,
-                    booklang
-                ))
-                found = True
+            print(len(docs), "docs in", booktitle)
+            if index < len(docs):
+                if sentence:=find_sentence_for_word(item, docs[index], lang):
+                    result.append((
+                        item['notes'],
+                        sentence,
+                        item['datetime'],
+                        booktitle,
+                        booklang
+                    ))
+                    found = True
             if not found: #Ordering is weird, loop through all docs
                 for doc in docs:
                     if sentence:=find_sentence_for_word(item, doc, lang):
@@ -199,10 +201,10 @@ def koreader_scandir(path):
             filelist.append(filename)
     return filelist
 
-def findDBpath(path):
+def findHistoryPath(path):
     # KOReader settings may be in a hidden directory
-    paths = glob.glob(os.path.join(path, "**/vocabulary_builder.sqlite3"), recursive=True)\
-        + glob.glob(os.path.join(path, ".*/**/vocabulary_builder.sqlite3"), recursive=True)
+    paths = glob.glob(os.path.join(path, "**/lookup_history.lua"), recursive=True)\
+        + glob.glob(os.path.join(path, ".*/**/lookup_history.lua"), recursive=True)
     if paths:
         return paths[0]
 
@@ -236,28 +238,28 @@ class KoreaderImporter(GenericImporter):
         books_in_lang = set(item[3] for item in items)
         print("Books in", langcode, ":", books_in_lang)
         try:
-            self.dbpath = findDBpath(self.path)
-            con = sqlite3.connect(self.dbpath)
-            cur = con.cursor()
-            bookids = []
+            self.histpath = findHistoryPath(self.path)
+            d = []
+            with open(self.histpath) as f:
+                with open(self.histpath) as f:
+                    content = f.read().split("LookupHistoryEntry")[1:]
+                    for item in content:
+                        d.append(slpp.decode(item))
+            entries = [entry['data'].get(next(iter(entry['data']))) for entry in d]
+            entries = [(entry['word'], entry['book_title'], entry['time']) for entry in entries]
             count = 0
             success_count = 0
-
-            for bookid, bookname in cur.execute("SELECT id, name FROM title"):
-                if bookname in books_in_lang:
-                    bookids.append(bookid)
-            print(bookids)
-            for timestamp, word, title_id in cur.execute("SELECT create_time, word, title_id FROM vocabulary"):
-                if title_id in bookids:
+            for word, booktitle, timestamp in entries:
+                if booktitle in books_in_lang:
                     count += 1
-                    success_count += self.parent.rec.recordLookup(word, langcode, True, "", True, timestamp, commit=False)
+                    success_count += self.parent.rec.recordLookup(word, langcode, True, "koreader", True, timestamp, commit=False)
             self.parent.rec.conn.commit()
 
-            self.layout.addRow(QLabel("Vocabulary database: " + self.dbpath))
+            self.layout.addRow(QLabel("Vocabulary database: " + self.histpath))
             self.layout.addRow(QLabel(f"Found {count} lookups in {langcode}, added {success_count} to lookup database."))
         except Exception as e:
             print(e)
-            self.layout.addRow(QLabel("Failed to find/read vocabulary_builder.sqlite3. Lookups will not be tracked this time."))
+            self.layout.addRow(QLabel("Failed to find/read lookup_history.lua. Lookups will not be tracked this time."))
 
         items = [item for item in items if item[2] > "1970-01-01 00:00:00"]
         return zip(*items)

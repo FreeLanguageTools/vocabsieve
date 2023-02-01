@@ -59,7 +59,7 @@ class KindleVocabImporter(GenericImporter):
             if lword.startswith(langcode):
                 word = removeprefix(lword, langcode+":")
                 count += 1
-                success_count += self.parent.rec.recordLookup(word, langcode, True, "", True, timestamp, commit=False) # record everything first
+                success_count += self.parent.rec.recordLookup(word, langcode, True, "kindle", True, timestamp, commit=False) # record everything first
                 words.append(word)
                 booknames.append(bookid2name[bookid])
                 sentences.append(sentence)

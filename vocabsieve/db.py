@@ -66,6 +66,15 @@ class Record():
         if not parent.settings.value("internal/db_no_definitions"):
             self.dropDefinitions()
             parent.settings.setValue("internal/db_no_definitions", True)
+        if not parent.settings.value("internal/db_new_source"):
+            self.fixSource()
+            parent.settings.setValue("internal/db_new_source", True)
+        self.conn.commit()
+
+    def fixSource(self):
+        self.c.execute("""
+            UPDATE lookups SET source='vocabsieve'
+            """)
         self.conn.commit()
 
     def createTables(self):
