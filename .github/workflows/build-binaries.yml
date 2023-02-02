@@ -29,6 +29,10 @@ jobs:
       run: |
         pip install https://freelanguagetools.org/python_lzo-1.12-cp38-cp38-win_amd64.whl
       if: ${{ matrix.os == 'windows-latest' }}
+    - name: Install headers for lzo (Ubuntu)
+      run: |
+        sudo apt install -y liblzo2-dev zlib1g-dev
+      if: ${{ matrix.os == 'ubuntu-latest' }}
     - name: Install dependencies
       run: |
         pip install wheel
@@ -50,7 +54,6 @@ jobs:
       if: ${{ matrix.os == 'macos-latest' }}
     - name: Build Linux AppImage
       run: |
-        apt install -y liblzo2-dev zlib1g-dev
         pip install python-appimage
         cp vocabsieve.{desktop,png} recipe/
         echo $(pwd) | cat - recipe/requirements.txt > tmpfile && mv tmpfile recipe/requirements.txt
