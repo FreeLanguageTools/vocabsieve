@@ -15,9 +15,9 @@ on:
 
 jobs:
   deploy:
-  strategy:
-    matrix:
-      os: [windows-latest, mac-latest, ubuntu-latest]
+    strategy:
+      matrix:
+        os: [windows-latest, mac-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v2
@@ -57,7 +57,6 @@ jobs:
         python_appimage build app -p 3.10 recipe
         mv VocabSieve-x86_64.AppImage VocabSieve-v$(grep version setup.cfg | awk '{print $3}')-linux-amd64.AppImage
       if: ${{ matrix.os == 'ubuntu-latest' }}
-    
     - name: Archive production artifacts
       uses: actions/upload-artifact@v3
       with:
