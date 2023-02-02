@@ -57,7 +57,7 @@ jobs:
         pip install python-appimage
         cp vocabsieve.{desktop,png} recipe/
         echo $(pwd) | cat - recipe/requirements.txt > tmpfile && mv tmpfile recipe/requirements.txt
-        python_appimage build app -p 3.10 recipe
+        python -m python_appimage build app -p 3.10 recipe
         mv VocabSieve-x86_64.AppImage VocabSieve-v$(grep version setup.cfg | awk '{print $3}')-linux-amd64.AppImage
       if: ${{ matrix.os == 'ubuntu-latest' }}
     - name: Archive production artifacts
