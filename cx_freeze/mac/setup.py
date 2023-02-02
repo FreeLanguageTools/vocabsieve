@@ -45,9 +45,15 @@ build_exe_options = {
     "silent_level": 1
     }
 
-bdist_msi_options = {
-    "upgrade_code": "{F10E2AE2-7629-3CA2-AA85-498478E708D7}",
-    "target_name": f"VocabSieve-v{__version__}-win64.msi"
+bdist_mac_options = {
+    'iconfile': "../icon.icns",
+    'bundle_name': f"VocabSieve-v{__version__}-macos",
+    'plist_items': '../Info.plist',
+}
+
+bdist_dmg_options = {
+    'volume_label': "VocabSieve",
+    'applications_shortcut': True
 }
 
 # base="Win32GUI" should be used only for Windows GUI app
@@ -60,7 +66,7 @@ setup(
     name="VocabSieve",
     version=__version__,
     description="A simple sentence mining tool",
-    options={"build_exe": build_exe_options, "bdist_msi": bdist_msi_options},
+    options={"build_exe": build_exe_options, "bdist_mac": bdist_mac, "bdist_dmg": bdist_dmg},
     executables=[Executable("app.py",
                             base=base,
                             icon="../icon.ico",
