@@ -58,9 +58,9 @@ At this time, there are no packages for other distributions. If you are able to 
 
 The easiest method is to download an AppImage from for a release from the Releases tab on the right. You may also download an AppImage for a nightly build on the [CI artifacts page](https://ci.appveyor.com/project/1over137/vocabsieve/build/artifacts). 
 
-Alternatively, users should simply use `pip3` to install VocabSieve: `pip3 install --user vocabsieve`. Depends on your system, you may need to install `gcc` and `liblzo2` with headers.
+Alternatively, users should simply use `pip3` to install VocabSieve: `pip3 install --user -U vocabsieve`. Depends on your system, you may need to install `gcc` and `liblzo2` with headers.
 
-Ubuntu: `apt install liblzo2-dev zlib1g-dev python3-pip python3-pyqt5`, then `pip3 install --user vocabsieve`
+Ubuntu: `apt install liblzo2-dev zlib1g-dev python3-pip python3-pyqt5`, then `pip3 install --user -U vocabsieve`
 
 This should install an executable and a desktop icon and behave like any other GUI application you may have.
 

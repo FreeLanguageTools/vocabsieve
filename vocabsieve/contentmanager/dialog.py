@@ -13,6 +13,11 @@ supported_content_formats = bidict({
     ".srt": "Subtitles (srt)",
     ".ass": "Subtitles (ass)",
     ".vtt": "Subtitles (vtt)",
+    ".html": "HTML", 
+    '.azw': "Ebook (azw)", 
+    '.azw3': "Ebook (azw3)", 
+    '.kfx': "Ebook (kfx)", 
+    '.mobi': "Ebook (mobi)",
     "folder": "Folder"
 })
 
@@ -69,19 +74,22 @@ class AddContentDialog(QDialog):
 
 
     def commit(self):
-        if self.contenttype in ['.epub', '.fb2']:
+        if self.contenttype in ['.epub', '.fb2', '.azw', '.azw3', '.kfx', '.mobi' ]:
             content = self.extractBook(self.path)
         elif self.contenttype in ['.ass', '.srt', '.vtt']:
             content = self.extractSubs(self.path)
         elif self.contenttype == "folder":
             content = ""
             for file in os.listdir(self.path):
-                _, ext = os.path.splitext(file)
-                if ext in ['.epub', '.fb2']:
-                    content += self.extractBook(os.path.join(self.path, file)) + "\n\n"
-                elif ext in ['.ass', '.srt', '.vtt']:
-                    content += self.extractSubs(os.path.join(self.path, file))
-        
+                try:
+                    _, ext = os.path.splitext(file)
+                    if ext in ['.epub', '.fb2', '.azw', '.azw3', '.kfx', '.mobi' ]:
+                        content += self.extractBook(os.path.join(self.path, file)) + "\n\n"
+                    elif ext in ['.ass', '.srt', '.vtt']:
+                        content += self.extractSubs(os.path.join(self.path, file))
+                except Exception as e:
+                    print(repr(e))
+                        
         self.parent.rec.importContent(
             self.name.text(),
             content,

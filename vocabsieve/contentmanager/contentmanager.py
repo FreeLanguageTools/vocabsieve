@@ -51,7 +51,7 @@ class ContentManager(QDialog):
         path, _ = QFileDialog.getOpenFileName(
                 self, "Choose a file to import", 
                 QStandardPaths.writableLocation(QStandardPaths.HomeLocation), 
-                "Files (*.epub *.fb2 *.srt *.vtt *.ass)"
+                "Files (*.epub *.fb2 *.mobi *.html *.azw *.azw3 *.kfx *.srt *.vtt *.ass)"
                 )
         if path:
             AddContentDialog(self, path).exec()

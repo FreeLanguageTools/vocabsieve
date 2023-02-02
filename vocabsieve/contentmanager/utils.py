@@ -4,8 +4,13 @@ from ebooklib import epub
 import ebooklib
 from lxml import etree
 from charset_normalizer import from_bytes
-
-supported_extensions = {".fb2", ".epub", ".srt", ".vtt", ".ass"}
+import mobi
+from bs4 import BeautifulSoup
+supported_extensions = {
+    ".fb2", ".epub", ".srt", ".vtt", 
+    ".ass", ".html", '.azw', '.azw3', 
+    '.kfx', '.mobi'
+    }
 
 
 def tostr(s):
@@ -20,6 +25,10 @@ def remove_ns(s: str) -> str: return str(s).split("}")[-1]
 
 def ebook2text(path):
     basename, ext = os.path.splitext(path)
+    if ext in {'.azw', '.azw3', '.kfx', '.mobi'}:
+        _, newpath = mobi.extract(path)
+        # newpath is either html or epub
+        return ebook2text(newpath)
     if ext == '.epub':
         book = epub.read_epub(path)
         chapters = []
@@ -31,7 +40,6 @@ def ebook2text(path):
                 continue
             content = "\n".join(data.splitlines())
             chapters.append(content)
-        return "\n\n\n\n".join(chapters)
     elif ext == '.fb2':
         with open(path, 'rb') as f:
             data = f.read()
@@ -50,4 +58,9 @@ def ebook2text(path):
                         else:
                             current_chapter += tostr(item) + "\n"
                     chapters.append(current_chapter)
-        return "\n\n\n\n".join(chapters)
+    elif ext == '.html':
+        with open(path, 'r', encoding='utf-8') as f:
+            c = f.read()
+            return BeautifulSoup(c).getText()
+    
+    return "\n\n\n\n".join(chapters)
