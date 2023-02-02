@@ -29,5 +29,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install build
         pip install cx_freeze
-        cd cx_freeze/debug
+        cd ../cx_freeze/debug
         python setup.py build_msi
+    - name: Archive production artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist
+          path: |
+            dist/*.msi
