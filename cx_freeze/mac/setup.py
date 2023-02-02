@@ -48,7 +48,7 @@ build_exe_options = {
 bdist_mac_options = {
     'iconfile': "../icon.icns",
     'bundle_name': f"VocabSieve-v{__version__}-macos",
-    'plist_items': '../Info.plist',
+    'custom_info_plist': '../Info.plist',
 }
 
 bdist_dmg_options = {
