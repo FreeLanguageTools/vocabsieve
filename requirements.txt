@@ -2,7 +2,6 @@
 lxml
 PyQt5
 requests
-soupsieve==2.3.1
 beautifulsoup4
 simplemma
 pystardict
@@ -22,6 +21,6 @@ ebooklib
 markdown
 markdownify
 readmdict
-python-lzo; sys_platform == 'linux'
+python-lzo
 packaging
 typing_extensions
