@@ -47,9 +47,8 @@ build_exe_options = {
 
 bdist_msi_options = {
     "upgrade_code": "{F10E2AE2-7629-3CA2-AA85-498478E708D7}",
-    "target_name": f"VocabSieve-v{__version__}-DEBUG-win64.msi",
-    "silent_level": 1
-}
+    "target_name": f"VocabSieve-v{__version__}-DEBUG-win64.msi"
+    }
 
 # base="Win32GUI" should be used only for Windows GUI app
 base = None
