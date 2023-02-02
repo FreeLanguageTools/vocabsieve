@@ -9,8 +9,9 @@
 name: Build Binaries
 
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - master
 
 jobs:
   deploy:
