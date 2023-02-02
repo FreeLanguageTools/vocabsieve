@@ -29,7 +29,8 @@ jobs:
         python -m pip install --upgrade pip
         pip install build
         pip install cx_freeze
-        cd $GITHUB_WORKSPACE/cx_freeze/debug
+        ls
+        cd cx_freeze/win_debug
         python setup.py build_msi
     - name: Archive production artifacts
       uses: actions/upload-artifact@v3
