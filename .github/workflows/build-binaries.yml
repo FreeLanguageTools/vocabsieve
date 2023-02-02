@@ -33,7 +33,7 @@ jobs:
         pip install cx_freeze
         ls
         cd cx_freeze/win_debug
-        python setup.py build_msi
+        python setup.py bdist_msi
     - name: Archive production artifacts
       uses: actions/upload-artifact@v3
       with:
