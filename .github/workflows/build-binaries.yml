@@ -49,6 +49,7 @@ jobs:
       if: ${{ matrix.os == 'windows-latest' }}
     - name: Build Mac App
       run: |
+        cd cx_freeze/mac
         python setup.py bdist_mac
         cd ../..
       if: ${{ matrix.os == 'macos-latest' }}
