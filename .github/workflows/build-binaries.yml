@@ -24,7 +24,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.8'
+        python-version: '3.10'
     - name: Install python-lzo
       run: |
         pip install https://freelanguagetools.org/python_lzo-1.12-cp38-cp38-win_amd64.whl
@@ -69,9 +69,23 @@ jobs:
         python -m python_appimage build app -p 3.10 recipe
         mv VocabSieve-x86_64.AppImage VocabSieve-v$(grep version setup.cfg | awk '{print $3}')-linux-amd64.AppImage
       if: ${{ matrix.os == 'ubuntu-latest' }}
-    - name: Archive production artifacts
+    - name: Upload Windows App
       uses: actions/upload-artifact@v3
       with:
         path: |
-          cx_freeze/*/dist/*
+          cx_freeze/win/dist/*
+    - name: Upload Windows App (debug)
+      uses: actions/upload-artifact@v3
+      with:
+        path: |
+          cx_freeze/win_debug/dist/*
+    - name: Upload Mac App
+      uses: actions/upload-artifact@v3
+      with:
+        path: |
+          cx_freeze/mac/dist/*
+    - name: Upload Linux AppImage
+      uses: actions/upload-artifact@v3
+      with:
+        path: |
           *.AppImage
