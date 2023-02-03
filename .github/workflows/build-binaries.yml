@@ -59,9 +59,6 @@ jobs:
       run: |
         cd cx_freeze/mac
         python setup.py bdist_dmg
-        ls
-        ls build
-        ls dist
         cd ../..
       if: ${{ matrix.os == 'macos-latest' }}
     - name: Build Linux AppImage
@@ -92,43 +89,3 @@ jobs:
       with:
         path: |
           *.AppImage
-
-    - name: Create Draft Release
-      id: create_release
-      uses: actions/create-release@v1
-      if: ${{ github.ref_type == 'tag' }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: ${{ github.ref }}
-        draft: true
-        prerelease: false
-
-    - uses: actions/upload-release-asset@v1.0.1
-      if: ${{ github.ref_type == 'tag' }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: cx_freeze/win/dist/*
-        asset_name: Windows App
-        asset_content_type: application/octet-stream
-    - uses: actions/upload-release-asset@v1.0.1
-      if: ${{ github.ref_type == 'tag' }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: cx_freeze/mac/dist/*
-        asset_name: Mac App
-        asset_content_type: application/
-    - uses: actions/upload-release-asset@v1.0.1
-      if: ${{ github.ref_type == 'tag' }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: "*.AppImage"
-        asset_name: Linux AppImage
-        asset_content_type: application/octet-stream
