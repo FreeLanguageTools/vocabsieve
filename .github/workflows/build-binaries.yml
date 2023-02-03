@@ -72,20 +72,24 @@ jobs:
     - name: Upload Windows App
       uses: actions/upload-artifact@v3
       with:
+        name: Windows App
         path: |
           cx_freeze/win/dist/*
     - name: Upload Windows App (debug)
       uses: actions/upload-artifact@v3
       with:
+        name: Windows App (debug)
         path: |
           cx_freeze/win_debug/dist/*
     - name: Upload Mac App
       uses: actions/upload-artifact@v3
       with:
+        name: Mac App
         path: |
           cx_freeze/mac/build/*.dmg
     - name: Upload Linux AppImage
       uses: actions/upload-artifact@v3
       with:
+        name: Linux AppImage
         path: |
           *.AppImage
