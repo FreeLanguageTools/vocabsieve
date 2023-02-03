@@ -52,8 +52,9 @@ bdist_mac_options = {
 }
 
 bdist_dmg_options = {
-    'volume_label': "VocabSieve",
-    'applications_shortcut': True
+    'volume_label': f"VocabSieve-v{__version__}-macos",
+    'applications_shortcut': True,
+
 }
 
 # base="Win32GUI" should be used only for Windows GUI app

@@ -86,7 +86,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         path: |
-          cx_freeze/mac/build/*
+          cx_freeze/mac/build/*.dmg
     - name: Upload Linux AppImage
       uses: actions/upload-artifact@v3
       with:
@@ -100,8 +100,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: <tofill>
-        release_name: <tofill>
+        tag_name: ${{ github.ref }}
+        release_name: ${{ github.ref }}
         draft: true
         prerelease: false
 
