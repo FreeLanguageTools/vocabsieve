@@ -370,7 +370,7 @@ class DictionaryWindow(QMainWindow):
     def onStats(self):
         if self.checkAnkiConnect():
             stats_window = StatisticsWindow(self)
-            stats_window.exec()
+            stats_window.open()
 
     def exportNotes(self) -> None:
         """

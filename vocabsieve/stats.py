@@ -153,7 +153,7 @@ class StatisticsWindow(QDialog):
         known_words = [word for word, points in score.items() if points >= threshold and word.isalpha()]
         if langcode in ['ru', 'uk']:
             known_words = [word for word in known_words if starts_with_cyrillic(word)]
-        total_score = sum(max(threshold, points) for points in score.values())
+        total_score = int(sum(min(threshold, points) for points in score.values()) / threshold)
         self.known.layout.addWidget(QLabel(f"<h3>Known words (<i>{prettydigits(len(known_words))}</i>)</h3>"))
         self.known.layout.addWidget(QLabel(f"<h4>Your total score: {prettydigits(total_score)}</h4>"))
         self.known.layout.addWidget(
