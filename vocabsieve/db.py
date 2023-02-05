@@ -70,6 +70,20 @@ class Record():
             self.fixSource()
             parent.settings.setValue("internal/db_new_source", True)
         self.conn.commit()
+        if not parent.settings.value("internal/seen_has_no_word"):
+            self.fixSeen()
+            parent.settings.setValue("internal/seen_has_no_word", True)
+        self.conn.commit()
+
+    def fixSeen(self):
+        try:
+            self.c.execute("""
+                ALTER TABLE seen DROP COLUMN word
+                """)
+            self.c.execute("VACUUM")
+            self.conn.commit()
+        except Exception as e:
+            print(e)
 
     def fixSource(self):
         self.c.execute("""
@@ -106,7 +120,6 @@ class Record():
         self.c.execute("""
         CREATE TABLE IF NOT EXISTS seen (
             language TEXT,
-            word TEXT,
             lemma TEXT,
             jd INTEGER,
             source INTEGER,
@@ -162,11 +175,14 @@ class Record():
             """)
         except sqlite3.OperationalError:
             pass
+        self.c.execute("VACUUM")
+
 
     def dropDefinitions(self):
         print('dropping definition')
         try:
             self.c.execute("""ALTER TABLE lookups DROP COLUMN definition""")
+            self.c.execute("VACUUM")
         except Exception as e:
             print(e)
         return
@@ -206,6 +222,13 @@ class Record():
         except sqlite3.OperationalError:
             print("encountered error, likely because column already exists")
 
+    def seenContent(self, cid, name, content, language, jd):
+        start = time.time()
+        for word in content.replace("\\n", "\n").replace("\\N", "\n").split():
+            lemma = lem_word(word, language)
+            self.c.execute('INSERT INTO seen(source, language, lemma, jd) VALUES(?,?,?,?)', (cid, language, lemma, jd))
+        print("Lemmatized", name, "in", time.time() - start, "seconds")
+
     def importContent(self, name: str, content: str, language: str, jd: int):
         start = time.time()
         self.c.execute('SELECT * FROM contents WHERE (name=?)', (name,))
@@ -220,9 +243,7 @@ class Record():
             self.c.execute("SELECT last_insert_rowid()")
             source = self.c.fetchone()[0]
             print("ID for content", name, "is", source)
-            for word in content.replace("\\n", "\n").replace("\\N", "\n").split():
-                lemma = lem_word(word, language)
-                self.c.execute('INSERT INTO seen(source, language, word, lemma, jd) VALUES(?,?,?,?,?)', (source, language, word, lemma, jd))
+            self.seenContent(source, name, content, language, jd)
             self.conn.commit()
             print("Recorded", name, "in", time.time() - start, "seconds")
             return True
@@ -236,17 +257,12 @@ class Record():
             WHERE language=?''', (language,))
 
     def rebuildSeen(self):
-        start = time.time()
         self.c.execute("DELETE FROM seen")
+        self.c.execute("VACUUM")
         self.c.execute('SELECT id, name, content, language, jd FROM contents')
         for cid, name, content, language, jd in self.c.fetchall():
             print("Lemmatizing", name)
-            for word in content.replace("\\n", "\n").replace("\\N", "\n").split():
-                lemma = lem_word(word, language)
-                if "\\n" in lemma:
-                    print(word, lemma)
-                self.c.execute('INSERT INTO seen(source, language, word, lemma, jd) VALUES(?,?,?,?,?)', (cid, language, word, lemma, jd))
-        print("Rebuilt seen database in", time.time() - start, "seconds")
+            self.seenContent(cid, name, content, language, jd)
         self.conn.commit()
 
     def getSeen(self, language):
@@ -268,6 +284,7 @@ class Record():
             DELETE FROM contents
             WHERE name=?
         """, (name,))
+        self.c.execute("VACUUM")
         self.conn.commit()
 
 
@@ -390,9 +407,10 @@ class Record():
 
     def purge(self):
         self.c.execute("""
-        DROP TABLE IF EXISTS lookups,notes,contents
+        DROP TABLE IF EXISTS lookups,notes,contents,seen
         """)
         self.createTables()
+        self.c.execute("VACUUM")
 
 
 class LocalDictionary():
@@ -437,6 +455,7 @@ class LocalDictionary():
             DELETE FROM dictionary
             WHERE dictname=?
         """, (name,))
+        self.c.execute("VACUUM")
         self.conn.commit()
 
     def define(self, word: str, lang: str, name: str) -> str:
@@ -482,3 +501,4 @@ class LocalDictionary():
         DROP TABLE IF EXISTS dictionary
         """)
         self.createTables()
+        self.c.execute("VACUUM")

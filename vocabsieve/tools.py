@@ -204,3 +204,9 @@ def dictimport(path, dicttype, lang, name) -> None:
 
 def dictdelete(name) -> None:
     dictdb.deletedict(name)
+
+def starts_with_cyrillic(s):
+    if s:
+        return unicodedata.name(s[0]).startswith("CYRILLIC")
+    else:
+        return s

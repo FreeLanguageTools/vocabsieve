@@ -23,7 +23,7 @@ from .config import *
 from .stats import StatisticsWindow
 from .db import *
 from .dictionary import *
-from .ext.importer import KoreaderImporter, KindleVocabImporter
+from .ext.importer import KoreaderImporter, KindleVocabImporter, KoreaderVocabImporter
 from .ext.reader import ReaderServer
 from .contentmanager import ContentManager
 from .global_events import GlobalObject
@@ -330,6 +330,7 @@ class DictionaryWindow(QMainWindow):
 
         self.repeat_last_import_action = QAction("&Repeat last import")
         self.import_koreader_action = QAction("K&OReader highlights")
+        self.import_koreader_vocab_action = QAction("K&OReader vocab builder")
         self.import_kindle_new_action = QAction("K&indle lookups")
 
         self.export_notes_csv_action = QAction("Export &notes to CSV")
@@ -342,6 +343,7 @@ class DictionaryWindow(QMainWindow):
         self.open_reader_action.triggered.connect(self.onReaderOpen)
         self.repeat_last_import_action.triggered.connect(self.repeatLastImport)
         self.import_koreader_action.triggered.connect(self.importkoreader)
+        self.import_koreader_vocab_action.triggered.connect(self.importkoreaderVocab)
         self.import_kindle_new_action.triggered.connect(self.importkindleNew)
         self.export_notes_csv_action.triggered.connect(self.exportNotes)
         self.export_lookups_csv_action.triggered.connect(self.exportLookups)
@@ -351,7 +353,8 @@ class DictionaryWindow(QMainWindow):
             [
                 self.repeat_last_import_action,
                 self.import_koreader_action, 
-                self.import_kindle_new_action,
+                self.import_koreader_vocab_action,
+                self.import_kindle_new_action
             ]
         )
 
@@ -539,7 +542,7 @@ class DictionaryWindow(QMainWindow):
     def importkoreader(self) -> None:
         path = QFileDialog.getExistingDirectory(
             parent=self,
-            caption="Select the directory containing ebook files",
+            caption="Select a directory containing KOReader settings and ebook files",
             directory=QStandardPaths.writableLocation(QStandardPaths.HomeLocation)
         )
         if not path:
@@ -551,6 +554,23 @@ class DictionaryWindow(QMainWindow):
                 "Check if you've picked the right directory. It should be a folder containing all of your the ebooks you want to extract from")
         except Exception as e:
             QMessageBox.warning(self, "Something went wrong", "Error: "+repr(e))
+
+    def importkoreaderVocab(self) -> None:
+        path = QFileDialog.getExistingDirectory(
+            parent=self,
+            caption="Select a directory containing KOReader settings and ebook files",
+            directory=QStandardPaths.writableLocation(QStandardPaths.HomeLocation)
+        )
+        if not path:
+            return
+        try:
+            KoreaderVocabImporter(self, path).exec()
+        except ValueError:
+            QMessageBox.warning(self, "No notes are found", 
+                "Check if you've picked the right directory. It should be a folder containing both all of your books and KOReader settings.")
+        except Exception as e:
+            QMessageBox.warning(self, "Something went wrong", "Error: "+repr(e))
+
 
     def repeatLastImport(self):
         try:
@@ -564,6 +584,8 @@ class DictionaryWindow(QMainWindow):
                 KindleVocabImporter(self, path).exec()
             elif method == "koreader":
                 KoreaderImporter(self, path).exec()
+            elif method == "koreader-vocab":
+                KoreaderVocabImporter(self, path).exec()
             else:
                 # Nightly users, clear it for them
                 self.settings.setValue("last_import_method", "") 

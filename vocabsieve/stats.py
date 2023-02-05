@@ -6,6 +6,8 @@ from .tools import *
 from .lemmatizer import lem_word
 import json
 
+prettydigits = lambda number: format(number, ',').replace(',', ' ')
+
 class StatisticsWindow(QDialog):
     def __init__(self, parent, src_name="Generic", path=None, methodname="generic"):
         super().__init__(parent)
@@ -147,9 +149,17 @@ class StatisticsWindow(QDialog):
                 if self.settings.value("enable_anki"):
                     QMessageBox.warning(self, "Cannot access AnkiConnect", 
                         "Check if AnkiConnect is installed and Anki is running. <br>Re-open statistics to view the whole data.")
-        known_words = [word for word, score in score.items() if score >= threshold and word.isalpha()]
-        self.known.layout.addWidget(QLabel(f"<h3>Known words (<i>{len(known_words)}</i>)</h3>"))
-        self.known.layout.addWidget(QLabel(f"Lemmas: {count_seen_data} seen, {count_lookup_data} looked up, {len(set(tgt_lemmas))} as Anki targets, {len(set(ctx_lemmas))} in Anki context"))
+        print(len(set(ctx_lemmas)), len(ctx_lemmas))
+        known_words = [word for word, points in score.items() if points >= threshold and word.isalpha()]
+        if langcode in ['ru', 'uk']:
+            known_words = [word for word in known_words if starts_with_cyrillic(word)]
+        total_score = sum(max(threshold, points) for points in score.values())
+        self.known.layout.addWidget(QLabel(f"<h3>Known words (<i>{prettydigits(len(known_words))}</i>)</h3>"))
+        self.known.layout.addWidget(QLabel(f"<h4>Your total score: {prettydigits(total_score)}</h4>"))
+        self.known.layout.addWidget(
+            QLabel(
+                f"Lemmas: {prettydigits(count_seen_data)} seen, {prettydigits(count_lookup_data)} looked up, "
+                f"{prettydigits(len(set(tgt_lemmas)))} as Anki targets, {prettydigits(len(set(ctx_lemmas)))} in Anki context"))
         known_words_widget = QPlainTextEdit(" ".join(known_words))
         known_words_widget.setReadOnly(True)
         self.known.layout.addWidget(known_words_widget)

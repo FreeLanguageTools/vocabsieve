@@ -35,13 +35,6 @@ def epub_xpathconvert(s):
     s = s.replace("/", "/f:")
     return (index, "." + s)
 
-def removesuffix(self: str, suffix: str, /) -> str:
-    # suffix='' should not call self[:-0].
-    if suffix and self.endswith(suffix):
-        return self[:-len(suffix)]
-    else:
-        return self[:]
-
 def koreader_parse_fb2(file, lang):
     result = []
     notepath = os.path.join(
@@ -179,35 +172,6 @@ def koreader_parse_epub(file, lang):
             continue
     return result
 
-def koreader_scandir(path):
-    filelist = []
-    epubs = glob.glob(os.path.join(path, "**/*.epub"), recursive=True)
-    for filename in epubs:
-        if os.path.exists(os.path.join(os.path.dirname(filename), 
-                            removesuffix(filename, "epub") + "sdr", 
-                            "metadata.epub.lua")):
-            filelist.append(filename)
-    fb2s = glob.glob(os.path.join(path, "**/*.fb2"), recursive=True)
-    for filename in fb2s:
-        if os.path.exists(os.path.join(os.path.dirname(filename), 
-                          removesuffix(filename, "fb2") + "sdr", 
-                          "metadata.fb2.lua")):
-            filelist.append(filename)
-    fb2zips = glob.glob(os.path.join(path, "**/*.fb2.zip"), recursive=True)
-    for filename in fb2zips:
-        if os.path.exists(os.path.join(os.path.dirname(filename), 
-                          removesuffix(filename, "zip") + "sdr", 
-                          "metadata.zip.lua")):
-            filelist.append(filename)
-    return filelist
-
-def findHistoryPath(path):
-    # KOReader settings may be in a hidden directory
-    paths = glob.glob(os.path.join(path, "**/lookup_history.lua"), recursive=True)\
-        + glob.glob(os.path.join(path, ".*/**/lookup_history.lua"), recursive=True)
-    if paths:
-        return paths[0]
-
 class KoreaderImporter(GenericImporter):
     def __init__(self, parent, path):
         super().__init__(parent, "KOReader highlights", path, "koreader")
@@ -255,7 +219,7 @@ class KoreaderImporter(GenericImporter):
                     success_count += self.parent.rec.recordLookup(word, langcode, True, "koreader", True, timestamp, commit=False)
             self.parent.rec.conn.commit()
 
-            self.layout.addRow(QLabel("Vocabulary database: " + self.histpath))
+            self.layout.addRow(QLabel("Lookup history: " + self.histpath))
             self.layout.addRow(QLabel(f"Found {count} lookups in {langcode}, added {success_count} to lookup database."))
         except Exception as e:
             print(e)

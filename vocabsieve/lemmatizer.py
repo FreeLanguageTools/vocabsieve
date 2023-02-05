@@ -2,6 +2,7 @@ import simplemma
 import pymorphy2
 import re
 from functools import lru_cache
+import unicodedata
 # On Windows frozen build, there is no pymorphy2 support for Russian due
 # to an issue with cxfreeze
 PYMORPHY_SUPPORT = []
@@ -31,10 +32,42 @@ simplemma_languages = ["ast", "bg", "ca", "cs", "cy", "da", "de", "el", "en",
 
 def lem_pre(word, language):
     word = re.sub(r'[\?\.!«»”“"…,()\[\]]*', "", word).strip()
+    word = re.sub(r"<.*?>", "", word)
+    word = re.sub(r"\{.*?\}", "", word)
     return word
 
 def lem_word(word, language, greedy=False):
     return lemmatize(lem_pre(word, language), language, greedy)
+
+
+def removeAccents(word):
+    #print("Removing accent marks from query ", word)
+    ACCENT_MAPPING = {
+        '́': '',
+        '̀': '',
+        'а́': 'а',
+        'а̀': 'а',
+        'е́': 'е',
+        'ѐ': 'е',
+        'и́': 'и',
+        'ѝ': 'и',
+        'о́': 'о',
+        'о̀': 'о',
+        'у́': 'у',
+        'у̀': 'у',
+        'ы́': 'ы',
+        'ы̀': 'ы',
+        'э́': 'э',
+        'э̀': 'э',
+        'ю́': 'ю',
+        '̀ю': 'ю',
+        'я́́': 'я',
+        'я̀': 'я',
+    }
+    word = unicodedata.normalize('NFKC', word)
+    for old, new in ACCENT_MAPPING.items():
+        word = word.replace(old, new)
+    return word
 
 @lru_cache
 def lemmatize(word, language, greedy=False):
@@ -52,9 +85,10 @@ def lemmatize(word, language, greedy=False):
             return simplemma.lemmatize(word, lang=language, greedy=greedy)
         else:
             return word
-    except ValueError:
-        print("encountered ValueError")
+    except ValueError as e:
+        print("encountered ValueError", repr(e))
         return word
-    except Exception:
+    except Exception as e:
+        print(repr(e))
         return word
     

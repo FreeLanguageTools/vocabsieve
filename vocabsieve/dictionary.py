@@ -12,12 +12,11 @@ from bs4 import BeautifulSoup
 from markdown import markdown
 from markdownify import markdownify
 from .playsound import playsound
-
 from .constants import DefinitionDisplayModes, LookUpResults
 from .db import *
 from .dictformats import removeprefix
 from .forvo import *
-from .lemmatizer import lem_word
+from .lemmatizer import lem_word, removeAccents
 
 dictdb = LocalDictionary()
 
@@ -54,34 +53,6 @@ def preprocess_clipboard(s: str, lang: str) -> str:
     return s
 
 
-def removeAccents(word):
-    #print("Removing accent marks from query ", word)
-    ACCENT_MAPPING = {
-        '́': '',
-        '̀': '',
-        'а́': 'а',
-        'а̀': 'а',
-        'е́': 'е',
-        'ѐ': 'е',
-        'и́': 'и',
-        'ѝ': 'и',
-        'о́': 'о',
-        'о̀': 'о',
-        'у́': 'у',
-        'у̀': 'у',
-        'ы́': 'ы',
-        'ы̀': 'ы',
-        'э́': 'э',
-        'э̀': 'э',
-        'ю́': 'ю',
-        '̀ю': 'ю',
-        'я́́': 'я',
-        'я̀': 'я',
-    }
-    word = unicodedata.normalize('NFKC', word)
-    for old, new in ACCENT_MAPPING.items():
-        word = word.replace(old, new)
-    return word
 
 
 def fmt_result(definitions):
@@ -194,8 +165,6 @@ def lookupin(
     # Remove any punctuation other than a hyphen
     # @language is code
     IS_UPPER = word[0].isupper()
-    if language == 'ru':
-        word = removeAccents(word)
     if lemmatize:
         word = lem_word(word, language, greedy_lemmatize)
     # The lemmatizer would always turn words lowercase, which can cause

@@ -1,5 +1,7 @@
 from ...constants import LookUpResults
 from datetime import datetime as dt
+import glob
+import os
 from itertools import zip_longest
 
 def get_uniques(l: list):
@@ -8,6 +10,13 @@ def get_uniques(l: list):
 
 def uniq_preserve_order(l: list) -> list:
     return sorted(set(l), key=lambda x: l.index(x))
+
+def removesuffix(self: str, suffix: str, /) -> str:
+    # suffix='' should not call self[:-0].
+    if suffix and self.endswith(suffix):
+        return self[:-len(suffix)]
+    else:
+        return self[:]
 
 def truncate_middle(s, n):
     if len(s) <= n:
@@ -43,3 +52,39 @@ def grouper(iterable, n, *, incomplete='fill', fillvalue=None):
         return zip(*args)
     else:
         raise ValueError('Expected fill, strict, or ignore')
+
+def findDBpath(path):
+    # KOReader settings may be in a hidden directory
+    paths = glob.glob(os.path.join(path, "**/vocabulary_builder.sqlite3"), recursive=True)\
+        + glob.glob(os.path.join(path, ".*/**/vocabulary_builder.sqlite3"), recursive=True)
+    if paths:
+        return paths[0]
+
+def koreader_scandir(path):
+    filelist = []
+    epubs = glob.glob(os.path.join(path, "**/*.epub"), recursive=True)
+    for filename in epubs:
+        if os.path.exists(os.path.join(os.path.dirname(filename), 
+                            removesuffix(filename, "epub") + "sdr", 
+                            "metadata.epub.lua")):
+            filelist.append(filename)
+    fb2s = glob.glob(os.path.join(path, "**/*.fb2"), recursive=True)
+    for filename in fb2s:
+        if os.path.exists(os.path.join(os.path.dirname(filename), 
+                          removesuffix(filename, "fb2") + "sdr", 
+                          "metadata.fb2.lua")):
+            filelist.append(filename)
+    fb2zips = glob.glob(os.path.join(path, "**/*.fb2.zip"), recursive=True)
+    for filename in fb2zips:
+        if os.path.exists(os.path.join(os.path.dirname(filename), 
+                          removesuffix(filename, "zip") + "sdr", 
+                          "metadata.zip.lua")):
+            filelist.append(filename)
+    return filelist
+
+def findHistoryPath(path):
+    # KOReader settings may be in a hidden directory
+    paths = glob.glob(os.path.join(path, "**/lookup_history.lua"), recursive=True)\
+        + glob.glob(os.path.join(path, ".*/**/lookup_history.lua"), recursive=True)
+    if paths:
+        return paths[0]
