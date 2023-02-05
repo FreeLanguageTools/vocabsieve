@@ -628,7 +628,8 @@ class DictionaryWindow(QMainWindow):
     def onWebButton(self) -> None:
         """Shows definitions of self.word.text() in wiktionoary in browser"""
 
-        url = self.settings.value("custom_url", f"https://en.wiktionary.org/wiki/{self.word.text()}")
+        url = self.settings.value("custom_url",
+            "https://en.wiktionary.org/wiki/@@@@").replace("@@@@", self.word.text())
         QDesktopServices.openUrl(QUrl(url))
 
     def onReaderOpen(self) -> None:
