@@ -3,13 +3,14 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from operator import itemgetter
 from .tools import *
+import time
 from .lemmatizer import lem_word
 import json
 
 prettydigits = lambda number: format(number, ',').replace(',', ' ')
 
 class StatisticsWindow(QDialog):
-    def __init__(self, parent, src_name="Generic", path=None, methodname="generic"):
+    def __init__(self, parent):
         super().__init__(parent)
         self.settings = parent.settings
         self.rec = parent.rec
@@ -68,17 +69,24 @@ class StatisticsWindow(QDialog):
         self.known.layout = QVBoxLayout(self.known)
         score = {}
 
+        start = time.time()
+
         lookup_data = self.rec.countAllLemmaLookups(langcode)
         count_lookup_data = 0
         for word, count in lookup_data:
             count_lookup_data += 1
             score[word] = score.get(word, 0) + count * w_lookup
+        print("Prepared lookup data in", time.time() - start, "seconds")
 
+        start = time.time()
         seen_data = self.rec.getSeen(langcode)
         count_seen_data = 0
         for word, count in seen_data:
             count_seen_data += 1
             score[word] = score.get(word, 0) + count * w_seen
+        print("Prepared seen data in", time.time() - start, "seconds")
+
+        start = time.time()
         
         fieldmap = json.loads(self.settings.value("tracking/fieldmap",  "{}"))
         if not fieldmap:
@@ -101,12 +109,16 @@ class StatisticsWindow(QDialog):
                     self.settings.value("tracking/anki_query_young")
                     )
                 young_notes = [note for note in young_notes if note not in mature_notes]
-
-
+                n_mature = len(mature_notes)
+                self.progress = QProgressDialog("Computing Anki data...", None, 0, n_mature+len(young_notes), self)
+                self.progress.setWindowModality(Qt.WindowModal)  
+                print("Got anki data from AnkiConnect in", time.time() - start, "seconds")
+                start = time.time()
                 mature_notes_info = notesInfo(anki_api, mature_notes)
                 young_notes_info = notesInfo(anki_api, young_notes)
 
-                for info in mature_notes_info:
+                for n, info in enumerate(mature_notes_info):
+                    self.progress.setValue(n)
                     model = info['modelName']
                     word_field, ctx_field = fieldmap.get(model) or ("<Ignore>", "<Ignore>")
                     word = ""
@@ -118,15 +130,22 @@ class StatisticsWindow(QDialog):
                     if word:
                         lemma = lem_word(word, langcode).lower()
                         tgt_lemmas.append(lemma)
-                        score[lemma] = score.get(lemma, 0) + w_anki_word
+                        try:
+                            score[lemma] += w_anki_word
+                        except KeyError:
+                            score[lemma] = w_anki_word
                     if ctx:
                         for ctx_word in re.sub(r"<.*?>", " ", ctx).split():
                             ctx_lemma = lem_word(ctx_word, langcode).lower()
                             if ctx_lemma != lemma: # No double counting
                                 ctx_lemmas.append(ctx_lemma)
-                                score[ctx_lemma] = score.get(ctx_lemma, 0) + w_anki_ctx
+                                try:
+                                    score[ctx_lemma] += w_anki_ctx
+                                except KeyError:
+                                    score[ctx_lemma] = w_anki_ctx
 
-                for info in young_notes_info:
+                for n, info in enumerate(young_notes_info):
+                    self.progress.setValue(n_mature+n)
                     model = info['modelName']
                     word_field, ctx_field = fieldmap.get(model) or ("<Ignore>", "<Ignore>")
                     word = ""
@@ -138,17 +157,26 @@ class StatisticsWindow(QDialog):
                     if word:
                         lemma = lem_word(word, langcode).lower()
                         tgt_lemmas.append(lemma)
-                        score[lemma] = score.get(lemma, 0) + w_anki_word_y
+                        try:
+                            score[lemma] += w_anki_word_y
+                        except KeyError:
+                            score[lemma] = w_anki_word_y
                     if ctx:
                         for ctx_word in re.sub(r"<.*?>", " ", ctx).split():
                             ctx_lemma = lem_word(ctx_word, langcode).lower()
                             if ctx_lemma != lemma: # No double counting
                                 ctx_lemmas.append(ctx_lemma)
-                                score[ctx_lemma] = score.get(ctx_lemma, 0) + w_anki_ctx_y
+                                try:
+                                    score[ctx_lemma] += w_anki_ctx_y
+                                except KeyError:
+                                    score[ctx_lemma] = w_anki_ctx_y
+                self.progress.setValue(n_mature+n+1)
             except Exception as e:
+                print(e)
                 if self.settings.value("enable_anki"):
                     QMessageBox.warning(self, "Cannot access AnkiConnect", 
                         "Check if AnkiConnect is installed and Anki is running. <br>Re-open statistics to view the whole data.")
+        print("Prepared anki data in", time.time() - start, "seconds")
         print(len(set(ctx_lemmas)), len(ctx_lemmas))
         known_words = [word for word, points in score.items() if points >= threshold and word.isalpha()]
         if langcode in ['ru', 'uk']:

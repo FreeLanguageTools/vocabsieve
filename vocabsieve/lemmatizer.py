@@ -30,6 +30,7 @@ simplemma_languages = ["ast", "bg", "ca", "cs", "cy", "da", "de", "el", "en",
                        "pl", "pt", "ro", "ru", "se", "sk", "sl", "sq", "sv",
                        "sw", "tl", "tr", "uk"]
 
+
 def lem_pre(word, language):
     word = re.sub(r'[\?\.!«»”“"…,()\[\]]*', "", word).strip()
     word = re.sub(r"<.*?>", "", word)
@@ -69,7 +70,7 @@ def removeAccents(word):
         word = word.replace(old, new)
     return word
 
-@lru_cache
+@lru_cache(maxsize=500000)
 def lemmatize(word, language, greedy=False):
     """Lemmatize a word. We will use PyMorphy for RU, UK, simplemma for others,
     and if that isn't supported , we give up. Should not fail under any circumstances"""
