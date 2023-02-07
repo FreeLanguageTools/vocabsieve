@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from ...constants import LookUpResults
+from ..constants import LookUpResults
 from .utils import *
 
 class BatchNotePreviewer(QTextEdit):

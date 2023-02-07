@@ -4,17 +4,8 @@ from PyQt5.QtGui import *
 from io import BytesIO
 import os
 import re
-import glob
-import json
-import sqlite3
 from zipfile import ZipFile
-from pathlib import Path
-from difflib import SequenceMatcher
 from sentence_splitter import split_text_into_sentences
-from vocabsieve.tools import addNotes
-from vocabsieve.dictionary import getAudio
-from datetime import datetime
-from itertools import compress
 from slpp import slpp
 from lxml import etree
 from ebooklib import epub, ITEM_DOCUMENT

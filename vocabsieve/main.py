@@ -23,8 +23,8 @@ from .config import *
 from .stats import StatisticsWindow
 from .db import *
 from .dictionary import *
-from .ext.importer import KoreaderImporter, KindleVocabImporter, KoreaderVocabImporter
-from .ext.reader import ReaderServer
+from .importer import KoreaderImporter, KindleVocabImporter, KoreaderVocabImporter
+from .reader import ReaderServer
 from .contentmanager import ContentManager
 from .global_events import GlobalObject
 from .text_manipulation import *

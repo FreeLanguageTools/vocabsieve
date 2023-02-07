@@ -1,24 +1,12 @@
-from PyQt5.QtWidgets import *
+import os
+import sqlite3
+from datetime import datetime as dt
+from datetime import timezone as tz
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from io import BytesIO
-import os
-import re
-import glob
-import json
-import sqlite3
-from zipfile import ZipFile
-from pathlib import Path
-from datetime import datetime as dt, timezone as tz
-from difflib import SequenceMatcher
+from PyQt5.QtWidgets import *
 from sentence_splitter import split_text_into_sentences
-from vocabsieve.tools import addNotes
-from vocabsieve.dictionary import getAudio
-from datetime import datetime
-from itertools import compress
 from slpp import slpp
-from lxml import etree
-from ebooklib import epub, ITEM_DOCUMENT
 
 from .GenericImporter import GenericImporter
 from .utils import *

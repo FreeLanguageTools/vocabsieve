@@ -3,8 +3,7 @@ import pymorphy2
 import re
 from functools import lru_cache
 import unicodedata
-# On Windows frozen build, there is no pymorphy2 support for Russian due
-# to an issue with cxfreeze
+
 PYMORPHY_SUPPORT = []
 morph = {}
 try:

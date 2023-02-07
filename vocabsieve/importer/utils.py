@@ -1,4 +1,4 @@
-from ...constants import LookUpResults
+from ..constants import LookUpResults
 from datetime import datetime as dt
 import glob
 import os
