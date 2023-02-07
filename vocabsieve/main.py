@@ -18,6 +18,7 @@ QCoreApplication.setOrganizationName(app_organization)
 settings = QSettings(app_organization, settings_app_title)
 
 from . import __version__
+from .analyzer import BookAnalyzer
 from .api import LanguageServer
 from .config import *
 from .stats import StatisticsWindow
@@ -318,6 +319,7 @@ class DictionaryWindow(QMainWindow):
         self.help_action = QAction("&Setup guide")
         self.about_action = QAction("&About")
         self.content_manager_action = QAction("Content Manager")
+        self.analyze_book_action = QAction("Analyze book")
 
         if not self.settings.value("reader_enabled", True, type=bool):
             self.open_reader_action.setEnabled(False)
@@ -327,6 +329,7 @@ class DictionaryWindow(QMainWindow):
         helpmenu.addAction(self.help_action)
         helpmenu.addAction(self.about_action)
         recordmenu.addAction(self.content_manager_action)
+        analyzemenu.addAction(self.analyze_book_action)
 
         self.repeat_last_import_action = QAction("&Repeat last import")
         self.import_koreader_action = QAction("K&OReader highlights")
@@ -348,6 +351,7 @@ class DictionaryWindow(QMainWindow):
         self.export_notes_csv_action.triggered.connect(self.exportNotes)
         self.export_lookups_csv_action.triggered.connect(self.exportLookups)
         self.stats_action.triggered.connect(self.onStats)
+        self.analyze_book_action.triggered.connect(self.onAnalyzeBook)
 
         importmenu.addActions(
             [
@@ -363,6 +367,15 @@ class DictionaryWindow(QMainWindow):
         )
 
         self.setMenuBar(self.menu)
+
+    def onAnalyzeBook(self):
+        path = QFileDialog.getOpenFileName(
+            parent=self, 
+            caption="Select book", 
+            filter="Ebook files (*.epub *.fb2 *.mobi *.html *.azw *.azw3 *.kfx)", 
+            directory=QStandardPaths.writableLocation(QStandardPaths.HomeLocation)
+            )[0]
+        BookAnalyzer(self, path).exec()
 
     def onContentManager(self):
         ContentManager(self).exec()

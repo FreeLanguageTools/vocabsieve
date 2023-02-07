@@ -5,6 +5,7 @@ from bidict import bidict
 from ..dictionary import langs_supported, langcodes
 import os
 import pysubs2
+from ..tools import *
 from .utils import *
 
 supported_content_formats = bidict({

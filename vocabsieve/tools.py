@@ -14,7 +14,11 @@ from .dictionary import *
 from .dictformats import *
 from .xdxftransform import xdxf2html
 from PyQt5.QtCore import QCoreApplication
-
+import mobi
+from itertools import islice
+from lxml import etree
+from charset_normalizer import from_bytes
+from ebooklib import epub, ITEM_DOCUMENT
 
 def request(action, **params):
     return {'action': action, 'params': params, 'version': 6}
@@ -210,3 +214,66 @@ def starts_with_cyrillic(s):
         return unicodedata.name(s[0]).startswith("CYRILLIC")
     else:
         return s
+
+def remove_ns(s: str) -> str: return str(s).split("}")[-1]
+
+def tostr(s):
+    return str(
+        from_bytes(
+            etree.tostring(
+                s,
+                encoding='utf8',
+                method='text')).best()).strip()
+
+def ebook2text(path):
+    _, ext = os.path.splitext(path)
+    if ext in {'.azw', '.azw3', '.kfx', '.mobi'}:
+        _, newpath = mobi.extract(path)
+        # newpath is either html or epub
+        return ebook2text(newpath)
+    if ext == '.epub':
+        book = epub.read_epub(path)
+        chapters = []
+        for doc in book.get_items_of_type(ITEM_DOCUMENT):
+            tree = etree.fromstring(doc.get_content())
+            notags = etree.tostring(tree, encoding='utf8', method="text")
+            data = str(from_bytes(notags).best()).strip()
+            if len(data.splitlines()) < 2:
+                continue
+            content = "\n".join(data.splitlines())
+            chapters.append(content)
+    elif ext == '.fb2':
+        with open(path, 'rb') as f:
+            data = f.read()
+            tree = etree.fromstring(data)
+        chapters = []
+        already_seen = False
+        for el in tree:
+            tag_nons = remove_ns(el.tag)
+            if tag_nons == "body" and not already_seen:
+                already_seen = True
+                for section in el:
+                    current_chapter = ""
+                    for item in section:
+                        if remove_ns(item.tag) == "title":
+                            current_chapter = tostr(item) + "\n\n"
+                        else:
+                            current_chapter += tostr(item) + "\n"
+                    chapters.append(current_chapter)
+    elif ext == '.html':
+        with open(path, 'r', encoding='utf-8') as f:
+            c = f.read()
+            return BeautifulSoup(c).getText()
+    
+    return "\n\n\n\n".join(chapters)
+
+def window(seq, n=2):
+    "Returns a sliding window (of width n) over data from the iterable"
+    "   s -> (s0,s1,...s[n-1]), (s1,s2,...,sn), ...                   "
+    it = iter(seq)
+    result = tuple(islice(it, n))
+    if len(result) == n:
+        yield result
+    for elem in it:
+        result = result[1:] + (elem,)
+        yield result
