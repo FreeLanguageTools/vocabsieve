@@ -37,15 +37,17 @@ class BookAnalyzer(QDialog):
         self.basic_info_left = ""
         if self.langcode in ['ru', 'uk']:
             self.known_words = [word for word in self.known_words if starts_with_cyrillic(word)]
-
+        
         print(self.langcode)
         print(len(self.known_words))
         self.layout.addWidget(QLabel("<h3>General info</h3>"), 1, 0, 1, 2)
         self.basic_info_left += "Total characters: " + prettydigits(len(self.content))
         self.basic_info_left += "<br>Total words: " + prettydigits(len(self.content.split()))
+        #self.progress = QProgressDialog("Splitting book into sentences...", "Cancel", 0, len(self.content), self)
         start = time.time()
+
         sentences = [sentence for sentence in split_text_into_sentences(self.content, self.langcode) if sentence]
-        print("Lemmatized book in " + str(time.time() - start) + " seconds.")
+        print("Split book in " + str(time.time() - start) + " seconds.")
         self.basic_info_left += "<br>Total sentences: " + prettydigits(len(sentences))
         self.layout.addWidget(QLabel(self.basic_info_left), 2, 0)
         self.basic_info_right = ""
@@ -55,7 +57,9 @@ class BookAnalyzer(QDialog):
         self.layout.addWidget(QLabel(self.basic_info_right), 2, 1)
         self.layout.addWidget(QLabel("<h3>Vocabulary coverage</h3>"), 3, 0)
         self.vocab_coverage = ""
+        start = time.time()
         words = [lem_word(word, self.langcode) for word in self.content.split()]
+        print("Lemmatized book in " + str(time.time() - start) + " seconds.")
         occurrences = sorted(Counter(words).items(), key=itemgetter(1), reverse=True)
         topN = list(zip(*occurrences[:100]))[0]
         self.known_words.extend(topN)

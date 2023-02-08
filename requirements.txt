@@ -20,6 +20,7 @@ pymorphy2-dicts-uk
 pysubs2
 ebooklib
 markdown
+pyqtgraph
 markdownify
 readmdict
 python-lzo; sys_platform == 'linux'

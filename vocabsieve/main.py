@@ -375,7 +375,8 @@ class DictionaryWindow(QMainWindow):
             filter="Ebook files (*.epub *.fb2 *.mobi *.html *.azw *.azw3 *.kfx)", 
             directory=QStandardPaths.writableLocation(QStandardPaths.HomeLocation)
             )[0]
-        BookAnalyzer(self, path).exec()
+        if path:
+            BookAnalyzer(self, path).exec()
 
     def onContentManager(self):
         ContentManager(self).exec()
@@ -811,7 +812,7 @@ class DictionaryWindow(QMainWindow):
         lemmatize = self.settings.value("lemmatization", True, type=bool)
         result = self.lookup(word, use_lemmatize)
         self.setState(result)
-        if result.get("definition") or state.get("definition2"):
+        if result.get("definition") or result.get("definition2"):
             self.rec.recordLookup(word, TL, lemmatize, "vocabsieve", True, time.time())
         past_lookups_count = self.rec.countLemmaLookups(word, self.settings.value("target_language",'en'))
         if past_lookups_count <= 1:

@@ -17,6 +17,7 @@ build_exe_options = {
         "bs4",
         "lxml",
         "simplemma",
+        "pyqtgraph",
         "bidict",
         "pystardict",
         "flask",
