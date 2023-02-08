@@ -5,10 +5,10 @@ from cx_Freeze import setup, Executable
 # Dependencies are automatically detected, but it might need fine tuning.
 # "packages": ["os"] is used as example only
 include_files = [
-    ('../../vocabsieve/ext/reader/templates/',
-     'lib/vocabsieve/ext/reader/templates/'),
-    ('../../vocabsieve/ext/reader/static/',
-     'lib/vocabsieve/ext/reader/static/')]
+    ('../../vocabsieve/reader/templates/',
+     'lib/vocabsieve/reader/templates/'),
+    ('../../vocabsieve/reader/static/',
+     'lib/vocabsieve/reader/static/')]
 build_exe_options = {
     "includes": [
         "vocabsieve",

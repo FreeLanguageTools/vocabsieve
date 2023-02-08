@@ -1,5 +1,5 @@
 graft vocabsieve/
 prune vocabsieve/__pycache__/
-prune vocabsieve/ext/__pycache__/
-prune vocabsieve/ext/reader/__pycache__/
-prune vocabsieve/ext/importer/__pycache__/
+prune vocabsieve/__pycache__/
+prune vocabsieve/reader/__pycache__/
+prune vocabsieve/importer/__pycache__/
