@@ -23,7 +23,6 @@ from ebooklib import epub, ITEM_DOCUMENT
 def request(action, **params):
     return {'action': action, 'params': params, 'version': 6}
 
-
 def invoke(action, server, **params):
     requestJson = json.dumps(request(action, **params)).encode('utf-8')
     response = json.load(
@@ -226,6 +225,8 @@ def tostr(s):
                 method='text')).best()).strip()
 
 def ebook2text(path):
+    ch_pos = {}
+    position = 0
     _, ext = os.path.splitext(path)
     if ext in {'.azw', '.azw3', '.kfx', '.mobi'}:
         _, newpath = mobi.extract(path)
@@ -240,7 +241,10 @@ def ebook2text(path):
             data = str(from_bytes(notags).best()).strip()
             if len(data.splitlines()) < 2:
                 continue
+            ch_name = data.splitlines()[0]
             content = "\n".join(data.splitlines())
+            ch_pos[position] = ch_name
+            position += len(content)
             chapters.append(content)
     elif ext == '.fb2':
         with open(path, 'rb') as f:
@@ -254,18 +258,22 @@ def ebook2text(path):
                 already_seen = True
                 for section in el:
                     current_chapter = ""
+                    title = ""
                     for item in section:
                         if remove_ns(item.tag) == "title":
+                            title = tostr(item)
                             current_chapter = tostr(item) + "\n\n"
                         else:
                             current_chapter += tostr(item) + "\n"
+                    ch_pos[position] = title
+                    position += len(current_chapter)
                     chapters.append(current_chapter)
     elif ext == '.html':
         with open(path, 'r', encoding='utf-8') as f:
             c = f.read()
             return BeautifulSoup(c).getText()
-    
-    return "\n\n\n\n".join(chapters)
+    print(ch_pos)
+    return "\n\n\n\n".join(chapters), ch_pos
 
 def window(seq, n=2):
     "Returns a sliding window (of width n) over data from the iterable"
@@ -277,3 +285,14 @@ def window(seq, n=2):
     for elem in it:
         result = result[1:] + (elem,)
         yield result
+
+def amount_and_percent(amount, total):
+    return f"{prettydigits(amount)} ({round(amount / total * 100, 2)}%)" if total else "0 (0%)"
+
+prettydigits = lambda number: format(number, ',').replace(',', ' ')
+
+def get_first_number(s: str):
+    if re.findall(r'^[^\d]*(\d+)', s):
+        return str(re.findall(r'^[^\d]*(\d+)', s)[0])
+    else:
+        return s
