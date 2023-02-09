@@ -17,6 +17,7 @@ QCoreApplication.setApplicationName(settings_app_title)
 QCoreApplication.setOrganizationName(app_organization)
 settings = QSettings(app_organization, settings_app_title)
 
+from .known_words import getKnownData
 from . import __version__
 from .analyzer import BookAnalyzer
 from .api import LanguageServer
@@ -320,6 +321,8 @@ class DictionaryWindow(QMainWindow):
         self.about_action = QAction("&About")
         self.content_manager_action = QAction("Content Manager")
         self.analyze_book_action = QAction("Analyze book")
+        self.export_known_words_action = QAction("Export known words to JSON")
+        self.export_word_scores_action = QAction("Export word scores to JSON")
 
         if not self.settings.value("reader_enabled", True, type=bool):
             self.open_reader_action.setEnabled(False)
@@ -330,6 +333,7 @@ class DictionaryWindow(QMainWindow):
         helpmenu.addAction(self.about_action)
         recordmenu.addAction(self.content_manager_action)
         analyzemenu.addAction(self.analyze_book_action)
+
 
         self.repeat_last_import_action = QAction("&Repeat last import")
         self.import_koreader_action = QAction("K&OReader highlights")
@@ -352,6 +356,8 @@ class DictionaryWindow(QMainWindow):
         self.export_lookups_csv_action.triggered.connect(self.exportLookups)
         self.stats_action.triggered.connect(self.onStats)
         self.analyze_book_action.triggered.connect(self.onAnalyzeBook)
+        self.export_known_words_action.triggered.connect(self.exportKnownWords)
+        self.export_word_scores_action.triggered.connect(self.exportWordScores)
 
         importmenu.addActions(
             [
@@ -363,7 +369,12 @@ class DictionaryWindow(QMainWindow):
         )
 
         exportmenu.addActions(
-            [self.export_notes_csv_action, self.export_lookups_csv_action]
+            [
+                self.export_notes_csv_action, 
+                self.export_lookups_csv_action,
+                self.export_known_words_action,
+                self.export_word_scores_action
+            ]
         )
 
         self.setMenuBar(self.menu)
@@ -377,6 +388,46 @@ class DictionaryWindow(QMainWindow):
             )[0]
         if path:
             BookAnalyzer(self, path).exec()
+
+    def exportKnownWords(self):
+        path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save known words to JSON file",
+            os.path.join(
+                QStandardPaths.writableLocation(QStandardPaths.DesktopLocation),
+                f"vocabsieve-known-words-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.json"
+            ),
+            "JSON (*.json)"
+        )
+        if not path:
+            return
+        
+        score, *_ = getKnownData(self.settings, self.rec)
+        known_words = [word for word, score in score.items() if score > self.settings.value("known_threshold", 100, type=int) and word.isalpha()]
+        if self.settings.value('target_language', 'en') in ['ru', 'uk']:
+            known_words = [word for word in known_words if starts_with_cyrillic(word)]
+
+        with open(path, 'w', encoding='utf-8') as file:
+            json.dump(known_words, file, indent=4, ensure_ascii=False)
+
+    def exportWordScores(self):
+        path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save word scores to JSON file",
+            os.path.join(
+                QStandardPaths.writableLocation(QStandardPaths.DesktopLocation),
+                f"vocabsieve-word-scores-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.json"
+            ),
+            "JSON (*.json)"
+        )
+        if not path:
+            return
+        
+        score, *_ = getKnownData(self.settings, self.rec)
+        score = {k:v for k,v in score.items() if not k.startswith('http') and " " not in k and not k.isnumeric()}
+
+        with open(path, 'w', encoding='utf-8') as file:
+            json.dump(score, file, indent=4, ensure_ascii=False)
 
     def onContentManager(self):
         ContentManager(self).exec()
