@@ -159,13 +159,13 @@ class BookAnalyzer(QDialog):
 
         
         verdict = ""
-        if sentence_target_counts.count(3) / len(sentence_target_counts) > 0.20:
+        if len(sentences_3t) / len(sentence_target_counts) > 0.20:
             verdict = "Too hard"
-        elif sentence_target_counts.count(3) / len(sentence_target_counts) > 0.10:
+        elif len(sentences_3t) / len(sentence_target_counts) > 0.10:
             verdict = "Hard"
-        elif sentence_target_counts.count(3) / len(sentence_target_counts) > 0.05:
+        elif len(sentences_3t) / len(sentence_target_counts) > 0.05:
             verdict = "Moderate"
-        elif sentence_target_counts.count(3) / len(sentence_target_counts) < 0.05:
+        elif len(sentences_3t) / len(sentence_target_counts) < 0.05:
             verdict = "Easy"
 
         show_chapter_names_button = QCheckBox("Toggle full chapter names")
