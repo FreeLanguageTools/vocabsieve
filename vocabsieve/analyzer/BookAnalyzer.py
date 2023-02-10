@@ -9,6 +9,7 @@ import time
 from statistics import stdev, mean
 from ..lemmatizer import lem_word
 from ..known_words import getKnownData
+import random
 import json
 import numpy as np
 from pyqtgraph import PlotWidget, AxisItem
@@ -109,30 +110,38 @@ class BookAnalyzer(QDialog):
         self.plotwidget_sentences = PlotWidget()
         self.plotwidget_sentences.setTitle("Sentence target count")
 
-        sentence_target_counts = [self.countTargets3(sentence) for sentence in sentences]
-        print(len(sentence_target_counts))
         self.plotwidget_sentences.setBackground('#ffffff')
 
         self.plotwidget_sentences.addLegend()
-        counts_0t = []
-        counts_1t = []
-        counts_2t = []
-        counts_3t = []
-        window_size = 300
-        for w in window(sentence_target_counts, window_size):
-            counts_0t.append(w.count(0)/window_size)
-            counts_1t.append(w.count(1)/window_size)
-            counts_2t.append(w.count(2)/window_size)
-            counts_3t.append(w.count(3)/window_size)
-        self.plotwidget_sentences.plot(counts_0t, pen='#4e79a7', name="0T")
-        self.plotwidget_sentences.plot(counts_1t, pen='#59a14f', name="1T")
-        self.plotwidget_sentences.plot(counts_2t, pen='#f28e2b', name="2T")
-        self.plotwidget_sentences.plot(counts_3t, pen='#e15759', name=">3T")
+        
+        learning_rate_box = QWidget()
+        learning_rate_box.layout = QHBoxLayout(learning_rate_box)
+        learning_rate_box.layout.addWidget(QLabel("Learning rate: "))
+        learning_rate_slider = QSlider(Qt.Horizontal)
+        learning_rate_slider.setMinimum(0)
+        learning_rate_slider.setMaximum(100)
+        learning_rate_slider.setValue(40)
+        learning_rate_box.layout.addWidget(learning_rate_slider)
+        learning_rate_label = QLabel("40%")
+        learning_rate_box.layout.addWidget(learning_rate_label)
+        learning_rate_slider.valueChanged.connect(lambda x: learning_rate_label.setText(str(x) + "%"))
+
+
+        learning_rate_slider.valueChanged.connect(lambda x: self.categorizeSentences(sentences, x/100))
+        self.label_0t = QLabel()
+        self.label_1t = QLabel()
+        self.label_2t = QLabel()
+        self.label_3t = QLabel()
+        sentence_target_counts = self.categorizeSentences(sentences, learning_rate_slider.value()/100)
+
+
+
         self.layout.addWidget(QLabel("<h3>Sentence types</h3>"), 7, 0)
-        self.layout.addWidget(QLabel(f"0T: {amount_and_percent(sentence_target_counts.count(0), len(sentence_target_counts))}"), 8, 0)
-        self.layout.addWidget(QLabel(f"1T: {amount_and_percent(sentence_target_counts.count(1), len(sentence_target_counts))}"), 9, 0)
-        self.layout.addWidget(QLabel(f"2T: {amount_and_percent(sentence_target_counts.count(2), len(sentence_target_counts))}"), 10, 0)
-        self.layout.addWidget(QLabel(f">3T: {amount_and_percent(sentence_target_counts.count(3), len(sentence_target_counts))}"), 11, 0)
+        self.layout.addWidget(self.label_0t, 8, 0)
+        self.layout.addWidget(self.label_1t, 9, 0)
+        self.layout.addWidget(self.label_2t, 10, 0)
+        self.layout.addWidget(self.label_3t, 11, 0)
+
         
         target_words_in_3t = []
         sentences_3t = [sentence for sentence in sentences if self.countTargets3(sentence) == 3]
@@ -163,7 +172,9 @@ class BookAnalyzer(QDialog):
         show_chapter_names_button.clicked.connect(self.addChapterAxes)
         self.layout.addWidget(QLabel("<h3>Predicted difficulty: " + verdict + "</h3>"), 1, 0)
         self.layout.addWidget(show_chapter_names_button, 1, 1)
-        self.layout.addWidget(self.plotwidget_sentences, 12, 0, 1, 2)
+
+        self.layout.addWidget(learning_rate_box, 12, 0)
+        self.layout.addWidget(self.plotwidget_sentences, 13, 0, 1, 2)
         
         if self.ch_pos:
             # convert character positions to word positions
@@ -192,6 +203,55 @@ class BookAnalyzer(QDialog):
             sentence_chapter_axis.setLabel("Chapter")
             sentence_chapter_axis.setTicks(ch_pos_sent)
             self.plotwidget_sentences.setAxisItems({'top': sentence_chapter_axis})
+
+    def categorizeSentences(self, sentences, learning_rate):
+        print("Categorizing sentences at learning rate", learning_rate)
+        counts_0t = []
+        counts_1t = []
+        counts_2t = []
+        counts_3t = []
+        window_size = 30
+        known_words = self.known_words.copy()
+        learned_words = set()
+        sentence_target_counts = []
+        for n, w in enumerate(grouper(sentences, window_size)):
+            w_counts = [self.countTargets3(sentence, known_words) for sentence in w if sentence]
+            sents_1t = [sentence for sentence in w if sentence and self.countTargets3(sentence, known_words) == 1]
+            sents_to_learn = random.sample(sents_1t, int(len(sents_1t) * learning_rate))
+            words_to_learn = [self.getTarget(sentence, known_words) for sentence in sents_to_learn]
+            learned_words.update(words_to_learn)
+            known_words.update(words_to_learn)
+            
+            sentence_target_counts.extend(w_counts)
+            counts_0t.append(w_counts.count(0)/len(w_counts))
+            counts_1t.append(w_counts.count(1)/len(w_counts))
+            counts_2t.append(w_counts.count(2)/len(w_counts))
+            counts_3t.append(w_counts.count(3)/len(w_counts))
+        print("Learned", len(learned_words), "words")
+        self.plotwidget_sentences.clear()
+        self.plotwidget_sentences.plot(list(range(0, len(counts_0t)*window_size, window_size)), counts_0t, pen='#4e79a7', name="0T")
+        self.plotwidget_sentences.plot(list(range(0, len(counts_1t)*window_size, window_size)), counts_1t, pen='#59a14f', name="1T")
+        self.plotwidget_sentences.plot(list(range(0, len(counts_2t)*window_size, window_size)), counts_2t, pen='#f28e2b', name="2T")
+        self.plotwidget_sentences.plot(list(range(0, len(counts_3t)*window_size, window_size)), counts_3t, pen='#e15759', name=">3T")
+        
+        self.label_0t.setText("0T: " + amount_and_percent(sentence_target_counts.count(0), len(sentence_target_counts)))
+        self.label_1t.setText("1T: " + amount_and_percent(sentence_target_counts.count(1), len(sentence_target_counts)))
+        self.label_2t.setText("2T: " + amount_and_percent(sentence_target_counts.count(2), len(sentence_target_counts)))
+        self.label_3t.setText(">3T: " + amount_and_percent(sentence_target_counts.count(3), len(sentence_target_counts)))
+
+        return sentence_target_counts
+
+        
+    def getTarget(self, sentence, known_words=None):
+        if not known_words:
+            known_words = self.known_words
+        targets = [
+            lem_word(word, self.langcode) 
+            for word in sentence.split() 
+            if lem_word(word, self.langcode) not in known_words
+            ]
+        return targets[0] if targets else None
+
     def countTargets3(self, sentence, known_words=None):
         if not known_words:
             known_words = self.known_words

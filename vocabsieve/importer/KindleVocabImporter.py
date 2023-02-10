@@ -7,6 +7,7 @@ import re
 from PyQt5.QtWidgets import QCheckBox, QLabel
 from typing import Tuple, Dict, Set
 from ..dictformats import removeprefix
+from ..tools import *
 
 def remove_author(titleauthor):
     "Remove author, which is in the last parentheses"

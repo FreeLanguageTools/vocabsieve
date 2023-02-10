@@ -4,6 +4,7 @@ import requests
 import os
 import re
 import unicodedata
+from itertools import zip_longest
 import time
 from .vsnt import *
 from bs4 import BeautifulSoup
@@ -296,3 +297,18 @@ def get_first_number(s: str):
         return str(re.findall(r'^[^\d]*(\d+)', s)[0])
     else:
         return s
+
+def grouper(iterable, n, *, incomplete='fill', fillvalue=None):
+    "Collect data into non-overlapping fixed-length chunks or blocks"
+    # grouper('ABCDEFG', 3, fillvalue='x') --> ABC DEF Gxx
+    # grouper('ABCDEFG', 3, incomplete='strict') --> ABC DEF ValueError
+    # grouper('ABCDEFG', 3, incomplete='ignore') --> ABC DEF
+    args = [iter(iterable)] * n
+    if incomplete == 'fill':
+        return zip_longest(*args, fillvalue=fillvalue)
+    if incomplete == 'strict':
+        return zip(*args, strict=True)
+    if incomplete == 'ignore':
+        return zip(*args)
+    else:
+        raise ValueError('Expected fill, strict, or ignore')
