@@ -61,7 +61,7 @@ class KoreaderVocabImporter(GenericImporter):
                     if word in sentence_:
                         sentence = sentence_
                 if sentence:
-                    items.append((word, sentence, str(dt.fromtimestamp(timestamp).replace(tzinfo=tz.utc).astimezone())[:19], bookmap[title_id]))
+                    items.append((word, sentence, str(dt.fromtimestamp(timestamp).astimezone())[:19], bookmap[title_id]))
 
         self.layout.addRow(QLabel("Vocabulary database: " + self.dbpath))
         self.layout.addRow(QLabel(f"Found {count} notes in Vocabulary Builder in language '{langcode}'"))

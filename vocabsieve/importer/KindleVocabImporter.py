@@ -63,7 +63,7 @@ class KindleVocabImporter(GenericImporter):
                 words.append(word)
                 booknames.append(bookid2name[bookid])
                 sentences.append(sentence)
-                dates.append(str(dt.fromtimestamp(timestamp/1000).replace(tzinfo=tz.utc).astimezone())[:19])
+                dates.append(str(dt.fromtimestamp(timestamp/1000).astimezone())[:19])
         self.layout.addRow(QLabel("Vocabulary database: " + vocab_db_path))
         self.layout.addRow(QLabel(f"Found {count} lookups in {langcode}, added {success_count} to lookup database."))
         self.parent.rec.conn.commit()
