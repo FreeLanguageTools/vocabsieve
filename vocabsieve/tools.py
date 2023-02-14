@@ -144,6 +144,7 @@ def freq_to_stars(freq_num, lemmatize):
         else:
             return "☆☆☆☆☆"
 
+
 def dictimport(path, dicttype, lang, name) -> None:
     "Import dictionary from file to database"
     if dicttype == "stardict":
@@ -157,18 +158,18 @@ def dictimport(path, dicttype, lang, name) -> None:
                 d[key] = stardict.dict[key]
         dictdb.importdict(d, lang, name)
     elif dicttype == "json":
-        with open(path, encoding="utf-8") as f:
+        with zopen(path) as f:
             d = json.load(f)
             dictdb.importdict(d, lang, name)
     elif dicttype == "migaku":
-        with open(path, encoding="utf-8") as f:
+        with zopen(path) as f:
             data = json.load(f)
             d = {}
             for item in data:
                 d[item['term']] = item['definition']
             dictdb.importdict(d, lang, name)
     elif dicttype == "freq":
-        with open(path, encoding="utf-8") as f:
+        with zopen(path) as f:
             data = json.load(f)
             d = {}
             for i, word in enumerate(data):
@@ -206,7 +207,8 @@ def dictimport(path, dicttype, lang, name) -> None:
         d = parseTSV(path)
         dictdb.importdict(d, lang, name)
     elif dicttype == "cognates":
-        d = parseCognates(path)
+        with zopen(path) as f:
+            d = json.load(f)
         for lang in d:
             data = {k: json.dumps(v) for k, v in d[lang].items()}
             dictdb.importdict(data, lang, name)

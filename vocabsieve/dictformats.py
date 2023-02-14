@@ -5,8 +5,11 @@ from typing import Dict, List
 import os
 import re
 import lzma
+import gzip
+import bz2
 import csv
 import json
+
 
 supported_dict_formats = bidict({
     "stardict": "StarDict",
@@ -22,9 +25,19 @@ supported_dict_formats = bidict({
 })
 
 supported_dict_extensions = [
-    ".json", ".ifo", ".mdx", ".dsl", ".dz", ".csv", ".tsv", ".xz"
+    ".json", ".ifo", ".mdx", ".dsl", ".dz", ".csv", ".tsv", ".xz", ".bz2", ".gz"
 ]
 
+
+def zopen(path):
+    if path.endswith('.xz'):
+        return lzma.open(path, 'rt', encoding='utf-8')
+    elif path.endswith('.gz'):
+        return gzip.open(path, 'rt', encoding='utf-8')
+    elif path.endswith('.bz2'):
+        return bz2.open(path, 'rt', encoding='utf-8')
+    else:
+        return open(path, encoding='utf-8')
 
 def dictinfo(path) -> Dict[str, str]:
     "Get information about dictionary from file path"
@@ -62,9 +75,9 @@ def dictinfo(path) -> Dict[str, str]:
         return {"type": "tsv", "basename": basename, "path": path}
     elif ext == ".csv":
         return {"type": "csv", "basename": basename, "path": path}
-    elif ext == ".xz":
+    elif ext == ".xz" or ext == ".bz2" or ext == ".gz":
         if basename.endswith(".json"):
-            with lzma.open(path, "rt", encoding="utf-8") as f:
+            with zopen(path) as f:
                 basename = removesuffix(basename, ".json")
                 d = json.load(f)
                 if isinstance(d, list):
@@ -171,6 +184,3 @@ def parseTSV(path) -> Dict[str, str]:
             newdict[row[0]] = row[1]
     return newdict
 
-def parseCognates(path) -> Dict[str, Dict[str, List[str]]]:
-    with lzma.open(path, "rt", encoding="utf-8") as f:
-        return json.load(f)
