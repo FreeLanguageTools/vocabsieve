@@ -27,10 +27,10 @@ class DictManager(QDialog):
         self.tview = QTreeWidget()
         self.tview.setColumnCount(4)
         self.tview.setHeaderLabels(["Name", "Type", "Language", "Headwords"])
-        self.add_dict = QPushButton("Import dictionary or frequency list..")
+        self.add_dict = QPushButton("Import dictionary, frequency list, or cognate data...")
         self.add_dict.clicked.connect(self.onAdd)
         self.add_audio = QPushButton(
-            "Import GoldenDict/LinguaLibre audio library..")
+            "Import GoldenDict/LinguaLibre audio library...")
         self.add_audio.clicked.connect(self.onAddAudio)
         self.remove = QPushButton("Remove")
         self.remove.clicked.connect(self.onRemove)

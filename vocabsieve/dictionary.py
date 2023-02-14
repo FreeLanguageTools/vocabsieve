@@ -100,6 +100,12 @@ def googletranslate(word, language, gtrans_lang, gtrans_api) -> Optional[LookUpR
         return {"word": word, "definition": res.json()['translation']}
     return None
 
+def getCognates(word: str, language: str) -> Optional[List[str]]:
+    "Get cognates from the local database"
+    data = lookupin(word, language, lemmatize=True, dictionary="cognates")
+    if not data:
+        return None
+    return json.loads(data['definition']) 
 
 def getAudio(word: str, 
              language: str, 

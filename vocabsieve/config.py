@@ -131,7 +131,7 @@ class SettingsDialog(QDialog):
         self.reader_port.setMinimum(1024)
         self.reader_port.setMaximum(49151)
 
-        self.importdict = QPushButton('Manage local dictionaries..')
+        self.importdict = QPushButton('Manage local resources..')
 
         self.importdict.clicked.connect(self.dictmanager)
 

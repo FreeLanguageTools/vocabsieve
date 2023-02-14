@@ -3,6 +3,7 @@
 # Obtained and modified from pyglossary library
 # Using under the terms of the GNU GPLv3
 from typing import Union
+import lxml
 from io import BytesIO
 from io import StringIO
 
