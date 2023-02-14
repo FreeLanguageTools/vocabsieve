@@ -5,11 +5,12 @@ from datetime import timezone as tz
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-from sentence_splitter import split_text_into_sentences
 from slpp import slpp
 
 from .GenericImporter import GenericImporter
 from .utils import *
+from ..tools import *
+
 
 
 def getBookMetadata(path):
@@ -57,7 +58,7 @@ class KoreaderVocabImporter(GenericImporter):
                 else:
                     continue
                 sentence = ""
-                for sentence_ in split_text_into_sentences(ctx, language=langcode):
+                for sentence_ in split_to_sentences(ctx, language=langcode):
                     if word in sentence_:
                         sentence = sentence_
                 if sentence:

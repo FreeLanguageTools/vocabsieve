@@ -14,6 +14,7 @@ from pystardict import Dictionary
 from .dictionary import *
 from .dictformats import *
 from .xdxftransform import xdxf2html
+from sentence_splitter import split_text_into_sentences, SentenceSplitterException
 from PyQt5.QtCore import QCoreApplication
 import mobi
 from itertools import islice
@@ -312,3 +313,9 @@ def grouper(iterable, n, *, incomplete='fill', fillvalue=None):
         return zip(*args)
     else:
         raise ValueError('Expected fill, strict, or ignore')
+
+def split_to_sentences(text: str, language: str):
+    try:
+        return split_text_into_sentences(text, language=language)
+    except SentenceSplitterException:
+        return text

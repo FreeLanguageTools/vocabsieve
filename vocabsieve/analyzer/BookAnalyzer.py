@@ -2,7 +2,6 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 import os
-from sentence_splitter import split_text_into_sentences
 from operator import itemgetter
 from ..tools import *
 import time
@@ -47,7 +46,7 @@ class BookAnalyzer(QDialog):
         #self.progress = QProgressDialog("Splitting book into sentences...", "Cancel", 0, len(self.content), self)
         start = time.time()
 
-        self.sentences = [sentence for sentence in split_text_into_sentences(self.content, self.langcode) if sentence]
+        self.sentences = [sentence for sentence in split_to_sentences(self.content, self.langcode) if sentence]
         print("Split book in " + str(time.time() - start) + " seconds.")
         self.basic_info_left += "<br>Total sentences: " + prettydigits(len(self.sentences))
         self.layout.addWidget(QLabel(self.basic_info_left), 3, 0)

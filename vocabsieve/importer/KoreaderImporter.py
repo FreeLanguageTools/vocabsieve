@@ -5,7 +5,6 @@ from io import BytesIO
 import os
 import re
 from zipfile import ZipFile
-from sentence_splitter import split_text_into_sentences
 from slpp import slpp
 from lxml import etree
 from ebooklib import epub, ITEM_DOCUMENT
@@ -51,7 +50,7 @@ def koreader_parse_fb2(file, lang):
             word_end = int(item['pos1'].split(".")[-1])
             if root.xpath(xpath, namespaces=ns):
                 ctx = root.xpath(xpath, namespaces=ns)[0].text
-                for sentence in split_text_into_sentences(ctx, language=lang):
+                for sentence in split_to_sentences(ctx, language=lang):
                     if item['notes'] in sentence:
                         if ctx.find(sentence) < word_start \
                             and ctx.find(sentence) + len(sentence) > word_end: 
@@ -89,7 +88,7 @@ def koreader_parse_fb2zip(file, lang):
             word_end = int(item['pos1'].split(".")[-1])
             if root.xpath(xpath, namespaces=ns):
                 ctx = root.xpath(xpath, namespaces=ns)[0].text
-                for sentence in split_text_into_sentences(ctx, language=lang):
+                for sentence in split_to_sentences(ctx, language=lang):
                     if item['notes'] in sentence:
                         if ctx.find(sentence) < word_start \
                             and ctx.find(sentence) + len(sentence) > word_end: 
@@ -107,7 +106,7 @@ def find_sentence_for_word(item, doc, lang):
     word_end = int(item['pos1'].split(".")[-1])
     if doc.xpath(xpath, namespaces=ns):
         ctx = doc.xpath(xpath, namespaces=ns)[0].text
-        for sentence in split_text_into_sentences(ctx, language=lang):
+        for sentence in split_to_sentences(ctx, language=lang):
             if item['notes'] in sentence:
                 if ctx.find(sentence) < word_start \
                     and ctx.find(sentence) + len(sentence) > word_end: 
