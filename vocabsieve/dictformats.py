@@ -1,9 +1,10 @@
 from readmdict import MDX
 from .dsl import Reader
 from bidict import bidict
-from typing import Dict
+from typing import Dict, List
 import os
 import re
+import lzma
 import csv
 import json
 
@@ -16,11 +17,12 @@ supported_dict_formats = bidict({
     "mdx": "MDX",
     "dsl": "Lingvo DSL",
     "csv": "CSV",
-    "tsv": "TSV (Tabfile)"
+    "tsv": "TSV (Tabfile)",
+    "cognates": "Cognate data"
 })
 
 supported_dict_extensions = [
-    ".json", ".ifo", ".mdx", ".dsl", ".dz", ".csv", ".tsv"
+    ".json", ".ifo", ".mdx", ".dsl", ".dz", ".csv", ".tsv", ".xz"
 ]
 
 
@@ -60,7 +62,34 @@ def dictinfo(path) -> Dict[str, str]:
         return {"type": "tsv", "basename": basename, "path": path}
     elif ext == ".csv":
         return {"type": "csv", "basename": basename, "path": path}
-
+    elif ext == ".xz":
+        if basename.endswith(".json"):
+            with lzma.open(path, "rt", encoding="utf-8") as f:
+                basename = removesuffix(basename, ".json")
+                d = json.load(f)
+                if isinstance(d, list):
+                    if isinstance(d[0], str):
+                        return {
+                            "type": "freq",
+                            "basename": basename,
+                            "path": path}
+                    return {
+                        "type": "migaku",
+                        "basename": basename,
+                        "path": path}
+                elif isinstance(d, dict):
+                    if isinstance(d[next(iter(d))], dict):
+                        return {
+                            "type": "cognates",
+                            "basename": basename,
+                            "path": path}
+                    elif isinstance(d[next(iter(d))], str):
+                        return {
+                            "type": "json",
+                            "basename": basename,
+                            "path": path
+                        }
+        raise NotImplementedError("Unsupported format" + basename + ext)
 
 def parseMDX(path) -> Dict[str, str]:
     mdx = MDX(path)
@@ -117,6 +146,13 @@ def removeprefix(self: str, prefix: str, /) -> str:
     else:
         return self[:]
 
+def removesuffix(self: str, suffix: str, /) -> str:
+    # suffix='' should not call self[:-0].
+    if suffix and self.endswith(suffix):
+        return self[:-len(suffix)]
+    else:
+        return self[:]
+
 
 def parseCSV(path) -> Dict[str, str]:
     newdict = {}
@@ -134,3 +170,7 @@ def parseTSV(path) -> Dict[str, str]:
         for row in data:
             newdict[row[0]] = row[1]
     return newdict
+
+def parseCognates(path) -> Dict[str, Dict[str, List[str]]]:
+    with lzma.open(path, "rt", encoding="utf-8") as f:
+        return json.load(f)

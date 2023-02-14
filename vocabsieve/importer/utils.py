@@ -1,4 +1,5 @@
 from ..constants import LookUpResults
+from ..tools import *
 from datetime import datetime as dt
 import glob
 import os
@@ -10,13 +11,6 @@ def get_uniques(l: list):
 
 def uniq_preserve_order(l: list) -> list:
     return sorted(set(l), key=lambda x: l.index(x))
-
-def removesuffix(self: str, suffix: str, /) -> str:
-    # suffix='' should not call self[:-0].
-    if suffix and self.endswith(suffix):
-        return self[:-len(suffix)]
-    else:
-        return self[:]
 
 def truncate_middle(s, n):
     if len(s) <= n:

@@ -205,6 +205,11 @@ def dictimport(path, dicttype, lang, name) -> None:
     elif dicttype == "tsv":
         d = parseTSV(path)
         dictdb.importdict(d, lang, name)
+    elif dicttype == "cognates":
+        d = parseCognates(path)
+        for lang in d:
+            data = {k: json.dumps(v) for k, v in d[lang].items()}
+            dictdb.importdict(data, lang, name)
 
 
 def dictdelete(name) -> None:

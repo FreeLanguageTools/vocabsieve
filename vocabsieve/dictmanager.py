@@ -87,7 +87,7 @@ to be reimported, otherwise this operation will fail.\
     def onAdd(self):
         fdialog = QFileDialog()
         fdialog.setFileMode(QFileDialog.ExistingFile)
-        fdialog.setNameFilter("Dictionary files (*.json *.ifo *.mdx *.dsl *.dsl.dz *.csv *.tsv)")
+        fdialog.setNameFilter("Dictionary files (*.json *.ifo *.mdx *.dsl *.dsl.dz *.csv *.tsv *.json.xz)")
         fdialog.exec()
         if fdialog.selectedFiles() == []:
             return
@@ -190,9 +190,15 @@ class AddDictDialog(QDialog):
         self.type.addItems(supported_dict_formats.inverse.keys())
         self.type.setCurrentText(supported_dict_formats[self.dicttype])
         self.lang = QComboBox()
-        self.lang.addItems(langs_supported.values())
-        self.lang.setCurrentText(
-            langcodes[self.settings.value("target_language")])
+        self.lang.addItems(langcodes.values())
+        print(self.dicttype)
+        if self.dicttype == "cognates":
+            print("got to cognates")
+            self.lang.setCurrentText(langcodes["<all>"])
+            print(langcodes["<all>"])
+        else:
+            self.lang.setCurrentText(
+                langcodes[self.settings.value("target_language", 'en')])
         self.commit_button = QPushButton("Add")
         self.commit_button.clicked.connect(self.commit)
 
