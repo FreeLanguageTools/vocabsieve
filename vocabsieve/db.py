@@ -455,17 +455,15 @@ class LocalDictionary():
             DELETE FROM dictionary
             WHERE dictname=?
         """, (name,))
-        self.c.execute("VACUUM")
         self.conn.commit()
+        self.c.execute("VACUUM")
 
-    def define(self, word: str, lang: str, name: str) -> str:
-        self.c.execute("""
-        SELECT definition FROM dictionary
-        WHERE word=?
-        AND language=?
-        AND dictname=?
-        """, (word, lang, name))
-        return str(self.c.fetchone()[0])
+    def getCognates(self, lang: str):
+        return self.c.execute("""
+            SELECT word, definition FROM dictionary
+            WHERE language=?
+            AND dictname='cognates'
+            """, (lang,))
 
     def countEntries(self) -> int:
         self.c.execute("""

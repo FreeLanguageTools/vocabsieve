@@ -294,11 +294,12 @@ def window(seq, n=2):
     for elem in it:
         result = result[1:] + (elem,)
         yield result
+        
+prettydigits = lambda number: format(number, ',').replace(',', ' ')
 
 def amount_and_percent(amount, total):
     return f"{prettydigits(amount)} ({round(amount / total * 100, 2)}%)" if total else "0 (0%)"
 
-prettydigits = lambda number: format(number, ',').replace(',', ' ')
 
 def get_first_number(s: str):
     if re.findall(r'^[^\d]*(\d+)', s):

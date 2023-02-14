@@ -4,7 +4,7 @@ import unicodedata
 from threading import Thread
 from urllib.parse import quote
 from typing import Optional, Dict, Tuple
-
+import time
 import requests
 
 from bidict import bidict
@@ -100,12 +100,22 @@ def googletranslate(word, language, gtrans_lang, gtrans_api) -> Optional[LookUpR
         return {"word": word, "definition": res.json()['translation']}
     return None
 
-def getCognates(word: str, language: str) -> Optional[List[str]]:
-    "Get cognates from the local database"
-    data = lookupin(word, language, lemmatize=True, dictionary="cognates")
-    if not data:
-        return None
-    return json.loads(data['definition']) 
+def getCognatesData(language: str, known_langs: list) -> Optional[List[str]]:
+    "Get all cognates from the local database in a given language"
+    start = time.time()
+    data = dictdb.getCognates(language)
+    if not known_langs:
+        return []
+    if not known_langs[0]:
+        return []
+    cognates = []
+    for word, cognates_in in data:
+        for lang in known_langs:
+            if lang in cognates_in:
+                cognates.append(word)
+                break
+    print("Got all cognates in", time.time() - start, "seconds")
+    return cognates
 
 def getAudio(word: str, 
              language: str, 
@@ -170,6 +180,8 @@ def lookupin(
         gtrans_api: str="https://lingva.ml") -> Optional[LookUpResults]:
     # Remove any punctuation other than a hyphen
     # @language is code
+    if not word:
+        return word
     IS_UPPER = word[0].isupper()
     if lemmatize:
         word = lem_word(word, language, greedy_lemmatize)

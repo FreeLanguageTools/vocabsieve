@@ -4,7 +4,25 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from .tools import *
 
-def getKnownData(settings, rec):
+last_known_data = None
+last_known_data_date = None
+
+def getKnownData(settings, rec, lifetime):
+    global last_known_data
+    global last_known_data_date
+    if not last_known_data:
+        last_known_data = _getKnownData(settings, rec)
+        last_known_data_date = time.time()
+        return last_known_data
+    else:
+        if time.time() - last_known_data_date > lifetime:
+            last_known_data = _getKnownData(settings, rec)
+            last_known_data_date = time.time()
+            return last_known_data
+        else:
+            return last_known_data
+
+def _getKnownData(settings, rec):
     w_lookup = settings.value('tracking/w_lookup', 15, type=int) # Weight for each lookup, max 1 per day
     w_seen = settings.value('tracking/w_seen', 8, type=int) # W for seeing
     w_anki_ctx = settings.value('tracking/w_anki_ctx', 30, type=int) # W for being on context field of a mature card
@@ -122,4 +140,5 @@ def getKnownData(settings, rec):
             if settings.value("enable_anki"):
                 QMessageBox.warning(None, "Cannot access AnkiConnect", 
                     "Check if AnkiConnect is installed and Anki is running. <br>Re-open statistics to view the whole data.")
+        score = {k: v for k, v in score.items() if k.isalpha()}
         return score, count_seen_data, count_lookup_data, len(set(tgt_lemmas)), len(set(ctx_lemmas))

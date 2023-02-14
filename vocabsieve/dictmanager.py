@@ -193,6 +193,10 @@ class AddDictDialog(QDialog):
         self.lang.addItems(langcodes.values())
         if self.dicttype == "cognates":
             self.lang.setCurrentText(langcodes["<all>"])
+            self.lang.setEnabled(False)
+            self.type.setEnabled(False)
+            self.name.setText("cognates")
+            self.name.setReadOnly(True)
         else:
             self.lang.setCurrentText(
                 langcodes[self.settings.value("target_language", 'en')])
