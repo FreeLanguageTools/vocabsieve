@@ -465,6 +465,15 @@ class LocalDictionary():
             AND dictname='cognates'
             """, (lang,))
 
+    def define(self, word: str, lang: str, name: str) -> str:
+        self.c.execute("""
+        SELECT definition FROM dictionary
+        WHERE word=?
+        AND language=?
+        AND dictname=?
+        """, (word, lang, name))
+        return str(self.c.fetchone()[0])
+
     def countEntries(self) -> int:
         self.c.execute("""
         SELECT COUNT(*) FROM dictionary
