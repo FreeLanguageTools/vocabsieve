@@ -7,7 +7,25 @@ from .tools import *
 last_known_data = None
 last_known_data_date = None
 
-def getKnownData(settings, rec, lifetime):
+def getKnownWords(settings, rec):
+    langcode = settings.value('target_language', 'en')
+    known_langs = [l.strip() for l in settings.value('tracking/known_langs', 'en').split(",")]
+    score, count_seen_data, count_lookup_data, count_tgt_lemmas, count_ctx_lemmas = getKnownData(settings, rec)
+    cognates = set(getCognatesData(langcode, known_langs))
+    threshold = settings.value('tracking/known_threshold', 100, type=int)
+    threshold_cognate = settings.value('tracking/known_threshold_cognate', 25, type=int)
+    start = time.time()
+    total_score = 0
+    total_score += sum([min(points, threshold) for word, points in score.items() if word not in cognates]) / threshold
+    total_score += sum([min(points, threshold_cognate) for word, points in score.items() if word in cognates]) / threshold_cognate
+    known_words = [word for word, points in score.items() if points >= threshold and word not in cognates]
+    known_cognates = [word for word, points in score.items() if points >= threshold_cognate and word in cognates]
+    known_words += known_cognates
+    known_words = sorted(list(set(known_words)))
+    return known_words, known_cognates, total_score, count_seen_data, count_lookup_data, count_tgt_lemmas, count_ctx_lemmas
+
+def getKnownData(settings, rec):
+    lifetime = settings.value('tracking/known_data_lifetime', 1800, type=int) # Seconds
     global last_known_data
     global last_known_data_date
     if not last_known_data:
@@ -99,14 +117,14 @@ def _getKnownData(settings, rec):
                     except KeyError:
                         score[lemma] = w_anki_word
                 if ctx:
-                    for ctx_word in re.sub(r"<.*?>", " ", ctx).split():
-                        ctx_lemma = lem_word(ctx_word, langcode).lower()
-                        if ctx_lemma != lemma: # No double counting
-                            ctx_lemmas.append(ctx_lemma)
-                            try:
-                                score[ctx_lemma] += w_anki_ctx
-                            except KeyError:
-                                score[ctx_lemma] = w_anki_ctx
+                    ctx = set(map(lambda w: lem_word(w, langcode), re.sub(r"<.*?>", " ", ctx).split()))
+                    ctx.discard(lemma)
+                    for ctx_lemma in ctx:
+                        ctx_lemmas.append(ctx_lemma)
+                        try:
+                            score[ctx_lemma] += w_anki_ctx
+                        except KeyError:
+                            score[ctx_lemma] = w_anki_ctx
 
             for n, info in enumerate(young_notes_info):
                 progress.setValue(n_mature+n)
@@ -126,14 +144,13 @@ def _getKnownData(settings, rec):
                     except KeyError:
                         score[lemma] = w_anki_word_y
                 if ctx:
-                    for ctx_word in re.sub(r"<.*?>", " ", ctx).split():
-                        ctx_lemma = lem_word(ctx_word, langcode).lower()
-                        if ctx_lemma != lemma: # No double counting
-                            ctx_lemmas.append(ctx_lemma)
-                            try:
-                                score[ctx_lemma] += w_anki_ctx_y
-                            except KeyError:
-                                score[ctx_lemma] = w_anki_ctx_y
+                    ctx = set(map(lambda w: lem_word(w, langcode), re.sub(r"<.*?>", " ", ctx).split()))
+                    ctx.discard(lemma)
+                    for ctx_lemma in ctx:
+                        try:
+                            score[ctx_lemma] += w_anki_ctx_y
+                        except KeyError:
+                            score[ctx_lemma] = w_anki_ctx_y
             progress.setValue(n_mature+n+1)
         except Exception as e:
             print(e)

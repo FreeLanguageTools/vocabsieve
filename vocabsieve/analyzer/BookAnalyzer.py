@@ -7,13 +7,14 @@ from ..tools import *
 import time
 from statistics import stdev, mean
 from ..lemmatizer import lem_word
-from ..known_words import getKnownData
+import itertools
+from ..known_words import getKnownWords
 import random
 import json
 import numpy as np
 from pyqtgraph import PlotWidget, AxisItem
 from collections import Counter
-
+from multiprocessing import Pool
 
 class BookAnalyzer(QDialog):
     def __init__(self, parent, path):
@@ -23,12 +24,10 @@ class BookAnalyzer(QDialog):
         bookname, _ = os.path.splitext(os.path.basename(self.path))
         self.setWindowTitle("Analysis of " + bookname)
         self.langcode = self.parent.settings.value('target_language', 'en')
-        self.content, self.ch_pos = ebook2text(self.path)
+        self.chapters, self.ch_pos = ebook2text(self.path)
         self.layout = QGridLayout(self)
         self.layout.addWidget(QLabel("<h1>Analysis of \"" + bookname + "\"</h1>"), 0, 0, 1, 2)
-        self.score, *_ = getKnownData(self.parent.settings, self.parent.rec)
-        threshold = self.parent.settings.value('tracking/known_threshold', 100, type=int)
-        self.known_words = [word for word, points in self.score.items() if points >= threshold and word.isalpha()]
+        self.known_words, *_ = getKnownWords(self.parent.settings, self.parent.rec)
         self.initWidgets()
         self.show()
     
@@ -37,17 +36,24 @@ class BookAnalyzer(QDialog):
         if self.langcode in ['ru', 'uk']:
             self.known_words = [word for word in self.known_words if starts_with_cyrillic(word)]
         
-
+        self.content = "\n".join(self.chapters)
+        
         print(self.langcode)
         print(len(self.known_words))
         self.layout.addWidget(QLabel("<h2>General info</h2>"), 2, 0, 1, 2)
         self.basic_info_left += "Total characters: " + prettydigits(len(self.content))
         self.basic_info_left += "<br>Total words: " + prettydigits(len(self.content.split()))
         #self.progress = QProgressDialog("Splitting book into sentences...", "Cancel", 0, len(self.content), self)
-        start = time.time()
+        p = Pool()
 
-        self.sentences = [sentence for sentence in split_to_sentences(self.content, self.langcode) if sentence]
-        print("Split book in " + str(time.time() - start) + " seconds.")
+        start = time.time()
+        self.sentences = list(sentence for sentence in 
+            itertools.chain.from_iterable(
+                p.starmap(split_to_sentences, ((ch, self.langcode) for ch in self.chapters))
+                ) 
+            if sentence)
+        print("Split book (MP) in " + str(time.time() - start) + " seconds.")
+    
         self.basic_info_left += "<br>Total sentences: " + prettydigits(len(self.sentences))
         self.layout.addWidget(QLabel(self.basic_info_left), 3, 0)
         self.basic_info_right = ""
@@ -58,8 +64,9 @@ class BookAnalyzer(QDialog):
         self.layout.addWidget(QLabel("<h2>Vocabulary coverage</h2>"), 4, 0)
         self.vocab_coverage = ""
         start = time.time()
-        words = [lem_word(word, self.langcode) for word in self.content.split()]
+        words = list(p.starmap(lem_word, ((word, self.langcode) for word in self.content.split())))
         print("Lemmatized book in " + str(time.time() - start) + " seconds.")
+        p.close()
         occurrences = sorted(Counter(words).items(), key=itemgetter(1), reverse=True)
         topN = list(zip(*occurrences[:100]))[0]
         self.known_words.extend(topN)
@@ -74,22 +81,21 @@ class BookAnalyzer(QDialog):
         new_unique_count = []
         already_seen = set()
         window_size = 1000
-        step_size = 50
+        step_size = 100
         startlens = []
         for n, w in enumerate(window(words, window_size)):
             if n % step_size == 0:
-                
-                already_seen = already_seen.union(set(w)) - self.known_words
+                already_seen = already_seen.union(set(w)).difference(self.known_words)
                 if n - window_size >= 0:
-                    difference = len(already_seen) - startlens[n - window_size]
+                    difference = len(already_seen) - startlens[(n - window_size) // step_size]
                 else:
                     difference = None
-            if difference:
-                new_unique_count.append(difference)
-            else:
-                new_unique_count.append(np.nan)
-            startlens.append(len(already_seen))
-            unique_count.append(len(set(w) - self.known_words))
+                if difference:
+                    new_unique_count.append(difference)
+                else:
+                    new_unique_count.append(np.nan)
+                startlens.append(len(already_seen))
+                unique_count.append(len(set(w) - self.known_words))
 
         print("Calculated unique unknown words in " + str(time.time() - start) + " seconds.")
         self.plotwidget_words = PlotWidget()
@@ -98,8 +104,8 @@ class BookAnalyzer(QDialog):
         self.plotwidget_words.setTitle("Unique unknown words per " + str(window_size) + " words")
         self.plotwidget_words.setBackground('#ffffff')
         self.plotwidget_words.addLegend()
-        self.plotwidget_words.plot(unique_count, pen='#4e79a7', name="Unique unknown words")
-        self.plotwidget_words.plot(new_unique_count, pen='#f28e2b', name="New unique unknown words")
+        self.plotwidget_words.plot(list(range(0, len(unique_count)*step_size, step_size)), unique_count, pen='#4e79a7', name="Unique unknown words")
+        self.plotwidget_words.plot(list(range(0, len(new_unique_count)*step_size, step_size)), new_unique_count, pen='#f28e2b', name="New unique unknown words")
         # Add X axis label
         self.plotwidget_words.setLabel('bottom', 'Words')
         # Add Y axis label
@@ -183,6 +189,8 @@ class BookAnalyzer(QDialog):
         if self.ch_pos:
             # convert character positions to word positions
             self.ch_pos_word = {len(self.content[:pos].split()): name for pos, name in self.ch_pos.items()}
+            print("Converted character positions to word positions in", time.time() - start, "seconds.")
+            start = time.time()
             # convert character positions to sentence positions
             self.ch_pos_sent = {}
             length = 0
@@ -194,7 +202,8 @@ class BookAnalyzer(QDialog):
                         del self.ch_pos[next(iter(self.ch_pos))]
                 except StopIteration:
                     pass
-                self.addChapterAxes()
+            print("Converted character positions to sentence positions in", time.time() - start, "seconds.")
+            self.addChapterAxes()
         print("Chapter axes added in", time.time() - start, "seconds.")
     
     def addChapterAxes(self, names=False):
@@ -225,15 +234,20 @@ class BookAnalyzer(QDialog):
         counts_1t = []
         counts_2t = []
         counts_3t = []
-        window_size = 50
+        window_size = 30
         known_words = self.known_words.copy()
         learned_words = set()
         sentence_target_counts = []
-        for n, w in enumerate(grouper(sentences, window_size)):
+        for w in grouper(sentences, window_size):
             w_counts = [self.countTargets3(sentence, known_words) for sentence in w if sentence]
             sents_1t = [sentence for i, sentence in zip(w_counts, w) if i == 1]
-            sents_to_learn = random.sample(sents_1t, int(len(sents_1t) * learning_rate))
-            words_to_learn = [self.getTarget(sentence, known_words) for sentence in sents_to_learn]
+            sents_2t = [sentence for i, sentence in zip(w_counts, w) if i == 2]
+            sents_3t = [sentence for i, sentence in zip(w_counts, w) if i == 3]
+            sents_to_learn = []
+            sents_to_learn.extend(random.sample(sents_1t, int(len(sents_1t) * learning_rate)))
+            sents_to_learn.extend(random.sample(sents_2t, int(len(sents_2t) * learning_rate**2)))
+            sents_to_learn.extend(random.sample(sents_3t, int(len(sents_3t) * learning_rate**3)))
+            words_to_learn = list(itertools.chain(*[self.getTargets(sentence, known_words) for sentence in sents_to_learn]))
             learned_words.update(words_to_learn)
             known_words.update(words_to_learn)
             
@@ -244,6 +258,7 @@ class BookAnalyzer(QDialog):
             counts_3t.append(w_counts.count(3)/len(w_counts))
         print("Learned", len(learned_words), "words")
         print("Categorized sentences in " + str(time.time() - start) + " seconds.")
+        print("0T:", sentence_target_counts.count(0), "1T:", sentence_target_counts.count(1), "2T:", sentence_target_counts.count(2), "3T:", sentence_target_counts.count(3))
         self.plotwidget_sentences.clear()
         self.plotwidget_sentences.plot(list(range(0, len(counts_0t)*window_size, window_size)), counts_0t, pen='#4e79a7', name="0T")
         self.plotwidget_sentences.plot(list(range(0, len(counts_1t)*window_size, window_size)), counts_1t, pen='#59a14f', name="1T")
@@ -259,7 +274,7 @@ class BookAnalyzer(QDialog):
         return sentence_target_counts
 
         
-    def getTarget(self, sentence, known_words=None):
+    def getTargets(self, sentence, known_words=None):
         if not known_words:
             known_words = self.known_words
         targets = [
@@ -267,7 +282,7 @@ class BookAnalyzer(QDialog):
             for word in sentence.split() 
             if lem_word(word, self.langcode) not in known_words
             ]
-        return targets[0] if targets else None
+        return targets
 
     def countTargets3(self, sentence, known_words=None):
         if not known_words:

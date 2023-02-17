@@ -281,8 +281,7 @@ def ebook2text(path):
         with open(path, 'r', encoding='utf-8') as f:
             c = f.read()
             return BeautifulSoup(c).getText()
-    print(ch_pos)
-    return "\n\n\n\n".join(chapters), ch_pos
+    return chapters, ch_pos
 
 def window(seq, n=2):
     "Returns a sliding window (of width n) over data from the iterable"

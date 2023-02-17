@@ -4,8 +4,7 @@ from PyQt5.QtWidgets import *
 from operator import itemgetter
 import time
 from .tools import *
-from .known_words import getKnownData
-from .dictionary import getCognatesData
+from .known_words import getKnownData, getKnownWords
 
 prettydigits = lambda number: format(number, ',').replace(',', ' ')
 
@@ -63,25 +62,10 @@ class StatisticsWindow(QDialog):
         langcode = self.settings.value('target_language', 'en')
         start = time.time()
         self.known.layout = QVBoxLayout(self.known)
-        score, count_seen_data, count_lookup_data, count_tgt_lemmas, count_ctx_lemmas = getKnownData(
-            self.settings, self.rec, self.settings.value('tracking/known_data_lifetime', 1800, type=int)
-            )
+        
+        known_words, known_cognates, total_score, count_seen_data, count_lookup_data, count_tgt_lemmas, count_ctx_lemmas = getKnownWords(self.settings, self.rec)
         print("Got known data in", time.time() - start, "seconds")
-        cognates = set(getCognatesData(langcode, self.known_langs))
-        print(len(cognates))
-        start = time.time()
-        total_score = 0
-        total_score += sum([min(points, self.threshold) for word, points in score.items() if word not in cognates]) / self.threshold
-        print("First step took", time.time() - start, "seconds")
-        total_score += sum([min(points, self.threshold_cognate) for word, points in score.items() if word in cognates]) / self.threshold_cognate
-        print("Second step took", time.time() - start, "seconds")
-        known_words = [word for word, points in score.items() if points >= self.threshold and word not in cognates]
-        print("Third step took", time.time() - start, "seconds")
-        known_cognates = [word for word, points in score.items() if points >= self.threshold_cognate and word in cognates]
-        print("Fourth step took", time.time() - start, "seconds")
-        known_words += known_cognates
-        known_words = sorted(list(set(known_words)))
-        print("Computed known words in", time.time() - start, "seconds")
+
         if langcode in ['ru', 'uk']:
             known_words = [word for word in known_words if starts_with_cyrillic(word)]
         self.known.layout.addWidget(QLabel(f"<h3>Known words: {prettydigits(len(known_words))} ({prettydigits(len(known_cognates))} cognates)</h3>"))
@@ -94,4 +78,6 @@ class StatisticsWindow(QDialog):
         known_words_widget.setReadOnly(True)
         self.known.layout.addWidget(known_words_widget)
 
+    def initLookupsStats(self):
+        pass
             

@@ -65,7 +65,7 @@ class AddContentDialog(QDialog):
         self.layout.addRow(self.commit_button)
 
     def extractBook(self, path):
-        return ebook2text(path)[0]
+        return "\n".join(ebook2text(path)[0])
 
     def extractSubs(self, path):
         _, ext = os.path.splitext(path)

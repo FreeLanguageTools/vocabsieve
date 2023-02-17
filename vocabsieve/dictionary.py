@@ -198,7 +198,6 @@ def lookupin(
                 if IS_UPPER:
                     candidates.append(" ".join(combo).capitalize())
     candidates = set(candidates)
-    print(candidates)
     for word in candidates:
         try:
             if dictionary == "Wiktionary (English)":

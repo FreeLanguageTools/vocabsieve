@@ -17,7 +17,7 @@ QCoreApplication.setApplicationName(settings_app_title)
 QCoreApplication.setOrganizationName(app_organization)
 settings = QSettings(app_organization, settings_app_title)
 
-from .known_words import getKnownData
+from .known_words import getKnownData, getKnownWords
 from . import __version__
 from .analyzer import BookAnalyzer
 from .api import LanguageServer
@@ -387,7 +387,7 @@ class DictionaryWindow(QMainWindow):
             directory=QStandardPaths.writableLocation(QStandardPaths.HomeLocation)
             )[0]
         if path:
-            BookAnalyzer(self, path).exec()
+            BookAnalyzer(self, path).show()
 
     def exportKnownWords(self):
         path, _ = QFileDialog.getSaveFileName(
@@ -402,8 +402,7 @@ class DictionaryWindow(QMainWindow):
         if not path:
             return
         
-        score, *_ = getKnownData(self.settings, self.rec)
-        known_words = [word for word, score in score.items() if score > self.settings.value("known_threshold", 100, type=int) and word.isalpha()]
+        known_words, *_ = getKnownWords(self.settings, self.rec)
         if self.settings.value('target_language', 'en') in ['ru', 'uk']:
             known_words = [word for word in known_words if starts_with_cyrillic(word)]
 
