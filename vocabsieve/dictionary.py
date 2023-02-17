@@ -6,7 +6,7 @@ from urllib.parse import quote
 from typing import Optional, Dict, Tuple
 import time
 import requests
-
+import itertools
 from bidict import bidict
 from bs4 import BeautifulSoup
 from markdown import markdown
@@ -183,26 +183,43 @@ def lookupin(
     if not word:
         return word
     IS_UPPER = word[0].isupper()
-    if lemmatize:
+    if lemmatize and not " " in word:
         word = lem_word(word, language, greedy_lemmatize)
     # The lemmatizer would always turn words lowercase, which can cause
     # lookups to fail if not recovered.
     candidates = [word, word.capitalize()] if IS_UPPER else [word]
+    if " " in word:
+        words = word.split(" ")
+        # Try all unlemmatized first, then brute force to test each lemmatized vs unlemmatized combos
+        combinations = list(itertools.product(*[[word, lem_word(word, language, greedy_lemmatize)] for word in words]))
+        for combo in combinations:
+            if IS_UPPER:
+                candidates.append(" ".join(combo))
+                if IS_UPPER:
+                    candidates.append(" ".join(combo).capitalize())
+    candidates = set(candidates)
+    print(candidates)
     for word in candidates:
         try:
             if dictionary == "Wiktionary (English)":
                 item = wiktionary(word, language)
                 item['definition'] = fmt_result(item['definition'])
+                item['word'] = word
                 return item
             elif dictionary == "Google Translate":
                 return googletranslate(word, language, gtrans_lang, gtrans_api)
             else:
-                return {
-                    "word": word,
-                    "definition": dictdb.define(
-                        word,
-                        language,
-                        dictionary)}
+                try:
+                    item = {
+                        "word": word,
+                        "definition": dictdb.define(
+                            word,
+                            language,
+                            dictionary)}
+                except Exception:
+                    pass
+                finally:
+                    return item
         except BaseException:
             pass
     raise Exception("Word not found")
