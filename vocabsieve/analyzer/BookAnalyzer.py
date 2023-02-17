@@ -21,6 +21,7 @@ class BookAnalyzer(QDialog):
         super().__init__(parent)
         self.parent = parent
         self.path = path
+        self.settings = parent.settings
         bookname, _ = os.path.splitext(os.path.basename(self.path))
         self.setWindowTitle("Analysis of " + bookname)
         self.langcode = self.parent.settings.value('target_language', 'en')
@@ -28,6 +29,7 @@ class BookAnalyzer(QDialog):
         self.layout = QGridLayout(self)
         self.layout.addWidget(QLabel("<h1>Analysis of \"" + bookname + "\"</h1>"), 0, 0, 1, 2)
         self.known_words, *_ = getKnownWords(self.parent.settings, self.parent.rec)
+        self.is_drawing = False
         self.initWidgets()
         self.show()
     
@@ -64,60 +66,29 @@ class BookAnalyzer(QDialog):
         self.layout.addWidget(QLabel("<h2>Vocabulary coverage</h2>"), 4, 0)
         self.vocab_coverage = ""
         start = time.time()
-        words = list(p.starmap(lem_word, ((word, self.langcode) for word in self.content.split())))
+        self.words = list(p.starmap(lem_word, ((word, self.langcode) for word in self.content.split())))
         print("Lemmatized book in " + str(time.time() - start) + " seconds.")
         p.close()
-        occurrences = sorted(Counter(words).items(), key=itemgetter(1), reverse=True)
+        occurrences = sorted(Counter(self.words).items(), key=itemgetter(1), reverse=True)
         topN = list(zip(*occurrences[:100]))[0]
         self.known_words.extend(topN)
         self.known_words = set(self.known_words)
-        unknown_words = [word for word in words if word not in self.known_words]
-        self.vocab_coverage += "Unknown lemmas: " + amount_and_percent(len(unknown_words), len(words))
-        self.vocab_coverage += "<br>Unknown unique lemmas: " + amount_and_percent(len(set(unknown_words)), len(set(words)))
+        unknown_words = [word for word in self.words if word not in self.known_words]
+        self.vocab_coverage += "Unknown lemmas: " + amount_and_percent(len(unknown_words), len(self.words))
+        self.vocab_coverage += "<br>Unknown unique lemmas: " + amount_and_percent(len(set(unknown_words)), len(set(self.words)))
         self.layout.addWidget(QLabel(self.vocab_coverage), 5, 0)
 
-        start = time.time()
-        unique_count = []
-        new_unique_count = []
-        already_seen = set()
-        window_size = 1000
-        step_size = 100
-        startlens = []
-        for n, w in enumerate(window(words, window_size)):
-            if n % step_size == 0:
-                already_seen = already_seen.union(set(w)).difference(self.known_words)
-                if n - window_size >= 0:
-                    difference = len(already_seen) - startlens[(n - window_size) // step_size]
-                else:
-                    difference = None
-                if difference:
-                    new_unique_count.append(difference)
-                else:
-                    new_unique_count.append(np.nan)
-                startlens.append(len(already_seen))
-                unique_count.append(len(set(w) - self.known_words))
-
-        print("Calculated unique unknown words in " + str(time.time() - start) + " seconds.")
         self.plotwidget_words = PlotWidget()
-
-
-        self.plotwidget_words.setTitle("Unique unknown words per " + str(window_size) + " words")
+        self.plotwidget_words.setTitle("Unique unknown words per " + str(1000) + " words")
         self.plotwidget_words.setBackground('#ffffff')
         self.plotwidget_words.addLegend()
-        self.plotwidget_words.plot(list(range(0, len(unique_count)*step_size, step_size)), unique_count, pen='#4e79a7', name="Unique unknown words")
-        self.plotwidget_words.plot(list(range(0, len(new_unique_count)*step_size, step_size)), new_unique_count, pen='#f28e2b', name="New unique unknown words")
-        # Add X axis label
-        self.plotwidget_words.setLabel('bottom', 'Words')
-        # Add Y axis label
-        self.plotwidget_words.setLabel('left', 'Count')
-        self.layout.addWidget(self.plotwidget_words, 6, 0, 1, 2)
 
+        self.updateWordChart(self.words, self.settings.value("analyzer/word_step_size", 100, type=int))  
         self.plotwidget_sentences = PlotWidget()
         self.plotwidget_sentences.setTitle("Sentence target count")
-
         self.plotwidget_sentences.setBackground('#ffffff')
-
-        self.plotwidget_sentences.addLegend()
+        self.plotwidget_sentences.addLegend()      
+        self.layout.addWidget(self.plotwidget_words, 6, 0, 1, 2)
         
         learning_rate_box = QWidget()
         learning_rate_box.layout = QHBoxLayout(learning_rate_box)
@@ -205,6 +176,62 @@ class BookAnalyzer(QDialog):
             print("Converted character positions to sentence positions in", time.time() - start, "seconds.")
             self.addChapterAxes()
         print("Chapter axes added in", time.time() - start, "seconds.")
+
+        self.layout.addWidget(QLabel("Word chart step size:"), 14, 0)
+        self.word_chart_step_size = QSpinBox()
+        self.word_chart_step_size.setMinimum(1)
+        self.word_chart_step_size.setSingleStep(10)
+        self.word_chart_step_size.setMaximum(1000)
+        self.word_chart_step_size.setValue(self.settings.value("analyzer/word_step_size", 100, type=int))
+        self.word_chart_step_size.editingFinished.connect(lambda: self.updateWordChart(self.words, self.word_chart_step_size.value()))
+        self.word_chart_step_size.editingFinished.connect(lambda: self.settings.setValue("analyzer/word_step_size", self.word_chart_step_size.value()))
+        self.layout.addWidget(self.word_chart_step_size, 14, 1)
+        self.layout.addWidget(QLabel("Sentence chart step size:"), 15, 0)
+        self.sentence_chart_step_size = QSpinBox()
+        self.layout.addWidget(self.sentence_chart_step_size, 15, 1)
+        self.sentence_chart_step_size.setValue(self.settings.value("analyzer/sentence_window_size", 100, type=int))
+        self.sentence_chart_step_size.setMinimum(10)
+        self.sentence_chart_step_size.setSingleStep(5)
+        self.sentence_chart_step_size.setMaximum(1000)
+        self.sentence_chart_step_size.editingFinished.connect(self.updateSentenceChart)
+
+    def updateWordChart(self, words, step_size=100):
+        if self.is_drawing:
+            return
+        self.is_drawing = True
+        start = time.time()
+        unique_count = []
+        new_unique_count = []
+        already_seen = set()
+        window_size = 1000
+        startlens = []
+        for n, w in enumerate(window(words, window_size)):
+            if n % step_size == 0:
+                already_seen = already_seen.union(set(w)).difference(self.known_words)
+                if n - window_size >= 0:
+                    difference = len(already_seen) - startlens[(n - window_size) // step_size]
+                else:
+                    difference = None
+                if difference:
+                    new_unique_count.append(difference)
+                else:
+                    new_unique_count.append(np.nan)
+                startlens.append(len(already_seen))
+                unique_count.append(len(set(w) - self.known_words))
+
+        print("Calculated unique unknown words in " + str(time.time() - start) + " seconds.")
+
+        self.plotwidget_words.clear()
+        self.plotwidget_words.plot(list(range(0, len(unique_count)*step_size, step_size)), unique_count, pen='#4e79a7', name="Unique unknown words")
+        self.plotwidget_words.plot(list(range(0, len(new_unique_count)*step_size, step_size)), new_unique_count, pen='#f28e2b', name="New unique unknown words")
+        # Add X axis label
+        self.plotwidget_words.setLabel('bottom', 'Words')
+        # Add Y axis label
+        self.plotwidget_words.setLabel('left', 'Count')
+
+
+        
+        self.is_drawing = False
     
     def addChapterAxes(self, names=False):
             # Match first number from string
@@ -227,14 +254,24 @@ class BookAnalyzer(QDialog):
         self.learning_rate = self.learning_rate_slider.value()/100
         self.categorizeSentences(self.sentences, self.learning_rate)
 
-    def categorizeSentences(self, sentences, learning_rate):
+    def updateSentenceChart(self):
+        window_size = self.sentence_chart_step_size.value()
+        self.learning_rate = self.learning_rate_slider.value()/100
+        self.categorizeSentences(self.sentences, self.learning_rate, window_size)
+        self.settings.setValue("analyzer/sentence_window_size", window_size)
+
+    def categorizeSentences(self, sentences, learning_rate, window_size=None):
+        if self.is_drawing:
+            return
+        self.is_drawing = True
+        if window_size is None:
+            window_size = self.settings.value("analyzer/sentence_window_size", 80, type=int)
         start = time.time()
         print("Categorizing sentences at learning rate", learning_rate)
         counts_0t = []
         counts_1t = []
         counts_2t = []
         counts_3t = []
-        window_size = 30
         known_words = self.known_words.copy()
         learned_words = set()
         sentence_target_counts = []
@@ -257,7 +294,6 @@ class BookAnalyzer(QDialog):
             counts_2t.append(w_counts.count(2)/len(w_counts))
             counts_3t.append(w_counts.count(3)/len(w_counts))
         print("Learned", len(learned_words), "words")
-        print("Categorized sentences in " + str(time.time() - start) + " seconds.")
         print("0T:", sentence_target_counts.count(0), "1T:", sentence_target_counts.count(1), "2T:", sentence_target_counts.count(2), "3T:", sentence_target_counts.count(3))
         self.plotwidget_sentences.clear()
         self.plotwidget_sentences.plot(list(range(0, len(counts_0t)*window_size, window_size)), counts_0t, pen='#4e79a7', name="0T")
@@ -271,6 +307,7 @@ class BookAnalyzer(QDialog):
         self.label_3t.setText(">3T: " + amount_and_percent(sentence_target_counts.count(3), len(sentence_target_counts)))
         self.learned_words_count_label.setText(str(len(learned_words)) + " words will be learned")
         print("Categorization done in", time.time() - start, "seconds.")
+        self.is_drawing = False
         return sentence_target_counts
 
         

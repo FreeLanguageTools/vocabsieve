@@ -11,6 +11,7 @@ from ebooklib import epub, ITEM_DOCUMENT
 
 from .GenericImporter import GenericImporter
 from .utils import *
+from ..tools import *
 
 
 def fb2_xpathconvert(s):

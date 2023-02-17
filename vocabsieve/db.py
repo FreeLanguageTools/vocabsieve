@@ -80,8 +80,8 @@ class Record():
             self.c.execute("""
                 ALTER TABLE seen DROP COLUMN word
                 """)
-            self.c.execute("VACUUM")
             self.conn.commit()
+            self.c.execute("VACUUM")
         except Exception as e:
             print(e)
 
@@ -258,12 +258,12 @@ class Record():
 
     def rebuildSeen(self):
         self.c.execute("DELETE FROM seen")
-        self.c.execute("VACUUM")
         self.c.execute('SELECT id, name, content, language, jd FROM contents')
         for cid, name, content, language, jd in self.c.fetchall():
             print("Lemmatizing", name)
             self.seenContent(cid, name, content, language, jd)
         self.conn.commit()
+        self.c.execute("VACUUM")
 
     def getSeen(self, language):
         return self.c.execute('''
@@ -284,8 +284,8 @@ class Record():
             DELETE FROM contents
             WHERE name=?
         """, (name,))
-        self.c.execute("VACUUM")
         self.conn.commit()
+        self.c.execute("VACUUM")
 
 
     def recordLookup(

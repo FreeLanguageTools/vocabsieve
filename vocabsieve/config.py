@@ -469,7 +469,7 @@ class SettingsDialog(QDialog):
         self.tab_t.layout.addRow(self.young_count_label, self.preview_young_button)
         self.tab_t.layout.addRow(self.open_fieldmatcher)
         self.tab_t.layout.addRow(QLabel("<h3>Word scoring</h3>"))
-        self.tab_t.layout.addRow(QLabel("Known languages"), self.known_langs)
+        self.tab_t.layout.addRow(QLabel("Known languages (use commas)"), self.known_langs)
         self.tab_t.layout.addRow(QLabel("Known data lifetime"), self.known_data_lifetime)
         self.tab_t.layout.addRow(QLabel("Known threshold score"), self.known_threshold)
         self.tab_t.layout.addRow(QLabel("Known threshold score (cognate)"), self.known_threshold_cognate)
