@@ -15,13 +15,16 @@ class StatisticsWindow(QDialog):
         self.rec = parent.rec
         self.setWindowTitle(f"Statistics")
         self.tabs = QTabWidget()
-        self.mlw = QWidget()  # Most looked up words
         self.known = QWidget()  # Known words
+        self.lookupStats = QWidget()  # Lookup stats
+        self.mlw = QWidget()  # Most looked up words
         self.tabs.resize(400, 500)
-        self.tabs.addTab(self.mlw, "Most looked up words")
-        self.initMLW()
-        self.tabs.addTab(self.known, "Known words")
         self.initKnown()
+        self.initMLW()
+        self.initLookupsStats()
+        self.tabs.addTab(self.known, "Known words")
+        self.tabs.addTab(self.mlw, "Most looked up words")
+        self.tabs.addTab
         self.layout = QVBoxLayout(self)
         self.layout.addWidget(self.tabs)
 
@@ -62,7 +65,10 @@ class StatisticsWindow(QDialog):
         langcode = self.settings.value('target_language', 'en')
         start = time.time()
         self.known.layout = QVBoxLayout(self.known)
-        
+        hasCognates = dictdb.hasCognatesData()
+        if not hasCognates:
+            self.known.layout.addWidget(label:=QLabel('No cognates data installed. Please download <a href="https://raw.githubusercontent.com/FreeLanguageTools/CogNet-processing/master/cognates.json.xz">this file</a> and import it in the configuration tool.'))
+            label.setOpenExternalLinks(True)
         known_words, known_cognates, total_score, count_seen_data, count_lookup_data, count_tgt_lemmas, count_ctx_lemmas = getKnownWords(self.settings, self.rec)
         print("Got known data in", time.time() - start, "seconds")
 
@@ -79,5 +85,7 @@ class StatisticsWindow(QDialog):
         self.known.layout.addWidget(known_words_widget)
 
     def initLookupsStats(self):
-        pass
+        self.lookupStats.layout = QVBoxLayout(self.lookupStats)
+        self.lookupStats.layout.addWidget(QLabel(f"<h3>Lookup stats</h3>"))
+        
             
