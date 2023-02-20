@@ -94,11 +94,11 @@ jobs:
         path: |
           *.AppImage
     - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: |
-            cx_freeze/win/dist/*
-            cx_freeze/mac/build/*.dmg
-            *.AppImage
-          draft: true
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: |
+          cx_freeze/win/dist/*
+          cx_freeze/mac/build/*.dmg
+          *.AppImage
+        draft: true
