@@ -336,7 +336,7 @@ class DictionaryWindow(QMainWindow):
 
 
         self.repeat_last_import_action = QAction("&Repeat last import")
-        self.import_koreader_action = QAction("K&OReader highlights")
+        self.import_koreader_action = QAction("K&OReader highlights (deprecated)")
         self.import_koreader_vocab_action = QAction("K&OReader vocab builder")
         self.import_kindle_new_action = QAction("K&indle lookups")
 
