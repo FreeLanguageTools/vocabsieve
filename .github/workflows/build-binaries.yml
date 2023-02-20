@@ -8,10 +8,8 @@
 
 name: Build Binaries
 
-on:
-  push:
-    branches:
-      - master
+on: push
+
 
 jobs:
   deploy:
