@@ -2,7 +2,10 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from operator import itemgetter
+from pyqtgraph import PlotWidget, BarGraphItem, PlotItem, AxisItem, mkPen
+from datetime import timedelta, datetime
 import time
+import math
 from .tools import *
 from .known_words import getKnownData, getKnownWords
 
@@ -19,18 +22,18 @@ class StatisticsWindow(QDialog):
         self.lookupStats = QWidget()  # Lookup stats
         self.mlw = QWidget()  # Most looked up words
         self.tabs.resize(400, 500)
+        self.langcode = self.settings.value('target_language', 'en')
         self.initKnown()
         self.initMLW()
         self.initLookupsStats()
         self.tabs.addTab(self.known, "Known words")
         self.tabs.addTab(self.mlw, "Most looked up words")
-        self.tabs.addTab
+        self.tabs.addTab(self.lookupStats, "Lookup stats")
         self.layout = QVBoxLayout(self)
         self.layout.addWidget(self.tabs)
 
     def initMLW(self):
-        langcode = self.settings.value('target_language', 'en')
-        items = self.rec.countAllLemmaLookups(langcode)
+        items = self.rec.countAllLemmaLookups(self.langcode)
         items = sorted(items, key=itemgetter(1), reverse=True) # Sort by counts, descending
         self.mlw.layout = QVBoxLayout(self.mlw)
         
@@ -86,6 +89,41 @@ class StatisticsWindow(QDialog):
 
     def initLookupsStats(self):
         self.lookupStats.layout = QVBoxLayout(self.lookupStats)
-        self.lookupStats.layout.addWidget(QLabel(f"<h3>Lookup stats</h3>"))
-        
-            
+        self.lookupStats.layout.addWidget(QLabel(f"<h3>Lookup statistics</h3>"))
+        data = self.rec.getAllLookups()
+        today_midnight = datetime.combine(datetime.today(), datetime.min.time()).timestamp()
+        timestamp_30d_ago = today_midnight - 30 * 24 * 60 * 60
+        #timestamp_90d_ago = today_midnight - 90 * 24 * 60 * 60
+        #timestamp_180d_ago = today_midnight - 180 * 24 * 60 * 60
+
+        # 30 days
+        words_looked_up = {} # List of sets of lemmas looked up, 0 is today, 1 is yesterday, etc.
+        for i in range(31):
+            words_looked_up[i] = set()
+        for timestamp, word, lemma, language, lemmatization, source, success in data:
+            if language == self.langcode and timestamp > timestamp_30d_ago:
+                n_days_ago = math.ceil((today_midnight - timestamp) / (24 * 60 * 60))
+                words_looked_up[n_days_ago].add(lemma)
+        n_words_looked_up = [len(words_looked_up[i]) for i in range(31)]
+        n_cumul_words_looked_up = [sum(n_words_looked_up[i:]) for i in range(31)]
+        #self.lookupStats.layout.addWidget(QLabel(f"Count of words looked up in the last 30 days: {n_words_looked_up}"))
+        # Draw bar chart with pyqtgraph
+        self.lookups_plotwidget = PlotWidget()
+        self.lookups_plotwidget.setBackground('w')
+        self.lookupStats.layout.addWidget(self.lookups_plotwidget)
+        bar = BarGraphItem(x=[-i for i in range(31)], height=n_words_looked_up, width=1, brush='#4e79a7')
+        self.lookups_plotwidget.addItem(bar)
+
+        ratio = max(n_cumul_words_looked_up) / max(n_words_looked_up)
+        n_cumul_words_looked_up = [int(n / ratio) for n in n_cumul_words_looked_up]
+
+        self.lookups_plotwidget.plot(x=[-i for i in range(31)], y=n_cumul_words_looked_up, pen=mkPen('#f28e2b', width=3))
+        self.lookups_plotwidget.setLabel('left', "Distinct words looked up")
+        self.lookups_plotwidget.setLabel('right', "Cumulative words looked up")
+        axisItem = AxisItem('right')
+        pretty_number_max = int(round(max(n_cumul_words_looked_up)*ratio, -len(str(int(max(n_cumul_words_looked_up)*ratio))) + 1))
+        pretty_number_step = int(round(pretty_number_max // 6, -len(str(pretty_number_max // 6)) + 1))
+        axisItem.setTicks([[(n/ratio, str(int(n))) for n in range(0, pretty_number_max, pretty_number_step)],[]])
+        self.lookups_plotwidget.setAxisItems({'right': axisItem})
+        self.lookups_plotwidget.setLabel('bottom', "Day")
+        self.lookupStats.layout.addWidget(QLabel(f"Total lookups: {prettydigits(sum(n_words_looked_up))} ({round(sum(n_words_looked_up)/30, 1)} per day, {round(sum(n_words_looked_up)/4.3, 1)} per week)"))
