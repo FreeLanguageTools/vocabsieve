@@ -6,10 +6,12 @@ Join our chat on [Matrix](https://webchat.kde.org/#/room/#flt:midov.pl) or [Tele
 
 VocabSieve (originally Simple Sentence Mining, `ssmtool`) is a program for sentence mining, in which sentences with target vocabulary words are collected and added into a spaced repetition system (SRS, e.g. Anki) for language learning. It is meant to help intermediate learners gain vocabulary efficiently by allowing card creation without interrupting the flow of content immersion. It can also import notes from Kindles or ereaders running KOReader, so you can effortlessly make cards with minimal interruption to your reading.
 
-## Workflow gallery
+## Screenshots
 
 [![out.gif](https://i.postimg.cc/vm7frv7p/out.gif)](https://postimg.cc/xkCXYM4R)
 [![out.gif](https://i.postimg.cc/5yj3VjPB/out.gif)](https://postimg.cc/kR38NMPG)
+[![20230220-163240.png](https://i.postimg.cc/rwT8HvJ8/20230220-163240.png)](https://postimg.cc/TpkMLNFS)
+
 
 ## Features
 - **Quick word lookups**: Getting definition, pronunciation, and frequency within one or two keypresses/clicks.
@@ -17,9 +19,11 @@ VocabSieve (originally Simple Sentence Mining, `ssmtool`) is a program for sente
 - **Lemmatization**: Automatically remove inflections to enhance dictionary experience (`books` -> `book`, `ran` -> `run`). This works for most European languages.
 - **Local-first**: No internet is required if you use downloaded resources. VocabSieve has no central server, so there are no fees to keep it running, so you will never have to pay a subscription.
 - **Sane defaults**: Little configuration is needed other than settings for the Anki deck. It comes with two dictionary sources by default for most languages and one pronunciation source that should cover most needs. It comes with a working note type, saving you the effort of finding an appropriate one and/or styling it if you don't want to.
-- **Local resource support**: Dictionaries in StarDict, Migaku, plain JSON, MDX, Lingvo (.dsl), CSV; frequency lists; and audio libraries.
+- **Local resource support**: Dictionaries in StarDict, Migaku, plain JSON, MDX, Lingvo (.dsl), CSV; frequency lists; and audio libraries. Cognates data can also be imported for more accurate vocabulary tracking.
 - **Web reader**: Read epub, fb2 books, or plain articles with one-click word lookups and Anki export.
 - **eReader integration**: Batch-import [KOReader](https://github.com/koreader/koreader) and Kindle highlights to Anki sentence cards to build vocabulary efficiently without interrupting your reading.
+- **Vocabulary tracking**: Track your learning progress effortlessly when you look up (including from ereader), review your Anki cards, or immerse. The data never leaves your computer, and can easily be exported for your own use.
+- **Book analysis**: Not sure what to read? Once VocabSieve gets enough data of what words you know, it can quickly scan books and predict your level of understanding. 
 
 ## Tutorials
 [Wiki page](https://wiki.freelanguagetools.org/vocabsieve_setup)
@@ -29,7 +33,7 @@ VocabSieve (originally Simple Sentence Mining, `ssmtool`) is a program for sente
 
 **Windows and Mac users**: If you want to install this program, go to [Releases](https://github.com/FreeLanguageTools/vocabsieve/releases/) and from the latest release, download the appropriate file for your operating system. 
 
-For a nightly build, please check the [CI artifacts page](https://ci.appveyor.com/project/1over137/vocabsieve/build/artifacts). These are not considered ready for release and likely contain bugs. It is recommended to use the debug version to get more details when things go wrong.
+For a nightly build, please check the [CI artifacts page](https://nightly.link/FreeLanguageTools/vocabsieve/workflows/build-binaries/master). These are not considered ready for release and likely contain bugs. It is recommended to use the debug version to get more details when things go wrong.
 
 
 ## Linux distro packages
@@ -56,9 +60,9 @@ Use your favorite AUR helper (or manually) to install the pacakge `vocabsieve`.
 
 At this time, there are no packages for other distributions. If you are able to create packages for them, please tell me!
 
-The easiest method is to download an AppImage from for a release from the Releases tab on the right. You may also download an AppImage for a nightly build on the [CI artifacts page](https://ci.appveyor.com/project/1over137/vocabsieve/build/artifacts). 
+The easiest method is to download an AppImage from for a release from the Releases tab on the right. You may also download an AppImage for a nightly build on the [CI artifacts page](https://nightly.link/FreeLanguageTools/vocabsieve/workflows/build-binaries/master). 
 
-Alternatively, users should simply use `pip3` to install VocabSieve: `pip3 install --user -U vocabsieve`. Depends on your system, you may need to install `gcc` and `liblzo2` with headers.
+Alternatively, you may also simply use `pip3` to install VocabSieve: `pip3 install --user -U vocabsieve`. Depends on your system, you may need to install `gcc` and `liblzo2` with headers. NOTE: do not use this if you don't know how to deal with Python environments. 
 
 Ubuntu: `apt install liblzo2-dev zlib1g-dev python3-pip python3-pyqt5`, then `pip3 install --user -U vocabsieve`
 
