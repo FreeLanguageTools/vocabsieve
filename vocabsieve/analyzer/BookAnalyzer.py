@@ -54,21 +54,33 @@ class BookAnalyzer(QDialog):
                 p.starmap(split_to_sentences, ((ch, self.langcode) for ch in self.chapters))
                 ) 
             if sentence)
-        print("Split book (MP) in " + str(time.time() - start) + " seconds.")
+        print(f"Split book ({p._processes} threads) in " + str(time.time() - start) + " seconds.")
     
+        start = time.time()
+        self.words = list(p.starmap(lem_word, ((word, self.langcode) for word in self.content.split())))
+        print(f"Lemmatized ({p._processes} threads) book in " + str(time.time() - start) + " seconds.")
+        p.close()
+        unique_words_3k = []
+        unique_words_10k = []
+        # Unique words per 3000 tokens
+        for w in grouper(self.words, 3000):
+            unique_words_3k.append(len(set(w)))
+        for w in grouper(self.words, 10000):
+            unique_words_10k.append(len(set(w)))
+
+        
+
         self.basic_info_left += "<br>Total sentences: " + prettydigits(len(self.sentences))
+        self.basic_info_left += "<br>Unique lemmas per 3000: " + str(round(mean(unique_words_3k))) + " ± " + str(round(stdev(unique_words_3k), 1))
         self.layout.addWidget(QLabel(self.basic_info_left), 3, 0)
         self.basic_info_right = ""
         self.basic_info_right += "Avg. word length: " + str(round(len(self.content) / len(self.content.split()), 2)) + " ± " + str(round(stdev([len(word) for word in self.content.split()]), 2))
         self.basic_info_right += "<br>Avg. sentence length (chars, incl. spaces): " + str(round(mean([len(sentence) for sentence in self.sentences]), 2)) + " ± " + str(round(stdev([len(sentence) for sentence in self.sentences]), 2))
         self.basic_info_right += "<br>Avg. sentence length (words): " + str(round(mean([len(sentence.split()) for sentence in self.sentences]), 2)) + " ± " + str(round(stdev([len(sentence.split()) for sentence in self.sentences]), 2))
+        self.basic_info_right += "<br>Unique lemmas per 10000: " + str(round(mean(unique_words_10k))) + " ± " + str(round(stdev(unique_words_10k), 1))
         self.layout.addWidget(QLabel(self.basic_info_right), 3, 1)
         self.layout.addWidget(QLabel("<h2>Vocabulary coverage</h2>"), 4, 0)
         self.vocab_coverage = ""
-        start = time.time()
-        self.words = list(p.starmap(lem_word, ((word, self.langcode) for word in self.content.split())))
-        print("Lemmatized book in " + str(time.time() - start) + " seconds.")
-        p.close()
         occurrences = sorted(Counter(self.words).items(), key=itemgetter(1), reverse=True)
         topN = list(zip(*occurrences[:100]))[0]
         self.known_words.extend(topN)
@@ -139,13 +151,13 @@ class BookAnalyzer(QDialog):
         print("Calculated cram words in " + str(time.time() - start) + " seconds.")
         
         verdict = ""
-        if len(sentences_3t) / len(sentence_target_counts) > 0.20:
+        if len(sentences_3t) / len(sentence_target_counts) > 0.15:
             verdict = "Too hard"
-        elif len(sentences_3t) / len(sentence_target_counts) > 0.10:
+        elif len(sentences_3t) / len(sentence_target_counts) > 0.08:
             verdict = "Hard"
-        elif len(sentences_3t) / len(sentence_target_counts) > 0.05:
+        elif len(sentences_3t) / len(sentence_target_counts) > 0.03:
             verdict = "Moderate"
-        elif len(sentences_3t) / len(sentence_target_counts) < 0.05:
+        elif len(sentences_3t) / len(sentence_target_counts) < 0.03:
             verdict = "Easy"
 
         show_chapter_names_button = QCheckBox("Toggle full chapter names")
@@ -228,9 +240,6 @@ class BookAnalyzer(QDialog):
         self.plotwidget_words.setLabel('bottom', 'Words')
         # Add Y axis label
         self.plotwidget_words.setLabel('left', 'Count')
-
-
-        
         self.is_drawing = False
     
     def addChapterAxes(self, names=False):
@@ -293,8 +302,6 @@ class BookAnalyzer(QDialog):
             counts_1t.append(w_counts.count(1)/len(w_counts))
             counts_2t.append(w_counts.count(2)/len(w_counts))
             counts_3t.append(w_counts.count(3)/len(w_counts))
-        print("Learned", len(learned_words), "words")
-        print("0T:", sentence_target_counts.count(0), "1T:", sentence_target_counts.count(1), "2T:", sentence_target_counts.count(2), "3T:", sentence_target_counts.count(3))
         self.plotwidget_sentences.clear()
         self.plotwidget_sentences.plot(list(range(0, len(counts_0t)*window_size, window_size)), counts_0t, pen='#4e79a7', name="0T")
         self.plotwidget_sentences.plot(list(range(0, len(counts_1t)*window_size, window_size)), counts_1t, pen='#59a14f', name="1T")
