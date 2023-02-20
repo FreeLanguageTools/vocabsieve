@@ -73,6 +73,9 @@ class Record():
         if not parent.settings.value("internal/seen_has_no_word"):
             self.fixSeen()
             parent.settings.setValue("internal/seen_has_no_word", True)
+        if not parent.settings.value("internal/timestamps_are_seconds", True):
+            self.fixBadTimestamps()
+            parent.settings.setValue("internal/timestamps_are_seconds", True)
         self.conn.commit()
 
     def fixSeen(self):
@@ -90,6 +93,12 @@ class Record():
             UPDATE lookups SET source='vocabsieve'
             """)
         self.conn.commit()
+
+    def fixBadTimestamps(self):
+        "In the past some lookups were imported with millisecond timestamps"
+        self.c.execute("""
+            UPDATE lookups SET timestamp=timestamp/1000 WHERE timestamp > 1000000000000
+            """)
 
     def createTables(self):
         self.c.execute("""
