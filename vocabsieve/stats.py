@@ -114,7 +114,7 @@ class StatisticsWindow(QDialog):
         bar = BarGraphItem(x=[-i for i in range(31)], height=n_words_looked_up, width=1, brush='#4e79a7')
         self.lookups_plotwidget.addItem(bar)
 
-        ratio = max(n_cumul_words_looked_up) / max(n_words_looked_up)
+        ratio = (max(n_cumul_words_looked_up) / max(n_words_looked_up)) if max(n_words_looked_up) else 1
         n_cumul_words_looked_up = [int(n / ratio) for n in n_cumul_words_looked_up]
 
         self.lookups_plotwidget.plot(x=[-i for i in range(31)], y=n_cumul_words_looked_up, pen=mkPen('#f28e2b', width=3))
@@ -122,7 +122,7 @@ class StatisticsWindow(QDialog):
         self.lookups_plotwidget.setLabel('right', "Cumulative words looked up")
         axisItem = AxisItem('right')
         pretty_number_max = int(round(max(n_cumul_words_looked_up)*ratio, -len(str(int(max(n_cumul_words_looked_up)*ratio))) + 1))
-        pretty_number_step = int(round(pretty_number_max // 6, -len(str(pretty_number_max // 6)) + 1))
+        pretty_number_step = max(int(round(pretty_number_max // 6, -len(str(pretty_number_max // 6)) + 1)), 1)
         axisItem.setTicks([[(n/ratio, str(int(n))) for n in range(0, pretty_number_max, pretty_number_step)],[]])
         self.lookups_plotwidget.setAxisItems({'right': axisItem})
         self.lookups_plotwidget.setLabel('bottom', "Day")
