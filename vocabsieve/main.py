@@ -387,7 +387,7 @@ class DictionaryWindow(QMainWindow):
             directory=QStandardPaths.writableLocation(QStandardPaths.HomeLocation)
             )[0]
         if path:
-            BookAnalyzer(self, path).show()
+            BookAnalyzer(self, path).open()
 
     def exportKnownWords(self):
         path, _ = QFileDialog.getSaveFileName(

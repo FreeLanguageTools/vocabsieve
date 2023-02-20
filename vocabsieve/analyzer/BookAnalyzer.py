@@ -14,7 +14,9 @@ import json
 import numpy as np
 from pyqtgraph import PlotWidget, AxisItem
 from collections import Counter
-from multiprocessing import Pool
+from multiprocessing import Pool, freeze_support
+
+freeze_support()
 
 class BookAnalyzer(QDialog):
     def __init__(self, parent, path):
