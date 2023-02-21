@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 import platform
+import qdarktheme
 from shutil import rmtree
 from .tools import *
 from .dictionary import *
@@ -217,6 +218,15 @@ class SettingsDialog(QDialog):
         self.w_anki_word_y.setMinimum(0)
         self.w_anki_word_y.setMaximum(1000)
 
+        self.theme = QComboBox()
+        self.theme.addItems(qdarktheme.get_themes())
+
+        self.accent_color = QPushButton()
+        self.accent_color.setText(self.settings.value("accent_color", "default"))
+        self.accent_color.setToolTip("Hex color code (e.g. #ff0000 for red)")
+        self.accent_color.clicked.connect(self.save_accent_color)
+
+
         self.known_langs = QLineEdit("en")
         self.known_langs.setToolTip("Comma-separated list of languages that you know. These will be used to determine whether a word is cognate or not.")
 
@@ -228,6 +238,7 @@ class SettingsDialog(QDialog):
         self.loadDictionaries()
         self.loadFreqSources()
         self.loadAudioDictionaries()
+            
 
     def initTabs(self):
         self.tabs = QTabWidget()
@@ -267,6 +278,16 @@ class SettingsDialog(QDialog):
             self.settings.setValue("reader_hlcolor", color.name())
             self.reader_hlcolor.setText(color.name())
 
+    def save_accent_color(self):
+        color = QColorDialog.getColor()
+        if color.isValid():
+            self.settings.setValue("accent_color", color.name())
+            self.accent_color.setText(color.name())
+            qdarktheme.setup_theme(
+                self.settings.value("theme", "dark"),
+                custom_colors={"primary": color.name()}
+                )
+
     def reset_settings(self):
         answer = QMessageBox.question(
             self,
@@ -304,6 +325,7 @@ class SettingsDialog(QDialog):
             addDefaultModel(self.settings.value("anki_api", 'http://127.0.0.1:8765'))
         except Exception:
             pass
+        self.loadDecks()
         self.loadFields()
         self.note_type.setCurrentText("vocabsieve-notes")
         self.sentence_field.setCurrentText("Sentence")
@@ -413,14 +435,16 @@ class SettingsDialog(QDialog):
             QLabel("<h3>Interface settings</h3>")
         )
         self.tab_i.layout.addRow(
-            QLabel("<h4>These settings require a restart to take effect.</h4>"))
+            QLabel("<h4>Settings marked * require a restart to take effect.</h4>"))
         if platform.system() == "Linux":
             # Primary selection is only available on Linux
             self.tab_i.layout.addRow(self.primary)
+        self.tab_i.layout.addRow("Theme", self.theme)
+        self.tab_i.layout.addRow("Accent color", self.accent_color)
         self.tab_i.layout.addRow(self.allow_editing)
         self.tab_i.layout.addRow(QLabel("Frequency display mode"), self.freq_display_mode)
-        self.tab_i.layout.addRow(QLabel("Interface layout orientation"), self.orientation)
-        self.tab_i.layout.addRow(QLabel("Text scale"), self.text_scale_box)
+        self.tab_i.layout.addRow(QLabel("*Interface layout orientation"), self.orientation)
+        self.tab_i.layout.addRow(QLabel("*Text scale"), self.text_scale_box)
         self.tab_i.layout.addRow(
             QLabel("<h4>These settings require a page refresh to take effect.</h4>"))
         self.tab_i.layout.addRow(QLabel("Reader font"), self.reader_font)
@@ -662,6 +686,9 @@ class SettingsDialog(QDialog):
         self.register_config_handler(self.w_anki_word_y, 'tracking/w_anki_word_y', 40)
         self.register_config_handler(self.w_anki_ctx_y, 'tracking/w_anki_ctx_y', 20)
         self.register_config_handler(self.known_data_lifetime, 'tracking/known_data_lifetime', 1800)
+
+        self.register_config_handler(self.theme, 'theme', 'auto')
+        self.theme.currentTextChanged.connect(qdarktheme.setup_theme)
 
         self.target_language.currentTextChanged.connect(self.loadDictionaries)
         self.target_language.currentTextChanged.connect(

@@ -109,7 +109,8 @@ class StatisticsWindow(QDialog):
         #self.lookupStats.layout.addWidget(QLabel(f"Count of words looked up in the last 30 days: {n_words_looked_up}"))
         # Draw bar chart with pyqtgraph
         self.lookups_plotwidget = PlotWidget()
-        self.lookups_plotwidget.setBackground('w')
+        bgcolor = self.palette().color(QPalette.Background)
+        self.lookups_plotwidget.setBackground(bgcolor)
         self.lookupStats.layout.addWidget(self.lookups_plotwidget)
         bar = BarGraphItem(x=[-i for i in range(31)], height=n_words_looked_up, width=1, brush='#4e79a7')
         self.lookups_plotwidget.addItem(bar)

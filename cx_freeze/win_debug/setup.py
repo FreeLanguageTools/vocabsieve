@@ -18,6 +18,7 @@ build_exe_options = {
         "lxml",
         "simplemma",
         "pyqtgraph",
+        "qdarktheme",
         "bidict",
         "pystardict",
         "flask",

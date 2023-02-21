@@ -11,6 +11,8 @@ from packaging import version
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
+import qdarktheme
+
 
 from .app_text import *
 QCoreApplication.setApplicationName(settings_app_title)
@@ -1234,7 +1236,15 @@ If you find this tool useful, you can give it a star on Github and tell others a
 
 
 def main():
+    qdarktheme.enable_hi_dpi()
     app = QApplication(sys.argv)
+    if theme:=settings.value("theme"):
+        if color:=settings.value("accent_color"):
+            qdarktheme.setup_theme(theme, custom_colors={"primary": color})
+        else:
+            qdarktheme.setup_theme(theme)
+    else:
+        qdarktheme.setup_theme("auto")
     w = DictionaryWindow()
 
     w.show()

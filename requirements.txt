@@ -21,6 +21,7 @@ pysubs2
 ebooklib
 markdown
 pyqtgraph
+pyqtdarktheme
 markdownify
 readmdict
 python-lzo; sys_platform == 'linux'

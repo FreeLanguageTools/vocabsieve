@@ -94,13 +94,14 @@ class BookAnalyzer(QDialog):
 
         self.plotwidget_words = PlotWidget()
         self.plotwidget_words.setTitle("Unique unknown words per " + str(1000) + " words")
-        self.plotwidget_words.setBackground('#ffffff')
+        bgcolor = self.parent.palette().color(QPalette.Background)
+        self.plotwidget_words.setBackground(bgcolor)
         self.plotwidget_words.addLegend()
 
         self.updateWordChart(self.words, self.settings.value("analyzer/word_step_size", 100, type=int))  
         self.plotwidget_sentences = PlotWidget()
         self.plotwidget_sentences.setTitle("Sentence target count")
-        self.plotwidget_sentences.setBackground('#ffffff')
+        self.plotwidget_sentences.setBackground(bgcolor)
         self.plotwidget_sentences.addLegend()      
         self.layout.addWidget(self.plotwidget_words, 6, 0, 1, 2)
         
