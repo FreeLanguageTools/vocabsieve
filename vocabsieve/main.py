@@ -85,7 +85,8 @@ class DictionaryWindow(QMainWindow):
                 and QClipboard.supportsSelection(QApplication.clipboard()):
             QApplication.clipboard().selectionChanged.connect(
                 lambda: self.clipboardChanged(False, True))
-        QApplication.clipboard().dataChanged.connect(self.clipboardChanged)
+        if not os.environ.get("XDG_SESSION_TYPE") == "wayland":
+            QApplication.clipboard().dataChanged.connect(self.clipboardChanged)
 
         if not self.settings.value("internal/configured"):
             self.configure()
@@ -98,7 +99,7 @@ class DictionaryWindow(QMainWindow):
         self.setFont(font)
 
     def focusInEvent(self, event: QFocusEvent) -> None:
-        if platform.system() == "Darwin":
+        if platform.system() == "Darwin" or (platform.system().startswith("Linux") and os.environ.get("XDG_SESSION_TYPE") == "wayland"):
             if self.prev_clipboard != QApplication.clipboard().text():
                 self.clipboardChanged(evenWhenFocused=True)
             self.prev_clipboard = QApplication.clipboard().text()
