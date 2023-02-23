@@ -82,7 +82,8 @@ class DictionaryWindow(QMainWindow):
 
         GlobalObject().addEventListener("double clicked", self.lookupClicked)
         if self.settings.value("primary", False, type=bool)\
-                and QClipboard.supportsSelection(QApplication.clipboard()):
+                and QClipboard.supportsSelection(QApplication.clipboard())\
+                and not os.environ.get("XDG_SESSION_TYPE") == "wayland":
             QApplication.clipboard().selectionChanged.connect(
                 lambda: self.clipboardChanged(False, True))
         if not os.environ.get("XDG_SESSION_TYPE") == "wayland":
@@ -100,7 +101,7 @@ class DictionaryWindow(QMainWindow):
 
     def focusInEvent(self, event: QFocusEvent) -> None:
         if platform.system() == "Darwin" or (platform.system().startswith("Linux") and os.environ.get("XDG_SESSION_TYPE") == "wayland"):
-            if self.prev_clipboard != QApplication.clipboard().text():
+            if self.prev_clipboard != QApplication.clipboard().text() and len(QApplication.clipboard().text()):
                 self.clipboardChanged(evenWhenFocused=True)
             self.prev_clipboard = QApplication.clipboard().text()
         super().focusInEvent(event)
