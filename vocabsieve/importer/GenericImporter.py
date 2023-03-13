@@ -197,7 +197,7 @@ class GenericImporter(QDialog):
             if word and sentence and definition:
                 if self.settings.value("bold_word", 1, type=int):
                     sentence = re.sub(
-                        r"__([ \w]+)__",
+                        r"__(.+?)__",
                         r"<strong>\1</strong>",
                         sentence
                         )
