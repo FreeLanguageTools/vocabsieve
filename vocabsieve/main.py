@@ -306,7 +306,6 @@ class DictionaryWindow(QMainWindow):
         self.toanki_button.clicked.connect(self.createNote)
         self.read_button.clicked.connect(lambda: self.clipboardChanged(True))
 
-        self.sentence.textChanged.connect(self.updateAnkiButtonState)
 
         self.bar.addPermanentWidget(self.stats_label)
 
@@ -547,14 +546,6 @@ class DictionaryWindow(QMainWindow):
         layout.setRowStretch(6, 0)
 
         return layout
-
-    def updateAnkiButtonState(self, forceDisable=False) -> None:  
-        """Disables self.toanki_button if sentence field is empty"""
-
-        if not self.sentence.toPlainText().strip() or forceDisable:
-            self.toanki_button.setEnabled(False)
-        else:
-            self.toanki_button.setEnabled(True)
 
     def checkAnkiConnect(self):
         api = self.settings.value('anki_api', 'http://127.0.0.1:8765')
