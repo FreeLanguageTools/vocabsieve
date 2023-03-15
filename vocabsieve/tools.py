@@ -237,6 +237,9 @@ def ebook2text(path):
     ch_pos = {}
     position = 0
     _, ext = os.path.splitext(path)
+    if ext == ".txt":
+        with open(path, "r") as f:
+            return [f.read()], {0: "<content>"}
     if ext in {'.azw', '.azw3', '.kfx', '.mobi'}:
         _, newpath = mobi.extract(path)
         # newpath is either html or epub
