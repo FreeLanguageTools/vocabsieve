@@ -27,7 +27,7 @@ from .config import *
 from .stats import StatisticsWindow
 from .db import *
 from .dictionary import *
-from .importer import KoreaderImporter, KindleVocabImporter, KoreaderVocabImporter
+from .importer import KoreaderImporter, KindleVocabImporter, KoreaderVocabImporter, AutoTextImporter
 from .reader import ReaderServer
 from .contentmanager import ContentManager
 from .global_events import GlobalObject
@@ -341,6 +341,7 @@ class DictionaryWindow(QMainWindow):
         self.import_koreader_action = QAction("K&OReader highlights (deprecated)")
         self.import_koreader_vocab_action = QAction("K&OReader vocab builder")
         self.import_kindle_new_action = QAction("K&indle lookups")
+        self.import_auto_text = QAction("Auto import vocab from text")
 
         self.export_notes_csv_action = QAction("Export &notes to CSV")
         self.export_lookups_csv_action = QAction("Export &lookup data to CSV")
@@ -354,6 +355,7 @@ class DictionaryWindow(QMainWindow):
         self.import_koreader_action.triggered.connect(self.importkoreader)
         self.import_koreader_vocab_action.triggered.connect(self.importkoreaderVocab)
         self.import_kindle_new_action.triggered.connect(self.importkindleNew)
+        self.import_auto_text.triggered.connect(self.importautotext)
         self.export_notes_csv_action.triggered.connect(self.exportNotes)
         self.export_lookups_csv_action.triggered.connect(self.exportLookups)
         self.stats_action.triggered.connect(self.onStats)
@@ -366,7 +368,8 @@ class DictionaryWindow(QMainWindow):
                 self.repeat_last_import_action,
                 self.import_koreader_action, 
                 self.import_koreader_vocab_action,
-                self.import_kindle_new_action
+                self.import_kindle_new_action,
+                self.import_auto_text
             ]
         )
 
@@ -380,6 +383,8 @@ class DictionaryWindow(QMainWindow):
         )
 
         self.setMenuBar(self.menu)
+
+
 
     def onAnalyzeBook(self):
         path = QFileDialog.getOpenFileName(
@@ -596,6 +601,16 @@ class DictionaryWindow(QMainWindow):
                 "Check if you've picked the right directory: it should be your Kindle root folder")
         except Exception as e:
             QMessageBox.warning(self, "Something went wrong", "Error: "+repr(e))
+
+    def importautotext(self) -> None:
+        path = QFileDialog.getOpenFileName(
+            parent=self, 
+            caption="Select book or text file", 
+            filter="Book, text files (*.epub *.fb2 *.mobi *.html *.azw *.azw3 *.kfx *.txt)", 
+            directory=QStandardPaths.writableLocation(QStandardPaths.HomeLocation)
+            )[0]
+        if path:
+            AutoTextImporter(self, path).exec()
 
     def importkoreader(self) -> None:
         path = QFileDialog.getExistingDirectory(
