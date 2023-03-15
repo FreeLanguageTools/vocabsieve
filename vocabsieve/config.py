@@ -748,6 +748,7 @@ class SettingsDialog(QDialog):
         custom_dicts = json.loads(self.settings.value("custom_dicts", '[]'))
         self.dict_source.blockSignals(True)
         self.dict_source.clear()
+        self.dict_source.addItem("<disabled>")
         self.dict_source2.blockSignals(True)
         self.dict_source2.clear()
         self.dict_source2.addItem("<disabled>")

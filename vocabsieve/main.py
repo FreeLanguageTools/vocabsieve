@@ -853,6 +853,7 @@ class DictionaryWindow(QMainWindow):
         QCoreApplication.processEvents()
         TL = self.getLanguage()
         lemmatize = self.settings.value("lemmatization", True, type=bool)
+        dict_name = self.settings.value("dict_source", "Wiktionary (English)")
         result = self.lookup(word, use_lemmatize)
         self.setState(result)
         if result.get("definition") or result.get("definition2"):
@@ -932,6 +933,13 @@ class DictionaryWindow(QMainWindow):
                     self.freq_display.setText(freq_to_stars(1e6, lemfreq))
         self.status(
             f"L: '{word}' in '{language}', lemma: {short_sign}, from {dictionaries.get(dictname, dictname)}")
+        if dictname == "<disabled>":
+            word = lem_word(word, language, lem_greedily) if lemmatize else word
+            self.status("Dict disabled")
+            return {
+                "word": word,
+                "definition": ""
+            }
         try:
             item = lookupin(
                 word,
