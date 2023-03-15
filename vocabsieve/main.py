@@ -76,7 +76,6 @@ class DictionaryWindow(QMainWindow):
         self.setupButtons()
         self.startServer()
         self.initTimer()
-        self.updateAnkiButtonState()
         self.setupShortcuts()
         self.checkUpdates()
 
@@ -699,7 +698,6 @@ class DictionaryWindow(QMainWindow):
 
     def lookupClicked(self, use_lemmatize=True) -> None:
         target = self.getCurrentWord()
-        self.updateAnkiButtonState()
         if target:
             self.lookupSet(target, use_lemmatize)
 
@@ -945,7 +943,6 @@ class DictionaryWindow(QMainWindow):
                 self.settings.value("gtrans_api", "https://lingva.ml"))
         except Exception as e:
             self.status(repr(e))
-            self.updateAnkiButtonState(True)
             item = {
                 "word": word,
                 "definition": failed_lookup(word, self.settings)
