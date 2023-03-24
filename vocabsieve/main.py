@@ -679,6 +679,8 @@ class DictionaryWindow(QMainWindow):
         self.shortcut_paste.activated.connect(self.read_button.animateClick)
         self.shortcut_web = QShortcut(QKeySequence('Ctrl+1'), self)
         self.shortcut_web.activated.connect(self.web_button.animateClick)
+        self.shortcut_clearimage = QShortcut(QKeySequence('Ctrl+I'), self)
+        self.shortcut_clearimage.activated.connect(lambda: self.setImage(None))
 
     def getCurrentWord(self) -> str:
         """Returns currently selected word. If there isn't any, last selected word is returned"""
