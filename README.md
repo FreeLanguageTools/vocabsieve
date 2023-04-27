@@ -64,7 +64,7 @@ The easiest method is to download an AppImage from for a release from the Releas
 
 Alternatively, you may also simply use `pip3` to install VocabSieve: `pip3 install --user -U vocabsieve`. Depends on your system, you may need to install `gcc` and `liblzo2` with headers. NOTE: do not use this if you don't know how to deal with Python environments. 
 
-Ubuntu: `apt install liblzo2-dev zlib1g-dev python3-pip python3-pyqt5`, then `pip3 install --user -U vocabsieve`
+Ubuntu: `apt install liblzo2-dev zlib1g-dev python3-pip python3-pyqt5 python3-pyqt5.qtsvg`, then `pip3 install --user -U vocabsieve`
 
 This should install an executable and a desktop icon and behave like any other GUI application you may have.
 

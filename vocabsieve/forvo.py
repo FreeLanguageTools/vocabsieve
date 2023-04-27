@@ -48,7 +48,7 @@ class Forvo:
             raise Exception("failed to fetch forvo page")
         html = BeautifulSoup(page, "lxml")
         available_pronunciations_lists_el = html.find_all(
-            id=re.compile(r"^pronunciations-list-[a-z]+(?:_[a-z]+)?+"))
+            id=re.compile(r"^pronunciations-list-[a-z]+(?:_[a-z]+)?"))
         available_lang_locales = [
             self.get_locale(*re.findall(
                 r"^pronunciations-list-([a-z]+)(?:_([a-z]+))?",
@@ -122,9 +122,10 @@ class Forvo:
                         break
             else:
                 origin = username[0].contents[0]
+            word = self.url.rsplit('/', 2)[-1]
             pronunciation_object = Pronunciation(self.language,
-                                                 "headword",
-                                                 self.url.rsplit('/', 2)[-1],
+                                                 word,
+                                                 word,
                                                  vote_count,
                                                  origin,
                                                  dl_url,
