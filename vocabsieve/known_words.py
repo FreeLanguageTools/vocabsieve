@@ -110,7 +110,7 @@ def _getKnownData(settings, rec):
                 if ctx_field != "<Ignore>":
                     ctx = info['fields'][ctx_field]['value']
                 if word:
-                    lemma = lem_word(word, langcode).lower()
+                    lemma = word #lem_word(word, langcode).lower()
                     tgt_lemmas.append(lemma)
                     try:
                         score[lemma] += w_anki_word
@@ -137,7 +137,7 @@ def _getKnownData(settings, rec):
                 if ctx_field != "<Ignore>":
                     ctx = info['fields'][ctx_field]['value']
                 if word:
-                    lemma = lem_word(word, langcode).lower()
+                    lemma = word #lem_word(word, langcode).lower()
                     tgt_lemmas.append(lemma)
                     try:
                         score[lemma] += w_anki_word_y
