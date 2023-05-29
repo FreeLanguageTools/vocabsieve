@@ -42,7 +42,6 @@ build_exe_options = {
         ],
     "include_files": include_files,
     "excludes": ["tkinter"],
-    "bin_includes": ["liblzo2.so"],
     "include_msvcr": True,
     "silent_level": 1
     }
