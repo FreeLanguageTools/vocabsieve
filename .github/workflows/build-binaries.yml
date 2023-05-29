@@ -43,7 +43,7 @@ jobs:
       run: |
         pip install wheel
         pip install -r requirements.txt
-        pip install cx_freeze==6.14.9
+        pip install cx_freeze
     - name: Build Windows App
       run: |
         cd cx_freeze/win_debug
