@@ -1,5 +1,5 @@
 import simplemma
-import pymorphy2
+import pymorphy3
 import re
 from functools import lru_cache
 import unicodedata
@@ -7,20 +7,20 @@ import unicodedata
 PYMORPHY_SUPPORT = []
 morph = {}
 try:
-    import pymorphy2_dicts_ru
-    morph['ru'] = pymorphy2.MorphAnalyzer(path=pymorphy2_dicts_ru.get_path(), lang="ru")
+    import pymorphy3_dicts_ru
+    morph['ru'] = pymorphy3.MorphAnalyzer(path=pymorphy3_dicts_ru.get_path(), lang="ru")
     PYMORPHY_SUPPORT.append("ru")
-    print("PyMorphy2 is available for RU")
+    print("pymorphy3 is available for RU")
 except Exception as e:
-    print("PyMorphy2 is not available for RU, performance may be bad:", e)
+    print("pymorphy3 is not available for RU, performance may be bad:", e)
 
 try:
-    import pymorphy2_dicts_uk
-    morph['uk'] = pymorphy2.MorphAnalyzer(path=pymorphy2_dicts_uk.get_path(), lang="uk")
-    print("PyMorphy2 is available for UK")
+    import pymorphy3_dicts_uk
+    morph['uk'] = pymorphy3.MorphAnalyzer(path=pymorphy3_dicts_uk.get_path(), lang="uk")
+    print("pymorphy3 is available for UK")
     PYMORPHY_SUPPORT.append("uk")
 except Exception as e:
-    print("PyMorphy2 is not available for UK, performance may be bad:", e)
+    print("pymorphy3 is not available for UK, performance may be bad:", e)
 
 simplemma_languages = ["ast", "bg", "ca", "cs", "cy", "da", "de", "el", "en",
                        "enm", "es", "et", "fa", "fi", "fr", "ga", "gd", "gl",
