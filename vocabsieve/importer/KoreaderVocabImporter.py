@@ -21,6 +21,8 @@ def getBookMetadata(path):
         data = slpp.decode(" ".join("\n".join(f.readlines()[1:]).split(" ")[1:]))
         booklang = data['doc_props']['language']
         booktitle = data['doc_props']['title']
+        # truncate long language settings e.g. "tr-TR" -> "tr"
+        booklang = booklang[2:3] == '-' and booklang[:2] or booklang
     return booklang, booktitle
 
 
