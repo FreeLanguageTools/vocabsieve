@@ -14,9 +14,9 @@ charset-normalizer
 slpp
 mobi
 sentence_splitter
-pymorphy2
-pymorphy2-dicts-ru
-pymorphy2-dicts-uk
+pymorphy3
+pymorphy3-dicts-ru
+pymorphy3-dicts-uk
 pysubs2
 ebooklib
 markdown
@@ -24,6 +24,6 @@ pyqtgraph
 pyqtdarktheme
 markdownify
 readmdict
-python-lzo; sys_platform == 'linux'
+python-lzo==1.12; sys_platform != 'win32'
 packaging
 typing_extensions

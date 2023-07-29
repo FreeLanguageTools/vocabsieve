@@ -23,7 +23,7 @@ dictdb = LocalDictionary()
 gtrans_languages = ['af', 'sq', 'am', 'ar', 'hy', 'az', 'eu', 'be', 'bn',
                     'bs', 'bg', 'ca', 'ceb', 'ny', 'zh', 'zh_HANT', 'co', 'hr', 'cs',
                     'da', 'nl', 'en', 'eo', 'et', 'tl', 'fi', 'fr', 'fy', 'gl', 'ka',
-                    'de', 'el', 'gu', 'ht', 'ha', 'haw', 'hi', 'hmn', 'hu', 'is', 'ig',
+                    'de', 'el', 'gu', 'he', 'ht', 'ha', 'haw', 'hi', 'hmn', 'hu', 'is', 'ig',
                     'id', 'ga', 'it', 'ja', 'kn', 'kk', 'km', 'rw', 'ko', 'ku', 'ky',
                     'lo', 'la', 'lv', 'lt', 'lb', 'mk', 'mg', 'ms', 'ml', 'mt', 'mi',
                     'mr', 'mn', 'my', 'ne', 'no', 'or', 'ps', 'fa', 'pl', 'pt', 'pa',
@@ -94,7 +94,10 @@ def wiktionary(word, language: str) -> Optional[dict]:
 
 def googletranslate(word, language, gtrans_lang, gtrans_api) -> Optional[LookUpResults]:
     "Google translation, through the googletrans python library"
+    if language == "he":
+        language = "iw" # fix for hebrew language code
     url = f"{gtrans_api}/api/v1/{language}/{gtrans_lang}/{quote(word)}"
+    print(url)
     res = requests.get(url)
     if res.status_code == 200:
         return {"word": word, "definition": res.json()['translation']}

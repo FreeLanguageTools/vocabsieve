@@ -22,9 +22,9 @@ build_exe_options = {
         "bidict",
         "pystardict",
         "flask",
-        "pymorphy2",
-        "pymorphy2_dicts_ru",
-        "pymorphy2_dicts_uk",
+        "pymorphy3",
+        "pymorphy3_dicts_ru",
+        "pymorphy3_dicts_uk",
         "flask_sqlalchemy",
         "jinja2.ext",
         "sqlalchemy",
@@ -42,7 +42,6 @@ build_exe_options = {
         ],
     "include_files": include_files,
     "excludes": ["tkinter"],
-    "bin_includes": ["liblzo2.so"],
     "include_msvcr": True,
     "silent_level": 1
     }

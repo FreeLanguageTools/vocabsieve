@@ -234,9 +234,10 @@ class GenericImporter(QDialog):
                 notes.append(content)
         res = addNotes(self.parent.settings.value("anki_api"), notes)
         # Record last import data
-        self.parent.settings.setValue("last_import_method", self.methodname)
-        self.parent.settings.setValue("last_import_path", self.path)
-        self.parent.settings.setValue(f"last_import_date_{self.methodname}", self.lastDate[:10])
+        if self.methodname != "auto": # don't save for auto vocab extraction
+            self.parent.settings.setValue("last_import_method", self.methodname)
+            self.parent.settings.setValue("last_import_path", self.path)
+            self.parent.settings.setValue(f"last_import_date_{self.methodname}", self.lastDate[:10])
 
         self.layout.addRow(QLabel(
             QDateTime.currentDateTime().toString('[hh:mm:ss]') + " "
