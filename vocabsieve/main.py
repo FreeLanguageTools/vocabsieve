@@ -1,4 +1,5 @@
 import csv
+import threading
 import importlib
 import os
 import platform
@@ -55,6 +56,7 @@ class DictionaryWindow(QMainWindow):
         self.setFocusPolicy(Qt.StrongFocus)
         self.widget = QWidget()
         self.settings = settings
+        self.audio_fetched.connect(self.updateAudioUI)
 
         self.rec = Record(self)
         self.setCentralWidget(self.widget)
@@ -844,6 +846,27 @@ class DictionaryWindow(QMainWindow):
         else:
             self.setSentence(preprocess_clipboard(text, lang))
 
+    def updateAudioUI(self, audios):
+        self.audios = audios
+        self.audio_selector.clear()
+        if len(self.audios):
+            for item in self.audios:
+                self.audio_selector.addItem("🔊 " + item)
+            self.audio_selector.setCurrentItem(self.audio_selector.item(0))
+
+    def fetchAudioInBackground(self, word):
+        try:
+            audios = getAudio(
+                word,
+                self.settings.value("target_language", 'en'),
+                dictionary=self.settings.value("audio_dict", "Forvo (all)"),
+                custom_dicts=json.loads(
+                    self.settings.value("custom_dicts", '[]')))
+
+            self.audio_fetched.emit(audios)
+        except Exception as e:
+            print("Failed to fetch audio:", repr(e))
+
     def lookupSet(self, word, use_lemmatize=True) -> None:
         sentence_text = self.sentence.unboldedText
         if settings.value("bold_style", type=int):
@@ -883,27 +906,8 @@ class DictionaryWindow(QMainWindow):
         QCoreApplication.processEvents()
         self.audio_path = ""
 
-        if self.settings.value("audio_dict", "Forvo (all)") == "<disabled>":
-            return
-
-        try:
-            self.audios = getAudio(
-                word,
-                self.settings.value("target_language", 'en'),
-                dictionary=self.settings.value("audio_dict", "Forvo (all)"),
-                custom_dicts=json.loads(
-                    self.settings.value("custom_dicts", '[]')))
-        except Exception:
-            self.audios = {}
-        
-        self.audio_selector.clear()
-
-        if len(self.audios):
-            for item in self.audios:
-                self.audio_selector.addItem("🔊 " + item)
-            self.audio_selector.setCurrentItem(
-                self.audio_selector.item(0)
-            )
+        if self.settings.value("audio_dict", "Forvo (all)") != "<disabled>":
+            threading.Thread(target=self.fetchAudioInBackground, args=(word,)).start()
 
     def getLanguage(self) -> str:
         return self.settings.value("target_language", "en")  # type: ignore
