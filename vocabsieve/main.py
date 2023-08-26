@@ -50,6 +50,7 @@ else:
     MOD = "Ctrl"
 
 class DictionaryWindow(QMainWindow):
+    audio_fetched = pyqtSignal(dict)
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle(app_title(True))
