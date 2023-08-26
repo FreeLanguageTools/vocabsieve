@@ -369,7 +369,7 @@ class DictionaryWindow(QMainWindow):
         importmenu.addActions(
             [
                 self.repeat_last_import_action,
-                self.import_koreader_action, 
+                self.import_koreader_action,
                 self.import_koreader_vocab_action,
                 self.import_kindle_new_action,
                 self.import_auto_text
@@ -378,7 +378,7 @@ class DictionaryWindow(QMainWindow):
 
         exportmenu.addActions(
             [
-                self.export_notes_csv_action, 
+                self.export_notes_csv_action,
                 self.export_lookups_csv_action,
                 self.export_known_words_action,
                 self.export_word_scores_action
@@ -391,9 +391,9 @@ class DictionaryWindow(QMainWindow):
 
     def onAnalyzeBook(self):
         path = QFileDialog.getOpenFileName(
-            parent=self, 
-            caption="Select book", 
-            filter="Ebook files (*.epub *.fb2 *.mobi *.html *.azw *.azw3 *.kfx)", 
+            parent=self,
+            caption="Select book",
+            filter="Ebook files (*.epub *.fb2 *.mobi *.html *.azw *.azw3 *.kfx)",
             directory=QStandardPaths.writableLocation(QStandardPaths.HomeLocation)
             )[0]
         if path:
@@ -411,7 +411,7 @@ class DictionaryWindow(QMainWindow):
         )
         if not path:
             return
-        
+
         known_words, *_ = getKnownWords(self.settings, self.rec)
         if self.settings.value('target_language', 'en') in ['ru', 'uk']:
             known_words = [word for word in known_words if starts_with_cyrillic(word)]
@@ -431,7 +431,7 @@ class DictionaryWindow(QMainWindow):
         )
         if not path:
             return
-        
+
         score, *_ = getKnownData(self.settings, self.rec)
         score = {k:v for k,v in score.items() if not k.startswith('http') and " " not in k and not k.isnumeric()}
 
@@ -461,11 +461,11 @@ class DictionaryWindow(QMainWindow):
         )
         if not path:
             return
-        
+
         with open(path, 'w', encoding='utf-8') as file:
             writer = csv.writer(file)
             writer.writerow(
-                ['timestamp', 'content', 'anki_export_success', 'sentence', 'word', 
+                ['timestamp', 'content', 'anki_export_success', 'sentence', 'word',
                 'definition', 'definition2', 'pronunciation', 'image', 'tags']
             )
             writer.writerows(self.rec.getAllNotes())
@@ -607,9 +607,9 @@ class DictionaryWindow(QMainWindow):
 
     def importautotext(self) -> None:
         path = QFileDialog.getOpenFileName(
-            parent=self, 
-            caption="Select book or text file", 
-            filter="Book, text files (*.epub *.fb2 *.mobi *.html *.azw *.azw3 *.kfx *.txt)", 
+            parent=self,
+            caption="Select book or text file",
+            filter="Book, text files (*.epub *.fb2 *.mobi *.html *.azw *.azw3 *.kfx *.txt)",
             directory=QStandardPaths.writableLocation(QStandardPaths.HomeLocation)
             )[0]
         if path:
@@ -626,7 +626,7 @@ class DictionaryWindow(QMainWindow):
         try:
             KoreaderImporter(self, path).exec()
         except ValueError:
-            QMessageBox.warning(self, "No notes are found", 
+            QMessageBox.warning(self, "No notes are found",
                 "Check if you've picked the right directory. It should be a folder containing all of your the ebooks you want to extract from")
         except Exception as e:
             QMessageBox.warning(self, "Something went wrong", "Error: "+repr(e))
@@ -642,7 +642,7 @@ class DictionaryWindow(QMainWindow):
         try:
             KoreaderVocabImporter(self, path).exec()
         except ValueError:
-            QMessageBox.warning(self, "No notes are found", 
+            QMessageBox.warning(self, "No notes are found",
                 "Check if you've picked the right directory. It should be a folder containing both all of your books and KOReader settings.")
         except Exception as e:
             QMessageBox.warning(self, "Something went wrong", "Error: "+repr(e))
@@ -664,8 +664,8 @@ class DictionaryWindow(QMainWindow):
                 KoreaderVocabImporter(self, path).exec()
             else:
                 # Nightly users, clear it for them
-                self.settings.setValue("last_import_method", "") 
-                self.settings.setValue("last_import_path", "") 
+                self.settings.setValue("last_import_method", "")
+                self.settings.setValue("last_import_path", "")
                 QMessageBox.warning(self, "You have not imported notes before",
                     "Use any one of the other two options on the menu, and you will be able to use this one next time.")
         except Exception as e:
@@ -800,7 +800,7 @@ class DictionaryWindow(QMainWindow):
             self.image_viewer.setText("<center><b>&lt;No image selected&gt;</center>")
             self.image_path = ""
             return
-        
+
         filename = str(int(time.time()*1000)) + '.' + self.settings.value("img_format", "jpg")
         self.image_path = os.path.join(datapath, "images", filename)
         content.save(
@@ -825,7 +825,7 @@ class DictionaryWindow(QMainWindow):
             if QApplication.clipboard().mimeData().hasImage():
                 self.setImage(QApplication.clipboard().pixmap())
                 return
-            
+
             text = QApplication.clipboard().text()
 
         lang = self.settings.value("target_language", "en")
@@ -868,31 +868,10 @@ class DictionaryWindow(QMainWindow):
         except Exception as e:
             print("Failed to fetch audio:", repr(e))
 
-    def updateAudioUI(self, audios):
-        self.audios = audios
-        self.audio_selector.clear()
-        if len(self.audios):
-            for item in self.audios:
-                self.audio_selector.addItem("🔊 " + item)
-            self.audio_selector.setCurrentItem(self.audio_selector.item(0))
-
-    def fetchAudioInBackground(self, word):
-        try:
-            audios = getAudio(
-                word,
-                self.settings.value("target_language", 'en'),
-                dictionary=self.settings.value("audio_dict", "Forvo (all)"),
-                custom_dicts=json.loads(
-                    self.settings.value("custom_dicts", '[]')))
-
-            self.audio_fetched.emit(audios)
-        except Exception as e:
-            print("Failed to fetch audio:", repr(e))
-
     def lookupSet(self, word, use_lemmatize=True) -> None:
         sentence_text = self.sentence.unboldedText
         if settings.value("bold_style", type=int):
-            # Bold word that was clicked on, either with "<b>{word}</b>" or 
+            # Bold word that was clicked on, either with "<b>{word}</b>" or
             # "__{word}__".
 
             if self.settings.value("bold_style", type=int) == 1:
@@ -903,11 +882,11 @@ class DictionaryWindow(QMainWindow):
                 print(f"BoldStyle={self.settings.value('bold_style', type=int)} is not implemented")
 
             sentence_text = bold_word_in_text(
-                word, 
-                sentence_text, 
+                word,
+                sentence_text,
                 apply_bold,
-                self.getLanguage(), 
-                use_lemmatize, 
+                self.getLanguage(),
+                use_lemmatize,
                 self.getLemGreedy())
 
         self.sentence.setHtml(sentence_text)
@@ -1092,7 +1071,7 @@ class DictionaryWindow(QMainWindow):
                 addNote(api, content)
 
             self.rec.recordNote(
-                    json.dumps(content), 
+                    json.dumps(content),
                     sentence,
                     word,
                     definition,
@@ -1110,7 +1089,7 @@ class DictionaryWindow(QMainWindow):
             self.status(f"Note added: '{word}'")
         except Exception as e:
             self.rec.recordNote(
-                json.dumps(content), 
+                json.dumps(content),
                 sentence,
                 word,
                 definition,
@@ -1134,8 +1113,8 @@ class DictionaryWindow(QMainWindow):
             )
         self.setImage(None)
 
-    def process_defi_anki(self, 
-                          w: SearchableTextEdit, 
+    def process_defi_anki(self,
+                          w: SearchableTextEdit,
                           display_mode: DefinitionDisplayModes) -> str:
         """Process definitions before sending to Anki"""
 
@@ -1203,7 +1182,7 @@ class DictionaryWindow(QMainWindow):
             except Exception as e:
                 print(repr(e))
                 self.status("Failed to start API server")
-        
+
         if self.settings.value("reader_enabled", True, type=bool):
             try:
                 self.thread2 = QThread()
