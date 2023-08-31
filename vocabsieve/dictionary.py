@@ -43,16 +43,19 @@ pronunciation_sources = ["Forvo (all)", "Forvo (best)"]
 
 
 
-def preprocess_clipboard(s: str, lang: str) -> str:
+def preprocess_clipboard(s: str, lang: str, should_convert_to_uppercase: bool = False) -> str:
     """
     Pre-process string from clipboard before showing it
     NOTE: originally intended for parsing JA and ZH, but
     that feature has been removed for the time being due
     to maintainence and dependency concerns.
     """
-    return s
-
-
+    # Convert the first letter to uppercase if should_convert_to_uppercase is True
+    if should_convert_to_uppercase:
+        print("Uppercasing")
+        return s[0].upper() + s[1:]
+    else:
+        return s
 
 
 def fmt_result(definitions):

@@ -49,6 +49,10 @@ class SettingsDialog(QDialog):
             "Allow directly editing definition fields")
         self.primary = QCheckBox("Use primary selection")
         self.register_config_handler(self.allow_editing, "allow_editing", True)
+        self.capitalize_first_letter = QCheckBox(
+            "Capitalize first letter of sentence")
+        self.capitalize_first_letter.setToolTip(
+            "Capitalize the first letter of clipboard's content before pasting into the sentence field. Does not affect dictionary lookups.")
         self.lemmatization = QCheckBox(
             "Use lemmatization for dictionary lookups")
         self.lemmatization.setToolTip(
@@ -473,6 +477,7 @@ class SettingsDialog(QDialog):
                     self.text_scale.value() / 100,
                     "1.2f") + "x"))
 
+        self.tab_m.layout.addRow(self.capitalize_first_letter)
         self.tab_m.layout.addRow(QLabel("<h3>Images</h3>"))
         self.tab_m.layout.addRow(QLabel("Image format"), self.img_format)
         self.tab_m.layout.addRow(QLabel("<i>◊ WebP, JPG, GIF are lossy, which create smaller files.</i>"))
@@ -671,6 +676,7 @@ class SettingsDialog(QDialog):
             self.orientation, 'orientation', 'Vertical')
         self.register_config_handler(self.text_scale, 'text_scale', '100')
 
+        self.register_config_handler(self.capitalize_first_letter, 'capitalize_first_letter', False)
         self.register_config_handler(self.img_format, 'img_format', 'jpg')
         self.register_config_handler(self.img_quality, 'img_quality', -1)
 

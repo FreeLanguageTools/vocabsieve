@@ -805,6 +805,9 @@ class DictionaryWindow(QMainWindow):
         )
         self.image_viewer.setPixmap(content)
 
+    def getConvertToUppercase(self) -> bool:
+        return self.settings.value("capitalize_first_letter", False, type=bool)
+
     def clipboardChanged(self, evenWhenFocused=False, selection=False):
         """
         If the input is just a single word, we look it up right away.
@@ -825,6 +828,7 @@ class DictionaryWindow(QMainWindow):
             
             text = QApplication.clipboard().text()
 
+        should_convert_to_uppercase = self.getConvertToUppercase()
         lang = self.settings.value("target_language", "en")
         if self.isActiveWindow() and not evenWhenFocused:
             return
@@ -833,16 +837,16 @@ class DictionaryWindow(QMainWindow):
             target = copyobj['word']
             target = re.sub('[\\?\\.!«»…()\\[\\]]*', "", target)
             self.previousWord = target
-            sentence = preprocess_clipboard(copyobj['sentence'], lang)
+            sentence = preprocess_clipboard(copyobj['sentence'], lang, should_convert_to_uppercase)
             self.setSentence(sentence)
             self.setWord(target)
             self.lookupSet(target)
-        elif self.single_word.isChecked() and is_oneword(preprocess_clipboard(text, lang)):
-            self.setSentence(word := preprocess_clipboard(text, lang))
+        elif self.single_word.isChecked() and is_oneword(preprocess_clipboard(text, lang, should_convert_to_uppercase)):
+            self.setSentence(word := preprocess_clipboard(text, lang, should_convert_to_uppercase))
             self.setWord(word)
             self.lookupSet(text)
         else:
-            self.setSentence(preprocess_clipboard(text, lang))
+            self.setSentence(preprocess_clipboard(text, lang, should_convert_to_uppercase))
 
     def lookupSet(self, word, use_lemmatize=True) -> None:
         sentence_text = self.sentence.unboldedText
