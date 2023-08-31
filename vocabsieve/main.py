@@ -806,7 +806,7 @@ class DictionaryWindow(QMainWindow):
         self.image_viewer.setPixmap(content)
 
     def getConvertToUppercase(self) -> bool:
-        return self.settings.value("convert_uppercase", False, type=bool)
+        return self.settings.value("capitalize_first_letter", False, type=bool)
 
     def clipboardChanged(self, evenWhenFocused=False, selection=False):
         """
