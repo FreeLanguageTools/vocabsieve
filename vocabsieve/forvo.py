@@ -124,10 +124,10 @@ class Forvo:
                 origin = username[0].contents[0]
             word = self.url.rsplit('/', 2)[-1]
             pronunciation_object = Pronunciation(self.language,
-                                                 word,
-                                                 word,
+                                                 word.strip(),
+                                                 word.strip(),
                                                  vote_count,
-                                                 origin,
+                                                 origin.strip(),
                                                  dl_url,
                                                  is_ogg,
                                                  -1, #data_id, can't obtain anymore
