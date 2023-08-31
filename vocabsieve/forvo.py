@@ -30,11 +30,15 @@ class Pronunciation:
 
 
 class Forvo:
-    def __init__(self, word, lang):
+    def __init__(self, word, lang, accent=""):
         self.url = "https://forvo.com/word/" + quote(word)
         self.pronunciations: List[Pronunciation] = []
         self.session = requests.Session()
         self.language = lang
+        self.accent = accent
+
+    def get_locale(self, language, accent) -> str:
+        return f"{language}" + (f"_{accent}" if accent != "" else "")
 
     def get_pronunciations(self) -> Forvo:
         res = requests.get(self.url, headers=HEADERS)
@@ -43,35 +47,32 @@ class Forvo:
         else:
             raise Exception("failed to fetch forvo page")
         html = BeautifulSoup(page, "lxml")
-        available_langs_els = html.find_all(
-            id=re.compile(r"language-container-\w{2,4}"))
-        available_langs = [
-            re.findall(
-                r"language-container-(\w{2,4})",
-                el.attrs["id"])[0] for el in available_langs_els]
-        if self.language not in available_langs:
+        available_pronunciations_lists_el = html.find_all(
+            id=re.compile(r"^pronunciations-list-[a-z]+(?:_[a-z]+)?"))
+        available_lang_locales = [
+            self.get_locale(*re.findall(
+                r"^pronunciations-list-([a-z]+)(?:_([a-z]+))?",
+                el.attrs["id"])[0]) for el in available_pronunciations_lists_el]
+
+        desired_locale = self.get_locale(self.language, self.accent)
+        if not any(desired_locale in s for s in available_lang_locales):
             return self
 
-        lang_container = [
-            lang for lang in available_langs_els if re.findall(
-                r"language-container-(\w{2,4})",
-                lang.attrs["id"])[0] == self.language][0]
-        pronunciations_els = lang_container.find_all(class_="pronunciations")
-        pronunciation_items = pronunciations_els[0].find_all(
-            class_="pronunciations-list")[0].find_all("li")
-        
-        word = self.url.rsplit('/', 2)[-1]
-        headword_el = pronunciations_els[0].find_all('em')[0]
-        headword = headword_el.find_all(text=True)[0].text
-        headword = " ".join(headword.split()[:-2])
+        lang_containers = [
+            lang for lang in available_pronunciations_lists_el if re.match(
+                f"pronunciations-list-{desired_locale}",
+                lang.attrs["id"])]
+
+        pronunciation_items = [li for container in lang_containers for li in container.find_all("li")]
+
+        # word = self.url.rsplit('/', 2)[-1]
+        # headword_el = pronunciations_els[0].find_all('em')[0]
+        # headword = headword_el.find_all(text=True)[0].text
+        # headword = " ".join(headword.split()[:-2])
 
         for pronunciation_item in pronunciation_items:
             if len(pronunciation_item.find_all(class_="more")) == 0:
                 continue
-            pronunciation_dls = re.findall(
-                r"Play\(\d+,'.+','.+',\w+,'([^']+)",
-                pronunciation_item.find_all(
-                    id=re.compile(r"play_\d+"))[0].attrs["onclick"])
             vote_count = pronunciation_item.find_all(class_="more")[0].find_all(
                 class_="main_actions")[0].find_all(
                 id=re.compile(r"word_rate_\d+"))[0].find_all(class_="num_votes")[0]
@@ -108,7 +109,6 @@ class Forvo:
                     class_="ofLink")
             if len(username) == 0:
                 for pronunciation_item_content in pronunciation_item.contents:
-
                     if not hasattr(pronunciation_item_content, "contents"):
                         continue
 
@@ -116,14 +116,15 @@ class Forvo:
                                 "Pronunciation by(.*)",
                                 pronunciation_item_content.contents[0],
                                 re.S)
-                                
+
                     if len(tempOrigin) != 0:
                         origin = tempOrigin[0].strip()
                         break
             else:
                 origin = username[0].contents[0]
+            word = self.url.rsplit('/', 2)[-1]
             pronunciation_object = Pronunciation(self.language,
-                                                 headword,
+                                                 word,
                                                  word,
                                                  vote_count,
                                                  origin,
@@ -133,14 +134,15 @@ class Forvo:
                                                  )
 
             self.pronunciations.append(pronunciation_object)
+        self.pronunciations = sorted(self.pronunciations, key=lambda x: x.votes, reverse=True)
         return self
 
 
 def fetch_audio_all(word: str, lang: str) -> Dict[str, str]:
     sounds = Forvo(word, lang).get_pronunciations().pronunciations
-    if len(sounds) == 0:
-        return {}
     result = {}
+    if len(sounds) == 0:
+        return result
     for item in sounds:
         result[item.origin + "/" + item.headword] = item.download_url
     return result
@@ -150,7 +152,6 @@ def fetch_audio_best(word: str, lang: str) -> Dict[str, str]:
     sounds = Forvo(word, lang).get_pronunciations().pronunciations
     if len(sounds) == 0:
         return {}
-    sounds = sorted(sounds, key=lambda x: x.votes, reverse=True)
     return {
         sounds[0].origin +
         "/" +
