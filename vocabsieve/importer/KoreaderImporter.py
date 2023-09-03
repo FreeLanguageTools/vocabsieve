@@ -35,7 +35,8 @@ def koreader_parse_fb2(file, lang):
         data = slpp.decode(" ".join("\n".join(f.readlines()[1:]).split(" ")[1:]))
         notes = data['bookmarks'].items()
         booklang = data['doc_props']['language']
-    print(notepath)
+        if '-' in booklang:
+            booklang = booklang[:2]
     root = etree.parse(file).getroot()
     ns = {'f': "http://www.gribuser.ru/xml/fictionbook/2.0"}
     try:
