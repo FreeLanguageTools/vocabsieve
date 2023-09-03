@@ -665,7 +665,7 @@ class SettingsDialog(QDialog):
         self.register_config_handler(
             self.gtrans_api,
             'gtrans_api',
-            'https://lingva.ml')
+            'https://lingva.lunar.icu')
 
         self.register_config_handler(self.reader_font, "reader_font", "serif")
         self.register_config_handler(self.reader_fontsize, "reader_fontsize", 14)

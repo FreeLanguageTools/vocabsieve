@@ -52,7 +52,6 @@ def preprocess_clipboard(s: str, lang: str, should_convert_to_uppercase: bool = 
     """
     # Convert the first letter to uppercase if should_convert_to_uppercase is True
     if should_convert_to_uppercase:
-        print("Uppercasing")
         return s[0].upper() + s[1:]
     else:
         return s
@@ -183,7 +182,7 @@ def lookupin(
         greedy_lemmatize: bool=False,
         dictionary: str="Wiktionary (English)",
         gtrans_lang: str="en",
-        gtrans_api: str="https://lingva.ml") -> Optional[LookUpResults]:
+        gtrans_api: str="https://lingva.lunar.icu") -> Optional[LookUpResults]:
     # Remove any punctuation other than a hyphen
     # @language is code
     if not word:

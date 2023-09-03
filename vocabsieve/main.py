@@ -974,7 +974,7 @@ class DictionaryWindow(QMainWindow):
                 lem_greedily,
                 dictname,
                 gtrans_lang,
-                self.settings.value("gtrans_api", "https://lingva.ml"))
+                self.settings.value("gtrans_api", "https://lingva.lunar.icu"))
         except Exception as e:
             self.status(repr(e))
             item = {
