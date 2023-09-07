@@ -70,7 +70,7 @@ class DictionaryWindow(QMainWindow):
         self.initWidgets()
 
         if self.settings.value("orientation", "Vertical") == "Vertical":
-            self.resize(400, 700)
+            self.resize(400, 730)
             self.layout = self.setupWidgetsV()  # type: ignore
         else:
             self.resize(1000, 300)
@@ -82,7 +82,7 @@ class DictionaryWindow(QMainWindow):
         self.setupShortcuts()
         self.checkUpdates()
 
-        GlobalObject().addEventListener("double clicked", self.lookupClicked)
+        GlobalObject().addEventListener("double clicked", self.lookupSelected)
         if self.settings.value("primary", False, type=bool)\
                 and QClipboard.supportsSelection(QApplication.clipboard())\
                 and not os.environ.get("XDG_SESSION_TYPE") == "wayland":
@@ -185,6 +185,12 @@ class DictionaryWindow(QMainWindow):
             "If enabled, vocabsieve will act as a quick dictionary and look up any single words copied to the clipboard.\n"
             "This can potentially send your clipboard contents over the network if an online dictionary service is used.\n"
             "This is INSECURE if you use password managers that copy passwords to the clipboard.")
+        self.lookup_definition_on_doubleclick = QCheckBox(
+            "Lookup definition on double click")
+        self.lookup_definition_on_doubleclick.setToolTip(
+            "Disable this if you want to use 3rd party dictionaries with copied text (e.g. with mpvacious)")
+        self.lookup_definition_on_doubleclick.clicked.connect(lambda v: self.settings.setValue("lookup_definition_on_doubleclick", v))
+        self.lookup_definition_on_doubleclick.setChecked(self.settings.value("lookup_definition_on_doubleclick", True, type=bool))
 
         self.web_button = QPushButton(f"Open webpage [{MOD}-1]")
         self.freq_display = QLineEdit()
@@ -244,63 +250,64 @@ class DictionaryWindow(QMainWindow):
         layout = QGridLayout(self.widget)
         layout.addWidget(self.namelabel, 0, 0, 1, 2)
 
-        layout.addWidget(self.single_word, 1, 0, 1, 3)
+        layout.addWidget(self.single_word, 1, 0, 1, 2)
+        layout.addWidget(self.lookup_definition_on_doubleclick, 2, 0, 1, 2)
 
         layout.addWidget(
-            QLabel("<h3 style=\"font-weight: normal;\">Sentence</h3>"), 2, 0)
-        layout.addWidget(self.read_button, 2, 1)
-        layout.addWidget(self.image_viewer, 0, 2, 3, 1)
-        layout.addWidget(self.sentence, 3, 0, 1, 3)
-        layout.setRowStretch(3, 1)
+            QLabel("<h3 style=\"font-weight: normal;\">Sentence</h3>"), 3, 0)
+        layout.addWidget(self.read_button, 3, 1)
+        layout.addWidget(self.image_viewer, 0, 2, 4, 1)
+        layout.addWidget(self.sentence, 4, 0, 1, 3)
+        layout.setRowStretch(4, 1)
         layout.addWidget(
-            QLabel("<h3 style=\"font-weight: normal;\">Word</h3>"), 4, 0)
+            QLabel("<h3 style=\"font-weight: normal;\">Word</h3>"), 5, 0)
 
         if self.settings.value("lemmatization", True, type=bool):
-            layout.addWidget(self.lookup_button, 4, 1)
-            layout.addWidget(self.lookup_exact_button, 4, 2)
+            layout.addWidget(self.lookup_button, 5, 1)
+            layout.addWidget(self.lookup_exact_button, 5, 2)
         else:
-            layout.addWidget(self.lookup_button, 4, 1, 1, 2)
+            layout.addWidget(self.lookup_button, 5, 1, 1, 2)
 
+        layout.addWidget(self.word, 6, 0, 1, 2)
+        layout.addWidget(self.lookup_hist_label, 6, 2)
         layout.addWidget(
-            QLabel("<h3 style=\"font-weight: normal;\">Definition</h3>"), 6, 0)
-        layout.addWidget(self.freq_display, 6, 1)
-        layout.addWidget(self.web_button, 6, 2)
-        layout.addWidget(self.word, 5, 0, 1, 2)
-        layout.addWidget(self.lookup_hist_label, 5, 2)
-        layout.setRowStretch(7, 2)
-        layout.setRowStretch(9, 2)
+            QLabel("<h3 style=\"font-weight: normal;\">Definition</h3>"), 7, 0)
+        layout.addWidget(self.freq_display, 7, 1)
+        layout.addWidget(self.web_button, 7, 2)
+        layout.setRowStretch(8, 2)
+        layout.setRowStretch(10, 2)
         if self.settings.value("dict_source2", "<disabled>") != "<disabled>":
-            layout.addWidget(self.definition, 7, 0, 2, 3)
-            layout.addWidget(self.definition2, 9, 0, 2, 3)
+            layout.addWidget(self.definition, 8, 0, 2, 3)
+            layout.addWidget(self.definition2, 10, 0, 2, 3)
         else:
-            layout.addWidget(self.definition, 7, 0, 4, 3)
+            layout.addWidget(self.definition, 8, 0, 4, 3)
 
         layout.addWidget(
             QLabel("<h3 style=\"font-weight: normal;\">Pronunciation</h3>"),
-            11,
+            12,
             0,
             1,
             3)
-        layout.addWidget(self.audio_selector, 12, 0, 1, 3)
-        layout.setRowStretch(12, 1)
+        layout.addWidget(self.audio_selector, 13, 0, 1, 3)
+        layout.setRowStretch(13, 1)
         layout.addWidget(
             QLabel("<h3 style=\"font-weight: normal;\">Additional tags</h3>"),
-            13,
+            14,
             0,
             1,
             3)
 
-        layout.addWidget(self.tags, 14, 0, 1, 3)
+        layout.addWidget(self.tags, 15, 0, 1, 3)
 
-        layout.addWidget(self.toanki_button, 15, 0, 1, 3)
-        layout.addWidget(self.config_button, 16, 0, 1, 3)
+        layout.addWidget(self.toanki_button, 16, 0, 1, 3)
+        layout.addWidget(self.config_button, 17, 0, 1, 3)
 
         return layout
 
     def setupButtons(self) -> None:
-        self.lookup_button.clicked.connect(lambda: self.lookupClicked(True))
+        self.lookup_button.clicked.connect(lambda: self.lookupSelected(True))
         self.lookup_exact_button.clicked.connect(
-            lambda: self.lookupClicked(False))
+            lambda: self.lookupSelected(False))
 
         self.web_button.clicked.connect(self.onWebButton)
 
@@ -716,7 +723,7 @@ class DictionaryWindow(QMainWindow):
         url = f"http://{self.settings.value('reader_host', '127.0.0.1', type=str)}:{self.settings.value('reader_port', '39285', type=str)}"
         QDesktopServices.openUrl(QUrl(url))
 
-    def lookupClicked(self, use_lemmatize=True) -> None:
+    def lookupSelected(self, use_lemmatize=True) -> None:
         target = self.getCurrentWord()
         if target:
             self.lookupSet(target, use_lemmatize)
