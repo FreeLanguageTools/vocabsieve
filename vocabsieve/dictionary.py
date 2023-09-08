@@ -51,7 +51,7 @@ def preprocess_clipboard(s: str, lang: str, should_convert_to_uppercase: bool = 
     to maintainence and dependency concerns.
     """
     # Convert the first letter to uppercase if should_convert_to_uppercase is True
-    if should_convert_to_uppercase:
+    if should_convert_to_uppercase and s:
         return s[0].upper() + s[1:]
     else:
         return s
