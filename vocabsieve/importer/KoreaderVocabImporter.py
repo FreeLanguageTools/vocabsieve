@@ -35,7 +35,7 @@ class KoreaderVocabImporter(GenericImporter):
         for bookfile in bookfiles:
             metadata.append(getBookMetadata(bookfile))
 
-        books_in_lang = [book[1] for book in metadata if book[0] == langcode]
+        books_in_lang = [book[1] for book in metadata if book[0].startswith(langcode)]
         self.dbpath = findDBpath(self.path)
         con = sqlite3.connect(self.dbpath)
         cur = con.cursor()
