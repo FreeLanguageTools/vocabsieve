@@ -192,7 +192,7 @@ def lookupin(
         word = lem_word(word, language, greedy_lemmatize)
     # The lemmatizer would always turn words lowercase, which can cause
     # lookups to fail if not recovered.
-    candidates = [word, word.capitalize()] if IS_UPPER else [word]
+    candidates = [word.lower(), word.capitalize()] if IS_UPPER else [word]
     if " " in word:
         words = word.split(" ")
         # Try all unlemmatized first, then brute force to test each lemmatized vs unlemmatized combos
