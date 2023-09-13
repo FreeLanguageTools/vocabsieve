@@ -1,1 +1,1 @@
-{{ python-executable }} ${APPDIR}/opt/python{{ python-version }}/bin/vocabsieve "$@"
+{{ python-executable }} -I ${APPDIR}/opt/python{{ python-version }}/bin/vocabsieve "$@"
