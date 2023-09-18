@@ -91,5 +91,7 @@ class KoreaderVocabImporter(GenericImporter):
         except Exception as e:
             print(e)
             self.layout.addRow(QLabel("Failed to find/read lookup_history.lua. Lookups will not be tracked this time."))
-
-        return zip(*items)
+        if items == []:
+            return ([], [], [], [])
+        else:
+            return zip(*items)

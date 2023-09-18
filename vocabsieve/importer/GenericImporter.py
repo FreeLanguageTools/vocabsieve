@@ -93,7 +93,7 @@ class GenericImporter(QDialog):
         dates should be strings to the second, such as "1970-01-01 00:00:00".
         Using T in place of the space is NOT allowed.
         """
-        return ((), (), (), ())
+        raise NotImplementedError("Should be implemented by subclasses")
 
     def updateHighlightCount(self):
         start_date = self.datewidget.currentText()
