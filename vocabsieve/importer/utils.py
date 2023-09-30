@@ -1,8 +1,8 @@
 from datetime import datetime as dt
 import glob
 import os
-from itertools import zip_longest
-from ..models import Definition, SRSNote
+from ..global_names import logger
+
 
 def get_uniques(l: list):
     return list(set(l) - set([""]))
@@ -30,24 +30,14 @@ def findDBpath(path):
 
 def koreader_scandir(path):
     filelist = []
-    epubs = glob.glob(os.path.join(path, "**/*.epub"), recursive=True)
-    for filename in epubs:
-        if os.path.exists(os.path.join(os.path.dirname(filename), 
-                            filename.removesuffix("epub") + "sdr", 
-                            "metadata.epub.lua")):
-            filelist.append(filename)
-    fb2s = glob.glob(os.path.join(path, "**/*.fb2"), recursive=True)
-    for filename in fb2s:
-        if os.path.exists(os.path.join(os.path.dirname(filename), 
-                          filename.removesuffix("fb2") + "sdr", 
-                          "metadata.fb2.lua")):
-            filelist.append(filename)
-    fb2zips = glob.glob(os.path.join(path, "**/*.fb2.zip"), recursive=True)
-    for filename in fb2zips:
-        if os.path.exists(os.path.join(os.path.dirname(filename), 
-                          filename.removesuffix("zip") + "sdr", 
-                          "metadata.zip.lua")):
-            filelist.append(filename)
+    for filetype in ["epub", "fb2", "fb2.zip", "pdf"]:
+        files = glob.glob(os.path.join(path, "**/*." + filetype), recursive=True)
+        for filename in files:
+            if os.path.exists(os.path.join(os.path.dirname(filename),
+                filename.removesuffix(filetype) + "sdr",
+                "metadata." + filetype.split(".")[-1] + ".lua")):
+                filelist.append(filename)
+    logger.info(f"Found {len(filelist)} book files in {path}: {filelist}")
     return filelist
 
 def findHistoryPath(path):
