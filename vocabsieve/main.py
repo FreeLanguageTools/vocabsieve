@@ -988,7 +988,6 @@ class DictionaryWindow(QMainWindow):
                 "word": word,
                 "definition": failed_lookup(word, self.settings)
             }
-            return item
         dict2name = self.settings.value("dict_source2", "<disabled>")
         if dict2name == "<disabled>":
             return item
