@@ -169,7 +169,7 @@ class DictionaryWindow(QMainWindow):
             ", then press \"Get definition\".")
 
         self.lookup_button = QPushButton(f"Define [{MOD}-D]")
-        self.lookup_exact_button = QPushButton(f"Define Direct [Shift-{MOD}-D]")
+        self.lookup_exact_button = QPushButton(f"Define direct [Shift-{MOD}-D]")
         self.lookup_exact_button.setToolTip(
             "This will look up the word without lemmatization.")
         self.toanki_button = QPushButton(f"Add note [{MOD}-S]")
@@ -188,7 +188,7 @@ class DictionaryWindow(QMainWindow):
         self.lookup_definition_on_doubleclick = QCheckBox(
             "Lookup definition on double click")
         self.lookup_definition_on_doubleclick.setToolTip(
-            "Disable this if you want to use 3rd party dictionaries with copied text (e.g. with mpvacious)")
+            "Disable this if you want to use 3rd party dictionaries with copied text (e.g. with mpvacious).")
         self.lookup_definition_on_doubleclick.clicked.connect(lambda v: self.settings.setValue("lookup_definition_on_doubleclick", v))
         self.lookup_definition_on_doubleclick.setChecked(self.settings.value("lookup_definition_on_doubleclick", True, type=bool))
 
@@ -199,6 +199,8 @@ class DictionaryWindow(QMainWindow):
         self.freq_display_lcd.setSegmentStyle(QLCDNumber.Flat)
         self.freq_display_lcd.display(0)
 
+        self.discard_audio_button = QPushButton("Discard audio [Ctrl+Shift+X]")
+        self.discard_audio_button.setToolTip("This will remove audio from the current working note.")
         self.audio_selector = QListWidget()
         self.audio_selector.setMinimumHeight(50)
         self.audio_selector.setFlow(QListView.TopToBottom)
@@ -287,7 +289,8 @@ class DictionaryWindow(QMainWindow):
             12,
             0,
             1,
-            3)
+            1)
+        layout.addWidget(self.discard_audio_button, 12, 1)
         layout.addWidget(self.audio_selector, 13, 0, 1, 3)
         layout.setRowStretch(13, 1)
         layout.addWidget(
@@ -310,6 +313,7 @@ class DictionaryWindow(QMainWindow):
             lambda: self.lookupSelected(False))
 
         self.web_button.clicked.connect(self.onWebButton)
+        self.discard_audio_button.clicked.connect(self.discard_current_audio)
 
         self.config_button.clicked.connect(self.configure)
         self.toanki_button.clicked.connect(self.createNote)
@@ -515,12 +519,14 @@ class DictionaryWindow(QMainWindow):
         # self.sentence.setMaximumHeight(99999)
         layout.addWidget(self.namelabel, 0, 0, 1, 1)
         layout.addWidget(self.image_viewer, 0, 1, 2, 1)
-        layout.addWidget(self.single_word, 0, 3, 1, 2)
+        layout.addWidget(self.single_word, 0, 3, 1, 1)
+        layout.addWidget(self.lookup_definition_on_doubleclick, 0, 4, 1, 2)
 
         layout.addWidget(
             QLabel("<h3 style=\"font-weight: normal;\">Sentence</h3>"), 1, 0)
         layout.addWidget(self.freq_display, 0, 2)
         layout.addWidget(self.read_button, 6, 1)
+        layout.addWidget(self.discard_audio_button, 6, 0)
 
         layout.addWidget(self.sentence, 2, 0, 3, 2)
         layout.addWidget(self.audio_selector, 5, 0, 1, 2)
@@ -691,6 +697,8 @@ class DictionaryWindow(QMainWindow):
         self.shortcut_web.activated.connect(self.web_button.animateClick)
         self.shortcut_clearimage = QShortcut(QKeySequence('Ctrl+I'), self)
         self.shortcut_clearimage.activated.connect(lambda: self.setImage(None))
+        self.shortcut_clearaudio = QShortcut(QKeySequence('Ctrl+Shift+X'), self)
+        self.shortcut_clearaudio.activated.connect(self.discard_audio_button.animateClick)
 
     def getCurrentWord(self) -> str:
         """Returns currently selected word. If there isn't any, last selected word is returned"""
@@ -879,6 +887,10 @@ class DictionaryWindow(QMainWindow):
         except Exception as e:
             print("Failed to fetch audio:", repr(e))
 
+    def discard_current_audio(self):
+        self.audio_selector.clear()
+        self.audio_path = ""
+
     def lookupSet(self, word, use_lemmatize=True) -> None:
         sentence_text = self.sentence.unboldedText
         if settings.value("bold_style", type=int):
@@ -1064,7 +1076,6 @@ class DictionaryWindow(QMainWindow):
                     self.settings.value("pronunciation_field")
                 ]
             }
-            self.audio_selector.clear()
         if self.settings.value("image_field", "<disabled>") != '<disabled>' and self.image_path:
             content['picture'] = {
                 "path": self.image_path,
@@ -1097,6 +1108,8 @@ class DictionaryWindow(QMainWindow):
             self.word.clear()
             self.definition.clear()
             self.definition2.clear()
+            self.setImage(None)
+            self.audio_selector.clear()
             self.status(f"Note added: '{word}'")
         except Exception as e:
             self.rec.recordNote(
@@ -1122,7 +1135,6 @@ class DictionaryWindow(QMainWindow):
                 " Anki' on the Anki tab."
 
             )
-        self.setImage(None)
 
     def process_defi_anki(self,
                           w: SearchableTextEdit,
