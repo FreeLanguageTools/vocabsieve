@@ -871,7 +871,8 @@ class DictionaryWindow(QMainWindow):
         self.audio_selector.clear()
         if len(self.audios):
             for item in self.audios:
-                self.audio_selector.addItem("🔊 " + item)
+                file_extension = self.audios[item].split(".")[-1]
+                self.audio_selector.addItem("🔊 " + item + "." + file_extension)
             self.audio_selector.setCurrentItem(self.audio_selector.item(0))
 
     def fetchAudioInBackground(self, word):
