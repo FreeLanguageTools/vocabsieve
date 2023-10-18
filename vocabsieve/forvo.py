@@ -144,7 +144,8 @@ def fetch_audio_all(word: str, lang: str) -> Dict[str, str]:
     if len(sounds) == 0:
         return result
     for item in sounds:
-        result[item.origin + "/" + item.headword] = item.download_url
+        file_extension = item.download_url.split(".")[-1]
+        result[item.origin + "/" + item.headword + "." + file_extension] = item.download_url
     return result
 
 
