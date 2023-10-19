@@ -122,13 +122,13 @@ def getCognatesData(language: str, known_langs: list) -> Optional[List[str]]:
     print("Got all cognates in", time.time() - start, "seconds")
     return cognates
 
-def getAudio(word: str, 
-             language: str, 
-             dictionary: str="Forvo (all)", 
+def getAudio(word: str,
+             language: str,
+             dictionary: str="Forvo (all)",
              custom_dicts:Optional[list]=None) -> Dict[str, str]:
     if custom_dicts is None:
         custom_dicts = []
-    
+
     # should return a dict of audio names and paths to audio
     if dictionary == "Forvo (all)":
         return fetch_audio_all(word, language)
@@ -278,18 +278,18 @@ def play_audio(name: str, data: Dict[str, str], lang: str) -> str:
         crossplatform_playsound(audiopath)
         return audiopath
 
-    fpath = os.path.join(forvopath, lang, name) + audiopath[-4:]
+    fpath = os.path.join(forvopath, lang, name)
     if not os.path.exists(fpath):
         res = requests.get(audiopath, headers=HEADERS)
 
         if res.status_code != 200:
             # /TODO: Maybe display error to the user?
             return ""
-        
+
         os.makedirs(os.path.dirname(fpath), exist_ok=True)
         with open(fpath, 'bw') as file:
             file.write(res.content)
-    
+
     crossplatform_playsound(fpath)
     return fpath
 
