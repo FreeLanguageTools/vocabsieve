@@ -885,6 +885,7 @@ class DictionaryWindow(QMainWindow):
 
             self.audio_fetched.emit(audios)
         except Exception as e:
+            self.audio_fetched.emit({})
             print("Failed to fetch audio:", repr(e))
 
     def discard_current_audio(self):
