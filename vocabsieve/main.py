@@ -292,8 +292,8 @@ class DictionaryWindow(QMainWindow):
             12,
             0,
             1,
-            1)
-        layout.addWidget(self.discard_audio_button, 12, 1)
+            0)
+        layout.addWidget(self.discard_audio_button, 12, 1, 1, 2, Qt.AlignRight)
         layout.addWidget(self.audio_selector, 13, 0, 1, 3)
         layout.setRowStretch(13, 1)
         layout.addWidget(
