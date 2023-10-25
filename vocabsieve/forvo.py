@@ -6,9 +6,9 @@ from os import path
 import os
 import re
 import base64
-from PyQt5.QtCore import QStandardPaths, QCoreApplication
+from PyQt5.QtCore import QStandardPaths
 from pathlib import Path
-from urllib.parse import quote, unquote
+from urllib.parse import quote
 from dataclasses import dataclass
 
 HEADERS = {
@@ -20,6 +20,7 @@ Path(path.join(datapath, "_forvo")).mkdir(parents=True, exist_ok=True)
 @dataclass
 class Pronunciation:
     language: str
+    accent: str
     headword: str
     query_word: str
     votes: int
@@ -27,6 +28,12 @@ class Pronunciation:
     download_url: str
     is_ogg: bool
     id: int
+
+@dataclass
+class PronunciationList:
+    language: str
+    accent: str
+    pronunciation_list: {}
 
 
 class Forvo:
@@ -37,9 +44,6 @@ class Forvo:
         self.language = lang
         self.accent = accent
 
-    def get_locale(self, language, accent) -> str:
-        return f"{language}" + (f"_{accent}" if accent != "" else "")
-
     def get_pronunciations(self) -> Forvo:
         res = requests.get(self.url, headers=HEADERS)
         if res.status_code == 200:
@@ -47,30 +51,23 @@ class Forvo:
         else:
             raise Exception("failed to fetch forvo page")
         html = BeautifulSoup(page, "lxml")
-        available_pronunciations_lists_el = html.find_all(
-            id=re.compile(r"^pronunciations-list-[a-z]+(?:_[a-z]+)?"))
-        available_lang_locales = [
-            self.get_locale(*re.findall(
-                r"^pronunciations-list-([a-z]+)(?:_([a-z]+))?",
-                el.attrs["id"])[0]) for el in available_pronunciations_lists_el]
+        pronunciations_list_regex = re.compile(r"^pronunciations-list-([a-z]+)(?:_([a-z]+))?")
+        available_pronunciations_lists = []
 
-        desired_locale = self.get_locale(self.language, self.accent)
-        if not any(desired_locale in s for s in available_lang_locales):
-            return self
+        for pronunciations_list in html.find_all(id=pronunciations_list_regex):
+            match = pronunciations_list_regex.match(pronunciations_list["id"])
+            if match:
+                available_pronunciations_lists.extend(
+                    PronunciationList(match.group(1), match.group(2), li)
+                        for li in pronunciations_list.find_all("li")
+                )
 
-        lang_containers = [
-            lang for lang in available_pronunciations_lists_el if re.match(
-                f"pronunciations-list-{desired_locale}",
-                lang.attrs["id"])]
+        available_pronunciations_lists = list(filter(lambda el: el.language == self.language, available_pronunciations_lists))
+        if self.accent:
+            available_pronunciations_lists = list(filter(lambda el: el.accent == self.accent, available_pronunciations_lists))
 
-        pronunciation_items = [li for container in lang_containers for li in container.find_all("li")]
-
-        # word = self.url.rsplit('/', 2)[-1]
-        # headword_el = pronunciations_els[0].find_all('em')[0]
-        # headword = headword_el.find_all(text=True)[0].text
-        # headword = " ".join(headword.split()[:-2])
-
-        for pronunciation_item in pronunciation_items:
+        for l in available_pronunciations_lists:
+            pronunciation_item = l.pronunciation_list
             if len(pronunciation_item.find_all(class_="more")) == 0:
                 continue
             vote_count = pronunciation_item.find_all(class_="more")[0].find_all(
@@ -124,6 +121,7 @@ class Forvo:
                 origin = username[0].contents[0]
             word = self.url.rsplit('/', 2)[-1]
             pronunciation_object = Pronunciation(self.language,
+                                                 l.accent,
                                                  word.strip(),
                                                  word.strip(),
                                                  vote_count,
@@ -144,8 +142,9 @@ def fetch_audio_all(word: str, lang: str) -> Dict[str, str]:
     if len(sounds) == 0:
         return result
     for item in sounds:
-        file_extension = item.download_url.split(".")[-1]
-        result[item.origin + "/" + item.headword + "." + file_extension] = item.download_url
+        file_extension = item.download_url.rsplit(".", 1)[-1]
+        accent = f"({item.accent})" if item.accent else ""
+        result[f"{item.origin}{accent}/{item.headword}.{file_extension}"] = item.download_url
     return result
 
 
