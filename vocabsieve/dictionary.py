@@ -1,7 +1,5 @@
 import json
 import re
-import unicodedata
-from threading import Thread
 from urllib.parse import quote
 from typing import Optional, Dict, Tuple
 import time
@@ -11,12 +9,12 @@ from bidict import bidict
 from bs4 import BeautifulSoup
 from markdown import markdown
 from markdownify import markdownify
-from .playsound import playsound
 from .constants import DefinitionDisplayModes, LookUpResults
 from .db import *
 from .dictformats import removeprefix
 from .forvo import *
-from .lemmatizer import lem_word, removeAccents
+from .lemmatizer import lem_word
+
 
 dictdb = LocalDictionary()
 
@@ -264,35 +262,6 @@ def getFreqlistsForLang(lang: str, dicts: list):
 
 
 forvopath = os.path.join(QStandardPaths.writableLocation(QStandardPaths.DataLocation), "forvo")
-
-
-def play_audio(name: str, data: Dict[str, str], lang: str) -> str:
-    def crossplatform_playsound(relative_audio_path: str):
-        Thread(target=lambda: playsound(relative_audio_path)).start()
-
-    audiopath: str = data.get(name, "")
-    if not audiopath:
-        return ""
-
-    if not audiopath.startswith("https://"):
-        crossplatform_playsound(audiopath)
-        return audiopath
-
-    fpath = os.path.join(forvopath, lang, name)
-    if not os.path.exists(fpath):
-        res = requests.get(audiopath, headers=HEADERS)
-
-        if res.status_code != 200:
-            # /TODO: Maybe display error to the user?
-            return ""
-
-        os.makedirs(os.path.dirname(fpath), exist_ok=True)
-        with open(fpath, 'bw') as file:
-            file.write(res.content)
-
-    crossplatform_playsound(fpath)
-    return fpath
-
 
 def process_definition(entry: str, mode: DefinitionDisplayModes, skip: int, newlines: int) -> str:
     result = entry

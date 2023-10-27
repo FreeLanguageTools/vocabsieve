@@ -28,6 +28,7 @@ from .config import *
 from .stats import StatisticsWindow
 from .db import *
 from .dictionary import *
+from .audio_player import *
 from .importer import KoreaderImporter, KindleVocabImporter, KoreaderVocabImporter, AutoTextImporter
 from .reader import ReaderServer
 from .contentmanager import ContentManager
@@ -57,6 +58,7 @@ class DictionaryWindow(QMainWindow):
         self.setFocusPolicy(Qt.StrongFocus)
         self.widget = QWidget()
         self.settings = settings
+        self.audio_player = AudioPlayer()
         self.audio_fetched.connect(self.updateAudioUI)
 
         self.rec = Record(self)
@@ -247,7 +249,7 @@ class DictionaryWindow(QMainWindow):
         if x is None:
             return
 
-        self.audio_path = play_audio(x, self.audios, self.settings.value("target_language", "en"))
+        self.audio_path = self.audio_player.play_audio(x, self.audios, self.settings.value("target_language", "en"))
 
     def setupWidgetsV(self) -> QGridLayout:
         """Prepares vertical layout"""
