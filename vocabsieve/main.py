@@ -207,9 +207,12 @@ class DictionaryWindow(QMainWindow):
         self.audio_selector.setResizeMode(QListView.Adjust)
         self.audio_selector.setWrapping(True)
 
-        self.audio_selector.currentItemChanged.connect(lambda x: (
-            self.play_audio(x.text()[2:]) if x is not None else None
-        ))
+        def play_audio_if_exists(x):
+            if x is not None:
+                self.play_audio(x.text()[2:])
+
+        self.audio_selector.currentItemChanged.connect(play_audio_if_exists)
+        self.audio_selector.itemDoubleClicked.connect(play_audio_if_exists)
 
         self.definition.setReadOnly(
             not (
