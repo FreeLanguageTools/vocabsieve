@@ -166,6 +166,11 @@ class SettingsDialog(QDialog):
         if 'webp' in supported_img_formats:
             self.img_format.addItem('webp')
 
+        self.audio_format = QComboBox()
+        self.audio_format.addItems(
+            ['mp3', 'ogg']
+        )
+
         self.img_quality = QSpinBox()
         self.img_quality.setMinimum(-1)
         self.img_quality.setMaximum(100)
@@ -242,7 +247,7 @@ class SettingsDialog(QDialog):
         self.loadDictionaries()
         self.loadFreqSources()
         self.loadAudioDictionaries()
-            
+
 
     def initTabs(self):
         self.tabs = QTabWidget()
@@ -483,6 +488,9 @@ class SettingsDialog(QDialog):
         self.tab_m.layout.addRow(QLabel("<i>◊ WebP, JPG, GIF are lossy, which create smaller files.</i>"))
         self.tab_m.layout.addRow(QLabel("Image quality"), self.img_quality)
         self.tab_m.layout.addRow(QLabel("<i>◊ Between 0 and 100. -1 uses the default value from Qt.</i>"))
+        self.tab_m.layout.addRow(QLabel("<h3>Audio</h3>"))
+        self.tab_m.layout.addRow(QLabel("Audio format"), self.audio_format)
+        self.tab_m.layout.addRow(QLabel("<i>◊ mp3 can be played on any device. ogg has limited support on Apple devices but takes up less space, resulting in less cache storage used and faster sync times</i>"))
         self.tab_m.layout.addRow(QLabel("<h3>Reset</h3>"))
         self.tab_m.layout.addRow(QLabel("Your data will be lost forever! There is NO cloud backup."))
         self.tab_m.layout.addRow(QLabel("<strong>Reset all settings to defaults</strong>"), self.reset_button)
@@ -517,7 +525,7 @@ class SettingsDialog(QDialog):
     def getMatchedCards(self):
         if self.settings.value("enable_anki", True):
             try:
-                _ = getVersion(api:=self.settings.value('anki_api', 'http://127.0.0.1:8765'))    
+                _ = getVersion(api:=self.settings.value('anki_api', 'http://127.0.0.1:8765'))
                 query_mature = self.anki_query_mature.text()
                 mature_notes = findNotes(api, query_mature)
                 self.mature_count_label.setText(f"Matched {str(len(mature_notes))} notes")
@@ -679,6 +687,7 @@ class SettingsDialog(QDialog):
         self.register_config_handler(self.capitalize_first_letter, 'capitalize_first_letter', False)
         self.register_config_handler(self.img_format, 'img_format', 'jpg')
         self.register_config_handler(self.img_quality, 'img_quality', -1)
+        self.register_config_handler(self.audio_format, 'audio_format', 'mp3')
 
         self.register_config_handler(self.anki_query_mature, 'tracking/anki_query_mature', "prop:ivl>=14")
         self.register_config_handler(self.anki_query_young, 'tracking/anki_query_young', "prop:ivl<14 is:review")

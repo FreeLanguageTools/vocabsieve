@@ -6,10 +6,12 @@ from os import path
 import os
 import re
 import base64
-from PyQt5.QtCore import QStandardPaths
+from PyQt5.QtCore import QStandardPaths, QSettings
 from pathlib import Path
 from urllib.parse import quote
 from dataclasses import dataclass
+from .app_text import settings_app_title, app_organization
+settings = QSettings(app_organization, settings_app_title)
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
@@ -26,7 +28,6 @@ class Pronunciation:
     votes: int
     origin: str
     download_url: str
-    is_ogg: bool
     id: int
 
 @dataclass
@@ -83,19 +84,21 @@ class Forvo:
                 r"Play\(\d+,'.+','.+',\w+,'([^']+)",
                 pronunciation_item.find_all(
                     id=re.compile(r"play_\d+"))[0].attrs["onclick"])
-            is_ogg = False
+            audio_extension = settings.value("audio_format", "mp3")
             if len(pronunciation_dls) == 0:
                 pronunciation_dl = re.findall(
                     r"Play\(\d+,'[^']+','([^']+)",
                     pronunciation_item.find_all(
                         id=re.compile(r"play_\d+"))[0].attrs["onclick"])[0]
-                dl_url = "https://audio00.forvo.com/ogg/" + \
+                dl_url = "https://audio00.forvo.com/" + audio_extension + "/" + \
                     str(base64.b64decode(pronunciation_dl), "utf-8")
-                is_ogg = True
             else:
                 pronunciation_dl = pronunciation_dls[0]
-                dl_url = "https://audio00.forvo.com/audios/mp3/" + \
+                dl_url = "https://audio00.forvo.com/audios/" + audio_extension + "/" + \
                     str(base64.b64decode(pronunciation_dl), "utf-8")
+            # forvo URL is interchangeable - replace all instances of mp3 with ogg and it'll provide a different format
+            dl_url = dl_url.rsplit(".", 1)[0] + "." + audio_extension
+            
             #data_id = int(
             #    pronunciation_item.find_all(
             #        class_="more")[0].find_all(
@@ -127,7 +130,6 @@ class Forvo:
                                                  vote_count,
                                                  origin.strip(),
                                                  dl_url,
-                                                 is_ogg,
                                                  -1, #data_id, can't obtain anymore
                                                  )
 
