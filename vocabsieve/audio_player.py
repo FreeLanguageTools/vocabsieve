@@ -12,7 +12,8 @@ class AudioPlayer:
     self.player = QMediaPlayer()
 
   def crossplatform_play_sound(self, path):
-    self.player.setMedia(QMediaContent(path))
+    content = QUrl.fromLocalFile(path)
+    self.player.setMedia(QMediaContent(content))
     Thread(target=lambda: self.player.play()).start()
 
   def play_audio(self, name: str, data: Dict[str, str], lang: str) -> str:
@@ -20,23 +21,19 @@ class AudioPlayer:
     if not audiopath:
         return ""
 
-    if not audiopath.startswith("https://"):
-        content = QUrl(audiopath)
-        self.crossplatform_play_sound(content)
-        return audiopath
+    if audiopath.startswith("https://"):
+      fpath = os.path.join(forvopath, lang, name)
+      if not os.path.exists(fpath):
+          res = requests.get(audiopath, headers=HEADERS)
 
-    fpath = os.path.join(forvopath, lang, name)
-    if not os.path.exists(fpath):
-        res = requests.get(audiopath, headers=HEADERS)
+          if res.status_code != 200:
+              # /TODO: Maybe display error to the user?
+              return ""
 
-        if res.status_code != 200:
-            # /TODO: Maybe display error to the user?
-            return ""
+          os.makedirs(os.path.dirname(fpath), exist_ok=True)
+          with open(fpath, 'bw') as file:
+              file.write(res.content)
+      audiopath = fpath
 
-        os.makedirs(os.path.dirname(fpath), exist_ok=True)
-        with open(fpath, 'bw') as file:
-            file.write(res.content)
-
-    url = QUrl.fromLocalFile(fpath)
-    self.crossplatform_play_sound(url)
-    return fpath
+    self.crossplatform_play_sound(audiopath)
+    return audiopath
