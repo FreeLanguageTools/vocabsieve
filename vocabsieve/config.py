@@ -379,6 +379,8 @@ class SettingsDialog(QDialog):
         self.tab_d.layout.addRow(
             QLabel("Pronunciation source"),
             self.audio_dict)
+        self.tab_d.layout.addRow(QLabel("Forvo audio format"), self.audio_format)
+        self.tab_d.layout.addRow(QLabel("<i>◊ Choose mp3 for playing on iOS, but ogg may save space</i>"))
         self.tab_d.layout.addRow(QLabel("Frequency list"), self.freq_source)
         self.tab_d.layout.addRow(
             QLabel("Google translate: To"),
@@ -488,9 +490,6 @@ class SettingsDialog(QDialog):
         self.tab_m.layout.addRow(QLabel("<i>◊ WebP, JPG, GIF are lossy, which create smaller files.</i>"))
         self.tab_m.layout.addRow(QLabel("Image quality"), self.img_quality)
         self.tab_m.layout.addRow(QLabel("<i>◊ Between 0 and 100. -1 uses the default value from Qt.</i>"))
-        self.tab_m.layout.addRow(QLabel("<h3>Audio</h3>"))
-        self.tab_m.layout.addRow(QLabel("Audio format"), self.audio_format)
-        self.tab_m.layout.addRow(QLabel("<i>◊ mp3 can be played on any device. ogg has limited support on Apple devices but takes up less space, resulting in less cache storage used and faster sync times</i>"))
         self.tab_m.layout.addRow(QLabel("<h3>Reset</h3>"))
         self.tab_m.layout.addRow(QLabel("Your data will be lost forever! There is NO cloud backup."))
         self.tab_m.layout.addRow(QLabel("<strong>Reset all settings to defaults</strong>"), self.reset_button)
