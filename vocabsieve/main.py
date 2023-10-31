@@ -235,6 +235,7 @@ class DictionaryWindow(QMainWindow):
 
         self.image_viewer = QLabel("<center><b>&lt;No image selected&gt;</center>")
         self.image_viewer.setScaledContents(True)
+        self.image_viewer.setToolTip(f"{MOD}-I to clear the image.")
         self.image_viewer.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
         self.image_viewer.setStyleSheet(
             '''
