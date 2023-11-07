@@ -8,9 +8,8 @@ import re
 import base64
 from PyQt5.QtCore import QStandardPaths, QSettings
 from pathlib import Path
-from urllib.parse import quote
+from urllib.parse import quote, unquote
 from dataclasses import dataclass
-import urllib
 from .app_text import settings_app_title, app_organization
 settings = QSettings(app_organization, settings_app_title)
 
@@ -123,7 +122,7 @@ class Forvo:
                         break
             else:
                 origin = username[0].contents[0]
-            word = urllib.parse.unquote(self.url.rsplit('/', 2)[-1])
+            word = unquote(self.url.rsplit('/', 2)[-1])
             pronunciation_object = Pronunciation(self.language,
                                                  l.accent,
                                                  word.strip(),
