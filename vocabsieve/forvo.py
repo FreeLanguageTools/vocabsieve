@@ -8,7 +8,7 @@ import re
 import base64
 from PyQt5.QtCore import QStandardPaths, QSettings
 from pathlib import Path
-from urllib.parse import quote
+from urllib.parse import quote, unquote
 from dataclasses import dataclass
 from .app_text import settings_app_title, app_organization
 settings = QSettings(app_organization, settings_app_title)
@@ -98,7 +98,7 @@ class Forvo:
                     str(base64.b64decode(pronunciation_dl), "utf-8")
             # forvo URL is interchangeable - replace all instances of mp3 with ogg and it'll provide a different format
             dl_url = dl_url.rsplit(".", 1)[0] + "." + audio_extension
-            
+
             #data_id = int(
             #    pronunciation_item.find_all(
             #        class_="more")[0].find_all(
@@ -122,7 +122,7 @@ class Forvo:
                         break
             else:
                 origin = username[0].contents[0]
-            word = self.url.rsplit('/', 2)[-1]
+            word = unquote(self.url.rsplit('/', 2)[-1])
             pronunciation_object = Pronunciation(self.language,
                                                  l.accent,
                                                  word.strip(),
