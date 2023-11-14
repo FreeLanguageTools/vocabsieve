@@ -9,7 +9,7 @@ name: Deploy Jekyll site to Pages
 on:
   push:
     branches:
-      - "main"
+      - "master"
     paths:
       - "docs/**"
 
@@ -24,7 +24,7 @@ permissions:
 
 # Allow one concurrent deployment
 concurrency:
-  group: "pages"
+  group: "master"
   cancel-in-progress: true
 
 jobs:
