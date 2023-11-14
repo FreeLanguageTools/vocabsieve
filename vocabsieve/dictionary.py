@@ -141,7 +141,6 @@ def getAudio(word: str,
                     data = lookupin(
                         word.lower(),
                         language,
-                        lemmatize=False,
                         dictionary=d['name'])
                     if data['definition']:
                         data['definition'] = json.loads(data['definition'])
@@ -159,7 +158,6 @@ def getAudio(word: str,
     data = lookupin(
         word.lower(),
         language,
-        lemmatize=False,
         dictionary=dictionary)
     data['definition'] = json.loads(data['definition'])
     for d in custom_dicts:
@@ -176,7 +174,6 @@ def getAudio(word: str,
 def lookupin(
         word: str,
         language: str,
-        lemmatize: bool=True,
         greedy_lemmatize: bool=False,
         dictionary: str="Wiktionary (English)",
         gtrans_lang: str="en",
@@ -186,8 +183,6 @@ def lookupin(
     if not word:
         return word
     IS_UPPER = word[0].isupper()
-    if lemmatize and not " " in word:
-        word = lem_word(word, language, greedy_lemmatize)
     # The lemmatizer would always turn words lowercase, which can cause
     # lookups to fail if not recovered.
     candidates = [word.lower(), word.capitalize()] if IS_UPPER else [word]

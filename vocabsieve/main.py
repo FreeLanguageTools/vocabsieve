@@ -938,7 +938,7 @@ class DictionaryWindow(QMainWindow):
         self.audio_path = ""
 
         if self.settings.value("audio_dict", "Forvo (all)") != "<disabled>":
-            threading.Thread(target=self.fetchAudioInBackground, args=(word,)).start()
+            threading.Thread(target=self.fetchAudioInBackground, args=(result['word'],)).start()
 
     def getLanguage(self) -> str:
         return self.settings.value("target_language", "en")  # type: ignore
@@ -960,7 +960,6 @@ class DictionaryWindow(QMainWindow):
         lemfreq = self.settings.value("lemfreq", True, type=bool)
         short_sign = "Y" if lemmatize else "N"
         language = self.getLanguage()
-        TL = language  # Handy synonym
         gtrans_lang: str = self.settings.value("gtrans_lang", "en")
         dictname: str = self.settings.value("dict_source", "Wiktionary (English)")
         freqname: str = self.settings.value("freq_source", "<disabled>")
@@ -985,8 +984,9 @@ class DictionaryWindow(QMainWindow):
                     self.freq_display.setText(freq_to_stars(1e6, lemfreq))
         self.status(
             f"L: '{word}' in '{language}', lemma: {short_sign}, from {dictionaries.get(dictname, dictname)}")
+        if lemmatize and not " " in word:
+            word = lem_word(word, language, lem_greedily)
         if dictname == "<disabled>":
-            word = lem_word(word, language, lem_greedily) if lemmatize else word
             self.status("Dict disabled")
             return {
                 "word": word,
@@ -996,7 +996,6 @@ class DictionaryWindow(QMainWindow):
             item = lookupin(
                 word,
                 language,
-                lemmatize,
                 lem_greedily,
                 dictname,
                 gtrans_lang,
@@ -1014,7 +1013,6 @@ class DictionaryWindow(QMainWindow):
             item2: LookUpResults = lookupin(
                 word,
                 language,
-                lemmatize,
                 lem_greedily,
                 dict2name,
                 gtrans_lang)
