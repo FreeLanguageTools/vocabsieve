@@ -58,7 +58,7 @@ Then, install the [AnkiConnect](https://ankiweb.net/shared/info/2055492159) addo
 {: .important }
 **MacOS users**: You must have Anki open on the foreground (i.e. visible on your desktop), or otherwise [disable the App Nap feature](https://github.com/FooSoft/anki-connect#notes-for-macos-users). If you do not do this, AnkiConnect will not respond and will cause this program to be very slow and/or unresponsive.
 
-## Browser (Optional)
+## Browser extension (Optional)
 
 {: .note}
 The browser extension should work as is, but is mostly unmaintained

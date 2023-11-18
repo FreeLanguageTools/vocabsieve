@@ -18,7 +18,7 @@ You can join FreeLanguageTools chatrooms on multiple platforms. All chatrooms ar
 
 | Platform                | Link             | Notes     |
 |  ---                    |    ----             |          ---  |
-| Telegram                | https://t.me/fltchat  |    |
+| Telegram                | [https://t.me/fltchat](https://t.me/fltchat)  |    |
 | Matrix                  | Under construction                    |       |
 | XMPP                    | Under construction                    |               |
 | Discord (*proprietary*) | Under construction                    |               |

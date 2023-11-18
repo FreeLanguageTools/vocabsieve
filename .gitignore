@@ -9,3 +9,5 @@ cx_freeze/build
 .coverage
 htmlcov
 .tox
+docs/_site
+docs/.jekyll-cache
