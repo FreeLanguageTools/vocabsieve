@@ -1,19 +1,13 @@
-from re import I
 from PyQt5.QtWidgets import QMainWindow, QWidget, QGridLayout, QLabel, QPushButton, QCheckBox, \
-                        QStatusBar, QMenuBar, QFileDialog, QLCDNumber, QListView, QListWidget, \
-                        QSizePolicy, QShortcut, QAction, QApplication, QMessageBox, QLineEdit
-from PyQt5.QtGui import QKeySequence, QFocusEvent, QClipboard, QDesktopServices, QPixmap
+                        QStatusBar, QMenuBar, QLCDNumber, QListView, QListWidget, \
+                        QSizePolicy, QApplication, QLineEdit
+from PyQt5.QtGui import  QFocusEvent, QDesktopServices
 from PyQt5.QtCore import QUrl, QCoreApplication, QStandardPaths, pyqtSignal, QSettings
 from PyQt5.Qt import Qt
-from markdown import markdown
 
-from ..app_text import app_title, settings_app_title, app_organization
-from ..global_events import GlobalObject
+from ..global_names import app_title, settings, datapath
 
-QCoreApplication.setApplicationName(settings_app_title)
-QCoreApplication.setOrganizationName(app_organization)
-settings = QSettings(app_organization, settings_app_title)
-
+print(datapath)
 from ..audio_player import AudioPlayer
 from ..db import Record
 from .searchable_text_edit import SearchableTextEdit
@@ -22,12 +16,7 @@ from .about import AboutDialog
 
 import platform
 import os
-import requests
-import importlib.metadata
-from packaging import version
 from typing import Optional
-from datetime import datetime
-from ..analyzer import BookAnalyzer
 
 
 # If on macOS, display the modifier key as "Cmd", else display it as "Ctrl".
@@ -49,7 +38,7 @@ class MainWindowBase(QMainWindow):
         self.audio_player = AudioPlayer()
         self.audio_fetched.connect(self.updateAudioUI)
 
-        self.rec = Record(self)
+        self.rec = Record(self, datapath)
         self.setCentralWidget(self.widget)
         self.previousWord = ""
         self.audio_path = ""

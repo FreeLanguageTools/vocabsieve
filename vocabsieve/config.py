@@ -312,7 +312,7 @@ class SettingsDialog(QDialog):
             self.close()
 
     def nuke_profile(self):
-        datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
+        datapath = self.parent.datapath
         answer = QMessageBox.question(
             self,
             "Confirm Reset",

@@ -16,7 +16,7 @@ from .forvo import *
 from .lemmatizer import lem_word
 
 
-dictdb = LocalDictionary()
+dictdb = LocalDictionary(datapath)
 
 gtrans_languages = ['af', 'sq', 'am', 'ar', 'hy', 'az', 'eu', 'be', 'bn',
                     'bs', 'bg', 'ca', 'ceb', 'ny', 'zh', 'zh_HANT', 'co', 'hr', 'cs',

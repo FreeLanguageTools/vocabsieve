@@ -1,20 +1,12 @@
 import sqlite3
-from PyQt5.QtCore import QStandardPaths, QCoreApplication
 from os import path
-from pathlib import Path
 import time
 from bidict import bidict
 import re
 from datetime import datetime
 from .constants import langcodes
 import unicodedata
-import simplemma
 from .lemmatizer import lem_word
-
-datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
-Path(datapath).mkdir(parents=True, exist_ok=True)
-print(datapath)
-
 
 def removeAccents(word):
     #print("Removing accent marks from query ", word)
@@ -50,7 +42,7 @@ dictionaries = bidict({"Wiktionary (English)": "wikt-en",
 
 
 class Record():
-    def __init__(self, parent):
+    def __init__(self, parent, datapath):
         self.conn = sqlite3.connect(
             path.join(
                 datapath,
@@ -423,7 +415,7 @@ class Record():
 
 
 class LocalDictionary():
-    def __init__(self):
+    def __init__(self, datapath):
         self.conn = sqlite3.connect(
             path.join(
                 datapath,

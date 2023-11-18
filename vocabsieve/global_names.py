@@ -1,4 +1,5 @@
 from .constants import DEBUG_ENV
+from PyQt5.QtCore import QStandardPaths, QSettings, QCoreApplication
 from . import __version__
 
 def _get_debug_description():
@@ -18,5 +19,11 @@ def app_title(include_version: bool):
 app_organization = "FreeLanguageTools"
 def _get_settings_app_title():
     return title_prefix + DEBUG_ENV if DEBUG_ENV else title_prefix
-settings_app_title = _get_settings_app_title()
+app_name = _get_settings_app_title()
+
+QCoreApplication.setApplicationName(app_name)
+QCoreApplication.setOrganizationName(app_organization)
+
+settings = QSettings(app_organization, app_name)
+datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
 

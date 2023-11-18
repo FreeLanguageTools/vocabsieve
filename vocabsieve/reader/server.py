@@ -5,6 +5,7 @@ from werkzeug.utils import secure_filename
 from markdown import markdown
 import os
 import re
+from ..global_names import settings, datapath
 from .utils import *
 from PyQt5.QtCore import QStandardPaths, QCoreApplication, QObject
 from pathlib import Path
@@ -19,7 +20,6 @@ else:
     QCoreApplication.setApplicationName("VocabSieve")
 QCoreApplication.setOrganizationName("FreeLanguageTools")
 
-datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
 Path(datapath).mkdir(parents=True, exist_ok=True)
 UPLOAD_FOLDER = os.path.join(datapath, "uploads")
 Path(UPLOAD_FOLDER).mkdir(parents=True, exist_ok=True)

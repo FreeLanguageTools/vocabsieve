@@ -8,7 +8,7 @@ from typing import Literal
 from bidict import bidict
 import re
 
-DEBUG_ENV = os.environ.get("VOCABSIEVE_DEBUG")
+DEBUG_ENV = os.environ.get("VOCABSIEVE_DEBUG", "")
 
 
 class LookUpResults(TypedDict):

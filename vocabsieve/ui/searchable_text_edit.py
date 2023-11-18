@@ -2,9 +2,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from ..global_events import GlobalObject
-from ..app_text import settings_app_title, app_organization
-
-settings = QSettings(app_organization, settings_app_title)
+from ..global_names import settings
 
 class SearchableTextEdit(QTextEdit):
 

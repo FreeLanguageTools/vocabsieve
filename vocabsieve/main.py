@@ -1,59 +1,42 @@
 import csv
 import threading
-import importlib
+import importlib.metadata
 import os
-import platform
 import sys
+import time
+import re
 from datetime import datetime
 from typing import Optional
-import requests
 from markdown import markdown
+import requests
 from packaging import version
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PyQt5.QtCore import QCoreApplication, QStandardPaths, QTimer, QDateTime, QThread, QUrl
+from PyQt5.QtGui import QClipboard, QKeySequence, QPixmap, QDesktopServices
+from PyQt5.QtWidgets import QApplication, QMessageBox, QAction, QShortcut, QFileDialog
 import qdarktheme
+import json
 
-
-from .app_text import *
-QCoreApplication.setApplicationName(settings_app_title)
-QCoreApplication.setOrganizationName(app_organization)
-settings = QSettings(app_organization, settings_app_title)
-
+from .global_names import settings, datapath
+from .text_manipulation import apply_bold_char, apply_bold_tags, bold_word_in_text
 from .known_words import getKnownData, getKnownWords
-from . import __version__
 from .analyzer import BookAnalyzer
-from .config import *
+from .config import SettingsDialog, getVersion
 from .stats import StatisticsWindow
-from .db import *
-from .dictionary import *
-from .audio_player import *
+from .dictionary import lookupin, getAudio, getFreq, lem_word, markdown_nop
 from .importer import KoreaderImporter, KindleVocabImporter, KoreaderVocabImporter, AutoTextImporter
 from .reader import ReaderServer
 from .contentmanager import ContentManager
 from .global_events import GlobalObject
-from .text_manipulation import *
-from .tools import *
-from .ui.searchable_boldable_text_edit import SearchableBoldableTextEdit
-from .ui.searchable_text_edit import SearchableTextEdit
+from .tools import is_json, preprocess_clipboard, process_definition, starts_with_cyrillic, is_oneword, freq_to_stars, addNote, failed_lookup
 from .constants import LookUpResults, DefinitionDisplayModes
 from .ui.main_window_base import MainWindowBase
+from .ui.searchable_text_edit import SearchableTextEdit
+from .db import dictionaries
 
-
-
-Path(os.path.join(datapath, "images")).mkdir(parents=True, exist_ok=True)
-# If on macOS, display the modifier key as "Cmd", else display it as "Ctrl".
-# For whatever reason, Qt automatically uses Cmd key when Ctrl is specified on Mac
-# so there is no need to change the keybind, only the display text
-if platform.system() == "Darwin":
-    MOD = "Cmd"
-else:
-    MOD = "Ctrl"
-
-class DictionaryWindow(MainWindowBase):
-    audio_fetched = pyqtSignal(dict)
+class MainWindow(MainWindowBase):
     def __init__(self) -> None:
         super().__init__()
+        self.datapath = datapath
         self.setupMenu()
         self.setupButtons()
         self.startServer()
@@ -581,7 +564,7 @@ class DictionaryWindow(MainWindowBase):
         mistakes, unless it is used from the button.
         """
         if selection:
-            text = QApplication.clipboard().text(QClipboard.Selection)
+            text = QApplication.clipboard().text(QClipboard.Selection) # type: ignore
         else:
             # I am not sure how you can copy an image to PRIMARY
             # so here we go
@@ -639,7 +622,7 @@ class DictionaryWindow(MainWindowBase):
 
     def lookupSet(self, word, use_lemmatize=True) -> None:
         sentence_text = self.sentence.unboldedText
-        if settings.value("bold_style", type=int):
+        if self.settings.value("bold_style", type=int):
             # Bold word that was clicked on, either with "<b>{word}</b>" or
             # "__{word}__".
 
@@ -955,14 +938,14 @@ class DictionaryWindow(MainWindowBase):
 def main():
     qdarktheme.enable_hi_dpi()
     app = QApplication(sys.argv)
-    if theme:=settings.value("theme"):
-        if color:=settings.value("accent_color"):
+    w = MainWindow()
+    if theme:=w.settings.value("theme"):
+        if color:=w.settings.value("accent_color"):
             qdarktheme.setup_theme(theme, custom_colors={"primary": color})
         else:
             qdarktheme.setup_theme(theme)
     else:
         qdarktheme.setup_theme("auto")
-    w = DictionaryWindow()
 
     w.show()
     sys.exit(app.exec())

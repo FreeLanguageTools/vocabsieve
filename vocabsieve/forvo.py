@@ -10,12 +10,10 @@ from PyQt5.QtCore import QStandardPaths, QSettings
 from pathlib import Path
 from urllib.parse import quote, unquote
 from dataclasses import dataclass
-from .app_text import settings_app_title, app_organization
-settings = QSettings(app_organization, settings_app_title)
+from .global_names import settings, datapath
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
-datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
 Path(path.join(datapath, "_forvo")).mkdir(parents=True, exist_ok=True)
 
 
