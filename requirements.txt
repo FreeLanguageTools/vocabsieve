@@ -24,6 +24,6 @@ pyqtgraph
 pyqtdarktheme
 markdownify
 readmdict
-python-lzo==1.12; sys_platform != 'win32'
+python-lzo
 packaging
 typing_extensions
