@@ -1,6 +1,7 @@
 ---
-title: Home
-layout: home
+title: Welcome
+layout: default
+nav_order: 1
 ---
 # Welcome
 
