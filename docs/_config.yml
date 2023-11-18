@@ -6,3 +6,20 @@ url: https://docs.freelanguagetools.org/
 
 aux_links:
   VocabSieve homepage: https://github.com/FreeLanguageTools/vocabsieve
+
+callouts_level: quiet # or loud
+callouts:
+  highlight:
+    color: yellow
+  important:
+    title: Important
+    color: blue
+  new:
+    title: New
+    color: green
+  note:
+    title: Note
+    color: purple
+  warning:
+    title: Warning
+    color: red

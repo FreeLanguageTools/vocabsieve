@@ -9,7 +9,8 @@ Welcome to VocabSieve manual.
 
 ## Quickstart
 
-Go to [[Getting Started]] if you are already familiar with immersion and Anki and just want to quickly set up VocabSieve.
+Go to [Installation]({{site.baseurl}}/installation.html) and [Configuration]({{site.baseurl}}/configuration.html) 
+if you are already familiar with immersion and Anki and just want to quickly set up VocabSieve.
 
 ## Community
 
@@ -18,6 +19,6 @@ You can join FreeLanguageTools chatrooms on multiple platforms. All chatrooms ar
 | Platform                | Link             | Notes     |
 |  ---                    |    ----             |          ---  |
 | Telegram                | https://t.me/fltchat  |    |
-| Matrix                  |                     | And more      |
-| XMPP                    |                     |               |
-| Discord (*proprietary*) |                     |               |
+| Matrix                  | Under construction                    |       |
+| XMPP                    | Under construction                    |               |
+| Discord (*proprietary*) | Under construction                    |               |
