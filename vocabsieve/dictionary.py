@@ -83,7 +83,6 @@ def wiktionary(word, language: str) -> Optional[dict]:
 
 
 def googletranslate(word, language, gtrans_lang, gtrans_api) -> Optional[LookUpResults]:
-    "Google translation, through the googletrans python library"
     if language == "he":
         language = "iw" # fix for hebrew language code
     url = f"{gtrans_api}/api/v1/{language}/{gtrans_lang}/{quote(word)}"

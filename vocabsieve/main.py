@@ -16,7 +16,7 @@ from PyQt5.QtWidgets import QApplication, QMessageBox, QAction, QShortcut, QFile
 import qdarktheme
 import json
 
-from .global_names import settings, datapath
+from .global_names import datapath
 from .text_manipulation import apply_bold_char, apply_bold_tags, bold_word_in_text
 from .known_words import getKnownData, getKnownWords
 from .analyzer import BookAnalyzer
@@ -27,23 +27,26 @@ from .importer import KoreaderImporter, KindleVocabImporter, KoreaderVocabImport
 from .reader import ReaderServer
 from .contentmanager import ContentManager
 from .global_events import GlobalObject
-from .tools import is_json, preprocess_clipboard, process_definition, starts_with_cyrillic, is_oneword, freq_to_stars, addNote, failed_lookup
+from .tools import is_json, preprocess_clipboard, process_definition, starts_with_cyrillic, is_oneword, freq_to_stars, addNote, failed_lookup, make_source_group
 from .constants import LookUpResults, DefinitionDisplayModes
 from .ui.main_window_base import MainWindowBase
 from .ui.searchable_text_edit import SearchableTextEdit
-from .db import dictionaries
+from .db import LocalDictionary, dictionaries
 from .models import SourceGroup
+
 
 class MainWindow(MainWindowBase):
     def __init__(self) -> None:
         super().__init__()
         self.datapath = datapath
+        self.dictdb = LocalDictionary(self.datapath)
         self.setupMenu()
         self.setupButtons()
         self.startServer()
         self.initTimer()
         self.setupShortcuts()
         self.checkUpdates()
+        self.initSources()
 
         GlobalObject().addEventListener("double clicked", self.lookupSelected)
         if self.settings.value("primary", False, type=bool)\
@@ -59,7 +62,10 @@ class MainWindow(MainWindowBase):
             self.settings.setValue("internal/configured", True)
     
     def initSources(self):
-        self.sg1 = SourceGroup
+        sg1_src_list = json.loads(self.settings.value("sg1", '["Wiktionary (English)"]'))
+        self.sg1 = make_source_group(sg1_src_list, self.dictdb)
+        self.definition.setSourceGroup(self.sg1)
+                                     
 
     def checkUpdates(self) -> None:
         if self.settings.value("check_updates") is None:
@@ -461,10 +467,10 @@ class MainWindow(MainWindowBase):
         url = f"http://{self.settings.value('reader_host', '127.0.0.1', type=str)}:{self.settings.value('reader_port', '39285', type=str)}"
         QDesktopServices.openUrl(QUrl(url))
 
-    def lookupSelected(self, use_lemmatize=True) -> None:
+    def lookupSelected(self) -> None:
         target = self.getCurrentWord()
         if target:
-            self.lookupSet(target, use_lemmatize)
+            self.definition.lookup(target)
 
     def setState(self, state: LookUpResults) -> None:
         self.word.setText(state['word'])

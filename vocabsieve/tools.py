@@ -21,6 +21,11 @@ from itertools import islice
 from lxml import etree
 from charset_normalizer import from_bytes
 from ebooklib import epub, ITEM_DOCUMENT
+from .sources.WiktionarySource import WiktionarySource
+from .sources.GoogleTranslateSource import GoogleTranslateSource
+from .sources.LocalSource import LocalSource
+from .models import LemmaPolicy, Source, SourceGroup
+from .global_names import settings
 
 def request(action, **params):
     return {'action': action, 'params': params, 'version': 6}
@@ -329,3 +334,30 @@ def split_to_sentences(text: str, language: str):
         return split_text_into_sentences(text, language=language)
     except SentenceSplitterException:
         return text
+    
+def make_source(src_name: str, dictdb: LocalDictionary):
+    lemma_policy = LemmaPolicy(settings.value(f"{src_name}/lemma_policy", 3, type=int)) # 3 = try_lemma
+    langcode = settings.value("target_language", "en")
+    if src_name == "Wiktionary (English)":
+        return WiktionarySource(langcode, lemma_policy)
+    elif src_name == "Google Translate":
+        return GoogleTranslateSource(
+            langcode, 
+            lemma_policy,
+            settings.value("gtrans_api", "https://lingva.lunar.icu"), 
+            settings.value("gtrans_lang", "en")
+        )
+    else: # Local, /TODO error handling
+        return LocalSource(langcode, lemma_policy, dictdb)
+
+
+def make_source_group(src_names: list[str], dictdb: LocalDictionary):
+    source_list = []
+    for src_name in src_names:
+        source_list.append(
+            make_source(
+                src_name,
+                dictdb
+            )
+        )
+    return SourceGroup(source_list)

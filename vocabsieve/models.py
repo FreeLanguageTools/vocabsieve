@@ -80,7 +80,7 @@ class SourceGroup:
     def __init__(self, sources: list[Source]) -> None:
         self.sources = sources
 
-    def getDefinitions(self, word: str) -> list[Definition]:
+    def define(self, word: str) -> list[Definition]:
         '''Get definitions from all sources'''
         definitions = []
         for source in self.sources:

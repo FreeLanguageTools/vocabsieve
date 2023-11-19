@@ -768,6 +768,7 @@ class SettingsDialog(QDialog):
         dicts = getDictsForLang(
             langcodes.inverse[self.target_language.currentText()], custom_dicts)
 
+        self.all_sources_widget.clear()
         self.all_sources_widget.addItems(dicts)
         
         self.postproc_selector.addItems(dicts)

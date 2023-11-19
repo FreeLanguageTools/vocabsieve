@@ -3,18 +3,22 @@ from PyQt5.QtWidgets import QMainWindow, QWidget, QGridLayout, QLabel, QPushButt
                         QSizePolicy, QApplication, QLineEdit
 from PyQt5.QtGui import  QFocusEvent, QDesktopServices
 from PyQt5.QtCore import QUrl, QCoreApplication, QStandardPaths, pyqtSignal, QSettings, Qt
+from vocabsieve.models import SourceGroup
+
+from vocabsieve.ui.multi_definition_widget import MultiDefinitionWidget
 
 from ..global_names import app_title, settings, datapath
 
-print(datapath)
 from ..audio_player import AudioPlayer
 from ..db import Record
 from .searchable_text_edit import SearchableTextEdit
 from .searchable_boldable_text_edit import SearchableBoldableTextEdit
 from .about import AboutDialog
+from ..tools import make_source_group
 
 import platform
 import os
+import json
 from typing import Optional
 
 
@@ -82,10 +86,10 @@ class MainWindowBase(QMainWindow):
         #self.sentence.setMaximumHeight(300)
         self.word = QLineEdit()
         self.word.setPlaceholderText("Word will appear here when looked up.")
-        self.definition = SearchableTextEdit()
+        self.definition = MultiDefinitionWidget()
         self.definition.setMinimumHeight(70)
         #self.definition.setMaximumHeight(1800)
-        self.definition2 = SearchableTextEdit()
+        self.definition2 = MultiDefinitionWidget()
         self.definition2.setMinimumHeight(70)
         #self.definition2.setMaximumHeight(1800)
         self.tags = QLineEdit()
@@ -122,9 +126,6 @@ class MainWindowBase(QMainWindow):
         self.web_button = QPushButton(f"Open webpage [{MOD}-1]")
         self.freq_display = QLineEdit()
         self.freq_display.setPlaceholderText("Word frequency")
-        self.freq_display_lcd = QLCDNumber()
-        self.freq_display_lcd.setSegmentStyle(QLCDNumber.Flat)
-        self.freq_display_lcd.display(0)
 
         self.discard_audio_button = QPushButton("Discard audio [Ctrl+Shift+X]")
         self.discard_audio_button.setToolTip("This will remove audio from the current working note.")
@@ -245,8 +246,6 @@ class MainWindowBase(QMainWindow):
         layout.addWidget(self.config_button, 17, 0, 1, 3)
 
         return layout
-
-    
 
     
 

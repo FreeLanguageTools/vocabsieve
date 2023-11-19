@@ -1,7 +1,6 @@
 from vocabsieve.db import LocalDictionary
 from ..models import Source, Definition, LemmaPolicy
 from ..db import LocalDictionary
-from typing import override
 
 class LocalSource(Source):
     def __init__(self, langcode: str, lemma_policy: LemmaPolicy, db: LocalDictionary) -> None:
