@@ -7,6 +7,7 @@ from .tools import *
 from .dictionary import *
 from .dictmanager import *
 from .fieldmatcher import FieldMatcher
+from .ui.source_ordering_widget import SourceGroupWidget, AllSourcesWidget
 
 BoldStyles = ["<disabled>", "Font weight", "Underscores"]
 
@@ -20,21 +21,15 @@ class SettingsDialog(QDialog):
         self.setWindowTitle("Configure VocabSieve")
         self.initWidgets()
         self.initTabs()
-        try:
-            self.setupWidgets()
-            self.setupAutosave()
-            self.setupProcessing()
-            self.deactivateProcessing()
-            self.getMatchedCards()
-            self.twodictmode = self.settings.value(
-                "dict_source2", "<disabled>") != "<disabled>"
-        except TypeError as e:
-            print(e)
-            print(
-                "TypeError encountered while trying to setup settings dialog,",
-                "resetting all settings to default")
-            self.settings.clear()
-            self.close()
+
+        self.setupWidgets()
+        self.setupAutosave()
+        self.setupProcessing()
+        self.deactivateProcessing()
+        self.getMatchedCards()
+        self.twodictmode = self.settings.value(
+            "dict_source2", "<disabled>") != "<disabled>"
+
         if not user_note_type and not self.settings.value("internal/added_default_note_type"):
             try:
                 self.onDefaultNoteType()
@@ -71,8 +66,6 @@ class SettingsDialog(QDialog):
         self.target_language = QComboBox()
         self.deck_name = QComboBox()
         self.tags = QLineEdit()
-        self.dict_source = QComboBox()
-        self.dict_source2 = QComboBox()
         self.freq_source = QComboBox()
         self.gtrans_lang = QComboBox()
         self.note_type = QComboBox()
@@ -241,6 +234,12 @@ class SettingsDialog(QDialog):
 
         self.open_fieldmatcher = QPushButton("Match fields (required for using Anki data)")
 
+        self.sg1_widget = SourceGroupWidget()
+        self.sg2_widget = SourceGroupWidget()
+        self.all_sources_widget = AllSourcesWidget()
+        self.sg2_enabled = QCheckBox("Enable Dictionary Group 2")
+
+
     def dictmanager(self):
         importer = DictManager(self)
         importer.exec()
@@ -251,35 +250,39 @@ class SettingsDialog(QDialog):
 
     def initTabs(self):
         self.tabs = QTabWidget()
-        self.tab_d = QWidget()  # Dictionary
-        self.tab_d.layout = QFormLayout(self.tab_d)
+        self.tab_g = QWidget()  # General
+        self.tab_g.layout = QFormLayout(self.tab_g) #type: ignore
+        self.tab_s = QWidget()
+        self.tab_s.layout = QGridLayout(self.tab_s) #type: ignore
         self.tab_a = QWidget()  # Anki
-        self.tab_a.layout = QFormLayout(self.tab_a)
+        self.tab_a.layout = QFormLayout(self.tab_a) #type: ignore
         self.tab_n = QWidget()  # Network
-        self.tab_n.layout = QFormLayout(self.tab_n)
+        self.tab_n.layout = QFormLayout(self.tab_n) #type: ignore
         self.tab_i = QWidget()  # Interface
-        self.tab_i.layout = QFormLayout(self.tab_i)
+        self.tab_i.layout = QFormLayout(self.tab_i) #type: ignore
         self.tab_p = QWidget()  # Processing
-        self.tab_p.layout = QFormLayout(self.tab_p)
+        self.tab_p.layout = QFormLayout(self.tab_p) #type: ignore
         self.tab_m = QWidget()  # Miscellaneous
-        self.tab_m.layout = QFormLayout(self.tab_m)
+        self.tab_m.layout = QFormLayout(self.tab_m) #type: ignore
         self.tab_t = QWidget()  # Tracking
-        self.tab_t.layout = QFormLayout(self.tab_t)
-
+        self.tab_t.layout = QFormLayout(self.tab_t) #type: ignore
 
         self.tabs.resize(400, 400)
 
-        self.layout = QVBoxLayout(self)
+        self.layout = QVBoxLayout(self) # type: ignore
         self.layout.addWidget(self.tabs)
         self.layout.addWidget(self.bar)
 
-        self.tabs.addTab(self.tab_d, "Dictionary")
+        self.tabs.addTab(self.tab_g, "General")
+        self.tabs.addTab(self.tab_s, "Dictionaries")
         self.tabs.addTab(self.tab_p, "Processing")
         self.tabs.addTab(self.tab_a, "Anki")
         self.tabs.addTab(self.tab_n, "Network")
         self.tabs.addTab(self.tab_t, "Tracking")
         self.tabs.addTab(self.tab_i, "Interface")
         self.tabs.addTab(self.tab_m, "Misc")
+
+        self.tab_s
 
     def save_color(self):
         color = QColorDialog.getColor()
@@ -360,34 +363,25 @@ class SettingsDialog(QDialog):
         ])
         self.gtrans_lang.addItems(langs_supported.values())
         self.display_mode.addItems(["Raw", "Plaintext", "Markdown", "HTML", "Markdown-HTML"])
-        self.tab_d.layout.addRow(QLabel("<h3>Dictionary sources</h3>"))
-        self.tab_d.layout.addRow(self.lemmatization)
-        self.tab_d.layout.addRow(self.lem_greedily)
-        self.tab_d.layout.addRow(self.lemfreq)
-        self.tab_d.layout.addRow(
+        self.tab_g.layout.addRow(QLabel("<h3>General</h3>"))
+        self.tab_g.layout.addRow(
             QLabel("Target language"),
             self.target_language)
-        self.tab_d.layout.addRow(
-            QLabel("Dictionary source 1"),
-            self.dict_source)
-        self.tab_d.layout.addRow(
-            QLabel("Dictionary source 2"),
-            self.dict_source2)
 
-        self.tab_d.layout.addRow(QLabel("Bold words"), self.bold_style)
+        self.tab_g.layout.addRow(QLabel("Bold words"), self.bold_style)
 
-        self.tab_d.layout.addRow(
+        self.tab_g.layout.addRow(
             QLabel("Pronunciation source"),
             self.audio_dict)
-        self.tab_d.layout.addRow(QLabel("Forvo audio format"), self.audio_format)
-        self.tab_d.layout.addRow(QLabel("<i>◊ Choose mp3 for playing on iOS, but ogg may save space</i>"))
-        self.tab_d.layout.addRow(QLabel("Frequency list"), self.freq_source)
-        self.tab_d.layout.addRow(
+        self.tab_g.layout.addRow(QLabel("Forvo audio format"), self.audio_format)
+        self.tab_g.layout.addRow(QLabel("<i>◊ Choose mp3 for playing on iOS, but ogg may save space</i>"))
+        self.tab_g.layout.addRow(QLabel("Frequency list"), self.freq_source)
+        self.tab_g.layout.addRow(
             QLabel("Google translate: To"),
             self.gtrans_lang)
-        self.tab_d.layout.addRow(QLabel("Web lookup preset"), self.web_preset)
-        self.tab_d.layout.addRow(QLabel("Custom URL pattern"), self.custom_url)
-        self.tab_d.layout.addRow(self.importdict)
+        self.tab_g.layout.addRow(QLabel("Web lookup preset"), self.web_preset)
+        self.tab_g.layout.addRow(QLabel("Custom URL pattern"), self.custom_url)
+        self.tab_g.layout.addRow(self.importdict)
 
         self.tab_a.layout.addRow(QLabel("<h3>Anki settings</h3>"))
         self.tab_a.layout.addRow(self.enable_anki)
@@ -516,10 +510,20 @@ class SettingsDialog(QDialog):
         self.tab_t.layout.addRow(QLabel("Score: young Anki target word"), self.w_anki_word_y)
         self.tab_t.layout.addRow(QLabel("Score: young Anki card context"), self.w_anki_ctx_y)
 
-
-
         self.reset_button.clicked.connect(self.reset_settings)
         self.nuke_button.clicked.connect(self.nuke_profile)
+
+
+        self.tab_s.layout.addWidget(QLabel("<h3>Dictionary groups</h3>"), 0, 0, 1, 2)
+        self.tab_s.layout.addWidget(QLabel("Dictionary Group 1"), 1, 0, 1 ,1)
+        self.tab_s.layout.addWidget(QLabel("Available dictionaries"), 1, 1, 1, 1)
+        self.tab_s.layout.addWidget(self.sg1_widget, 2, 0, 1, 1)
+        self.tab_s.layout.addWidget(self.sg2_enabled, 3, 0, 1, 2)
+        self.tab_s.layout.addWidget(self.sg2_widget, 4, 0, 1, 1)
+        self.tab_s.layout.addWidget(self.all_sources_widget, 2, 1, 3, 1)
+
+        self.sg2_enabled.stateChanged.connect(lambda value: self.sg2_widget.setEnabled(value))
+        self.sg2_widget.setEnabled(self.sg2_enabled.isChecked())
 
     def getMatchedCards(self):
         if self.settings.value("enable_anki", True):
@@ -626,7 +630,7 @@ class SettingsDialog(QDialog):
         self.loadAudioDictionaries()
         self.loadFreqSources()
 
-        self.dict_source2.currentTextChanged.connect(self.changeMainLayout)
+        self.sg2_enabled.clicked.connect(self.changeMainLayout)
         self.postproc_selector.currentTextChanged.connect(self.setupProcessing)
         self.note_type.currentTextChanged.connect(self.loadFields)
         self.api_enabled.clicked.connect(self.setAvailable)
@@ -646,12 +650,6 @@ class SettingsDialog(QDialog):
             'gtrans_lang',
             'en',
             code_translate=True)
-        self.register_config_handler(
-            self.dict_source,
-            'dict_source',
-            'Wiktionary (English)')
-        self.register_config_handler(
-            self.dict_source2, 'dict_source2', '<disabled>')
         self.register_config_handler(self.audio_dict, 'audio_dict', 'Forvo (all)')
         self.register_config_handler(
             self.freq_source, 'freq_source', '<disabled>')
@@ -702,6 +700,11 @@ class SettingsDialog(QDialog):
         self.register_config_handler(self.known_data_lifetime, 'tracking/known_data_lifetime', 1800)
 
         self.register_config_handler(self.theme, 'theme', 'auto')
+        
+        self.register_config_handler(self.sg2_enabled, 'sg2_enabled', False)
+        self.register_config_handler(self.sg1_widget, 'sg1', [])
+        self.register_config_handler(self.sg2_widget, 'sg2', [])
+
         self.theme.currentTextChanged.connect(qdarktheme.setup_theme)
 
         self.target_language.currentTextChanged.connect(self.loadDictionaries)
@@ -760,29 +763,14 @@ class SettingsDialog(QDialog):
 
     def loadDictionaries(self):
         custom_dicts = json.loads(self.settings.value("custom_dicts", '[]'))
-        self.dict_source.blockSignals(True)
-        self.dict_source.clear()
-        self.dict_source.addItem("<disabled>")
-        self.dict_source2.blockSignals(True)
-        self.dict_source2.clear()
-        self.dict_source2.addItem("<disabled>")
         self.postproc_selector.blockSignals(True)
         self.postproc_selector.clear()
         dicts = getDictsForLang(
             langcodes.inverse[self.target_language.currentText()], custom_dicts)
 
-        self.dict_source.addItems(dicts)
-        self.dict_source2.addItems(dicts)
+        self.all_sources_widget.addItems(dicts)
+        
         self.postproc_selector.addItems(dicts)
-        self.dict_source.setCurrentText(
-            self.settings.value(
-                'dict_source',
-                'Wiktionary (English)'))
-        self.dict_source2.setCurrentText(
-            self.settings.value(
-                'dict_source2', '<disabled>'))
-        self.dict_source.blockSignals(False)
-        self.dict_source2.blockSignals(False)
         self.postproc_selector.blockSignals(False)
 
     def loadFreqSources(self):
@@ -946,7 +934,7 @@ class SettingsDialog(QDialog):
         msg.exec()
 
     def changeMainLayout(self):
-        if self.dict_source2.currentText() != "<disabled>":
+        if self.sg2_enabled.isChecked():
             # This means user has changed from one source to two source mode,
             # need to redraw main window
             if self.settings.value("orientation", "Vertical") == "Vertical":
@@ -984,21 +972,24 @@ class SettingsDialog(QDialog):
             default,
             code_translate=False,
             no_initial_update=False):
+        
         name = widget.objectName()
         def update(v): return self.settings.setValue(key, v)
 
-        def update_map(v): return self.settings.setValue(
-            key, langcodes.inverse[v])
-        if type(widget) == QCheckBox:
+        def update_map(v): return self.settings.setValue(key, langcodes.inverse[v])
+    
+        def update_json(v): return self.settings.setValue(key, json.dumps(v))
+
+        if isinstance(widget, QCheckBox):
             widget.setChecked(self.settings.value(key, default, type=bool))
             widget.clicked.connect(update)
             if not no_initial_update:
                 update(widget.isChecked())
-        if type(widget) == QLineEdit:
+        if isinstance(widget, QLineEdit):
             widget.setText(self.settings.value(key, default))
             widget.textChanged.connect(update)
             update(widget.text())
-        if type(widget) == QComboBox:
+        if isinstance(widget, QComboBox):
             if code_translate:
                 widget.setCurrentText(
                     langcodes[self.settings.value(key, default)])
@@ -1008,7 +999,30 @@ class SettingsDialog(QDialog):
                 widget.setCurrentText(self.settings.value(key, default))
                 widget.currentTextChanged.connect(update)
                 update(widget.currentText())
-        if type(widget) == QSlider or type(widget) == QSpinBox:
+        if isinstance(widget, QSlider)or isinstance(widget, QSpinBox):
             widget.setValue(self.settings.value(key, default, type=int))
             widget.valueChanged.connect(update)
             update(widget.value())
+        if isinstance(widget, QListWidget):
+            widget.addItems(json.loads(self.settings.value(key, json.dumps([]), type=str)))
+            model = widget.model()
+            model.rowsMoved.connect(
+                lambda: update_json(
+                    [widget.item(i).text() for i in range(widget.count())]
+                    )
+                )
+            # Need to use a QTimer here to delay accessing the model until after the rows have been inserted
+            model.rowsInserted.connect(
+                lambda: QTimer.singleShot(0, 
+                        lambda: update_json(
+                            [widget.item(i).text() for i in range(widget.count())]
+                        )
+                    )
+                )
+            model.rowsRemoved.connect(
+                lambda: QTimer.singleShot(0, 
+                        lambda: update_json(
+                            [widget.item(i).text() for i in range(widget.count())]
+                        )
+                    )
+                )

@@ -32,6 +32,7 @@ from .constants import LookUpResults, DefinitionDisplayModes
 from .ui.main_window_base import MainWindowBase
 from .ui.searchable_text_edit import SearchableTextEdit
 from .db import dictionaries
+from .models import SourceGroup
 
 class MainWindow(MainWindowBase):
     def __init__(self) -> None:
@@ -56,6 +57,9 @@ class MainWindow(MainWindowBase):
         if not self.settings.value("internal/configured"):
             self.configure()
             self.settings.setValue("internal/configured", True)
+    
+    def initSources(self):
+        self.sg1 = SourceGroup
 
     def checkUpdates(self) -> None:
         if self.settings.value("check_updates") is None:
@@ -183,8 +187,6 @@ class MainWindow(MainWindowBase):
         )
 
         self.setMenuBar(self.menu)
-
-
 
     def onAnalyzeBook(self):
         path = QFileDialog.getOpenFileName(

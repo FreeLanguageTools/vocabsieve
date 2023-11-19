@@ -207,7 +207,7 @@ class MainWindowBase(QMainWindow):
         layout.addWidget(self.web_button, 7, 2)
         layout.setRowStretch(8, 2)
         layout.setRowStretch(10, 2)
-        if self.settings.value("dict_source2", "<disabled>") != "<disabled>":
+        if self.settings.value("sg2_enabled", False, type=bool):
             layout.addWidget(self.definition, 8, 0, 2, 3)
             layout.addWidget(self.definition2, 10, 0, 2, 3)
         else:

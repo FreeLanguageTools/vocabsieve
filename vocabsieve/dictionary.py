@@ -55,16 +55,6 @@ def preprocess_clipboard(s: str, lang: str, should_convert_to_uppercase: bool = 
         return s
 
 
-def fmt_result(definitions):
-    "Format the result of dictionary lookup"
-    lines = []
-    for defn in definitions:
-        if defn['pos'] != "":
-            lines.append("<i>" + defn['pos'] + "</i>")
-        lines.extend([str(item[0] + 1) + ". " + item[1]
-                     for item in list(enumerate(defn['meaning']))])
-    return "<br>".join(lines)
-
 
 def wiktionary(word, language: str) -> Optional[dict]:
     "Get definitions from Wiktionary"

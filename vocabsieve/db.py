@@ -191,11 +191,6 @@ class Record():
     def lemmatizeLookups(self):
         "In the past, lemmas were not recorded during lookups. This applies it to older rows"
         try:
-            self.c.execute("ALTER TABLE lookups DROP COLUMN lemma")
-        except sqlite3.OperationalError:
-            print("Encountered error in dropping column, continuing")
-            pass
-        try:
             print("Trying to add lemma column to lookups table..")
             self.c.execute("""
                 ALTER TABLE lookups ADD COLUMN lemma TEXT;
