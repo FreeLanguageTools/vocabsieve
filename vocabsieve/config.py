@@ -8,6 +8,8 @@ from .dictionary import *
 from .dictmanager import *
 from .fieldmatcher import FieldMatcher
 from .ui.source_ordering_widget import SourceGroupWidget, AllSourcesWidget
+from .models import DisplayMode, LemmaPolicy
+from enum import Enum
 
 BoldStyles = ["<disabled>", "Font weight", "Underscores"]
 
@@ -135,6 +137,7 @@ class SettingsDialog(QDialog):
 
         self.postproc_selector = QComboBox()
         self.display_mode = QComboBox()
+        self.lemma_policy = QComboBox()
         self.skip_top = QSpinBox()
         self.skip_top.setSuffix(" lines")
         self.cleanup_html = QCheckBox()
@@ -362,7 +365,11 @@ class SettingsDialog(QDialog):
             BoldStyles[0]
         ])
         self.gtrans_lang.addItems(langs_supported.values())
-        self.display_mode.addItems(["Raw", "Plaintext", "Markdown", "HTML", "Markdown-HTML"])
+        # Use enum
+        for mode in DisplayMode:
+            self.display_mode.addItem(mode.value, mode)
+        for policy in LemmaPolicy:
+            self.lemma_policy.addItem(policy.value, policy)
         self.tab_g.layout.addRow(QLabel("<h3>General</h3>"))
         self.tab_g.layout.addRow(
             QLabel("Target language"),
@@ -459,6 +466,7 @@ class SettingsDialog(QDialog):
         self.tab_p.layout.addRow(QLabel("<h3>Per-dictionary postprocessing options</h3>"))
         self.tab_p.layout.addRow(QLabel("Configure for dictionary:"), self.postproc_selector)
         self.tab_p.layout.addRow(QLabel("<hr>"))
+        self.tab_p.layout.addRow(QLabel("Lemmatization policy"), self.lemma_policy)
         self.tab_p.layout.addRow(QLabel("Display mode"), self.display_mode)
         self.tab_p.layout.addRow(QLabel("<i>◊ HTML mode does not support editing/processing. "
                                         "Your edits will not be saved!</i>"))
@@ -556,10 +564,12 @@ class SettingsDialog(QDialog):
             pass
         # Reestablish config handlers
         self.register_config_handler(self.display_mode,
-                                     f"{curr_dict}/" + "display_mode", "Markdown")
+                                     f"{curr_dict}/" + "display_mode", DisplayMode.markdown_html)
         self.display_mode.currentTextChanged.connect(
             self.deactivateProcessing
         )
+        self.register_config_handler(self.lemma_policy,
+                                     f"{curr_dict}/" + "lemma_policy", LemmaPolicy.try_lemma)
         self.register_config_handler(self.skip_top,
                                      f"{curr_dict}/" + "skip_top", 0)
         self.register_config_handler(self.collapse_newlines,
@@ -975,11 +985,15 @@ class SettingsDialog(QDialog):
             no_initial_update=False):
         
         name = widget.objectName()
-        def update(v): return self.settings.setValue(key, v)
+        def update(v): 
+            self.settings.setValue(key, v)
 
-        def update_map(v): return self.settings.setValue(key, langcodes.inverse[v])
+        def update_map(v): 
+            self.settings.setValue(key, langcodes.inverse[v])
     
-        def update_json(v): return self.settings.setValue(key, json.dumps(v))
+        def update_json(v): 
+            self.settings.setValue(key, json.dumps(v))
+            self.parent.initSources()
 
         if isinstance(widget, QCheckBox):
             widget.setChecked(self.settings.value(key, default, type=bool))
@@ -996,6 +1010,10 @@ class SettingsDialog(QDialog):
                     langcodes[self.settings.value(key, default)])
                 widget.currentTextChanged.connect(update_map)
                 update_map(widget.currentText())
+            elif isinstance(default, Enum): # if default is an enum type
+                widget.setCurrentText(self.settings.value(key, default.value))
+                widget.currentTextChanged.connect(update)
+                update(widget.currentText())
             else:
                 widget.setCurrentText(self.settings.value(key, default))
                 widget.currentTextChanged.connect(update)

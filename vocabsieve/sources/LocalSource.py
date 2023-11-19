@@ -1,12 +1,12 @@
 from vocabsieve.db import LocalDictionary
-from ..models import Source, Definition, LemmaPolicy
+from ..models import Source, SourceOptions, LookupResult
 from ..db import LocalDictionary
 
 class LocalSource(Source):
-    def __init__(self, langcode: str, lemma_policy: LemmaPolicy, db: LocalDictionary) -> None:
-        super().__init__("Local", langcode, lemma_policy)
+    def __init__(self, langcode: str, options: SourceOptions, db: LocalDictionary) -> None:
+        super().__init__("Local", langcode, options)
         self.db = db
 
-    def _lookup(self, word: str) -> Definition:
+    def _lookup(self, word: str) -> LookupResult:
         definition = self.db.define(word, self.langcode, self.name)
-        return Definition(headword=word, source=self.name, definition=definition)
+        return LookupResult(definition=definition)

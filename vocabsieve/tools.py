@@ -24,7 +24,7 @@ from ebooklib import epub, ITEM_DOCUMENT
 from .sources.WiktionarySource import WiktionarySource
 from .sources.GoogleTranslateSource import GoogleTranslateSource
 from .sources.LocalSource import LocalSource
-from .models import LemmaPolicy, Source, SourceGroup
+from .models import LemmaPolicy, Source, SourceGroup, DisplayMode, SourceOptions, collapse_newlines
 from .global_names import settings
 
 def request(action, **params):
@@ -336,19 +336,36 @@ def split_to_sentences(text: str, language: str):
         return text
     
 def make_source(src_name: str, dictdb: LocalDictionary):
-    lemma_policy = LemmaPolicy(settings.value(f"{src_name}/lemma_policy", 3, type=int)) # 3 = try_lemma
+    if policy_string:=settings.value(f"{src_name}/lemma_policy"):
+        lemma_policy = LemmaPolicy(policy_string)
+    else:
+        lemma_policy = LemmaPolicy.try_lemma
+    if display_mode:=settings.value(f"{src_name}/display_mode"):
+        display_mode = DisplayMode(display_mode)
+    else:
+        display_mode = DisplayMode.markdown_html
+    skip_top = settings.value(f"{src_name}/skip_top", 0, type=int)
+    collapse_newlines = settings.value(f"{src_name}/collapse_newlines", 0, type=int)
+
+    options = SourceOptions(
+        lemma_policy=lemma_policy,
+        skip_top=skip_top,
+        collapse_newlines=collapse_newlines,
+        display_mode=display_mode
+    )
+
     langcode = settings.value("target_language", "en")
     if src_name == "Wiktionary (English)":
-        return WiktionarySource(langcode, lemma_policy)
+        return WiktionarySource(langcode, options)
     elif src_name == "Google Translate":
         return GoogleTranslateSource(
             langcode, 
-            lemma_policy,
+            options,
             settings.value("gtrans_api", "https://lingva.lunar.icu"), 
             settings.value("gtrans_lang", "en")
         )
     else: # Local, /TODO error handling
-        return LocalSource(langcode, lemma_policy, dictdb)
+        return LocalSource(langcode, options, dictdb)
 
 
 def make_source_group(src_names: list[str], dictdb: LocalDictionary):

@@ -22,17 +22,17 @@ from .known_words import getKnownData, getKnownWords
 from .analyzer import BookAnalyzer
 from .config import SettingsDialog, getVersion
 from .stats import StatisticsWindow
-from .dictionary import lookupin, getAudio, getFreq, lem_word, markdown_nop
+from .dictionary import getAudio, lem_word
 from .importer import KoreaderImporter, KindleVocabImporter, KoreaderVocabImporter, AutoTextImporter
 from .reader import ReaderServer
 from .contentmanager import ContentManager
 from .global_events import GlobalObject
-from .tools import is_json, preprocess_clipboard, process_definition, starts_with_cyrillic, is_oneword, freq_to_stars, addNote, failed_lookup, make_source_group
-from .constants import LookUpResults, DefinitionDisplayModes
+from .tools import is_json, preprocess_clipboard, starts_with_cyrillic, is_oneword, freq_to_stars, addNote, failed_lookup, make_source_group
 from .ui.main_window_base import MainWindowBase
 from .ui.searchable_text_edit import SearchableTextEdit
 from .db import LocalDictionary, dictionaries
-from .models import SourceGroup
+from .models import DisplayMode, SourceGroup
+from .format import markdown_nop
 
 
 class MainWindow(MainWindowBase):
@@ -65,6 +65,11 @@ class MainWindow(MainWindowBase):
         sg1_src_list = json.loads(self.settings.value("sg1", '["Wiktionary (English)"]'))
         self.sg1 = make_source_group(sg1_src_list, self.dictdb)
         self.definition.setSourceGroup(self.sg1)
+
+        if self.settings.value("sg2_enabled", False, type=bool):
+            sg2_src_list = json.loads(self.settings.value("sg2", '["Google Translate"]'))
+            self.sg2 = make_source_group(sg2_src_list, self.dictdb)
+            self.definition2.setSourceGroup(self.sg2)
                                      
 
     def checkUpdates(self) -> None:
@@ -104,9 +109,8 @@ class MainWindow(MainWindowBase):
                     QDesktopServices.openUrl(QUrl(current['html_url']))
 
     def setupButtons(self) -> None:
-        self.lookup_button.clicked.connect(lambda: self.lookupSelected(True))
-        self.lookup_exact_button.clicked.connect(
-            lambda: self.lookupSelected(False))
+        self.lookup_button.clicked.connect(self.lookupSelected)
+
 
         self.web_button.clicked.connect(self.onWebButton)
         self.discard_audio_button.clicked.connect(self.discard_current_audio)
@@ -469,75 +473,20 @@ class MainWindow(MainWindowBase):
 
     def lookupSelected(self) -> None:
         target = self.getCurrentWord()
+        self.lookup(target)
+    
+    def lookup(self, target: str) -> None:
+        self.boldWordInSentence(target)
         if target:
             self.definition.lookup(target)
-
-    def setState(self, state: LookUpResults) -> None:
-        self.word.setText(state['word'])
-        self.definition.original = state['definition']
-
-        display_mode1 = self.settings.value(
-            self.settings.value("dict_source", "Wiktionary (English)")
-            + "/display_mode",
-            "Markdown"
-        )
-        skip_top1 = self.settings.value(
-            self.settings.value("dict_source", "Wiktionary (English)")
-            + "/skip_top",
-            0, type=int
-        )
-        collapse_newlines1 = self.settings.value(
-            self.settings.value("dict_source", "Wiktionary (English)")
-            + "/collapse_newlines",
-            0, type=int
-        )
-
-        self.definition.setText(
-            process_definition(
-                state['definition'].strip(),
-                display_mode1,
-                skip_top1,
-                collapse_newlines1
-            )
-        )
-
-        if state.get('definition2'):
-            self.definition2.original = state['definition2']
-            display_mode2 = self.settings.value(
-                self.settings.value("dict_source2", "Wiktionary (English)")
-                + "/display_mode",
-                "Markdown"
-            )
-            skip_top2 = self.settings.value(
-                self.settings.value("dict_source2", "Wiktionary (English)")
-                + "/skip_top",
-                0, type=int
-            )
-            collapse_newlines2 = self.settings.value(
-                self.settings.value("dict_source2", "Wiktionary (English)")
-                + "/collapse_newlines",
-                0, type=int
-            )
-            if display_mode2 in ['Raw', 'Plaintext', 'Markdown']:
-                self.definition2.setPlainText(
-                    process_definition(
-                        state['definition2'].strip(),
-                        display_mode2,
-                        skip_top2,
-                        collapse_newlines2)
-                )
-            else:
-                self.definition2.setHtml(
-                    process_definition(
-                        state['definition2'].strip(),
-                        display_mode2,
-                        skip_top2,
-                        collapse_newlines2)
-                )
-
-        cursor = self.sentence.textCursor()
-        cursor.clearSelection()
-        self.sentence.setTextCursor(cursor)
+            if self.settings.value("sg2_enabled", False, type=bool):
+                self.definition2.lookup(target)
+            self.getAudio(target)
+        
+    def getAudio(self, target: str):
+        self.audio_path = ""
+        if self.settings.value("audio_dict", "Forvo (all)") != "<disabled>":
+            threading.Thread(target=self.fetchAudioInBackground, args=(target,)).start()
 
     def setSentence(self, content) -> None:
         self.sentence.setText(str.strip(content))
@@ -594,11 +543,11 @@ class MainWindow(MainWindowBase):
             sentence = preprocess_clipboard(copyobj['sentence'], lang, should_convert_to_uppercase)
             self.setSentence(sentence)
             self.setWord(target)
-            self.lookupSet(target)
+            self.lookup(target)
         elif self.single_word.isChecked() and is_oneword(preprocess_clipboard(text, lang, should_convert_to_uppercase)):
             self.setSentence(word := preprocess_clipboard(text, lang, should_convert_to_uppercase))
             self.setWord(word)
-            self.lookupSet(text)
+            self.lookup(text)
         else:
             self.setSentence(preprocess_clipboard(text, lang, should_convert_to_uppercase))
 
@@ -620,7 +569,7 @@ class MainWindow(MainWindowBase):
         self.audio_selector.clear()
         self.audio_path = ""
 
-    def lookupSet(self, word, use_lemmatize=True) -> None:
+    def boldWordInSentence(self, word) -> None:
         sentence_text = self.sentence.unboldedText
         if self.settings.value("bold_style", type=int):
             # Bold word that was clicked on, either with "<b>{word}</b>" or
@@ -637,118 +586,20 @@ class MainWindow(MainWindowBase):
                 word,
                 sentence_text,
                 apply_bold,
-                self.getLanguage(),
-                use_lemmatize,
-                self.getLemGreedy())
+                self.getLanguage()
+                )
 
         if sentence_text is not None:
             self.sentence.setHtml(sentence_text)
 
         QCoreApplication.processEvents()
-        TL = self.getLanguage()
-        lemmatize = self.settings.value("lemmatization", True, type=bool)
-        dict_name = self.settings.value("dict_source", "Wiktionary (English)")
-        result = self.lookup(word, use_lemmatize)
-        self.setState(result)
-        if result.get("definition") or result.get("definition2"):
-            self.rec.recordLookup(word, TL, lemmatize, "vocabsieve", True, time.time())
-        past_lookups_count = self.rec.countLemmaLookups(word, self.settings.value("target_language",'en'))
-        if past_lookups_count <= 1:
-            self.lookup_hist_label.setText("<b>new word</b>")
-        else:
-            self.lookup_hist_label.setText(f"<b>{past_lookups_count-1} prev. lookups</b>")
-        QCoreApplication.processEvents()
-        self.audio_path = ""
-
-        if self.settings.value("audio_dict", "Forvo (all)") != "<disabled>":
-            threading.Thread(target=self.fetchAudioInBackground, args=(word,)).start()
+        
 
     def getLanguage(self) -> str:
         return self.settings.value("target_language", "en")  # type: ignore
 
     def getLemGreedy(self) -> bool:
         return self.settings.value("lem_greedily", False, type=bool)  # type: ignore
-
-    def lookup(self, word: str, use_lemmatize: bool) -> LookUpResults:
-        """
-        Look up a word and return a dict with the lemmatized form (if enabled)
-        and definition
-        """
-        word = re.sub('[«»…,()\\[\\]_]*', "", word)
-        # TODO
-        # why manually check "lemmatization" in settings when you can pass it through parameter?
-        lemmatize = use_lemmatize and self.settings.value(
-            "lemmatization", True, type=bool)
-        lem_greedily = self.getLemGreedy()
-        lemfreq = self.settings.value("lemfreq", True, type=bool)
-        short_sign = "Y" if lemmatize else "N"
-        language = self.getLanguage()
-        TL = language  # Handy synonym
-        gtrans_lang: str = self.settings.value("gtrans_lang", "en")
-        dictname: str = self.settings.value("dict_source", "Wiktionary (English)")
-        freqname: str = self.settings.value("freq_source", "<disabled>")
-        if freqname != "<disabled>":
-            freq_found = False
-            freq_display = self.settings.value("freq_display", "Rank")
-            try:
-                freq, max_freq = getFreq(word, language, lemfreq, freqname)
-                freq_found = True
-            except TypeError:
-                pass
-
-            if freq_found:
-                if freq_display == "Rank":
-                    self.freq_display.setText(f'{str(freq)}/{str(max_freq)}')
-                elif freq_display == "Stars":
-                    self.freq_display.setText(freq_to_stars(freq, lemfreq))
-            else:
-                if freq_display == "Rank":
-                    self.freq_display.setText('-1')
-                elif freq_display == "Stars":
-                    self.freq_display.setText(freq_to_stars(1e6, lemfreq))
-        self.status(
-            f"L: '{word}' in '{language}', lemma: {short_sign}, from {dictionaries.get(dictname, dictname)}")
-        if dictname == "<disabled>":
-            word = lem_word(word, language, lem_greedily) if lemmatize else word
-            self.status("Dict disabled")
-            return {
-                "word": word,
-                "definition": ""
-            }
-        try:
-            item = lookupin(
-                word,
-                language,
-                lemmatize,
-                lem_greedily,
-                dictname,
-                gtrans_lang,
-                self.settings.value("gtrans_api", "https://lingva.lunar.icu"))
-        except Exception as e:
-            self.status(repr(e))
-            item = {
-                "word": word,
-                "definition": failed_lookup(word, self.settings)
-            }
-        dict2name = self.settings.value("dict_source2", "<disabled>")
-        if dict2name == "<disabled>":
-            return item
-        try:
-            item2: LookUpResults = lookupin(
-                word,
-                language,
-                lemmatize,
-                lem_greedily,
-                dict2name,
-                gtrans_lang)
-        except Exception as e:
-            self.status("Dict-2 failed" + repr(e))
-            self.definition2.clear()
-            return item
-        return {
-            "word": item['word'],
-            'definition': item['definition'],
-            'definition2': item2['definition']}
 
     def createNote(self) -> None:
         sentence = self.sentence.textBoldedByTags.replace("\n", "<br>")
@@ -867,7 +718,7 @@ class MainWindow(MainWindowBase):
 
     def process_defi_anki(self,
                           w: SearchableTextEdit,
-                          display_mode: DefinitionDisplayModes) -> str:
+                          display_mode: DisplayMode) -> str:
         """Process definitions before sending to Anki"""
 
         print("display mode is", display_mode)

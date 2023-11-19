@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-from ..models import Source, Definition, LemmaPolicy
+from ..models import Source, Definition, SourceOptions, LookupResult
 
 def fmt_result(definitions):
     "Format the result of dictionary lookup"
@@ -13,17 +13,17 @@ def fmt_result(definitions):
     return "<br>".join(lines)
 
 class WiktionarySource(Source):
-    def __init__(self, langcode: str, lemma_policy: LemmaPolicy) -> None:
-        super().__init__("Wiktionary (English)", langcode, lemma_policy)
+    def __init__(self, langcode: str, options: SourceOptions) -> None:
+        super().__init__("Wiktionary (English)", langcode, options)
 
-    def _lookup(self, word: str) -> Definition:
+    def _lookup(self, word: str) -> LookupResult:
         try:
             res = requests.get(
                 'https://en.wiktionary.org/api/rest_v1/page/definition/' +
                 word,
                 timeout=4)
         except Exception as e:
-            return Definition(headword=word, source="Wiktionary (English)", error=str(e))
+            return LookupResult(error=str(e))
 
         if res.status_code != 200:
             raise Exception("Lookup error")
@@ -37,5 +37,5 @@ class WiktionarySource(Source):
 
             meaning_item = {"pos": item['partOfSpeech'], "meaning": meanings}
             definitions.append(meaning_item)
-        return Definition(headword=word, source="Wiktionary (English)", definition=fmt_result(definitions))
+        return LookupResult(definition=fmt_result(definitions))
 
