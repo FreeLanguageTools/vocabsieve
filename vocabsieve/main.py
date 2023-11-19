@@ -596,14 +596,6 @@ class MainWindow(MainWindowBase):
         else:
             self.setSentence(preprocess_clipboard(text, lang, should_convert_to_uppercase))
 
-    def updateAudioUI(self, audios):
-        self.audios = audios
-        self.audio_selector.clear()
-        if len(self.audios):
-            for item in self.audios:
-                self.audio_selector.addItem("🔊 " + item)
-            self.audio_selector.setCurrentItem(self.audio_selector.item(0))
-
     def fetchAudioInBackground(self, word):
         try:
             audios = getAudio(

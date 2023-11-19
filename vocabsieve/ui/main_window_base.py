@@ -2,8 +2,7 @@ from PyQt5.QtWidgets import QMainWindow, QWidget, QGridLayout, QLabel, QPushButt
                         QStatusBar, QMenuBar, QLCDNumber, QListView, QListWidget, \
                         QSizePolicy, QApplication, QLineEdit
 from PyQt5.QtGui import  QFocusEvent, QDesktopServices
-from PyQt5.QtCore import QUrl, QCoreApplication, QStandardPaths, pyqtSignal, QSettings
-from PyQt5.Qt import Qt
+from PyQt5.QtCore import QUrl, QCoreApplication, QStandardPaths, pyqtSignal, QSettings, Qt
 
 from ..global_names import app_title, settings, datapath
 
@@ -67,6 +66,9 @@ class MainWindowBase(QMainWindow):
                 self.clipboardChanged(evenWhenFocused=True)
             self.prev_clipboard = QApplication.clipboard().text()
         super().focusInEvent(event)
+
+    def clipboardChanged(self, evenWhenFocused=False, selection=False) -> None:
+        pass
 
 
     def initWidgets(self) -> None:
@@ -174,6 +176,14 @@ class MainWindowBase(QMainWindow):
             return
 
         self.audio_path = self.audio_player.play_audio(x, self.audios, self.settings.value("target_language", "en"))
+
+    def updateAudioUI(self, audios):
+        self.audios = audios
+        self.audio_selector.clear()
+        if len(self.audios):
+            for item in self.audios:
+                self.audio_selector.addItem("🔊 " + item)
+            self.audio_selector.setCurrentItem(self.audio_selector.item(0))
 
     def setupWidgetsV(self) -> QGridLayout:
         """Prepares vertical layout"""
