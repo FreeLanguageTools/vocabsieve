@@ -12,6 +12,7 @@ import itertools
 class AutoTextImporter(GenericImporter):
     def __init__(self, parent, path):
         self.path = path
+        self.splitter = parent.splitter
         super().__init__(parent, "Auto vocab detection", path, "auto")
 
     def getNotes(self):
@@ -19,11 +20,11 @@ class AutoTextImporter(GenericImporter):
         bookname = os.path.splitext(os.path.basename(self.path))[0]
         sentences = list(sentence for sentence in 
             itertools.chain.from_iterable(
-                map(lambda x: split_to_sentences(x, self.lang), (ch for ch in chs))
+                map(lambda x: self.splitter.split(x), (ch for ch in chs))
                 ) 
             if sentence)
 
-        known_words, *_ = getKnownWords(self.parent.settings, self.parent.rec)
+        known_words, *_ = getKnownWords(self.parent.settings, self.parent.rec, self.parent.dictdb)
         known_words = set(known_words)
         already_mined = set()
         reading_notes = []

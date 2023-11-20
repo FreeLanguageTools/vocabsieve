@@ -12,7 +12,6 @@ from .local_dictionary import LocalDictionary
 from .dictionary import *
 from .dictformats import *
 
-from sentence_splitter import split_text_into_sentences, SentenceSplitterException
 import mobi
 from itertools import islice
 from lxml import etree
@@ -292,12 +291,6 @@ def grouper(iterable, n, *, incomplete='fill', fillvalue=None):
         return zip(*args)
     else:
         raise ValueError('Expected fill, strict, or ignore')
-
-def split_to_sentences(text: str, language: str):
-    try:
-        return split_text_into_sentences(text, language=language)
-    except SentenceSplitterException:
-        return text
     
 def make_dict_source(src_name: str, dictdb: LocalDictionary) -> DictionarySource:
     if policy_string:=settings.value(f"{src_name}/lemma_policy"):

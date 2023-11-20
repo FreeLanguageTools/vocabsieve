@@ -37,6 +37,9 @@ class Record():
         if not parent.settings.value("internal/timestamps_are_seconds", True):
             self.fixBadTimestamps()
             parent.settings.setValue("internal/timestamps_are_seconds", True)
+        if not parent.settings.value("internal/lookup_unique_index"):
+            self.makeLookupUnique()
+            parent.settings.setValue("internal/lookup_unique_index", True)
         self.conn.commit()
 
     def fixSeen(self):
@@ -70,7 +73,8 @@ class Record():
             language TEXT,
             lemmatization INTEGER,
             source TEXT,
-            success INTEGER
+            success INTEGER,
+            UNIQUE(timestamp, lemma)
         )
         """)
         self.c.execute("""
@@ -146,6 +150,24 @@ class Record():
         except sqlite3.OperationalError:
             pass
         self.c.execute("VACUUM")
+
+    def makeLookupUnique(self):
+        """
+        In the past, lookups were not unique, which made it very slow
+        to avoid inserting duplicates"""
+        self.c.execute("""
+            CREATE TABLE temp_lookups AS SELECT * FROM lookups GROUP BY lemma, timestamp
+        """)
+        self.c.execute("""
+            DROP TABLE lookups
+        """)
+        self.c.execute("""
+            ALTER TABLE temp_lookups RENAME TO lookups
+        """)
+        self.c.execute("""
+            CREATE UNIQUE INDEX IF NOT EXISTS lookup_index ON lookups (timestamp, lemma)
+        """)
+        self.conn.commit()
 
 
     def dropDefinitions(self):
@@ -262,29 +284,22 @@ class Record():
             success: bool,
             timestamp: float,
             commit: bool = True):
-        #try:
         lemma = lem_word(word, language) # For statistics, so it is used even if lemmatization is off
-        self.c.execute('SELECT * FROM lookups WHERE (lemma=? AND timestamp=?)', (lemma, timestamp))
-        exists = self.c.fetchone()
-        if not exists:
-            sql = """INSERT INTO lookups(timestamp, word, lemma, language, lemmatization, source, success)
-                    VALUES(?,?,?,?,?,?,?)"""
-            self.c.execute(
-                sql,
-                (timestamp,
-                word,
-                lemma,
-                language,
-                lemmatization,
-                source,
-                success))
-            if commit:
-                self.conn.commit()
-            return True
-        #print(word, "already exists")
-        return False
-        #except sqlite3.ProgrammingError:
-        #    return False
+        sql = """INSERT OR IGNORE INTO lookups(timestamp, word, lemma, language, lemmatization, source, success)
+                VALUES(?,?,?,?,?,?,?)"""
+        self.c.execute(
+            sql,
+            (timestamp,
+            word,
+            lemma,
+            language,
+            lemmatization,
+            source,
+            success))
+        if commit:
+            self.conn.commit()
+
+
 
     def recordNote(self, data, sentence, word, definition, definition2, pronunciation, image, tags, success):
         timestamp = time.time()
@@ -316,6 +331,10 @@ class Record():
 
     def countLemmaLookups(self, word, language):
         self.c.execute('''SELECT COUNT (DISTINCT date(timestamp, "unixepoch")) FROM lookups WHERE lemma=?''', (lem_word(word, language),))
+        return self.c.fetchone()[0]
+
+    def countLookups(self, language):
+        self.c.execute('''SELECT COUNT (*) FROM lookups WHERE language=?''', (language,))
         return self.c.fetchone()[0]
 
     def countAllLemmaLookups(self, language):

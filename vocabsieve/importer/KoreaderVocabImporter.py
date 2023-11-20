@@ -12,6 +12,7 @@ from .utils import *
 from ..tools import *
 from .models import ReadingNote
 from ..global_names import settings
+import time
 
 
 def getBookMetadata(path):
@@ -31,18 +32,24 @@ def getBookMetadata(path):
 
 class KoreaderVocabImporter(GenericImporter):
     def __init__(self, parent, path):
+        self.splitter = parent.splitter
         super().__init__(parent, "KOReader vocab builder", path, "koreader-vocab")
 
     def getNotes(self):
+        start = time.time()
         bookfiles = koreader_scandir(self.path)
+        print("Scanned dir at ", time.time() - start)
         langcode = self.parent.settings.value("target_language", "en")
         metadata = []
         for bookfile in bookfiles:
             metadata.append(getBookMetadata(bookfile))
+        print("Got metadata at ", time.time() - start)
 
         books_in_lang = [book[1] for book in metadata if book[0].startswith(langcode)]
         
         self.dbpath = findDBpath(self.path)
+
+        print("Found dbpath at ", time.time() - start)
         if self.dbpath is None:
             raise Exception("Cannot find vocabulary_builder.sqlite3")
         con = sqlite3.connect(self.dbpath)
@@ -55,6 +62,8 @@ class KoreaderVocabImporter(GenericImporter):
         for bookid, bookname in cur.execute("SELECT id, name FROM title"):
             if bookname in books_in_lang:
                 bookmap[bookid] = bookname
+        
+        print("Got bookmap at ", time.time() - start)
 
         reading_notes = []
         for timestamp, word, title_id, prev_context, next_context in cur.execute("SELECT create_time, word, title_id, prev_context, next_context FROM vocabulary"):
@@ -65,7 +74,7 @@ class KoreaderVocabImporter(GenericImporter):
                 else:
                     continue
                 sentence = ""
-                for sentence_ in split_to_sentences(ctx, language=langcode):
+                for sentence_ in self.splitter.split(ctx):
                     if word in sentence_:
                         sentence = sentence_
                 if sentence:
@@ -80,11 +89,14 @@ class KoreaderVocabImporter(GenericImporter):
                         )
                     )
 
+        print("Got reading notes at ", time.time() - start)
+
         self._layout.addRow(QLabel("Vocabulary database: " + self.dbpath))
         self._layout.addRow(QLabel(f"Found {count} notes in Vocabulary Builder in language '{langcode}'"))
         
         try:
             self.histpath = findHistoryPath(self.path)
+            print("Found histpath at ", time.time() - start)
             d = []
             with open(self.histpath) as f:
                 with open(self.histpath) as f:
@@ -93,16 +105,19 @@ class KoreaderVocabImporter(GenericImporter):
                         d.append(slpp.decode(item))
             entries = [entry['data'].get(next(iter(entry['data']))) for entry in d]
             entries = [(entry['word'], entry['book_title'], entry['time']) for entry in entries]
+            print("Processed entries at ", time.time() - start)
             count = 0
-            success_count = 0
+            lookups_count_before = self.parent.rec.countLookups(langcode)
             for word, booktitle, timestamp in entries:
                 if booktitle in books_in_lang:
                     count += 1
-                    success_count += self.parent.rec.recordLookup(word, langcode, True, "koreader", True, timestamp, commit=False)
+                    self.parent.rec.recordLookup(word, langcode, True, "koreader", True, timestamp, commit=False)
+            print("Added lookups at ", time.time() - start)
             self.parent.rec.conn.commit()
-
+            lookups_count_after = self.parent.rec.countLookups(langcode)
+            print("Committed ", time.time() - start)
             self._layout.addRow(QLabel("Lookup history: " + self.histpath))
-            self._layout.addRow(QLabel(f"Found {count} lookups in {langcode}, added {success_count} to lookup database."))
+            self._layout.addRow(QLabel(f"Found {count} lookups in {langcode}, added { lookups_count_after - lookups_count_before } to lookup database."))
         except Exception as e:
             print(e)
             self._layout.addRow(QLabel("Failed to find/read lookup_history.lua. Lookups will not be tracked this time."))

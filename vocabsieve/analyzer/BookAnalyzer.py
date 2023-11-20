@@ -10,6 +10,7 @@ from ..lemmatizer import lem_word
 import itertools
 from ..known_words import getKnownWords
 import random
+from sentence_splitter import SentenceSplitter
 import json
 import numpy as np
 from pyqtgraph import PlotWidget, AxisItem
@@ -27,10 +28,11 @@ class BookAnalyzer(QDialog):
         bookname, _ = os.path.splitext(os.path.basename(self.path))
         self.setWindowTitle("Analysis of " + bookname)
         self.langcode = self.parent.settings.value('target_language', 'en')
+        self.splitter = parent.splitter
         self.chapters, self.ch_pos = ebook2text(self.path)
         self._layout = QGridLayout(self)
         self._layout.addWidget(QLabel("<h1>Analysis of \"" + bookname + "\"</h1>"), 0, 0, 1, 2)
-        self.known_words, *_ = getKnownWords(self.parent.settings, self.parent.rec)
+        self.known_words, *_ = getKnownWords(self.parent.settings, self.parent.rec, self.parent.dictdb)
         self.is_drawing = False
         self.initWidgets()
         self.show()
@@ -53,7 +55,7 @@ class BookAnalyzer(QDialog):
         start = time.time()
         self.sentences = list(sentence for sentence in 
             itertools.chain.from_iterable(
-                p.starmap(split_to_sentences, ((ch, self.langcode) for ch in self.chapters))
+                p.starmap(self.splitter.split, ((ch,) for ch in self.chapters))
                 ) 
             if sentence)
         print(f"Split book ({p._processes} threads) in " + str(time.time() - start) + " seconds.")

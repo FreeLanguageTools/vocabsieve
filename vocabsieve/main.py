@@ -32,6 +32,7 @@ from .tools import is_json, prepareAnkiNoteDict, preprocess_clipboard, starts_wi
 from .ui.main_window_base import MainWindowBase
 from .local_dictionary import LocalDictionary
 from .models import AnkiSettings, DictionarySourceGroup, SRSNote
+from sentence_splitter import SentenceSplitter, SentenceSplitterException
 
 
 
@@ -40,6 +41,7 @@ class MainWindow(MainWindowBase):
         super().__init__()
         self.datapath = datapath
         self.dictdb = LocalDictionary(self.datapath)
+        self.splitter = SentenceSplitter(language=self.settings.value("target_language", "en"))
         self.setupMenu()
         self.setupButtons()
         self.startServer()
@@ -65,6 +67,7 @@ class MainWindow(MainWindowBase):
         sg1_src_list = json.loads(self.settings.value("sg1", '["Wiktionary (English)"]'))
         self.sg1 = make_source_group(sg1_src_list, self.dictdb)
         self.definition.setSourceGroup(self.sg1)
+        self.splitter = SentenceSplitter(language=self.settings.value("target_language", "en"))
 
         if self.settings.value("sg2_enabled", False, type=bool):
             sg2_src_list = json.loads(self.settings.value("sg2", '["Google Translate"]'))
