@@ -3,8 +3,6 @@ from typing import Optional
 from enum import Enum
 from bs4 import BeautifulSoup
 import re
-
-from markdown import markdown
 from markdownify import markdownify
 from .format import markdown_nop
 
@@ -33,8 +31,20 @@ class SRSNote:
     definition2: Optional[str] = None
     audio_path: Optional[str] = None
     image: Optional[str] = None
-    tags: Optional[str] = None
+    tags: Optional[list[str]] = None
 
+@dataclass(frozen=True, slots=True)
+class AnkiSettings:
+    '''Represents settings for Anki'''
+    deck: str
+    model: str
+    word_field: str
+    sentence_field: Optional[str] = None
+    definition1_field: Optional[str] = None
+    definition2_field: Optional[str] = None
+    audio_field: Optional[str] = None
+    image_field: Optional[str] = None
+    tags: Optional[list[str]] = None
 
 
 
@@ -153,10 +163,17 @@ class DictionarySource(Source):
         '''
         raise NotImplementedError
 
-class SourceGroup:
+class DictionarySourceGroup:
     '''Wrapper for a group of Sources associated with a textbox on the main window'''
-    def __init__(self, sources: list[Source]) -> None:
+    def __init__(self, sources: list[DictionarySource]) -> None:
         self.sources = sources
+
+    def getSource(self, name: str) -> Optional[DictionarySource]:
+        '''Get a Source by name'''
+        for source in self.sources:
+            if source.name == name:
+                return source
+        return None
 
     def define(self, word: str) -> list[Definition]:
         '''Get definitions from all sources'''

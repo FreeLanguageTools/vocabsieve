@@ -26,7 +26,7 @@ class WiktionarySource(DictionarySource):
             return LookupResult(error=str(e))
 
         if res.status_code != 200:
-            raise Exception("Lookup error")
+            return LookupResult(error=str(res.text))
         definitions = []
         data = res.json()[self.langcode]
         for item in data:

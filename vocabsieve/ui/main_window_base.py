@@ -82,7 +82,7 @@ class MainWindowBase(QMainWindow):
         #self.sentence.setMaximumHeight(300)
         self.word = QLineEdit()
         self.word.setPlaceholderText("Word will appear here when looked up.")
-        self.definition = MultiDefinitionWidget()
+        self.definition = MultiDefinitionWidget(self.word)
         self.definition.setMinimumHeight(70)
         #self.definition.setMaximumHeight(1800)
         self.definition2 = MultiDefinitionWidget()

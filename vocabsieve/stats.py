@@ -35,7 +35,7 @@ class StatisticsWindow(QDialog):
     def initMLW(self):
         items = self.rec.countAllLemmaLookups(self.langcode)
         items = sorted(items, key=itemgetter(1), reverse=True) # Sort by counts, descending
-        self.mlw.layout = QVBoxLayout(self.mlw)
+        self.mlw._layout = QVBoxLayout(self.mlw)
         
         levels = [5, 8, 12, 20]
         level_prev = 1e9
@@ -57,8 +57,8 @@ class StatisticsWindow(QDialog):
                     content += item[0] + " "
                     count += 1
             lws[level].setText(content)
-            self.mlw.layout.addWidget(QLabel(f"<h3>{level}+ lookups (<i>{count}</i>)</h3>"))
-            self.mlw.layout.addWidget(lws[level])
+            self.mlw._layout.addWidget(QLabel(f"<h3>{level}+ lookups (<i>{count}</i>)</h3>"))
+            self.mlw._layout.addWidget(lws[level])
             level_prev = level
 
     def initKnown(self):
@@ -67,29 +67,29 @@ class StatisticsWindow(QDialog):
         self.known_langs = [l.strip() for l in self.settings.value('tracking/known_langs', 'en').split(",")]
         langcode = self.settings.value('target_language', 'en')
         start = time.time()
-        self.known.layout = QVBoxLayout(self.known)
+        self.known._layout = QVBoxLayout(self.known)
         hasCognates = dictdb.hasCognatesData()
         if not hasCognates:
-            self.known.layout.addWidget(label:=QLabel('No cognates data installed. Please download <a href="https://raw.githubusercontent.com/FreeLanguageTools/CogNet-processing/master/cognates.json.xz">this file</a> and import it in the configuration tool.'))
+            self.known._layout.addWidget(label:=QLabel('No cognates data installed. Please download <a href="https://raw.githubusercontent.com/FreeLanguageTools/CogNet-processing/master/cognates.json.xz">this file</a> and import it in the configuration tool.'))
             label.setOpenExternalLinks(True)
         known_words, known_cognates, total_score, count_seen_data, count_lookup_data, count_tgt_lemmas, count_ctx_lemmas = getKnownWords(self.settings, self.rec)
         print("Got known data in", time.time() - start, "seconds")
 
         if langcode in ['ru', 'uk']:
             known_words = [word for word in known_words if starts_with_cyrillic(word)]
-        self.known.layout.addWidget(QLabel(f"<h3>Known words: {prettydigits(len(known_words))} ({prettydigits(len(known_cognates))} cognates)</h3>"))
-        self.known.layout.addWidget(QLabel(f"<h4>Your total score: {prettydigits(int(total_score))}</h4>"))
-        self.known.layout.addWidget(
+        self.known._layout.addWidget(QLabel(f"<h3>Known words: {prettydigits(len(known_words))} ({prettydigits(len(known_cognates))} cognates)</h3>"))
+        self.known._layout.addWidget(QLabel(f"<h4>Your total score: {prettydigits(int(total_score))}</h4>"))
+        self.known._layout.addWidget(
             QLabel(
                 f"Lemmas: {prettydigits(count_seen_data)} seen, {prettydigits(count_lookup_data)} looked up, "
                 f"{prettydigits(count_tgt_lemmas)} as Anki targets, {prettydigits(count_ctx_lemmas)} in Anki context"))
         known_words_widget = QPlainTextEdit(" ".join(known_words))
         known_words_widget.setReadOnly(True)
-        self.known.layout.addWidget(known_words_widget)
+        self.known._layout.addWidget(known_words_widget)
 
     def initLookupsStats(self):
-        self.lookupStats.layout = QVBoxLayout(self.lookupStats)
-        self.lookupStats.layout.addWidget(QLabel(f"<h3>Lookup statistics</h3>"))
+        self.lookupStats._layout = QVBoxLayout(self.lookupStats)
+        self.lookupStats._layout.addWidget(QLabel(f"<h3>Lookup statistics</h3>"))
         data = self.rec.getAllLookups()
         today_midnight = datetime.combine(datetime.today(), datetime.min.time()).timestamp()
         timestamp_30d_ago = today_midnight - 30 * 24 * 60 * 60
@@ -106,12 +106,12 @@ class StatisticsWindow(QDialog):
                 words_looked_up[n_days_ago].add(lemma)
         n_words_looked_up = [len(words_looked_up[i]) for i in range(31)]
         n_cumul_words_looked_up = [sum(n_words_looked_up[i:]) for i in range(31)]
-        #self.lookupStats.layout.addWidget(QLabel(f"Count of words looked up in the last 30 days: {n_words_looked_up}"))
+        #self.lookupStats._layout.addWidget(QLabel(f"Count of words looked up in the last 30 days: {n_words_looked_up}"))
         # Draw bar chart with pyqtgraph
         self.lookups_plotwidget = PlotWidget()
         bgcolor = self.palette().color(QPalette.Background)
         self.lookups_plotwidget.setBackground(bgcolor)
-        self.lookupStats.layout.addWidget(self.lookups_plotwidget)
+        self.lookupStats._layout.addWidget(self.lookups_plotwidget)
         bar = BarGraphItem(x=[-i for i in range(31)], height=n_words_looked_up, width=1, brush='#4e79a7')
         self.lookups_plotwidget.addItem(bar)
 
@@ -127,4 +127,4 @@ class StatisticsWindow(QDialog):
         axisItem.setTicks([[(n/ratio, str(int(n))) for n in range(0, pretty_number_max, pretty_number_step)],[]])
         self.lookups_plotwidget.setAxisItems({'right': axisItem})
         self.lookups_plotwidget.setLabel('bottom', "Day")
-        self.lookupStats.layout.addWidget(QLabel(f"Total lookups: {prettydigits(sum(n_words_looked_up))} ({round(sum(n_words_looked_up)/30, 1)} per day, {round(sum(n_words_looked_up)/4.3, 1)} per week)"))
+        self.lookupStats._layout.addWidget(QLabel(f"Total lookups: {prettydigits(sum(n_words_looked_up))} ({round(sum(n_words_looked_up)/30, 1)} per day, {round(sum(n_words_looked_up)/4.3, 1)} per week)"))

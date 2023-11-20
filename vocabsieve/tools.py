@@ -1,21 +1,18 @@
 import json
 import urllib.request
-import requests
 import os
 import re
 import unicodedata
 from itertools import zip_longest
-import time
 from .vsnt import *
 from bs4 import BeautifulSoup
-from typing import List, Dict
+from typing import List
 from .db import *
 from pystardict import Dictionary
 from .dictionary import *
 from .dictformats import *
 from .xdxftransform import xdxf2html
 from sentence_splitter import split_text_into_sentences, SentenceSplitterException
-from PyQt5.QtCore import QCoreApplication
 import mobi
 from itertools import islice
 from lxml import etree
@@ -24,7 +21,7 @@ from ebooklib import epub, ITEM_DOCUMENT
 from .sources.WiktionarySource import WiktionarySource
 from .sources.GoogleTranslateSource import GoogleTranslateSource
 from .sources.LocalDictionarySource import LocalDictionarySource
-from .models import LemmaPolicy, Source, SourceGroup, DisplayMode, SourceOptions, collapse_newlines
+from .models import LemmaPolicy, DictionarySourceGroup, DisplayMode, SRSNote, SourceOptions, DictionarySource, AnkiSettings
 from .global_names import settings
 
 def request(action, **params):
@@ -61,6 +58,46 @@ def getFields(server, name) -> list:
     result = invoke('modelFieldNames', server, modelName=name)
     return list(result)
 
+def prepareAnkiNoteDict(anki_settings: AnkiSettings, note: SRSNote) -> dict:
+    """
+    Helper function to create a json to be sent to AnkiConnect
+    """
+    content = {
+        "deckName": anki_settings.deck,
+        "modelName": anki_settings.model,
+        "fields": {
+            anki_settings.word_field: note.word,
+            anki_settings.sentence_field: note.sentence,
+            anki_settings.definition1_field: note.definition1,
+            anki_settings.definition2_field: note.definition2
+        },
+        "tags": []
+    }
+    if anki_settings.tags:
+        content["tags"].extend(anki_settings.tags)
+    if note.tags:
+        content["tags"].extend(note.tags)
+    if note.audio_path:
+        content["audio"] = [
+                    {
+                        "path": note.audio_path,
+                        "filename": os.path.basename(note.audio_path),
+                        "fields": [
+                            anki_settings.audio_field
+                        ]
+                    }
+                ]
+    if note.image:
+        content["picture"] = [
+            {
+                "path": note.image,
+                "filename": note.image,
+                "fields": [
+                    anki_settings.image_field
+                ]
+            }
+        ]
+    return content
 
 def addNote(server, content) -> int:
     result = invoke('addNote', server, note=content)
@@ -335,7 +372,7 @@ def split_to_sentences(text: str, language: str):
     except SentenceSplitterException:
         return text
     
-def make_source(src_name: str, dictdb: LocalDictionary):
+def make_dict_source(src_name: str, dictdb: LocalDictionary) -> DictionarySource:
     if policy_string:=settings.value(f"{src_name}/lemma_policy"):
         lemma_policy = LemmaPolicy(policy_string)
     else:
@@ -372,9 +409,9 @@ def make_source_group(src_names: list[str], dictdb: LocalDictionary):
     source_list = []
     for src_name in src_names:
         source_list.append(
-            make_source(
+            make_dict_source(
                 src_name,
                 dictdb
             )
         )
-    return SourceGroup(source_list)
+    return DictionarySourceGroup(source_list)

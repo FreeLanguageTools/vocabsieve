@@ -106,18 +106,18 @@ class BookAnalyzer(QDialog):
         self._layout.addWidget(self.plotwidget_words, 6, 0, 1, 2)
         
         learning_rate_box = QWidget()
-        learning_rate_box.layout = QHBoxLayout(learning_rate_box)
-        learning_rate_box.layout.addWidget(QLabel("Learning rate: "))
+        learning_rate_box._layout = QHBoxLayout(learning_rate_box)
+        learning_rate_box._layout.addWidget(QLabel("Learning rate: "))
         self.learning_rate_slider = QSlider(Qt.Horizontal)
         self.learning_rate_slider.setMinimum(0)
         self.learning_rate_slider.setMaximum(100)
         self.learning_rate_slider.setValue(40)
-        learning_rate_box.layout.addWidget(self.learning_rate_slider)
+        learning_rate_box._layout.addWidget(self.learning_rate_slider)
         learning_rate_label = QLabel("40%")
-        learning_rate_box.layout.addWidget(learning_rate_label)
+        learning_rate_box._layout.addWidget(learning_rate_label)
         self.learning_rate_slider.valueChanged.connect(lambda x: learning_rate_label.setText(str(x) + "%"))
         self.learned_words_count_label = QLabel()
-        learning_rate_box.layout.addWidget(self.learned_words_count_label)
+        learning_rate_box._layout.addWidget(self.learned_words_count_label)
 
 
         self.learning_rate_slider.sliderReleased.connect(self.onSliderRelease)

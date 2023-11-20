@@ -190,12 +190,11 @@ class GenericImporter(QDialog):
                         # First item
                         audio_path = audios[next(iter(audios))]
 
-                tags = " ".join([
-                    self.parent.settings.value("tags", "vocabsieve").strip(),
-                    self.methodname,
-                    note.book_name.replace(" ","_")
-                    ]
-                    )    
+                tags = []
+                if self.settings.value("tags", "vocabsieve").strip():
+                    tags.extend(self.settings.value("tags", "vocabsieve").strip().split())
+                tags.append(self.methodname)
+                tags.append(note.book_name.replace(" ","_"))
                 
                 new_note_item = SRSNote(
                         word=definition1.headword,

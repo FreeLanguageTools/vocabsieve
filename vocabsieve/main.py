@@ -27,12 +27,11 @@ from .importer import KindleVocabImporter, KoreaderVocabImporter, AutoTextImport
 from .reader import ReaderServer
 from .contentmanager import ContentManager
 from .global_events import GlobalObject
-from .tools import is_json, preprocess_clipboard, starts_with_cyrillic, is_oneword, addNote, make_source_group
+from .tools import is_json, prepareAnkiNoteDict, preprocess_clipboard, starts_with_cyrillic, is_oneword, addNote, make_source_group
 from .ui.main_window_base import MainWindowBase
-from .ui.searchable_text_edit import SearchableTextEdit
 from .db import LocalDictionary
-from .models import DisplayMode, SourceGroup
-from .format import markdown_nop
+from .models import AnkiSettings, DictionarySourceGroup, SRSNote
+
 
 
 class MainWindow(MainWindowBase):
@@ -71,7 +70,7 @@ class MainWindow(MainWindowBase):
             self.sg2 = make_source_group(sg2_src_list, self.dictdb)
             self.definition2.setSourceGroup(self.sg2)
         else:
-            self.sg2 = SourceGroup([])
+            self.sg2 = DictionarySourceGroup([])
             self.definition2.setSourceGroup(self.sg2) 
 
     def checkUpdates(self) -> None:
@@ -305,8 +304,7 @@ class MainWindow(MainWindowBase):
         url = f"https://wiki.freelanguagetools.org/vocabsieve_setup"
         QDesktopServices.openUrl(QUrl(url))
 
-
-    def checkAnkiConnect(self):
+    def checkAnkiConnect(self) -> int:
         api = self.settings.value('anki_api', 'http://127.0.0.1:8765')
         if self.settings.value('enable_anki', True, type=bool):
             try:
@@ -331,7 +329,7 @@ class MainWindow(MainWindowBase):
                 )
                 if answer == QMessageBox.Ignore:
                     return 2
-                if answer == QMessageBox.Abort:
+                else:
                     return 0
         else:
             return 3
@@ -341,7 +339,6 @@ class MainWindow(MainWindowBase):
             self.settings_dialog = SettingsDialog(self)
             self.settings_dialog.exec()
             self.initSources()
-
 
     def importkindleNew(self):
         fname = QFileDialog.getExistingDirectory(
@@ -367,22 +364,6 @@ class MainWindow(MainWindowBase):
             )[0]
         if path:
             AutoTextImporter(self, path).exec()
-
-    def importkoreader(self) -> None:
-        path = QFileDialog.getExistingDirectory(
-            parent=self,
-            caption="Select a directory containing KOReader settings and ebook files",
-            directory=QStandardPaths.writableLocation(QStandardPaths.HomeLocation)
-        )
-        if not path:
-            return
-        try:
-            KoreaderImporter(self, path).exec()
-        except ValueError:
-            QMessageBox.warning(self, "No notes are found",
-                "Check if you've picked the right directory. It should be a folder containing all of your the ebooks you want to extract from")
-        except Exception as e:
-            QMessageBox.warning(self, "Something went wrong", "Error: "+repr(e))
 
     def importkoreaderVocab(self) -> None:
         path = QFileDialog.getExistingDirectory(
@@ -567,10 +548,9 @@ class MainWindow(MainWindowBase):
 
     def boldWordInSentence(self, word) -> None:
         sentence_text = self.sentence.unboldedText
-        if self.settings.value("bold_style", type=int):
+        if self.settings.value("bold_style", type=int) != 0:
             # Bold word that was clicked on, either with "<b>{word}</b>" or
             # "__{word}__".
-
             if self.settings.value("bold_style", type=int) == 1:
                 apply_bold = apply_bold_tags
             elif self.settings.value("bold_style", type=int) == 2:
@@ -598,136 +578,52 @@ class MainWindow(MainWindowBase):
         return self.settings.value("lem_greedily", False, type=bool)  # type: ignore
 
     def createNote(self) -> None:
-        sentence = self.sentence.textBoldedByTags.replace("\n", "<br>")
+        if self.checkAnkiConnect() == 0:
+            return
 
-        tags = (self.settings.value("tags", "vocabsieve").strip() + " " + self.tags.text().strip()).split(" ")
-        word = self.word.text()
-        content = {
-            "deckName": self.settings.value("deck_name"),
-            "modelName": self.settings.value("note_type"),
-            "fields": {
-                self.settings.value("sentence_field"): sentence,
-                self.settings.value("word_field"): word,
-            },
-            "tags": tags
-        }
-        definition = self.process_defi_anki(
-            self.definition,
-            self.settings.value(
-                self.settings.value("dict_source", "Wiktionary (English)")
-                + "/display_mode",
-                "Markdown"
-            )
+        anki_settings = AnkiSettings(
+            deck=self.settings.value("deck_name", "Default"),
+            model=self.settings.value("note_type", "vocabsieve-notes"),
+            word_field=self.settings.value("word_field", "Word"),
+            sentence_field=self.settings.value("sentence_field", "Sentence"),
+            definition1_field=self.settings.value("definition1_field", "Definition"),
+            definition2_field=self.settings.value("definition2_field"),
+            audio_field=self.settings.value("pronunciation_field"),
+            image_field=self.settings.value("image_field"),
         )
-        content['fields'][self.settings.value('definition_field')] = definition
-        definition2 = None
-        if self.settings.value("dict_source2", "<disabled>") != '<disabled>':
-            try:
-                if self.settings.value(
-                    "definition2_field",
-                        "<disabled>") == "<disabled>":
-                    self.warn(
-                        "Aborted.\nYou must have field for Definition#2 in order to use two dictionaries.")
-                    return
-                definition2 = self.process_defi_anki(
-                    self.definition2,
-                    self.settings.value(
-                        self.settings.value("dict_source2", "Wiktionary (English)")
-                        + "/display_mode",
-                        "Markdown"
-                    )
-                )
-                content['fields'][self.settings.value(
-                    'definition2_field')] = definition2
-            except Exception as e:
-                return
 
-        if self.settings.value(
-            "pronunciation_field",
-                "<disabled>") != '<disabled>' and self.audio_path:
-            content['audio'] = {
-                "path": self.audio_path,
-                "filename": os.path.basename(self.audio_path),
-                "fields": [
-                    self.settings.value("pronunciation_field")
-                ]
-            }
-        if self.settings.value("image_field", "<disabled>") != '<disabled>' and self.image_path:
-            content['picture'] = {
-                "path": self.image_path,
-                "filename": os.path.basename(self.image_path),
-                "fields": [
-                    self.settings.value("image_field")
-                ]
-            }
-
-        self.status("Adding note")
-        api = self.settings.value("anki_api")
-        enable_anki_flag = self.settings.value("enable_anki", True, type=bool)
-        try:
-            if enable_anki_flag:
-                addNote(api, content)
-
-            self.rec.recordNote(
-                    json.dumps(content),
-                    sentence,
-                    word,
-                    definition,
-                    definition2,
-                    self.audio_path,
-                    self.image_path,
-                    " ".join(tags),
-                    enable_anki_flag
-                    )
-
-            self.sentence.clear()
-            self.word.clear()
-            self.definition.clear()
-            self.definition2.clear()
-            self.setImage(None)
-            self.audio_selector.clear()
-            self.status(f"Note added: '{word}'")
+        note = SRSNote(
+            word=self.word.text(),
+            sentence=self.sentence.textBoldedByTags.replace("\n", "<br>"),
+            definition1=self.definition.process_defi_anki(),
+            definition2=self.definition2.process_defi_anki(),
+            audio_path=self.audio_path,
+            image=self.image_path,
+            tags=self.settings.value("tags", "vocabsieve").strip().split() + self.tags.text().strip().split()
+        )
+        
+        content = prepareAnkiNoteDict(anki_settings, note)
+        print(content)
+        try: 
+            addNote(
+                self.settings.value("anki_api", "http://127.0.0.1:8765"),
+                content
+            )
+            self.status("Added note to Anki")
+            # Clear fields
+            self.sentence.setText("")
+            self.word.setText("")
+            self.definition.reset()
+            self.definition2.reset()
+            self.discard_current_audio()
+            
         except Exception as e:
-            self.rec.recordNote(
-                json.dumps(content),
-                sentence,
-                word,
-                definition,
-                definition2,
-                self.audio_path,
-                self.image_path,
-                " ".join(tags),
-                False
-            )
-            self.status(f"Failed to add note: {word}")
-            QMessageBox.warning(
-                self,
-                f"Failed to add note: {word}",
-                "<h2>Failed to add note</h2>"
-                + f"Error: {repr(e)}"
-                + "\nHints: AnkiConnect must be running to add notes."
-                "<br>If you wish to only add notes to the database (and "
-                "export it as CSV), click Configure and uncheck 'Enable"
-                " Anki' on the Anki tab."
+            print(repr(e))
+            self.warn("Encountered error in adding note\n" + repr(e))
+            return
 
-            )
 
-    def process_defi_anki(self,
-                          w: SearchableTextEdit,
-                          display_mode: DisplayMode) -> str:
-        """Process definitions before sending to Anki"""
 
-        print("display mode is", display_mode)
-        if display_mode in ["Raw", "Plaintext"]:
-            return w.toPlainText().replace("\n", "<br>") # Anki needs <br>s
-        elif display_mode == "Markdown":
-            return markdown_nop(w.toPlainText())
-        elif display_mode == "Markdown-HTML":
-            return markdown_nop(w.toMarkdown())
-        elif display_mode == "HTML":
-            return w.original  # type: ignore
-        else:
-            return ""
 
     def errorNoConnection(self, error) -> None:
         """

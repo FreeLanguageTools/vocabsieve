@@ -1,15 +1,19 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QTextEdit, QPushButton, QHBoxLayout
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QHBoxLayout
 from PyQt5.QtCore import Qt
 from .searchable_text_edit import SearchableTextEdit 
-from ..models import Definition, SourceGroup
+from ..models import Definition, DictionarySourceGroup, DisplayMode
+from ..format import markdown_nop
+from typing import Optional
 
 class MultiDefinitionWidget(SearchableTextEdit):
-    def __init__(self):
+    def __init__(self, word_widget: Optional[QLineEdit] = None):
         super().__init__()
-        self.sg = SourceGroup([])
+        self.sg = DictionarySourceGroup([])
+        self.word_widget = word_widget
         self._layout = QVBoxLayout(self)
         self.definitions: list[Definition] = []
         self.currentIndex = 0
+        self.currentDefinition: Optional[Definition] = None
         self.info_label = QLabel("")
         self.info_label.setAlignment(Qt.AlignCenter)
         self._layout.addWidget(self.info_label)
@@ -35,12 +39,14 @@ class MultiDefinitionWidget(SearchableTextEdit):
         first_button.clicked.connect(self.first)
         last_button.clicked.connect(self.last)
 
-    def setSourceGroup(self, sg: SourceGroup):
+    def setSourceGroup(self, sg: DictionarySourceGroup):
         self.sg = sg
 
     def getDefinitions(self, word: str) -> list[Definition]:
-        "Can be used by other classes to get definitions from the source group"
-        return self.sg.define(word)
+        """Can be used by other classes to get definitions from the source group
+        filters out definitions with no definition"""
+
+        return [defi for defi in self.sg.define(word) if defi.definition is not None]
 
     def lookup(self, word: str):
         self.reset()
@@ -57,10 +63,12 @@ class MultiDefinitionWidget(SearchableTextEdit):
             return
         self.counter.setText(f"{self.currentIndex+1}/{len(self.definitions)}")
         if defi:=self.definitions[self.currentIndex]:
+            self.currentDefinition = defi
             if defi.definition is not None:
                 self.setText(defi.definition)
                 self.info_label.setText(f"<strong>{defi.headword}</strong> in <em>{defi.source}</em>")
-        
+                if self.word_widget:
+                    self.word_widget.setText(defi.headword)
     def setCurrentIndex(self, index: int):
         self.currentIndex = index
         self.updateIndex()
@@ -87,6 +95,31 @@ class MultiDefinitionWidget(SearchableTextEdit):
 
     def reset(self):
         self.definitions = []
+        self.currentDefinition = None
         self.currentIndex = 0
         self.setText("")
+        self.info_label.setText("")
         self.counter.setText("0/0")
+
+    def process_defi_anki(self) -> str:
+        """Process definitions before sending to Anki"""
+        # Figure out display mode of current source
+        if self.currentDefinition is None:
+            return ""
+        
+        source_name = self.currentDefinition.source
+        source = self.sg.getSource(source_name)
+        if source is None:
+            return ""
+
+        match source.display_mode:
+            case DisplayMode.raw:
+                return self.toPlainText().replace("\n", "<br>")
+            case DisplayMode.plaintext:
+                return self.toPlainText().replace("\n", "<br>")
+            case DisplayMode.markdown:
+                return markdown_nop(self.toPlainText())
+            case DisplayMode.markdown_html:
+                return markdown_nop(self.toMarkdown())
+            case DisplayMode.html:
+                return self.original
