@@ -2,11 +2,10 @@ from flask import Flask, render_template, flash, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from werkzeug.utils import secure_filename
-from markdown import markdown
 import os
 import re
-from ..global_names import settings, datapath
-from .utils import *
+from ..global_names import datapath
+from .utils import parseBook
 from PyQt5.QtCore import QStandardPaths, QCoreApplication, QObject
 from pathlib import Path
 # The following import is to avoid cxfreeze error

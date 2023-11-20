@@ -1,10 +1,7 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from bidict import bidict
+from PyQt5.QtWidgets import QDialog, QTreeWidget, QPushButton, QStatusBar, QVBoxLayout, QLabel, QFileDialog, QTreeWidgetItem
+from PyQt5.QtCore import QDate, QStandardPaths
 from operator import itemgetter
 from .dialog import AddContentDialog
-from ..dictionary import langs_supported
 
 class ContentManager(QDialog):
     def __init__(self, parent):

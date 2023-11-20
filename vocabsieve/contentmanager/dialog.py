@@ -1,12 +1,10 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from PyQt5.QtWidgets import QDialog, QLineEdit, QComboBox, QPushButton, QDateEdit, QFormLayout, QLabel
+from PyQt5.QtCore import QDate
 from bidict import bidict
 from ..dictionary import langs_supported, langcodes
 import os
 import pysubs2
-from ..tools import *
-from .utils import *
+from ..tools import ebook2text
 
 supported_content_formats = bidict({
     ".fb2": "Ebook (FictionBook)",
@@ -90,6 +88,8 @@ class AddContentDialog(QDialog):
                         content += self.extractSubs(os.path.join(self.path, file))
                 except Exception as e:
                     print(repr(e))
+        else:
+            raise NotImplementedError(f"{self.contenttype} not supported")
                         
         self.parent.rec.importContent(
             self.name.text(),

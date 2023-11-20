@@ -1,17 +1,15 @@
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QDialog, QGridLayout, QLabel, QHBoxLayout, QSlider, QWidget, QCheckBox, QSpinBox
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPalette
 import os
 from operator import itemgetter
-from ..tools import *
+from ..tools import ebook2text, starts_with_cyrillic, prettydigits, amount_and_percent, grouper, window, get_first_number
 import time
 from statistics import stdev, mean
 from ..lemmatizer import lem_word
 import itertools
 from ..known_words import getKnownWords
 import random
-from sentence_splitter import SentenceSplitter
-import json
 import numpy as np
 from pyqtgraph import PlotWidget, AxisItem
 from collections import Counter
@@ -40,7 +38,7 @@ class BookAnalyzer(QDialog):
     def initWidgets(self):
         self.basic_info_left = ""
         if self.langcode in ['ru', 'uk']:
-            self.known_words = [word for word in self.known_words if starts_with_cyrillic(word)]
+            self.known_words = set([word for word in self.known_words if starts_with_cyrillic(word)])
         
         self.content = "\n".join(self.chapters)
         
@@ -58,11 +56,11 @@ class BookAnalyzer(QDialog):
                 p.starmap(self.splitter.split, ((ch,) for ch in self.chapters))
                 ) 
             if sentence)
-        print(f"Split book ({p._processes} threads) in " + str(time.time() - start) + " seconds.")
+        print(f"Split book in " + str(time.time() - start) + " seconds.")
     
         start = time.time()
         self.words = list(p.starmap(lem_word, ((word, self.langcode) for word in self.content.split())))
-        print(f"Lemmatized ({p._processes} threads) book in " + str(time.time() - start) + " seconds.")
+        print(f"Lemmatized book in " + str(time.time() - start) + " seconds.")
         p.close()
         unique_words_3k = []
         unique_words_10k = []
@@ -87,7 +85,7 @@ class BookAnalyzer(QDialog):
         self.vocab_coverage = ""
         occurrences = sorted(Counter(self.words).items(), key=itemgetter(1), reverse=True)
         topN = list(zip(*occurrences[:100]))[0]
-        self.known_words.extend(topN)
+        self.known_words.update(topN)
         self.known_words = set(self.known_words)
         unknown_words = [word for word in self.words if word not in self.known_words]
         self.vocab_coverage += "Unknown lemmas: " + amount_and_percent(len(unknown_words), len(self.words))
@@ -108,18 +106,18 @@ class BookAnalyzer(QDialog):
         self._layout.addWidget(self.plotwidget_words, 6, 0, 1, 2)
         
         learning_rate_box = QWidget()
-        learning_rate_box._layout = QHBoxLayout(learning_rate_box)
-        learning_rate_box._layout.addWidget(QLabel("Learning rate: "))
+        learning_rate_box_layout = QHBoxLayout(learning_rate_box)
+        learning_rate_box_layout.addWidget(QLabel("Learning rate: "))
         self.learning_rate_slider = QSlider(Qt.Horizontal)
         self.learning_rate_slider.setMinimum(0)
         self.learning_rate_slider.setMaximum(100)
         self.learning_rate_slider.setValue(40)
-        learning_rate_box._layout.addWidget(self.learning_rate_slider)
+        learning_rate_box_layout.addWidget(self.learning_rate_slider)
         learning_rate_label = QLabel("40%")
-        learning_rate_box._layout.addWidget(learning_rate_label)
+        learning_rate_box_layout.addWidget(learning_rate_label)
         self.learning_rate_slider.valueChanged.connect(lambda x: learning_rate_label.setText(str(x) + "%"))
         self.learned_words_count_label = QLabel()
-        learning_rate_box._layout.addWidget(self.learned_words_count_label)
+        learning_rate_box_layout.addWidget(self.learned_words_count_label)
 
 
         self.learning_rate_slider.sliderReleased.connect(self.onSliderRelease)
@@ -128,6 +126,9 @@ class BookAnalyzer(QDialog):
         self.label_2t = QLabel()
         self.label_3t = QLabel()
         sentence_target_counts = self.categorizeSentences(self.sentences, self.learning_rate_slider.value()/100)
+
+        if sentence_target_counts is None:
+            return
 
 
 
@@ -156,6 +157,7 @@ class BookAnalyzer(QDialog):
         print("Calculated cram words in " + str(time.time() - start) + " seconds.")
         
         verdict = ""
+
         if len(sentences_3t) / len(sentence_target_counts) > 0.15:
             verdict = "Too hard"
         elif len(sentences_3t) / len(sentence_target_counts) > 0.08:

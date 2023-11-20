@@ -1,6 +1,5 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
+from PyQt5.QtWidgets import QTextEdit
+from PyQt5.QtCore import pyqtSlot
 from ..global_events import GlobalObject
 from ..global_names import settings
 

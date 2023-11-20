@@ -1,11 +1,10 @@
 from .GenericImporter import GenericImporter
-from .utils import *
 from datetime import datetime as dt, timezone as tz
 import sqlite3
 import os
 import re
 from PyQt5.QtWidgets import QCheckBox, QLabel
-from ..tools import *
+from ..tools import grouper
 from ..lemmatizer import lem_word
 from .models import ReadingNote
 from ..models import LookupRecord

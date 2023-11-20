@@ -1,7 +1,12 @@
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
+from PyQt5.QtGui import QFont
+from PyQt5.QtCore import pyqtSlot
 from .searchable_text_edit import SearchableTextEdit
-from ..text_manipulation import *
+from ..text_manipulation import (markdown_boldings_to_bold_tag_boldings, 
+                                 bold_char_boldings_to_bold_tag_boldings,
+                                 apply_bold_tags,
+                                 remove_bold_char_boldings
+                                 )
+import re
 from ..global_names import settings
 
 class SearchableBoldableTextEdit(SearchableTextEdit):

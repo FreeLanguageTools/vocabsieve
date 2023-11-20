@@ -21,14 +21,14 @@ from .global_names import datapath
 from .text_manipulation import apply_bold_char, apply_bold_tags, bold_word_in_text
 from .known_words import getKnownData, getKnownWords
 from .analyzer import BookAnalyzer
-from .config import SettingsDialog, getVersion
+from .config import SettingsDialog
 from .stats import StatisticsWindow
-from .dictionary import getAudio
+from .dictionary import getAudio, preprocess_clipboard
 from .importer import KindleVocabImporter, KoreaderVocabImporter, AutoTextImporter
 from .reader import ReaderServer
 from .contentmanager import ContentManager
 from .global_events import GlobalObject
-from .tools import is_json, prepareAnkiNoteDict, preprocess_clipboard, starts_with_cyrillic, is_oneword, addNote, make_source_group
+from .tools import is_json, prepareAnkiNoteDict, starts_with_cyrillic, is_oneword, addNote, make_source_group, getVersion
 from .ui.main_window_base import MainWindowBase
 from .local_dictionary import LocalDictionary
 from .models import AnkiSettings, DictionarySourceGroup, SRSNote

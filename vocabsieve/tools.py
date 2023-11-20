@@ -4,13 +4,10 @@ import os
 import re
 import unicodedata
 from itertools import zip_longest
-from .vsnt import *
+from .vsnt import FIELDS, CARDS, CSS
 from bs4 import BeautifulSoup
 from typing import List
 from .local_dictionary import LocalDictionary
-
-from .dictionary import *
-from .dictformats import *
 
 import mobi
 from itertools import islice
@@ -198,8 +195,8 @@ def tostr(s):
         from_bytes(
             etree.tostring(
                 s,
-                encoding='utf8',
-                method='text')).best()).strip()
+                encoding='utf8', # type: ignore
+                method='text')).best()).strip()  # type: ignore
 
 def ebook2text(path):
     ch_pos = {}
@@ -216,8 +213,8 @@ def ebook2text(path):
         book = epub.read_epub(path)
         chapters = []
         for doc in book.get_items_of_type(ITEM_DOCUMENT):
-            tree = etree.fromstring(doc.get_content())
-            notags = etree.tostring(tree, encoding='utf8', method="text")
+            tree = etree.fromstring(doc.get_content())   #type: ignore
+            notags = etree.tostring(tree, encoding='utf8', method="text") #type: ignore
             data = str(from_bytes(notags).best()).strip()
             if len(data.splitlines()) < 2:
                 continue
@@ -229,7 +226,7 @@ def ebook2text(path):
     elif ext == '.fb2':
         with open(path, 'rb') as f:
             data = f.read()
-            tree = etree.fromstring(data)
+            tree = etree.fromstring(data) #type: ignore
         chapters = []
         already_seen = False
         for el in tree:
@@ -252,7 +249,7 @@ def ebook2text(path):
         with open(path, 'r', encoding='utf-8') as f:
             c = f.read()
             return BeautifulSoup(c).getText()
-    return chapters, ch_pos
+    return chapters, ch_pos #type: ignore
 
 def window(seq, n=2):
     "Returns a sliding window (of width n) over data from the iterable"
@@ -265,7 +262,8 @@ def window(seq, n=2):
         result = result[1:] + (elem,)
         yield result
         
-prettydigits = lambda number: format(number, ',').replace(',', ' ')
+def prettydigits(number):
+    return format(number, ',').replace(',', ' ')
 
 def amount_and_percent(amount, total):
     return f"{prettydigits(amount)} ({round(amount / total * 100, 2)}%)" if total else "0 (0%)"

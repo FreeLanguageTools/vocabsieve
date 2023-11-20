@@ -4,8 +4,7 @@ from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from PyQt5.QtCore import QUrl
 from typing import Dict
 import requests
-from .forvo import *
-from .dictionary import *
+from .forvo import HEADERS
 from .global_names import forvopath
 
 class AudioPlayer:

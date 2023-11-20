@@ -1,8 +1,7 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from .utils import *
-from ..models import Definition, SRSNote
+from PyQt5.QtWidgets import QTextEdit, QVBoxLayout, QWidget, QPushButton, QLabel, QHBoxLayout
+from PyQt5.QtCore import Qt
+from .utils import genPreviewHTML
+from ..models import SRSNote
 
 class BatchNotePreviewer(QTextEdit):
     def __init__(self):

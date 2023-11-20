@@ -1,8 +1,8 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from .dictionary import *
-from .tools import *
+from PyQt5.QtWidgets import QDialog, QTreeWidget, QPushButton, QStatusBar, QVBoxLayout, QLabel, QFileDialog, QMessageBox, QTreeWidgetItem, QLineEdit, QComboBox, QFormLayout
+from PyQt5.QtCore import QDateTime, QCoreApplication, QStandardPaths
+import time
+from .constants import langcodes
+from .dictionary import getDictsForLang, getFreqlistsForLang, getAudioDictsForLang
 from .dictformats import supported_dict_formats, dictinfo
 import json
 from .local_dictionary import LocalDictionary

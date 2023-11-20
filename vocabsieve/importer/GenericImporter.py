@@ -1,19 +1,26 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from PyQt5.QtWidgets import (QDialog, QFormLayout, QLabel, QComboBox, QWidget, 
+                             QVBoxLayout, QCheckBox, QScrollArea, QPushButton, 
+                             QProgressBar, QSizePolicy, QApplication)
+from PyQt5.QtCore import QDateTime
+from .BatchNotePreviewer import BatchNotePreviewer
+from ..ui.main_window_base import MainWindowBase
+from .models import ReadingNote
+from ..models import SRSNote
+from ..tools import prepareAnkiNoteDict
+from .utils import truncate_middle
+
 import re
 import json
 
 from vocabsieve.tools import addNotes
 from vocabsieve.dictionary import getAudio
 from datetime import datetime as dt
-from itertools import compress
-from .utils import *
 from .BatchNotePreviewer import BatchNotePreviewer
 from ..ui.main_window_base import MainWindowBase
 from .models import ReadingNote
 from ..models import SRSNote
 from ..tools import prepareAnkiNoteDict
+from typing import Optional
 
 def date_to_timestamp(datestr: str):
     return dt.strptime(datestr, "%Y-%m-%d %H:%M:%S").timestamp()

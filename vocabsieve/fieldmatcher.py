@@ -1,7 +1,5 @@
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-from .tools import *
+from PyQt5.QtWidgets import QDialog, QGridLayout, QLabel, QComboBox
+from .tools import getNoteTypes, getFields
 import json
 
 class FieldMatcher(QDialog):

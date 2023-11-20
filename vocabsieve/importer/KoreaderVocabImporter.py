@@ -1,15 +1,11 @@
 import os
 import sqlite3
 from datetime import datetime as dt
-from datetime import timezone as tz
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QLabel
 from slpp import slpp
 
 from .GenericImporter import GenericImporter
-from .utils import *
-from ..tools import *
+from .utils import koreader_scandir, findDBpath, findHistoryPath
 from .models import ReadingNote
 from ..models import LookupRecord
 from ..lemmatizer import lem_word

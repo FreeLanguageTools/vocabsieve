@@ -3,7 +3,7 @@ import json
 from PyQt5.QtWidgets import QMessageBox, QProgressDialog
 from PyQt5.QtCore import Qt
 import re
-from .tools import *
+from .tools import getVersion, findNotes, notesInfo
 from .lemmatizer import lem_word
 
 last_known_data = None
@@ -24,7 +24,7 @@ def getKnownWords(settings, rec, dictdb):
     known_cognates = [word for word, points in score.items() if points >= threshold_cognate and word in cognates]
     known_words += known_cognates
     known_words = sorted(list(set(known_words)))
-    return known_words, known_cognates, total_score, count_seen_data, count_lookup_data, count_tgt_lemmas, count_ctx_lemmas
+    return set(known_words), known_cognates, total_score, count_seen_data, count_lookup_data, count_tgt_lemmas, count_ctx_lemmas
 
 def getKnownData(settings, rec):
     lifetime = settings.value('tracking/known_data_lifetime', 1800, type=int) # Seconds

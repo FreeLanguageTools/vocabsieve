@@ -1,15 +1,28 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (QDialog, QStatusBar, QCheckBox, QComboBox,QLineEdit, 
+                             QSpinBox, QPushButton, QSlider, QLabel, QHBoxLayout,
+                             QWidget, QTabWidget, QMessageBox, QColorDialog, QListWidget
+                            )
+from PyQt5.QtGui import QImageWriter
+                        
+from PyQt5.QtCore import Qt, QTimer
 import platform
 import qdarktheme
 from shutil import rmtree
-from .tools import *
-from .dictionary import *
-from .dictmanager import *
 from .fieldmatcher import FieldMatcher
 from .ui.source_ordering_widget import SourceGroupWidget, AllSourcesWidget
 from .models import DisplayMode, LemmaPolicy
 from enum import Enum
+from .dictmanager import DictManager
+from .tools import (addDefaultModel, getVersion, findNotes, 
+                    guiBrowse, getDeckList,
+                    getNoteTypes, getFields
+                    )
+from bidict import bidict
+from .dictionary import langs_supported, getAudioDictsForLang, getDictsForLang, getFreqlistsForLang
+from .constants import langcodes
+
+import os
+import json
 
 BoldStyles = ["<disabled>", "Font weight", "Underscores"]
 
@@ -254,21 +267,21 @@ class SettingsDialog(QDialog):
     def initTabs(self):
         self.tabs = QTabWidget()
         self.tab_g = QWidget()  # General
-        self.tab_g._layout = QFormLayout(self.tab_g) #type: ignore
+        self.tab_g_layout = QFormLayout(self.tab_g) #type: ignore
         self.tab_s = QWidget()
-        self.tab_s._layout = QGridLayout(self.tab_s) #type: ignore
+        self.tab_s_layout = QGridLayout(self.tab_s) #type: ignore
         self.tab_a = QWidget()  # Anki
-        self.tab_a._layout = QFormLayout(self.tab_a) #type: ignore
+        self.tab_a_layout = QFormLayout(self.tab_a) #type: ignore
         self.tab_n = QWidget()  # Network
-        self.tab_n._layout = QFormLayout(self.tab_n) #type: ignore
+        self.tab_n_layout = QFormLayout(self.tab_n) #type: ignore
         self.tab_i = QWidget()  # Interface
-        self.tab_i._layout = QFormLayout(self.tab_i) #type: ignore
+        self.tab_i_layout = QFormLayout(self.tab_i) #type: ignore
         self.tab_p = QWidget()  # Processing
-        self.tab_p._layout = QFormLayout(self.tab_p) #type: ignore
+        self.tab_p_layout = QFormLayout(self.tab_p) #type: ignore
         self.tab_m = QWidget()  # Miscellaneous
-        self.tab_m._layout = QFormLayout(self.tab_m) #type: ignore
+        self.tab_m_layout = QFormLayout(self.tab_m) #type: ignore
         self.tab_t = QWidget()  # Tracking
-        self.tab_t._layout = QFormLayout(self.tab_t) #type: ignore
+        self.tab_t_layout = QFormLayout(self.tab_t) #type: ignore
 
         self.tabs.resize(400, 400)
 
@@ -370,114 +383,114 @@ class SettingsDialog(QDialog):
             self.display_mode.addItem(mode.value, mode)
         for policy in LemmaPolicy:
             self.lemma_policy.addItem(policy.value, policy)
-        self.tab_g._layout.addRow(QLabel("<h3>General</h3>"))
-        self.tab_g._layout.addRow(
+        self.tab_g_layout.addRow(QLabel("<h3>General</h3>"))
+        self.tab_g_layout.addRow(
             QLabel("Target language"),
             self.target_language)
 
-        self.tab_g._layout.addRow(QLabel("Bold words"), self.bold_style)
+        self.tab_g_layout.addRow(QLabel("Bold words"), self.bold_style)
 
-        self.tab_g._layout.addRow(
+        self.tab_g_layout.addRow(
             QLabel("Pronunciation source"),
             self.audio_dict)
-        self.tab_g._layout.addRow(QLabel("Forvo audio format"), self.audio_format)
-        self.tab_g._layout.addRow(QLabel("<i>◊ Choose mp3 for playing on iOS, but ogg may save space</i>"))
-        self.tab_g._layout.addRow(QLabel("Frequency list"), self.freq_source)
-        self.tab_g._layout.addRow(
+        self.tab_g_layout.addRow(QLabel("Forvo audio format"), self.audio_format)
+        self.tab_g_layout.addRow(QLabel("<i>◊ Choose mp3 for playing on iOS, but ogg may save space</i>"))
+        self.tab_g_layout.addRow(QLabel("Frequency list"), self.freq_source)
+        self.tab_g_layout.addRow(
             QLabel("Google translate: To"),
             self.gtrans_lang)
-        self.tab_g._layout.addRow(QLabel("Web lookup preset"), self.web_preset)
-        self.tab_g._layout.addRow(QLabel("Custom URL pattern"), self.custom_url)
-        self.tab_g._layout.addRow(self.importdict)
+        self.tab_g_layout.addRow(QLabel("Web lookup preset"), self.web_preset)
+        self.tab_g_layout.addRow(QLabel("Custom URL pattern"), self.custom_url)
+        self.tab_g_layout.addRow(self.importdict)
 
-        self.tab_a._layout.addRow(QLabel("<h3>Anki settings</h3>"))
-        self.tab_a._layout.addRow(self.enable_anki)
-        self.tab_a._layout.addRow(
+        self.tab_a_layout.addRow(QLabel("<h3>Anki settings</h3>"))
+        self.tab_a_layout.addRow(self.enable_anki)
+        self.tab_a_layout.addRow(
             QLabel("<i>◊ If disabled, notes will not be sent to Anki, but only stored in a local database.</i>")
         )
-        self.tab_a._layout.addRow(QLabel("<hr>"))
-        self.tab_a._layout.addRow(QLabel('AnkiConnect API'), self.anki_api)
-        self.tab_a._layout.addRow(QLabel("Deck name"), self.deck_name)
-        self.tab_a._layout.addRow(QLabel('Default tags'), self.tags)
-        self.tab_a._layout.addRow(QLabel("<hr>"))
-        self.tab_a._layout.addRow(self.default_notetype_button)
-        self.tab_a._layout.addRow(QLabel("Note type"), self.note_type)
-        self.tab_a._layout.addRow(
+        self.tab_a_layout.addRow(QLabel("<hr>"))
+        self.tab_a_layout.addRow(QLabel('AnkiConnect API'), self.anki_api)
+        self.tab_a_layout.addRow(QLabel("Deck name"), self.deck_name)
+        self.tab_a_layout.addRow(QLabel('Default tags'), self.tags)
+        self.tab_a_layout.addRow(QLabel("<hr>"))
+        self.tab_a_layout.addRow(self.default_notetype_button)
+        self.tab_a_layout.addRow(QLabel("Note type"), self.note_type)
+        self.tab_a_layout.addRow(
             QLabel('Field name for "Sentence"'),
             self.sentence_field)
-        self.tab_a._layout.addRow(
+        self.tab_a_layout.addRow(
             QLabel('Field name for "Word"'),
             self.word_field)
-        #self.tab_a._layout.addRow(
+        #self.tab_a_layout.addRow(
         #    QLabel('Field name for "Frequency Stars"'),
         #    self.frequency_field)
-        self.tab_a._layout.addRow(
+        self.tab_a_layout.addRow(
             QLabel('Field name for "Definition"'),
             self.definition_field)
-        self.tab_a._layout.addRow(
+        self.tab_a_layout.addRow(
             QLabel('Field name for "Definition#2"'),
             self.definition2_field)
-        self.tab_a._layout.addRow(
+        self.tab_a_layout.addRow(
             QLabel('Field name for "Pronunciation"'),
             self.pronunciation_field)
-        self.tab_a._layout.addRow(
+        self.tab_a_layout.addRow(
             QLabel('Field name for "Image"'),
             self.image_field)
 
 
-        self.tab_n._layout.addRow(QLabel(
+        self.tab_n_layout.addRow(QLabel(
             '<h3>Network settings</h3>'
             '◊ All settings on this tab require a restart to take effect.'
             '<br>◊ Most users should not need to change these settings.</i>'
         ))
-        self.tab_n._layout.addRow(self.check_updates)
-        self.tab_n._layout.addRow(QLabel("<h4>Local API</h4>"))
-        self.tab_n._layout.addRow(self.api_enabled)
-        self.tab_n._layout.addRow(QLabel("API host"), self.api_host)
-        self.tab_n._layout.addRow(QLabel("API port"), self.api_port)
-        self.tab_n._layout.addRow(QLabel("<h4>Web Reader</h4>"))
-        self.tab_n._layout.addRow(self.reader_enabled)
-        self.tab_n._layout.addRow(QLabel("Web reader host"), self.reader_host)
-        self.tab_n._layout.addRow(QLabel("Web reader port"), self.reader_port)
-        self.tab_n._layout.addRow(
+        self.tab_n_layout.addRow(self.check_updates)
+        self.tab_n_layout.addRow(QLabel("<h4>Local API</h4>"))
+        self.tab_n_layout.addRow(self.api_enabled)
+        self.tab_n_layout.addRow(QLabel("API host"), self.api_host)
+        self.tab_n_layout.addRow(QLabel("API port"), self.api_port)
+        self.tab_n_layout.addRow(QLabel("<h4>Web Reader</h4>"))
+        self.tab_n_layout.addRow(self.reader_enabled)
+        self.tab_n_layout.addRow(QLabel("Web reader host"), self.reader_host)
+        self.tab_n_layout.addRow(QLabel("Web reader port"), self.reader_port)
+        self.tab_n_layout.addRow(
             QLabel("Google Translate API"),
             self.gtrans_api)
 
-        self.tab_i._layout.addRow(
+        self.tab_i_layout.addRow(
             QLabel("<h3>Interface settings</h3>")
         )
-        self.tab_i._layout.addRow(
+        self.tab_i_layout.addRow(
             QLabel("<h4>Settings marked * require a restart to take effect.</h4>"))
         if platform.system() == "Linux":
             # Primary selection is only available on Linux
-            self.tab_i._layout.addRow(self.primary)
-        self.tab_i._layout.addRow("Theme", self.theme)
-        self.tab_i._layout.addRow("Accent color", self.accent_color)
-        self.tab_i._layout.addRow(self.allow_editing)
-        self.tab_i._layout.addRow(QLabel("Frequency display mode"), self.freq_display_mode)
-        self.tab_i._layout.addRow(QLabel("*Interface layout orientation"), self.orientation)
-        self.tab_i._layout.addRow(QLabel("*Text scale"), self.text_scale_box)
-        self.tab_i._layout.addRow(
+            self.tab_i_layout.addRow(self.primary)
+        self.tab_i_layout.addRow("Theme", self.theme)
+        self.tab_i_layout.addRow("Accent color", self.accent_color)
+        self.tab_i_layout.addRow(self.allow_editing)
+        self.tab_i_layout.addRow(QLabel("Frequency display mode"), self.freq_display_mode)
+        self.tab_i_layout.addRow(QLabel("*Interface layout orientation"), self.orientation)
+        self.tab_i_layout.addRow(QLabel("*Text scale"), self.text_scale_box)
+        self.tab_i_layout.addRow(
             QLabel("<h4>These settings require a page refresh to take effect.</h4>"))
-        self.tab_i._layout.addRow(QLabel("Reader font"), self.reader_font)
-        self.tab_i._layout.addRow(QLabel("Reader font size"), self.reader_fontsize)
-        self.tab_i._layout.addRow(QLabel("Reader highlight color"), self.reader_hlcolor)
+        self.tab_i_layout.addRow(QLabel("Reader font"), self.reader_font)
+        self.tab_i_layout.addRow(QLabel("Reader font size"), self.reader_fontsize)
+        self.tab_i_layout.addRow(QLabel("Reader highlight color"), self.reader_hlcolor)
 
-        self.tab_p._layout.addRow(QLabel("<h3>Per-dictionary postprocessing options</h3>"))
-        self.tab_p._layout.addRow(QLabel("Configure for dictionary:"), self.postproc_selector)
-        self.tab_p._layout.addRow(QLabel("<hr>"))
-        self.tab_p._layout.addRow(QLabel("Lemmatization policy"), self.lemma_policy)
-        self.tab_p._layout.addRow(QLabel("Display mode"), self.display_mode)
-        self.tab_p._layout.addRow(QLabel("<i>◊ HTML mode does not support editing/processing. "
+        self.tab_p_layout.addRow(QLabel("<h3>Per-dictionary postprocessing options</h3>"))
+        self.tab_p_layout.addRow(QLabel("Configure for dictionary:"), self.postproc_selector)
+        self.tab_p_layout.addRow(QLabel("<hr>"))
+        self.tab_p_layout.addRow(QLabel("Lemmatization policy"), self.lemma_policy)
+        self.tab_p_layout.addRow(QLabel("Display mode"), self.display_mode)
+        self.tab_p_layout.addRow(QLabel("<i>◊ HTML mode does not support editing/processing. "
                                         "Your edits will not be saved!</i>"))
-        self.tab_p._layout.addRow(QLabel("Do not display the top"), self.skip_top)
-        self.tab_p._layout.addRow(QLabel(
+        self.tab_p_layout.addRow(QLabel("Do not display the top"), self.skip_top)
+        self.tab_p_layout.addRow(QLabel(
             "<i>◊ Use this if your dictionary repeats the word in the first line.</i>"))
-        self.tab_p._layout.addRow(QLabel("Collapse continuous newlines into"), self.collapse_newlines)
-        self.tab_p._layout.addRow(QLabel(
+        self.tab_p_layout.addRow(QLabel("Collapse continuous newlines into"), self.collapse_newlines)
+        self.tab_p_layout.addRow(QLabel(
             "<i>◊ Set to 1 to remove blank lines. 0 will leave them intact.</i>"))
-        self.tab_p._layout.addRow(QLabel("Attempt to clean up HTML"), self.cleanup_html)
-        self.tab_p._layout.addRow(QLabel(
+        self.tab_p_layout.addRow(QLabel("Attempt to clean up HTML"), self.cleanup_html)
+        self.tab_p_layout.addRow(QLabel(
             "<i>◊ Try this if your mdx dictionary does not work.</i> (NOT IMPLEMENTED)"))
 
         self.text_scale.valueChanged.connect(
@@ -486,49 +499,49 @@ class SettingsDialog(QDialog):
                     self.text_scale.value() / 100,
                     "1.2f") + "x"))
 
-        self.tab_m._layout.addRow(self.capitalize_first_letter)
-        self.tab_m._layout.addRow(QLabel("<h3>Images</h3>"))
-        self.tab_m._layout.addRow(QLabel("Image format"), self.img_format)
-        self.tab_m._layout.addRow(QLabel("<i>◊ WebP, JPG, GIF are lossy, which create smaller files.</i>"))
-        self.tab_m._layout.addRow(QLabel("Image quality"), self.img_quality)
-        self.tab_m._layout.addRow(QLabel("<i>◊ Between 0 and 100. -1 uses the default value from Qt.</i>"))
-        self.tab_m._layout.addRow(QLabel("<h3>Reset</h3>"))
-        self.tab_m._layout.addRow(QLabel("Your data will be lost forever! There is NO cloud backup."))
-        self.tab_m._layout.addRow(QLabel("<strong>Reset all settings to defaults</strong>"), self.reset_button)
-        self.tab_m._layout.addRow(QLabel("<strong>Delete all user data</strong>"), self.nuke_button)
+        self.tab_m_layout.addRow(self.capitalize_first_letter)
+        self.tab_m_layout.addRow(QLabel("<h3>Images</h3>"))
+        self.tab_m_layout.addRow(QLabel("Image format"), self.img_format)
+        self.tab_m_layout.addRow(QLabel("<i>◊ WebP, JPG, GIF are lossy, which create smaller files.</i>"))
+        self.tab_m_layout.addRow(QLabel("Image quality"), self.img_quality)
+        self.tab_m_layout.addRow(QLabel("<i>◊ Between 0 and 100. -1 uses the default value from Qt.</i>"))
+        self.tab_m_layout.addRow(QLabel("<h3>Reset</h3>"))
+        self.tab_m_layout.addRow(QLabel("Your data will be lost forever! There is NO cloud backup."))
+        self.tab_m_layout.addRow(QLabel("<strong>Reset all settings to defaults</strong>"), self.reset_button)
+        self.tab_m_layout.addRow(QLabel("<strong>Delete all user data</strong>"), self.nuke_button)
 
-        self.tab_t._layout.addRow(QLabel("<h3>Anki tracking</h3>"))
-        self.tab_t._layout.addRow(QLabel("Use the Anki Card Browser to make a query string. "
+        self.tab_t_layout.addRow(QLabel("<h3>Anki tracking</h3>"))
+        self.tab_t_layout.addRow(QLabel("Use the Anki Card Browser to make a query string. "
             "<br>Mature cards are excluded from the list of young cards automatically"))
 
-        self.tab_t._layout.addRow(QLabel("Query string for 'mature' cards"), self.anki_query_mature)
-        self.tab_t._layout.addRow(self.mature_count_label, self.preview_mature_button)
-        self.tab_t._layout.addRow(QLabel("Query string for 'young' cards"), self.anki_query_young)
-        self.tab_t._layout.addRow(self.young_count_label, self.preview_young_button)
-        self.tab_t._layout.addRow(self.open_fieldmatcher)
-        self.tab_t._layout.addRow(QLabel("<h3>Word scoring</h3>"))
-        self.tab_t._layout.addRow(QLabel("Known languages (use commas)"), self.known_langs)
-        self.tab_t._layout.addRow(QLabel("Known data lifetime"), self.known_data_lifetime)
-        self.tab_t._layout.addRow(QLabel("Known threshold score"), self.known_threshold)
-        self.tab_t._layout.addRow(QLabel("Known threshold score (cognate)"), self.known_threshold_cognate)
-        self.tab_t._layout.addRow(QLabel("Score: seen"), self.w_seen)
-        self.tab_t._layout.addRow(QLabel("Score: lookup (max 1 per day)"), self.w_lookup)
-        self.tab_t._layout.addRow(QLabel("Score: mature Anki target word"), self.w_anki_word)
-        self.tab_t._layout.addRow(QLabel("Score: mature Anki card context"), self.w_anki_ctx)
-        self.tab_t._layout.addRow(QLabel("Score: young Anki target word"), self.w_anki_word_y)
-        self.tab_t._layout.addRow(QLabel("Score: young Anki card context"), self.w_anki_ctx_y)
+        self.tab_t_layout.addRow(QLabel("Query string for 'mature' cards"), self.anki_query_mature)
+        self.tab_t_layout.addRow(self.mature_count_label, self.preview_mature_button)
+        self.tab_t_layout.addRow(QLabel("Query string for 'young' cards"), self.anki_query_young)
+        self.tab_t_layout.addRow(self.young_count_label, self.preview_young_button)
+        self.tab_t_layout.addRow(self.open_fieldmatcher)
+        self.tab_t_layout.addRow(QLabel("<h3>Word scoring</h3>"))
+        self.tab_t_layout.addRow(QLabel("Known languages (use commas)"), self.known_langs)
+        self.tab_t_layout.addRow(QLabel("Known data lifetime"), self.known_data_lifetime)
+        self.tab_t_layout.addRow(QLabel("Known threshold score"), self.known_threshold)
+        self.tab_t_layout.addRow(QLabel("Known threshold score (cognate)"), self.known_threshold_cognate)
+        self.tab_t_layout.addRow(QLabel("Score: seen"), self.w_seen)
+        self.tab_t_layout.addRow(QLabel("Score: lookup (max 1 per day)"), self.w_lookup)
+        self.tab_t_layout.addRow(QLabel("Score: mature Anki target word"), self.w_anki_word)
+        self.tab_t_layout.addRow(QLabel("Score: mature Anki card context"), self.w_anki_ctx)
+        self.tab_t_layout.addRow(QLabel("Score: young Anki target word"), self.w_anki_word_y)
+        self.tab_t_layout.addRow(QLabel("Score: young Anki card context"), self.w_anki_ctx_y)
 
         self.reset_button.clicked.connect(self.reset_settings)
         self.nuke_button.clicked.connect(self.nuke_profile)
 
 
-        self.tab_s._layout.addWidget(QLabel("<h3>Dictionary groups</h3>"), 0, 0, 1, 2)
-        self.tab_s._layout.addWidget(QLabel("Dictionary Group 1"), 1, 0, 1 ,1)
-        self.tab_s._layout.addWidget(QLabel("Available dictionaries"), 1, 1, 1, 1)
-        self.tab_s._layout.addWidget(self.sg1_widget, 2, 0, 1, 1)
-        self.tab_s._layout.addWidget(self.sg2_enabled, 3, 0, 1, 2)
-        self.tab_s._layout.addWidget(self.sg2_widget, 4, 0, 1, 1)
-        self.tab_s._layout.addWidget(self.all_sources_widget, 2, 1, 3, 1)
+        self.tab_s_layout.addWidget(QLabel("<h3>Dictionary groups</h3>"), 0, 0, 1, 2)
+        self.tab_s_layout.addWidget(QLabel("Dictionary Group 1"), 1, 0, 1 ,1)
+        self.tab_s_layout.addWidget(QLabel("Available dictionaries"), 1, 1, 1, 1)
+        self.tab_s_layout.addWidget(self.sg1_widget, 2, 0, 1, 1)
+        self.tab_s_layout.addWidget(self.sg2_enabled, 3, 0, 1, 2)
+        self.tab_s_layout.addWidget(self.sg2_widget, 4, 0, 1, 1)
+        self.tab_s_layout.addWidget(self.all_sources_widget, 2, 1, 3, 1)
 
         self.sg2_enabled.stateChanged.connect(lambda value: self.sg2_widget.setEnabled(value))
         self.sg2_widget.setEnabled(self.sg2_enabled.isChecked())
