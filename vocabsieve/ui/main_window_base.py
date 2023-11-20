@@ -1,9 +1,8 @@
 from PyQt5.QtWidgets import QMainWindow, QWidget, QGridLayout, QLabel, QPushButton, QCheckBox, \
-                        QStatusBar, QMenuBar, QLCDNumber, QListView, QListWidget, \
+                        QStatusBar, QMenuBar, QListView, QListWidget, \
                         QSizePolicy, QApplication, QLineEdit
 from PyQt5.QtGui import  QFocusEvent, QDesktopServices
-from PyQt5.QtCore import QUrl, QCoreApplication, QStandardPaths, pyqtSignal, QSettings, Qt
-from vocabsieve.models import SourceGroup
+from PyQt5.QtCore import QUrl, QCoreApplication, pyqtSignal, Qt
 
 from vocabsieve.ui.multi_definition_widget import MultiDefinitionWidget
 
@@ -11,14 +10,11 @@ from ..global_names import app_title, settings, datapath
 
 from ..audio_player import AudioPlayer
 from ..db import Record
-from .searchable_text_edit import SearchableTextEdit
 from .searchable_boldable_text_edit import SearchableBoldableTextEdit
 from .about import AboutDialog
-from ..tools import make_source_group
 
 import platform
 import os
-import json
 from typing import Optional
 
 
@@ -53,10 +49,10 @@ class MainWindowBase(QMainWindow):
 
         if self.settings.value("orientation", "Vertical") == "Vertical":
             self.resize(400, 730)
-            self.layout = self.setupWidgetsV()  # type: ignore
+            self._layout = self.setupWidgetsV()  # type: ignore
         else:
             self.resize(1000, 300)
-            self.layout = self.setupWidgetsH()  # type: ignore
+            self._layout = self.setupWidgetsH()  # type: ignore
 
     def scaleFont(self) -> None:
         font = QApplication.font()

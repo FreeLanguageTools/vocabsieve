@@ -28,8 +28,8 @@ class BookAnalyzer(QDialog):
         self.setWindowTitle("Analysis of " + bookname)
         self.langcode = self.parent.settings.value('target_language', 'en')
         self.chapters, self.ch_pos = ebook2text(self.path)
-        self.layout = QGridLayout(self)
-        self.layout.addWidget(QLabel("<h1>Analysis of \"" + bookname + "\"</h1>"), 0, 0, 1, 2)
+        self._layout = QGridLayout(self)
+        self._layout.addWidget(QLabel("<h1>Analysis of \"" + bookname + "\"</h1>"), 0, 0, 1, 2)
         self.known_words, *_ = getKnownWords(self.parent.settings, self.parent.rec)
         self.is_drawing = False
         self.initWidgets()
@@ -44,7 +44,7 @@ class BookAnalyzer(QDialog):
         
         print(self.langcode)
         print(len(self.known_words))
-        self.layout.addWidget(QLabel("<h2>General info</h2>"), 2, 0, 1, 2)
+        self._layout.addWidget(QLabel("<h2>General info</h2>"), 2, 0, 1, 2)
         self.basic_info_left += "Total characters: " + prettydigits(len(self.content))
         self.basic_info_left += "<br>Total words: " + prettydigits(len(self.content.split()))
         #self.progress = QProgressDialog("Splitting book into sentences...", "Cancel", 0, len(self.content), self)
@@ -74,14 +74,14 @@ class BookAnalyzer(QDialog):
 
         self.basic_info_left += "<br>Total sentences: " + prettydigits(len(self.sentences))
         self.basic_info_left += "<br>Unique lemmas per 3000: " + str(round(mean(unique_words_3k))) + " ± " + str(round(stdev(unique_words_3k), 1))
-        self.layout.addWidget(QLabel(self.basic_info_left), 3, 0)
+        self._layout.addWidget(QLabel(self.basic_info_left), 3, 0)
         self.basic_info_right = ""
         self.basic_info_right += "Avg. word length: " + str(round(len(self.content) / len(self.content.split()), 2)) + " ± " + str(round(stdev([len(word) for word in self.content.split()]), 2))
         self.basic_info_right += "<br>Avg. sentence length (chars, incl. spaces): " + str(round(mean([len(sentence) for sentence in self.sentences]), 2)) + " ± " + str(round(stdev([len(sentence) for sentence in self.sentences]), 2))
         self.basic_info_right += "<br>Avg. sentence length (words): " + str(round(mean([len(sentence.split()) for sentence in self.sentences]), 2)) + " ± " + str(round(stdev([len(sentence.split()) for sentence in self.sentences]), 2))
         self.basic_info_right += "<br>Unique lemmas per 10000: " + str(round(mean(unique_words_10k))) + " ± " + str(round(stdev(unique_words_10k), 1))
-        self.layout.addWidget(QLabel(self.basic_info_right), 3, 1)
-        self.layout.addWidget(QLabel("<h2>Vocabulary coverage</h2>"), 4, 0)
+        self._layout.addWidget(QLabel(self.basic_info_right), 3, 1)
+        self._layout.addWidget(QLabel("<h2>Vocabulary coverage</h2>"), 4, 0)
         self.vocab_coverage = ""
         occurrences = sorted(Counter(self.words).items(), key=itemgetter(1), reverse=True)
         topN = list(zip(*occurrences[:100]))[0]
@@ -90,7 +90,7 @@ class BookAnalyzer(QDialog):
         unknown_words = [word for word in self.words if word not in self.known_words]
         self.vocab_coverage += "Unknown lemmas: " + amount_and_percent(len(unknown_words), len(self.words))
         self.vocab_coverage += "<br>Unknown unique lemmas: " + amount_and_percent(len(set(unknown_words)), len(set(self.words)))
-        self.layout.addWidget(QLabel(self.vocab_coverage), 5, 0)
+        self._layout.addWidget(QLabel(self.vocab_coverage), 5, 0)
 
         self.plotwidget_words = PlotWidget()
         self.plotwidget_words.setTitle("Unique unknown words per " + str(1000) + " words")
@@ -103,7 +103,7 @@ class BookAnalyzer(QDialog):
         self.plotwidget_sentences.setTitle("Sentence target count")
         self.plotwidget_sentences.setBackground(bgcolor)
         self.plotwidget_sentences.addLegend()      
-        self.layout.addWidget(self.plotwidget_words, 6, 0, 1, 2)
+        self._layout.addWidget(self.plotwidget_words, 6, 0, 1, 2)
         
         learning_rate_box = QWidget()
         learning_rate_box.layout = QHBoxLayout(learning_rate_box)
@@ -129,11 +129,11 @@ class BookAnalyzer(QDialog):
 
 
 
-        self.layout.addWidget(QLabel("<h3>Sentence types</h3>"), 7, 0)
-        self.layout.addWidget(self.label_0t, 8, 0)
-        self.layout.addWidget(self.label_1t, 9, 0)
-        self.layout.addWidget(self.label_2t, 10, 0)
-        self.layout.addWidget(self.label_3t, 11, 0)
+        self._layout.addWidget(QLabel("<h3>Sentence types</h3>"), 7, 0)
+        self._layout.addWidget(self.label_0t, 8, 0)
+        self._layout.addWidget(self.label_1t, 9, 0)
+        self._layout.addWidget(self.label_2t, 10, 0)
+        self._layout.addWidget(self.label_3t, 11, 0)
 
         start = time.time()
         
@@ -144,12 +144,12 @@ class BookAnalyzer(QDialog):
         
         occurrences_3t = Counter(target_words_in_3t)
         # Get the most frequent words in 3t sentences
-        self.layout.addWidget(QLabel("<h3>Cram words</h3>"), 7, 1)
+        self._layout.addWidget(QLabel("<h3>Cram words</h3>"), 7, 1)
         for row, n_cram in enumerate([100, 200, 400, 800]):
             most_frequent_3t = [word for word, _ in occurrences_3t.most_common(n_cram)]
             tmp_known_words = self.known_words.union(set(most_frequent_3t))
             new_count_3t = [self.countTargets3(sentence, tmp_known_words) for sentence in sentences_3t].count(3)
-            self.layout.addWidget(QLabel(f"Cram {n_cram} words: {amount_and_percent(new_count_3t, len(self.sentences))} 3T sentences"), 8 + row, 1)
+            self._layout.addWidget(QLabel(f"Cram {n_cram} words: {amount_and_percent(new_count_3t, len(self.sentences))} 3T sentences"), 8 + row, 1)
 
         print("Calculated cram words in " + str(time.time() - start) + " seconds.")
         
@@ -165,11 +165,11 @@ class BookAnalyzer(QDialog):
 
         show_chapter_names_button = QCheckBox("Toggle full chapter names")
         show_chapter_names_button.clicked.connect(self.addChapterAxes)
-        self.layout.addWidget(QLabel("<h3>Predicted difficulty: " + verdict + "</h3>"), 1, 0)
-        self.layout.addWidget(show_chapter_names_button, 1, 1)
+        self._layout.addWidget(QLabel("<h3>Predicted difficulty: " + verdict + "</h3>"), 1, 0)
+        self._layout.addWidget(show_chapter_names_button, 1, 1)
 
-        self.layout.addWidget(learning_rate_box, 12, 0, 1, 2)
-        self.layout.addWidget(self.plotwidget_sentences, 13, 0, 1, 2)
+        self._layout.addWidget(learning_rate_box, 12, 0, 1, 2)
+        self._layout.addWidget(self.plotwidget_sentences, 13, 0, 1, 2)
         
         start = time.time()
         if self.ch_pos:
@@ -192,7 +192,7 @@ class BookAnalyzer(QDialog):
             self.addChapterAxes()
         print("Chapter axes added in", time.time() - start, "seconds.")
 
-        self.layout.addWidget(QLabel("Word chart step size:"), 14, 0)
+        self._layout.addWidget(QLabel("Word chart step size:"), 14, 0)
         self.word_chart_step_size = QSpinBox()
         self.word_chart_step_size.setMinimum(1)
         self.word_chart_step_size.setSingleStep(10)
@@ -200,10 +200,10 @@ class BookAnalyzer(QDialog):
         self.word_chart_step_size.setValue(self.settings.value("analyzer/word_step_size", 100, type=int))
         self.word_chart_step_size.editingFinished.connect(lambda: self.updateWordChart(self.words, self.word_chart_step_size.value()))
         self.word_chart_step_size.editingFinished.connect(lambda: self.settings.setValue("analyzer/word_step_size", self.word_chart_step_size.value()))
-        self.layout.addWidget(self.word_chart_step_size, 14, 1)
-        self.layout.addWidget(QLabel("Sentence chart step size:"), 15, 0)
+        self._layout.addWidget(self.word_chart_step_size, 14, 1)
+        self._layout.addWidget(QLabel("Sentence chart step size:"), 15, 0)
         self.sentence_chart_step_size = QSpinBox()
-        self.layout.addWidget(self.sentence_chart_step_size, 15, 1)
+        self._layout.addWidget(self.sentence_chart_step_size, 15, 1)
         self.sentence_chart_step_size.setValue(self.settings.value("analyzer/sentence_window_size", 100, type=int))
         self.sentence_chart_step_size.setMinimum(10)
         self.sentence_chart_step_size.setSingleStep(5)

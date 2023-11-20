@@ -29,8 +29,8 @@ class StatisticsWindow(QDialog):
         self.tabs.addTab(self.known, "Known words")
         self.tabs.addTab(self.mlw, "Most looked up words")
         self.tabs.addTab(self.lookupStats, "Lookup stats")
-        self.layout = QVBoxLayout(self)
-        self.layout.addWidget(self.tabs)
+        self._layout = QVBoxLayout(self)
+        self._layout.addWidget(self.tabs)
 
     def initMLW(self):
         items = self.rec.countAllLemmaLookups(self.langcode)

@@ -411,11 +411,9 @@ class Record():
 
 class LocalDictionary():
     def __init__(self, datapath):
-        self.conn = sqlite3.connect(
-            path.join(
-                datapath,
-                "dict.db"),
-            check_same_thread=False)
+        _path = path.join(datapath, "dict.db")
+        print("Initializing local dictionary object at ", _path)
+        self.conn = sqlite3.connect(_path, check_same_thread=False)
         self.c = self.conn.cursor()
         self.createTables()
 
@@ -475,6 +473,7 @@ class LocalDictionary():
         AND language=?
         AND dictname=?
         """, (word, lang, name))
+        print("Looking up", word, "in", name)
         return str(self.c.fetchone()[0])
 
     def countEntries(self) -> int:

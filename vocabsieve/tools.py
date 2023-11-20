@@ -23,7 +23,7 @@ from charset_normalizer import from_bytes
 from ebooklib import epub, ITEM_DOCUMENT
 from .sources.WiktionarySource import WiktionarySource
 from .sources.GoogleTranslateSource import GoogleTranslateSource
-from .sources.LocalSource import LocalSource
+from .sources.LocalDictionarySource import LocalDictionarySource
 from .models import LemmaPolicy, Source, SourceGroup, DisplayMode, SourceOptions, collapse_newlines
 from .global_names import settings
 
@@ -365,7 +365,7 @@ def make_source(src_name: str, dictdb: LocalDictionary):
             settings.value("gtrans_lang", "en")
         )
     else: # Local, /TODO error handling
-        return LocalSource(langcode, options, dictdb)
+        return LocalDictionarySource(langcode, options, dictdb, src_name)
 
 
 def make_source_group(src_names: list[str], dictdb: LocalDictionary):

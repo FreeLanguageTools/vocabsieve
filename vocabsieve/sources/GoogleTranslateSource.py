@@ -1,8 +1,8 @@
-from ..models import Source, LookupResult, SourceOptions
+from ..models import DictionarySource, LookupResult, SourceOptions
 import requests
 from urllib.parse import quote
 
-class GoogleTranslateSource(Source):
+class GoogleTranslateSource(DictionarySource):
     def __init__(self, langcode: str, options: SourceOptions, gtrans_api: str, gtrans_to_langcode: str) -> None:
         super().__init__("Google Translate", langcode, options)
         self.langcode = langcode

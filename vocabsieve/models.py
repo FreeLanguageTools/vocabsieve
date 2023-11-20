@@ -25,15 +25,18 @@ class LookupResult:
     error: Optional[str] = None
 
 @dataclass(frozen=True, slots=True)
-class Note:
+class SRSNote:
     '''Represents an Anki note or other flashcard program'''
-    sentence: str
     word: str
-    definition1: str
-    definition2: str
-    pronunciation: str
-    image: str
-    tags: str
+    sentence: Optional[str] = None
+    definition1: Optional[str] = None
+    definition2: Optional[str] = None
+    audio_path: Optional[str] = None
+    image: Optional[str] = None
+    tags: Optional[str] = None
+
+
+
 
 class LemmaPolicy(str, Enum):
     '''Represents how to handle lemmas'''
@@ -62,10 +65,28 @@ class SourceOptions:
 
 
 class Source:
-    '''Represents a an interface to a dictionary'''
-    def __init__(self, name: str, langcode: str, options: SourceOptions) -> None:
+    '''Represents an abstract interface to a source of information in a language'''
+    def __init__(self, name: str, langcode: str) -> None:
         self.name = name
         self.langcode = langcode
+
+class FreqSource(Source):
+    '''Represents an interface to a frequency list'''
+    def __init__(self, name: str, langcode: str, lemmatized: bool) -> None:
+        super().__init__(name, langcode)
+        self.lemmatized = lemmatized
+    
+    def define(self, word: str) -> int:
+        return self._lookup(word)
+    
+    def _lookup(self, word: str) -> int:
+        raise NotImplementedError
+    
+
+class DictionarySource(Source):
+    '''Represents a an interface to a dictionary'''
+    def __init__(self, name: str, langcode: str, options: SourceOptions) -> None:
+        super().__init__(name, langcode)
         self.lemma_policy = options.lemma_policy
         self.display_mode = options.display_mode
         self.skip_top = options.skip_top
@@ -73,10 +94,12 @@ class Source:
 
     def format(self, defi: str) -> str:
         '''Format a definition according to the SourceOptions'''
+        print("Formatting", defi)
         result = defi
         result = convert_display_mode(result, self.display_mode)
         result = skip_lines(result, self.skip_top)
         result = collapse_newlines(result, self.collapse_newlines)
+        print("Formatted", result)
         return result
 
         

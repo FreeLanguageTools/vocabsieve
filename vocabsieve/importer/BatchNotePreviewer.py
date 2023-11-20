@@ -1,19 +1,19 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from ..constants import LookUpResults
 from .utils import *
+from ..models import Definition, SRSNote
 
 class BatchNotePreviewer(QTextEdit):
     def __init__(self):
         super().__init__()
-        self.layout = QVBoxLayout(self)
+        self._layout = QVBoxLayout(self)
         self.note_items = []
         self.setReadOnly(True)
         self.currentIndex = 0
-        self.layout.setAlignment(Qt.AlignBottom)
+        self._layout.setAlignment(Qt.AlignBottom)
         buttons_box_widget = QWidget()
-        self.layout.addWidget(buttons_box_widget)
+        self._layout.addWidget(buttons_box_widget)
         buttons_box_layout = QHBoxLayout(buttons_box_widget)
 
         first_button = QPushButton("<<")
@@ -33,14 +33,14 @@ class BatchNotePreviewer(QTextEdit):
         last_button.clicked.connect(self.last)
 
 
-    def appendNoteItem(self, sentence: str, item: LookUpResults, word_original: str):
-        self.note_items.append((sentence, item, word_original))
+    def appendNoteItem(self, item: SRSNote):
+        self.note_items.append(item)
         self.setCurrentIndex(len(self.note_items) - 1)
         
     def setCurrentIndex(self, index: int):
         self.currentIndex = index
         self.counter.setText(f"{index+1}/{len(self.note_items)}")
-        self.setText(genPreviewHTML(*self.note_items[index]))
+        self.setText(genPreviewHTML(self.note_items[index]))
     
     def back(self):
         if self.currentIndex > 0:

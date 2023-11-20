@@ -57,12 +57,12 @@ class AddContentDialog(QDialog):
         self.commit_button.clicked.connect(self.commit)
 
     def setupWidgets(self):
-        self.layout = QFormLayout(self)
-        self.layout.addRow(QLabel("Name"), self.name)
-        self.layout.addRow(QLabel("Type"), QLabel(supported_content_formats[self.contenttype]))
-        self.layout.addRow(QLabel("Language"), self.lang)
-        self.layout.addRow(QLabel("Date"), self.date)
-        self.layout.addRow(self.commit_button)
+        self._layout = QFormLayout(self)
+        self._layout.addRow(QLabel("Name"), self.name)
+        self._layout.addRow(QLabel("Type"), QLabel(supported_content_formats[self.contenttype]))
+        self._layout.addRow(QLabel("Language"), self.lang)
+        self._layout.addRow(QLabel("Date"), self.date)
+        self._layout.addRow(self.commit_button)
 
     def extractBook(self, path):
         return "\n".join(ebook2text(path)[0])

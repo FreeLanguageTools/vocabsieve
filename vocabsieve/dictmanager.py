@@ -45,19 +45,19 @@ to be reimported, otherwise this operation will fail.\
         self.bar = QStatusBar()
 
     def setupWidgets(self):
-        self.layout = QVBoxLayout(self)
-        self.layout.addWidget(
+        self._layout = QVBoxLayout(self)
+        self._layout.addWidget(
             QLabel(
                 "<strong>Note</strong>: "
                 "<strong>Do not</strong> delete any files after importing them!<br>"
                 "VocabSieve does not store a copy of these files; it only indexes and caches them.<br>"
                 "If you delete the files, your dictionaries will disappear when the database is rebuilt."))
-        self.layout.addWidget(self.tview)
-        self.layout.addWidget(self.add_dict)
-        self.layout.addWidget(self.add_audio)
-        self.layout.addWidget(self.remove)
-        self.layout.addWidget(self.rebuild)
-        self.layout.addWidget(self.bar)
+        self._layout.addWidget(self.tview)
+        self._layout.addWidget(self.add_dict)
+        self._layout.addWidget(self.add_audio)
+        self._layout.addWidget(self.remove)
+        self._layout.addWidget(self.rebuild)
+        self._layout.addWidget(self.bar)
 
     def rebuildDB(self):
         start = time.time()
@@ -204,11 +204,11 @@ class AddDictDialog(QDialog):
         self.commit_button.clicked.connect(self.commit)
 
     def setupWidgets(self):
-        self.layout = QFormLayout(self)
-        self.layout.addRow(QLabel("Name"), self.name)
-        self.layout.addRow(QLabel("Type"), self.type)
-        self.layout.addRow(QLabel("Language"), self.lang)
-        self.layout.addRow(self.commit_button)
+        self._layout = QFormLayout(self)
+        self._layout.addRow(QLabel("Name"), self.name)
+        self._layout.addRow(QLabel("Type"), self.type)
+        self._layout.addRow(QLabel("Language"), self.lang)
+        self._layout.addRow(self.commit_button)
 
     def commit(self):
         "Give it a name, then add dictionary"

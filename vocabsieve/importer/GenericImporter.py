@@ -1,9 +1,9 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from PyQt5.Qt import *
 import re
 import json
+
 from vocabsieve.tools import addNotes
 from vocabsieve.dictionary import getAudio
 from datetime import datetime as dt
@@ -11,6 +11,9 @@ from itertools import compress
 
 from .utils import *
 from .BatchNotePreviewer import BatchNotePreviewer
+from ..ui.main_window_base import MainWindowBase
+from .models import ReadingNote
+from ..models import SRSNote
 
 def date_to_timestamp(datestr: str):
     return dt.strptime(datestr, "%Y-%m-%d %H:%M:%S").timestamp()
@@ -20,23 +23,27 @@ class GenericImporter(QDialog):
     This class implements the UI for extracting highlights.
     Subclass it and override getNotes to have a new importer
     """
-    def __init__(self, parent, src_name="Generic", path=None, methodname="generic"):
+    def __init__(self, parent: MainWindowBase, src_name="Generic", path=None, methodname="generic"):
         super().__init__(parent)
         self.settings = parent.settings
-        self.notes = None # Used for filtering
+        self.notes: Optional[set[tuple[str, str]]] = None # Used for filtering
         self.lang = parent.settings.value('target_language')
         self.methodname = methodname
         self.setWindowTitle(f"Import {src_name}")
-        self.parent = parent
+        self.parent = parent # type: ignore
         self.path = path
-        self.selected_highlight_items = []
         self.setMinimumWidth(500)
         self.src_name = src_name
-        self.layout = QFormLayout(self)
-        self.layout.addRow(QLabel(
+        self._layout = QFormLayout(self)
+        self._layout.addRow(QLabel(
             f"<h2>Import {src_name}</h2>"
         ))
-        self.orig_lookup_terms, self.orig_sentences, self.orig_dates, self.orig_book_names = self.getNotes()
+        self.reading_notes = self.getNotes()
+        self.selected_reading_notes = self.reading_notes
+
+
+        self.orig_dates = [note.date for note in self.reading_notes]
+        self.orig_book_names = [note.book_name for note in self.reading_notes]
         self.orig_dates_day = [date[:10] for date in self.orig_dates]
         possible_start_dates = sorted(set(self.orig_dates_day))
         self.datewidget = QComboBox()
@@ -45,8 +52,8 @@ class GenericImporter(QDialog):
         # Source selector, for selecting which books to include
         self.src_selector = QWidget()
         self.src_checkboxes = []
-        self.src_selector.layout = QVBoxLayout(self.src_selector)
-        self.layout.addRow(QLabel("<h3>Select books to extract highlights from</h3>"))
+        self.src_selector._layout = QVBoxLayout(self.src_selector) # type: ignore
+        self._layout.addRow(QLabel("<h3>Select books to extract highlights from</h3>"))
 
         self.lookup_button = QPushButton("Look up currently selected")
         self.lookup_button.clicked.connect(self.defineWords)
@@ -55,15 +62,15 @@ class GenericImporter(QDialog):
         for book_name in set(self.orig_book_names):
             self.src_checkboxes.append(
                 QCheckBox(truncate_middle(book_name, 90)))
-            self.src_selector.layout.addWidget(self.src_checkboxes[-1])
+            self.src_selector._layout.addWidget(self.src_checkboxes[-1]) # type: ignore
             self.src_checkboxes[-1].clicked.connect(self.updateHighlightCount)
         
         self.src_selector_scrollarea = QScrollArea()
         self.src_selector_scrollarea.setWidget(self.src_selector)
-        self.layout.addRow(self.src_selector_scrollarea)
-        self.layout.addRow("Use notes starting from: ", self.datewidget)
+        self._layout.addRow(self.src_selector_scrollarea)
+        self._layout.addRow("Use notes starting from: ", self.datewidget)
         self.notes_count_label = QLabel()
-        self.layout.addRow(self.notes_count_label, self.lookup_button)
+        self._layout.addRow(self.notes_count_label, self.lookup_button)
         self.progressbar = QProgressBar()
         self.progressbar.setMinimum(0)
         self.definition_count_label = QLabel()
@@ -74,9 +81,9 @@ class GenericImporter(QDialog):
         self.preview_widget = BatchNotePreviewer()
         self.preview_widget.setMinimumHeight(300)
         self.preview_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.layout.addRow(QLabel("Preview cards"), self.preview_widget)
-        self.layout.addRow(self.progressbar)
-        self.layout.addRow(self.definition_count_label, self.anki_button)
+        self._layout.addRow(QLabel("Preview cards"), self.preview_widget)
+        self._layout.addRow(self.progressbar)
+        self._layout.addRow(self.definition_count_label, self.anki_button)
         try:
             last_import_date = self.parent.settings.value(f'last_import_date_{self.methodname}', possible_start_dates[0])
             self.datewidget.setCurrentText(max(d for d in possible_start_dates if d <= last_import_date))
@@ -85,7 +92,7 @@ class GenericImporter(QDialog):
 
 
 
-    def getNotes(self):
+    def getNotes(self) -> list[ReadingNote]:
         """
         Returns a tuple of four tuples of equal length
         Respectively, lookup terms (highlights), sentences, dates, and book names
@@ -101,64 +108,72 @@ class GenericImporter(QDialog):
         for checkbox in self.src_checkboxes:
             if checkbox.isChecked():
                 selected_book_names.append(checkbox.text())
-        self.selected_highlight_items = self.filterHighlights(start_date, selected_book_names, self.notes)
-        if self.selected_highlight_items:
+        self.selected_reading_notes = self.filterHighlights(start_date, selected_book_names)
+        if self.selected_reading_notes:
             self.lookup_button.setEnabled(True)
-            self.progressbar.setMaximum(len(self.selected_highlight_items)) 
+            self.progressbar.setMaximum(len(self.selected_reading_notes)) 
         else:
             self.lookup_button.setEnabled(False)
         self.progressbar.setValue(0)
-        self.notes_count_label.setText(f"{len(self.selected_highlight_items)} highlights selected")
+        self.notes_count_label.setText(f"{len(self.selected_reading_notes)} highlights selected")
 
-    def filterHighlights(self, start_date, book_names, notes=None):
-        try:
-            lookup_terms, sentences, dates, book_names = zip(*compress(
-                zip(self.orig_lookup_terms, self.orig_sentences, self.orig_dates, self.orig_book_names), 
-                map(lambda w, b, d: (d[:10] >= start_date and b in book_names) and ((w.lower(),b) in notes if notes else True), self.orig_lookup_terms, self.orig_book_names, self.orig_dates)
-                ))
-        except ValueError:
-            lookup_terms, sentences, dates, book_names = [],[],[],[]
-        return list(zip(lookup_terms, sentences, dates, book_names))
+    def filterHighlights(self, start_date, book_names) -> list[ReadingNote]:
+        new_reading_notes = []
+        for item in self.reading_notes:
+            if item.date[:10] >= start_date and item.book_name in book_names:
+                if self.notes:
+                    if (item.lookup_term.lower(), item.book_name) in self.notes:
+                        new_reading_notes.append(item)
+                else:
+                    new_reading_notes.append(item)
+
+                
+
+        return new_reading_notes
+
 
 
     def defineWords(self):
-        self.sentences = []
-        self.words = []
-        self.definitions = []
-        self.definition2s = []
-        self.audio_paths = []
-        self.book_names = []
+        add_even_if_no_definition = self.settings.value("add_even_if_no_definition", False, type=bool)
+        self.anki_notes: list[SRSNote] = []
+        self.book_names: list[str] = []
         self.lastDate = "1970-01-01 00:00:00"
+        defi1 = self.parent.definition
+        defi2 = self.parent.definition2
+        definition2_enabled = self.settings.value("sg2_enabled", False, type=bool)
 
         # No using any of these buttons to prevent race conditions
         self.lookup_button.setEnabled(False)
         self.anki_button.setEnabled(False)
         self.preview_widget.reset()
         count = 0
-        for n_looked_up, (lookup_term, sentence, date, book_name) in enumerate(self.selected_highlight_items):
+        for n_looked_up, note in enumerate(self.selected_reading_notes):
             # Remove punctuations
-            self.lastDate = date
-            word = re.sub('[\\?\\.!«»…,()\\[\\]]*', "", lookup_term)
-            if sentence:
+            self.lastDate = note.date
+            word = re.sub('[\\?\\.!«»…,()\\[\\]]*', "", note.lookup_term)
+            if note.sentence:
                 if self.settings.value("bold_word", True, type=bool):
-                    self.sentences.append(sentence.replace("_", "").replace(word, f"__{word}__"))
+                    sentence = note.sentence.replace("_", "").replace(word, f"<strong>{word}</strong>")
+                else:
+                    sentence = note.sentence
                     
+                if defi1.getDefinitions(word):
+                    definition1 = defi1.getDefinitions(word)[0]
                 else:
-                    self.sentences.append(sentence)
-                item = self.parent.lookup(word, True)
-                if not item['definition'].startswith("<b>Definition for"):
-                    count += 1
-                    self.words.append(item['word'])
-                    self.definitions.append(item['definition'])
-                    self.definition_count_label.setText(
-                        str(count) + " definitions found")
-                    self.definition2s.append(item.get('definition2', ""))
-                    self.preview_widget.appendNoteItem(sentence, item, word)
-                    QApplication.processEvents()
+                    definition1 = None
+                if definition2_enabled:
+                    if defi2.getDefinitions(word):
+                        definition2 = defi2.getDefinitions(word)[0]
+                    else:
+                        definition2 = None
                 else:
-                    self.words.append(word)
-                    self.definitions.append("")
-                    self.definition2s.append("")
+                    definition2 = None
+                if definition1 is None:
+                    continue # TODO implement a way to add words without definition1
+                count += 1
+                self.definition_count_label.setText(
+                    str(count) + " definitions found")
+                QApplication.processEvents()
 
                 audio_path = ""
                 if self.settings.value("audio_dict", "Forvo (all)") != "<disabled>":
@@ -174,22 +189,31 @@ class GenericImporter(QDialog):
                     if audios:
                         # First item
                         audio_path = audios[next(iter(audios))]
-                self.audio_paths.append(audio_path)
-                self.book_names.append(book_name)
-            else:
-                print("no sentence")
-                #self.sentences.append("")
-                #self.definitions.append("")
-                #self.words.append("")
-                #self.definition2s.append("")
-                #self.audio_paths.append("")
+
+                tags = " ".join([
+                    self.parent.settings.value("tags", "vocabsieve").strip(),
+                    self.methodname,
+                    note.book_name.replace(" ","_")
+                    ]
+                    )    
+                
+                new_note_item = SRSNote(
+                        word=definition1.headword,
+                        sentence=sentence,
+                        definition1=definition1.definition,
+                        definition2=definition2.definition if definition2 else None,
+                        audio_path=audio_path,
+                        tags=tags
+                        )
+                self.preview_widget.appendNoteItem(new_note_item)
+                self.anki_notes.append(new_note_item)
             self.progressbar.setValue(n_looked_up+1)
             
         
         # Unlock buttons again now
         self.lookup_button.setEnabled(True)
         self.anki_button.setEnabled(True)
-        print("Lengths", len(self.sentences), len(self.words), len(self.definitions), len(self.audio_paths))
+        print("Lengths", len(self.anki_notes), len(self.selected_reading_notes))
     def to_anki(self):
         notes = []
         for word, sentence, definition, definition2, audio_path, book_name in zip(
@@ -239,7 +263,7 @@ class GenericImporter(QDialog):
             self.parent.settings.setValue("last_import_path", self.path)
             self.parent.settings.setValue(f"last_import_date_{self.methodname}", self.lastDate[:10])
 
-        self.layout.addRow(QLabel(
+        self._layout.addRow(QLabel(
             QDateTime.currentDateTime().toString('[hh:mm:ss]') + " "
             + str(len(notes)) 
             + " notes have been exported, of which " 

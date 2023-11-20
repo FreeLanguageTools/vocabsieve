@@ -38,9 +38,13 @@ class MultiDefinitionWidget(SearchableTextEdit):
     def setSourceGroup(self, sg: SourceGroup):
         self.sg = sg
 
+    def getDefinitions(self, word: str) -> list[Definition]:
+        "Can be used by other classes to get definitions from the source group"
+        return self.sg.define(word)
+
     def lookup(self, word: str):
         self.reset()
-        for definition in self.sg.define(word):
+        for definition in self.getDefinitions(word):
             self.appendDefinition(definition)
 
 
@@ -49,11 +53,13 @@ class MultiDefinitionWidget(SearchableTextEdit):
         self.updateIndex()
 
     def updateIndex(self):
+        if not self.definitions:
+            return
         self.counter.setText(f"{self.currentIndex+1}/{len(self.definitions)}")
         if defi:=self.definitions[self.currentIndex]:
             if defi.definition is not None:
                 self.setText(defi.definition)
-                self.info_label.setText(f"{defi.headword} in {defi.source}")
+                self.info_label.setText(f"<strong>{defi.headword}</strong> in <em>{defi.source}</em>")
         
     def setCurrentIndex(self, index: int):
         self.currentIndex = index

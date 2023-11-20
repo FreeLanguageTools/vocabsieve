@@ -5,9 +5,8 @@ import sqlite3
 import os
 import re
 from PyQt5.QtWidgets import QCheckBox, QLabel
-from typing import Tuple, Dict, Set
-from ..dictformats import removeprefix
 from ..tools import *
+from .models import ReadingNote
 
 def remove_author(titleauthor):
     "Remove author, which is in the last parentheses"
@@ -40,32 +39,34 @@ class KindleVocabImporter(GenericImporter):
                 self.clippings_items = set(zip(clippings_words, clippings_titles))
                 clippings_only = QCheckBox(f"Only select highlighted words ({str(len(clippings_words))} entries found)")
                 clippings_only.clicked.connect(self.toggleNotesFiltering)
-                self.layout.addRow(clippings_only)
+                self._layout.addRow(clippings_only)
         except Exception as e:
             print(e)
             self.clippings_items = set()
-            self.layout.addRow(QLabel("Cannot read highlights. Make sure that your clippings file is in the right place, and its length is a multiple of 5."))
+            self._layout.addRow(QLabel("Cannot read highlights. Make sure that your clippings file is in the right place, and its length is a multiple of 5."))
 
 
         bookdata = list(cur.execute("SELECT * FROM book_info"))
         bookid2name = dict(zip(list(zip(*bookdata))[2],list(zip(*bookdata))[4]))
-        words = []
-        booknames = []
-        sentences = []
-        dates = []
+        reading_notes = []
         langcode = self.parent.settings.value("target_language", 'en')
         count = 0
         success_count = 0
         for _, lword, bookid, _, _, sentence, timestamp in cur.execute("SELECT * FROM lookups"):
             if lword.startswith(langcode):
-                word = removeprefix(lword, langcode+":")
+                word = lword.removeprefix(langcode+":")
                 count += 1
                 success_count += self.parent.rec.recordLookup(word, langcode, True, "kindle", True, timestamp/1000, commit=False) # record everything first
-                words.append(word)
-                booknames.append(bookid2name[bookid])
-                sentences.append(sentence)
-                dates.append(str(dt.fromtimestamp(timestamp/1000).astimezone())[:19])
-        self.layout.addRow(QLabel("Vocabulary database: " + vocab_db_path))
-        self.layout.addRow(QLabel(f"Found {count} lookups in {langcode}, added {success_count} to lookup database."))
+                reading_notes.append(
+                    ReadingNote(
+                        lookup_term=word,
+                        sentence=sentence,
+                        book_name=bookid2name[bookid],
+                        date=str(dt.fromtimestamp(timestamp/1000).astimezone())[:19]
+                    
+                    )
+                )
+        self._layout.addRow(QLabel("Vocabulary database: " + vocab_db_path))
+        self._layout.addRow(QLabel(f"Found {count} lookups in {langcode}, added {success_count} to lookup database."))
         self.parent.rec.conn.commit()
-        return words, sentences, dates, booknames
+        return reading_notes

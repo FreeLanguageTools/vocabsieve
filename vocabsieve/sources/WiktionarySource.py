@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-from ..models import Source, Definition, SourceOptions, LookupResult
+from ..models import DictionarySource, SourceOptions, LookupResult
 
 def fmt_result(definitions):
     "Format the result of dictionary lookup"
@@ -12,7 +12,7 @@ def fmt_result(definitions):
                      for item in list(enumerate(defn['meaning']))])
     return "<br>".join(lines)
 
-class WiktionarySource(Source):
+class WiktionarySource(DictionarySource):
     def __init__(self, langcode: str, options: SourceOptions) -> None:
         super().__init__("Wiktionary (English)", langcode, options)
 

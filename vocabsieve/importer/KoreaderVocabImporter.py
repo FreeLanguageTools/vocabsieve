@@ -10,17 +10,22 @@ from slpp import slpp
 from .GenericImporter import GenericImporter
 from .utils import *
 from ..tools import *
-
+from .models import ReadingNote
+from ..global_names import settings
 
 
 def getBookMetadata(path):
     basename, ext = os.path.splitext(path)
-    notepath = os.path.join(removesuffix(path, ext) + ".sdr", f"metadata{ext}.lua")
+    notepath = os.path.join(path.removesuffix(ext) + ".sdr", f"metadata{ext}.lua")
             
     with open(notepath, encoding='utf8') as f:
         data = slpp.decode(" ".join("\n".join(f.readlines()[1:]).split(" ")[1:]))
-        booklang = data['doc_props']['language']
-        booktitle = data['doc_props']['title']
+        try:
+            booklang = data['doc_props']['language'] # type: ignore
+            booktitle = data['doc_props']['title'] # type: ignore
+        except KeyError or TypeError:
+            booklang = settings.value("target_language", "en")
+            booktitle = os.path.basename(path).removesuffix(ext)
     return booklang, booktitle
 
 
@@ -36,10 +41,12 @@ class KoreaderVocabImporter(GenericImporter):
             metadata.append(getBookMetadata(bookfile))
 
         books_in_lang = [book[1] for book in metadata if book[0].startswith(langcode)]
+        
         self.dbpath = findDBpath(self.path)
+        if self.dbpath is None:
+            raise Exception("Cannot find vocabulary_builder.sqlite3")
         con = sqlite3.connect(self.dbpath)
         cur = con.cursor()
-        bookids = []
         count = 0
         success_count = 0
 
@@ -49,7 +56,7 @@ class KoreaderVocabImporter(GenericImporter):
             if bookname in books_in_lang:
                 bookmap[bookid] = bookname
 
-        items = []
+        reading_notes = []
         for timestamp, word, title_id, prev_context, next_context in cur.execute("SELECT create_time, word, title_id, prev_context, next_context FROM vocabulary"):
             #print(word, title_id)
             if title_id in bookmap:
@@ -63,10 +70,18 @@ class KoreaderVocabImporter(GenericImporter):
                         sentence = sentence_
                 if sentence:
                     count += 1
-                    items.append((word, sentence, str(dt.fromtimestamp(timestamp).astimezone())[:19], bookmap[title_id]))
+                    #items.append((word, sentence, str(dt.fromtimestamp(timestamp).astimezone())[:19], bookmap[title_id]))
+                    reading_notes.append(
+                        ReadingNote(
+                            lookup_term=word,
+                            sentence=sentence,
+                            book_name=bookmap[title_id],
+                            date=str(dt.fromtimestamp(timestamp).astimezone())[:19]
+                        )
+                    )
 
-        self.layout.addRow(QLabel("Vocabulary database: " + self.dbpath))
-        self.layout.addRow(QLabel(f"Found {count} notes in Vocabulary Builder in language '{langcode}'"))
+        self._layout.addRow(QLabel("Vocabulary database: " + self.dbpath))
+        self._layout.addRow(QLabel(f"Found {count} notes in Vocabulary Builder in language '{langcode}'"))
         
         try:
             self.histpath = findHistoryPath(self.path)
@@ -86,12 +101,12 @@ class KoreaderVocabImporter(GenericImporter):
                     success_count += self.parent.rec.recordLookup(word, langcode, True, "koreader", True, timestamp, commit=False)
             self.parent.rec.conn.commit()
 
-            self.layout.addRow(QLabel("Lookup history: " + self.histpath))
-            self.layout.addRow(QLabel(f"Found {count} lookups in {langcode}, added {success_count} to lookup database."))
+            self._layout.addRow(QLabel("Lookup history: " + self.histpath))
+            self._layout.addRow(QLabel(f"Found {count} lookups in {langcode}, added {success_count} to lookup database."))
         except Exception as e:
             print(e)
-            self.layout.addRow(QLabel("Failed to find/read lookup_history.lua. Lookups will not be tracked this time."))
-        if items == []:
+            self._layout.addRow(QLabel("Failed to find/read lookup_history.lua. Lookups will not be tracked this time."))
+        if reading_notes == []:
             return ([], [], [], [])
         else:
-            return zip(*items)
+            return reading_notes

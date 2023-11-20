@@ -1,13 +1,9 @@
-from urllib.parse import quote
 from typing import Optional, Dict, Tuple
 import time
 from bidict import bidict
-from markdown import markdown
-from markdownify import markdownify
+
 from .db import *
-from .dictformats import removeprefix
 from .forvo import *
-from .lemmatizer import lem_word
 
 
 dictdb = LocalDictionary(datapath)

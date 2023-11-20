@@ -22,15 +22,15 @@ from .known_words import getKnownData, getKnownWords
 from .analyzer import BookAnalyzer
 from .config import SettingsDialog, getVersion
 from .stats import StatisticsWindow
-from .dictionary import getAudio, lem_word
-from .importer import KoreaderImporter, KindleVocabImporter, KoreaderVocabImporter, AutoTextImporter
+from .dictionary import getAudio
+from .importer import KindleVocabImporter, KoreaderVocabImporter, AutoTextImporter
 from .reader import ReaderServer
 from .contentmanager import ContentManager
 from .global_events import GlobalObject
-from .tools import is_json, preprocess_clipboard, starts_with_cyrillic, is_oneword, freq_to_stars, addNote, failed_lookup, make_source_group
+from .tools import is_json, preprocess_clipboard, starts_with_cyrillic, is_oneword, addNote, make_source_group
 from .ui.main_window_base import MainWindowBase
 from .ui.searchable_text_edit import SearchableTextEdit
-from .db import LocalDictionary, dictionaries
+from .db import LocalDictionary
 from .models import DisplayMode, SourceGroup
 from .format import markdown_nop
 
@@ -70,7 +70,9 @@ class MainWindow(MainWindowBase):
             sg2_src_list = json.loads(self.settings.value("sg2", '["Google Translate"]'))
             self.sg2 = make_source_group(sg2_src_list, self.dictdb)
             self.definition2.setSourceGroup(self.sg2)
-                                     
+        else:
+            self.sg2 = SourceGroup([])
+            self.definition2.setSourceGroup(self.sg2) 
 
     def checkUpdates(self) -> None:
         if self.settings.value("check_updates") is None:
@@ -152,7 +154,6 @@ class MainWindow(MainWindowBase):
 
 
         self.repeat_last_import_action = QAction("&Repeat last import")
-        self.import_koreader_action = QAction("K&OReader highlights (deprecated)")
         self.import_koreader_vocab_action = QAction("K&OReader vocab builder")
         self.import_kindle_new_action = QAction("K&indle lookups")
         self.import_auto_text = QAction("Auto import vocab from text")
@@ -166,7 +167,6 @@ class MainWindow(MainWindowBase):
         self.about_action.triggered.connect(self.onAbout)
         self.open_reader_action.triggered.connect(self.onReaderOpen)
         self.repeat_last_import_action.triggered.connect(self.repeatLastImport)
-        self.import_koreader_action.triggered.connect(self.importkoreader)
         self.import_koreader_vocab_action.triggered.connect(self.importkoreaderVocab)
         self.import_kindle_new_action.triggered.connect(self.importkindleNew)
         self.import_auto_text.triggered.connect(self.importautotext)
@@ -180,7 +180,6 @@ class MainWindow(MainWindowBase):
         importmenu.addActions(
             [
                 self.repeat_last_import_action,
-                self.import_koreader_action,
                 self.import_koreader_vocab_action,
                 self.import_kindle_new_action,
                 self.import_auto_text
@@ -341,6 +340,7 @@ class MainWindow(MainWindowBase):
         if self.checkAnkiConnect():
             self.settings_dialog = SettingsDialog(self)
             self.settings_dialog.exec()
+            self.initSources()
 
 
     def importkindleNew(self):
@@ -402,27 +402,23 @@ class MainWindow(MainWindowBase):
 
 
     def repeatLastImport(self):
-        try:
-            method = self.settings.value("last_import_method")
-            path = self.settings.value("last_import_path")
-            if not (method and path):
-                QMessageBox.warning(self, "You have not imported notes before",
-                    "Use any one of the other two options on the menu, and you will be able to use this one next time.")
-                return
-            if method == "kindle":
-                KindleVocabImporter(self, path).exec()
-            elif method == "koreader":
-                KoreaderImporter(self, path).exec()
-            elif method == "koreader-vocab":
-                KoreaderVocabImporter(self, path).exec()
-            else:
-                # Nightly users, clear it for them
-                self.settings.setValue("last_import_method", "")
-                self.settings.setValue("last_import_path", "")
-                QMessageBox.warning(self, "You have not imported notes before",
-                    "Use any one of the other two options on the menu, and you will be able to use this one next time.")
-        except Exception as e:
-            print("Encountered error while repeating last import, aborting:", repr(e))
+        method = self.settings.value("last_import_method")
+        path = self.settings.value("last_import_path")
+        if not (method and path):
+            QMessageBox.warning(self, "You have not imported notes before",
+                "Use any one of the other two options on the menu, and you will be able to use this one next time.")
+            return
+        if method == "kindle":
+            KindleVocabImporter(self, path).exec()
+        elif method == "koreader-vocab":
+            KoreaderVocabImporter(self, path).exec()
+        else:
+            # Nightly users, clear it for them
+            self.settings.setValue("last_import_method", "")
+            self.settings.setValue("last_import_path", "")
+            QMessageBox.warning(self, "You have not imported notes before",
+                "Use any one of the other two options on the menu, and you will be able to use this one next time.")
+ 
 
     def setupShortcuts(self) -> None:
         self.shortcut_toanki = QShortcut(QKeySequence('Ctrl+S'), self)

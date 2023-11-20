@@ -1,15 +1,13 @@
 from .GenericImporter import GenericImporter
 from .utils import *
-from datetime import datetime as dt, timezone as tz
-import sqlite3
+from datetime import datetime as dt
 import os
 import re
-from PyQt5.QtWidgets import QCheckBox, QLabel
 from ..known_words import getKnownWords
-from typing import Tuple, Dict, Set
 from ..lemmatizer import lem_word, lem_pre
-from ..dictformats import removeprefix
 from ..tools import *
+from .models import ReadingNote
+import itertools
 
 class AutoTextImporter(GenericImporter):
     def __init__(self, parent, path):
@@ -28,11 +26,9 @@ class AutoTextImporter(GenericImporter):
         known_words, *_ = getKnownWords(self.parent.settings, self.parent.rec)
         known_words = set(known_words)
         already_mined = set()
-        target_words = []
-        target_sentences = []
+        reading_notes = []
         norepeat = True
-        only_1t = True
-        print(len(sentences), "sentences found in text.")
+        #only_1t = True
         for sentence in sentences:
             unknowns = []
             for word, lemma in zip(sentence.split(), map(lambda x: lem_word(x, self.lang), sentence.split())):
@@ -41,13 +37,14 @@ class AutoTextImporter(GenericImporter):
                     unknowns.append(word)
             if len(unknowns) == 1:
                 if not (norepeat and lem_word(unknowns[0], self.lang) in already_mined):
-                    target_sentences.append(sentence)
-                    target_words.append(unknowns[0])
+                    #target_sentences.append(sentence)
+                    #target_words.append(unknowns[0])
                     already_mined.update([lem_word(unknowns[0], self.lang)])
-            if not only_1t:
-                if len(unknowns) >= 2:
-                    for lemma in unknowns:
-                        target_words.append(lemma)
-                        target_sentences.append(sentence)
-        return target_words, target_sentences, [str(dt.now().astimezone())[:19]]*len(target_words), [bookname]*len(target_words)
+                    reading_notes.append(ReadingNote(
+                        lookup_term=unknowns[0],
+                        sentence=sentence,
+                        book_name=bookname,
+                        date=str(dt.now().astimezone())[:19]
+                        ))
+        return reading_notes
         

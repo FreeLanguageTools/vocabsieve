@@ -35,17 +35,17 @@ class ContentManager(QDialog):
         self.refresh()
 
     def setupWidgets(self):
-        self.layout = QVBoxLayout(self)
+        self._layout = QVBoxLayout(self)
         label = QLabel("Vocabsieve supports tracking your progress by recording content you read. Add content here when you finish reading them")
         label.setWordWrap(True)
-        self.layout.addWidget(label)
-        self.layout.addWidget(self.tview)
-        self.layout.addWidget(self.add_file)
-        #self.layout.addWidget(self.add_url)
-        self.layout.addWidget(self.add_folder)
-        self.layout.addWidget(self.remove)
-        self.layout.addWidget(self.rebuild)
-        self.layout.addWidget(self.bar)
+        self._layout.addWidget(label)
+        self._layout.addWidget(self.tview)
+        self._layout.addWidget(self.add_file)
+        #self._layout.addWidget(self.add_url)
+        self._layout.addWidget(self.add_folder)
+        self._layout.addWidget(self.remove)
+        self._layout.addWidget(self.rebuild)
+        self._layout.addWidget(self.bar)
 
     def onAddFile(self):
         path, _ = QFileDialog.getOpenFileName(

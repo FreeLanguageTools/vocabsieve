@@ -78,7 +78,7 @@ def dictinfo(path) -> Dict[str, str]:
     elif ext == ".xz" or ext == ".bz2" or ext == ".gz":
         if basename.endswith(".json"):
             with zopen(path) as f:
-                basename = removesuffix(basename, ".json")
+                basename = basename.removesuffix(".json")
                 d = json.load(f)
                 if isinstance(d, list):
                     if isinstance(d[0], str):
@@ -111,7 +111,6 @@ def parseMDX(path) -> Dict[str, str]:
     for line in stylesheet_lines:
         if line.isnumeric():
             number = int(line)
-        else:
             stylesheet_map[number] = stylesheet_map.get(number, "") + line
     newdict = {}  # This temporarily stores the new entries
     i = 0
@@ -147,24 +146,9 @@ def parseDSL(path) -> Dict[str, str]:
             if "{" in headword:
                 headword = re.sub(r'\{[^}]+\}', "", headword)
             definition = re.sub(r'(\<b\>\d+\.\</b\>)\s+\<br>', r'\1 ', definition)
-            newdict[headword] = removeprefix(definition, "<br>")
+            newdict[headword] = definition.removeprefix("<br>")
     return newdict
 
-
-# There is a str.removeprefix function, but it is implemented
-# only in python 3.9. Copying the implementation here
-def removeprefix(self: str, prefix: str, /) -> str:
-    if self.startswith(prefix):
-        return self[len(prefix):]
-    else:
-        return self[:]
-
-def removesuffix(self: str, suffix: str, /) -> str:
-    # suffix='' should not call self[:-0].
-    if suffix and self.endswith(suffix):
-        return self[:-len(suffix)]
-    else:
-        return self[:]
 
 
 def parseCSV(path) -> Dict[str, str]:

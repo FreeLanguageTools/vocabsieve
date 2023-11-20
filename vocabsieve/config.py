@@ -272,9 +272,9 @@ class SettingsDialog(QDialog):
 
         self.tabs.resize(400, 400)
 
-        self.layout = QVBoxLayout(self) # type: ignore
-        self.layout.addWidget(self.tabs)
-        self.layout.addWidget(self.bar)
+        self._layout = QVBoxLayout(self) # type: ignore
+        self._layout.addWidget(self.tabs)
+        self._layout.addWidget(self.bar)
 
         self.tabs.addTab(self.tab_g, "General")
         self.tabs.addTab(self.tab_s, "Dictionaries")
@@ -993,7 +993,6 @@ class SettingsDialog(QDialog):
     
         def update_json(v): 
             self.settings.setValue(key, json.dumps(v))
-            self.parent.initSources()
 
         if isinstance(widget, QCheckBox):
             widget.setChecked(self.settings.value(key, default, type=bool))

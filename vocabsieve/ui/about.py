@@ -16,7 +16,7 @@ class AboutDialog(QDialog):
         self.buttonBox = QDialogButtonBox(QBtn)
         self.buttonBox.accepted.connect(self.accept)
 
-        self.layout = QVBoxLayout() # type: ignore
+        self._layout = QVBoxLayout() # type: ignore
         message = QLabel(
             f'''
 VocabSieve version: {__version__}<br>
@@ -46,6 +46,6 @@ If you find this tool useful, you can give it a star on Github and tell others a
         message.setOpenExternalLinks(True)
         message.setWordWrap(True)
         message.adjustSize()
-        self.layout.addWidget(message)
-        self.layout.addWidget(self.buttonBox)
-        self.setLayout(self.layout)
+        self._layout.addWidget(message)
+        self._layout.addWidget(self.buttonBox)
+        self.setLayout(self._layout)
