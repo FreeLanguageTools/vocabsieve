@@ -1,4 +1,5 @@
 import csv
+from operator import ge
 import threading
 import importlib.metadata
 import os
@@ -154,7 +155,7 @@ class MainWindow(MainWindowBase):
 
         self.repeat_last_import_action = QAction("&Repeat last import")
         self.import_koreader_vocab_action = QAction("K&OReader vocab builder")
-        self.import_kindle_new_action = QAction("K&indle lookups")
+        self.import_kindle_vocab_action = QAction("K&indle lookups")
         self.import_auto_text = QAction("Auto import vocab from text")
 
         self.export_notes_csv_action = QAction("Export &notes to CSV")
@@ -166,9 +167,9 @@ class MainWindow(MainWindowBase):
         self.about_action.triggered.connect(self.onAbout)
         self.open_reader_action.triggered.connect(self.onReaderOpen)
         self.repeat_last_import_action.triggered.connect(self.repeatLastImport)
-        self.import_koreader_vocab_action.triggered.connect(self.importkoreaderVocab)
-        self.import_kindle_new_action.triggered.connect(self.importkindleNew)
-        self.import_auto_text.triggered.connect(self.importautotext)
+        self.import_koreader_vocab_action.triggered.connect(self.importKoreader)
+        self.import_kindle_vocab_action.triggered.connect(self.importKindle)
+        self.import_auto_text.triggered.connect(self.importAutoText)
         self.export_notes_csv_action.triggered.connect(self.exportNotes)
         self.export_lookups_csv_action.triggered.connect(self.exportLookups)
         self.stats_action.triggered.connect(self.onStats)
@@ -180,7 +181,7 @@ class MainWindow(MainWindowBase):
             [
                 self.repeat_last_import_action,
                 self.import_koreader_vocab_action,
-                self.import_kindle_new_action,
+                self.import_kindle_vocab_action,
                 self.import_auto_text
             ]
         )
@@ -340,7 +341,7 @@ class MainWindow(MainWindowBase):
             self.settings_dialog.exec()
             self.initSources()
 
-    def importkindleNew(self):
+    def importKindle(self):
         fname = QFileDialog.getExistingDirectory(
             parent=self,
             caption="Select your Kindle root (top-level) directory",
@@ -355,7 +356,7 @@ class MainWindow(MainWindowBase):
         except Exception as e:
             QMessageBox.warning(self, "Something went wrong", "Error: "+repr(e))
 
-    def importautotext(self) -> None:
+    def importAutoText(self) -> None:
         path = QFileDialog.getOpenFileName(
             parent=self,
             caption="Select book or text file",
@@ -365,7 +366,7 @@ class MainWindow(MainWindowBase):
         if path:
             AutoTextImporter(self, path).exec()
 
-    def importkoreaderVocab(self) -> None:
+    def importKoreader(self) -> None:
         path = QFileDialog.getExistingDirectory(
             parent=self,
             caption="Select a directory containing KOReader settings and ebook files",
@@ -576,12 +577,9 @@ class MainWindow(MainWindowBase):
 
     def getLemGreedy(self) -> bool:
         return self.settings.value("lem_greedily", False, type=bool)  # type: ignore
-
-    def createNote(self) -> None:
-        if self.checkAnkiConnect() == 0:
-            return
-
-        anki_settings = AnkiSettings(
+    
+    def getAnkiSettings(self) -> AnkiSettings:
+        return AnkiSettings(
             deck=self.settings.value("deck_name", "Default"),
             model=self.settings.value("note_type", "vocabsieve-notes"),
             word_field=self.settings.value("word_field", "Word"),
@@ -591,6 +589,12 @@ class MainWindow(MainWindowBase):
             audio_field=self.settings.value("pronunciation_field"),
             image_field=self.settings.value("image_field"),
         )
+
+    def createNote(self) -> None:
+        if self.checkAnkiConnect() == 0:
+            return
+
+        anki_settings = self.getAnkiSettings()
 
         note = SRSNote(
             word=self.word.text(),
