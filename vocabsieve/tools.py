@@ -17,7 +17,8 @@ from ebooklib import epub, ITEM_DOCUMENT
 from .sources.WiktionarySource import WiktionarySource
 from .sources.GoogleTranslateSource import GoogleTranslateSource
 from .sources.LocalDictionarySource import LocalDictionarySource
-from .models import LemmaPolicy, DictionarySourceGroup, DisplayMode, SRSNote, SourceOptions, DictionarySource, AnkiSettings
+from .sources.LocalFreqSource import LocalFreqSource
+from .models import LemmaPolicy, DictionarySourceGroup, DisplayMode, SRSNote, SourceOptions, DictionarySource, FreqSource, AnkiSettings
 from .global_names import settings
 
 def request(action, **params):
@@ -195,11 +196,12 @@ def tostr(s):
         from_bytes(
             etree.tostring(
                 s,
-                encoding='utf8', # type: ignore
-                method='text')).best()).strip()  # type: ignore
+                encoding='utf8',
+                method='text')).best()).strip() 
 
-def ebook2text(path):
+def ebook2text(path) -> tuple[list[str], dict[int, str]]:
     ch_pos = {}
+    chapters = []
     position = 0
     _, ext = os.path.splitext(path)
     if ext == ".txt":
@@ -211,10 +213,9 @@ def ebook2text(path):
         return ebook2text(newpath)
     if ext == '.epub':
         book = epub.read_epub(path)
-        chapters = []
         for doc in book.get_items_of_type(ITEM_DOCUMENT):
-            tree = etree.fromstring(doc.get_content())   #type: ignore
-            notags = etree.tostring(tree, encoding='utf8', method="text") #type: ignore
+            tree = etree.fromstring(doc.get_content())
+            notags = etree.tostring(tree, encoding='utf8', method="text")
             data = str(from_bytes(notags).best()).strip()
             if len(data.splitlines()) < 2:
                 continue
@@ -226,7 +227,7 @@ def ebook2text(path):
     elif ext == '.fb2':
         with open(path, 'rb') as f:
             data = f.read()
-            tree = etree.fromstring(data) #type: ignore
+            tree = etree.fromstring(data)
         chapters = []
         already_seen = False
         for el in tree:
@@ -248,8 +249,8 @@ def ebook2text(path):
     elif ext == '.html':
         with open(path, 'r', encoding='utf-8') as f:
             c = f.read()
-            return BeautifulSoup(c).getText()
-    return chapters, ch_pos #type: ignore
+            return [BeautifulSoup(c).getText()], {0: os.path.basename(path)}
+    return chapters, ch_pos 
 
 def window(seq, n=2):
     "Returns a sliding window (of width n) over data from the iterable"
@@ -289,7 +290,12 @@ def grouper(iterable, n, *, incomplete='fill', fillvalue=None):
         return zip(*args)
     else:
         raise ValueError('Expected fill, strict, or ignore')
-    
+
+def make_freq_source(src_name: str, dictdb: LocalDictionary) -> FreqSource:
+    langcode = settings.value("target_language", "en")
+    lemmatized = settings.value("lemfreq", True, type=bool)
+    return LocalFreqSource(langcode, lemmatized, dictdb, src_name)
+
 def make_dict_source(src_name: str, dictdb: LocalDictionary) -> DictionarySource:
     if policy_string:=settings.value(f"{src_name}/lemma_policy"):
         lemma_policy = LemmaPolicy(policy_string)

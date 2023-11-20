@@ -1,9 +1,9 @@
 from PyQt5.QtWidgets import (QDialog, QStatusBar, QCheckBox, QComboBox,QLineEdit, 
                              QSpinBox, QPushButton, QSlider, QLabel, QHBoxLayout,
-                             QWidget, QTabWidget, QMessageBox, QColorDialog, QListWidget
+                             QWidget, QTabWidget, QMessageBox, QColorDialog, QListWidget,
+                             QFormLayout, QGridLayout, QVBoxLayout
                             )
 from PyQt5.QtGui import QImageWriter
-                        
 from PyQt5.QtCore import Qt, QTimer
 import platform
 import qdarktheme
@@ -30,6 +30,7 @@ class SettingsDialog(QDialog):
     def __init__(self, parent, ):
         super().__init__(parent)
         self.settings = parent.settings
+        self.dictdb = parent.dictdb
         user_note_type = self.settings.value("note_type")
         self.parent = parent
         self.resize(500,400)
@@ -267,25 +268,25 @@ class SettingsDialog(QDialog):
     def initTabs(self):
         self.tabs = QTabWidget()
         self.tab_g = QWidget()  # General
-        self.tab_g_layout = QFormLayout(self.tab_g) #type: ignore
+        self.tab_g_layout = QFormLayout(self.tab_g) 
         self.tab_s = QWidget()
-        self.tab_s_layout = QGridLayout(self.tab_s) #type: ignore
+        self.tab_s_layout = QGridLayout(self.tab_s)
         self.tab_a = QWidget()  # Anki
-        self.tab_a_layout = QFormLayout(self.tab_a) #type: ignore
+        self.tab_a_layout = QFormLayout(self.tab_a)
         self.tab_n = QWidget()  # Network
-        self.tab_n_layout = QFormLayout(self.tab_n) #type: ignore
+        self.tab_n_layout = QFormLayout(self.tab_n)
         self.tab_i = QWidget()  # Interface
-        self.tab_i_layout = QFormLayout(self.tab_i) #type: ignore
+        self.tab_i_layout = QFormLayout(self.tab_i)
         self.tab_p = QWidget()  # Processing
-        self.tab_p_layout = QFormLayout(self.tab_p) #type: ignore
+        self.tab_p_layout = QFormLayout(self.tab_p)
         self.tab_m = QWidget()  # Miscellaneous
-        self.tab_m_layout = QFormLayout(self.tab_m) #type: ignore
+        self.tab_m_layout = QFormLayout(self.tab_m)
         self.tab_t = QWidget()  # Tracking
-        self.tab_t_layout = QFormLayout(self.tab_t) #type: ignore
+        self.tab_t_layout = QFormLayout(self.tab_t)
 
         self.tabs.resize(400, 400)
 
-        self._layout = QVBoxLayout(self) # type: ignore
+        self._layout = QVBoxLayout(self)
         self._layout.addWidget(self.tabs)
         self._layout.addWidget(self.bar)
 
@@ -396,6 +397,7 @@ class SettingsDialog(QDialog):
         self.tab_g_layout.addRow(QLabel("Forvo audio format"), self.audio_format)
         self.tab_g_layout.addRow(QLabel("<i>◊ Choose mp3 for playing on iOS, but ogg may save space</i>"))
         self.tab_g_layout.addRow(QLabel("Frequency list"), self.freq_source)
+        self.tab_g_layout.addRow(self.lemfreq)
         self.tab_g_layout.addRow(
             QLabel("Google translate: To"),
             self.gtrans_lang)

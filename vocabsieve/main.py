@@ -28,7 +28,7 @@ from .importer import KindleVocabImporter, KoreaderVocabImporter, AutoTextImport
 from .reader import ReaderServer
 from .contentmanager import ContentManager
 from .global_events import GlobalObject
-from .tools import is_json, prepareAnkiNoteDict, starts_with_cyrillic, is_oneword, addNote, make_source_group, getVersion
+from .tools import is_json, prepareAnkiNoteDict, starts_with_cyrillic, is_oneword, addNote, make_source_group, getVersion, make_freq_source
 from .ui.main_window_base import MainWindowBase
 from .local_dictionary import LocalDictionary
 from .models import AnkiSettings, DictionarySourceGroup, SRSNote
@@ -66,6 +66,10 @@ class MainWindow(MainWindowBase):
         self.sg1 = make_source_group(sg1_src_list, self.dictdb)
         self.definition.setSourceGroup(self.sg1)
         self.splitter = SentenceSplitter(language=self.settings.value("target_language", "en"))
+
+        if self.settings.value("freq_source", "<disabled>") != "<disabled>":
+            self.freq_widget.setSource(make_freq_source(self.settings.value("freq_source"), self.dictdb))
+
 
         if self.settings.value("sg2_enabled", False, type=bool):
             sg2_src_list = json.loads(self.settings.value("sg2", '["Google Translate"]'))
@@ -461,6 +465,7 @@ class MainWindow(MainWindowBase):
             if self.settings.value("sg2_enabled", False, type=bool):
                 self.definition2.lookup(target)
             self.getAudio(target)
+            self.freq_widget.lookup(target)
         
     def getAudio(self, target: str):
         self.audio_path = ""

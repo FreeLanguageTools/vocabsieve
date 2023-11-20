@@ -12,6 +12,7 @@ from ..audio_player import AudioPlayer
 from ..record import Record
 from ..local_dictionary import LocalDictionary
 from .searchable_boldable_text_edit import SearchableBoldableTextEdit
+from .freq_display_widget import FreqDisplayWidget
 from .about import AboutDialog
 from ..models import AnkiSettings
 
@@ -125,8 +126,8 @@ class MainWindowBase(QMainWindow):
         self.lookup_definition_on_doubleclick.setChecked(self.settings.value("lookup_definition_on_doubleclick", True, type=bool))
 
         self.web_button = QPushButton(f"Open webpage [{MOD}-1]")
-        self.freq_display = QLineEdit()
-        self.freq_display.setPlaceholderText("Word frequency")
+        self.freq_widget = FreqDisplayWidget()
+        self.freq_widget.setPlaceholderText("Word frequency")
 
         self.discard_audio_button = QPushButton("Discard audio [Ctrl+Shift+X]")
         self.discard_audio_button.setToolTip("This will remove audio from the current working note.")
@@ -215,7 +216,7 @@ class MainWindowBase(QMainWindow):
         layout.addWidget(self.lookup_hist_label, 6, 2)
         layout.addWidget(
             QLabel("<h3 style=\"font-weight: normal;\">Definition</h3>"), 7, 0)
-        layout.addWidget(self.freq_display, 7, 1)
+        layout.addWidget(self.freq_widget, 7, 1)
         layout.addWidget(self.web_button, 7, 2)
         layout.setRowStretch(8, 2)
         layout.setRowStretch(10, 2)
@@ -270,7 +271,7 @@ class MainWindowBase(QMainWindow):
 
         layout.addWidget(
             QLabel("<h3 style=\"font-weight: normal;\">Sentence</h3>"), 1, 0)
-        layout.addWidget(self.freq_display, 0, 2)
+        layout.addWidget(self.freq_widget, 0, 2)
         layout.addWidget(self.read_button, 6, 1)
         layout.addWidget(self.discard_audio_button, 6, 0)
 

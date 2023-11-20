@@ -6,8 +6,12 @@ import re
 from itertools import chain, dropwhile
 
 b = "_"
-apply_bold_tags = lambda word: f"<b>{word}</b>"
-apply_bold_char = lambda word: f"{b}{b}{word}{b}{b}"
+
+def apply_bold_tags(word: str) -> str:
+    return f"<b>{word}</b>"
+def apply_bold_char(word: str) -> str:
+    return f"{b}{b}{word}{b}{b}"
+
 bolded_by_char_re = f"{b}{b}(.+?){b}{b}"
 bolded_by_markdown_re = r"\*\*(.+?)\*\*"
 

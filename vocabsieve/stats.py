@@ -4,13 +4,12 @@ from PyQt5.QtWidgets import QDialog, QTabWidget, QWidget, QLabel, QVBoxLayout, Q
 from PyQt5.QtGui import QPalette
 from operator import itemgetter
 from pyqtgraph import PlotWidget, BarGraphItem, PlotItem, AxisItem, mkPen
-from datetime import timedelta, datetime
+from datetime import datetime
 import time
 import math
-from .tools import starts_with_cyrillic
+from .tools import starts_with_cyrillic, prettydigits
 from .known_words import getKnownWords
 
-prettydigits = lambda number: format(number, ',').replace(',', ' ')
 
 class StatisticsWindow(QDialog):
     def __init__(self, parent):
