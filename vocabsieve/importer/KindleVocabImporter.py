@@ -6,7 +6,9 @@ import os
 import re
 from PyQt5.QtWidgets import QCheckBox, QLabel
 from ..tools import *
+from ..lemmatizer import lem_word
 from .models import ReadingNote
+from ..models import LookupRecord
 
 def remove_author(titleauthor):
     "Remove author, which is in the last parentheses"
@@ -25,6 +27,8 @@ class KindleVocabImporter(GenericImporter):
         self.updateHighlightCount()
 
     def getNotes(self):
+        if self.path is None:
+            return []
         vocab_db_path = os.path.join(self.path, "system", "vocabulary", "vocab.db")
         clippings_path = os.path.join(self.path, "documents", "My Clippings.txt")
 
@@ -56,7 +60,18 @@ class KindleVocabImporter(GenericImporter):
             if lword.startswith(langcode):
                 word = lword.removeprefix(langcode+":")
                 count += 1
-                self.parent.rec.recordLookup(word, langcode, True, "kindle", True, timestamp/1000, commit=False)
+                self.parent.rec.recordLookup(
+                    LookupRecord(
+                        word=word, 
+                        lemma=lem_word(word, langcode),
+                        language=langcode, 
+                        source="kindle", 
+                        lemmatization=False,
+                        success=True,
+                    ), 
+                    timestamp/1000, 
+                    commit=False
+                )
                 reading_notes.append(
                     ReadingNote(
                         lookup_term=word,

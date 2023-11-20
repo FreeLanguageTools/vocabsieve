@@ -82,7 +82,7 @@ def lemmatize(word, language, greedy=False):
             if morph and morph.get(language):
                 return morph[language].parse(word)[0].normal_form
         elif language in simplemma_languages:
-            return simplemma.lemmatize(word, lang=language, greedy=greedy)
+            return simplemma.lemmatize(word, lang=language, greedy=greedy) # pyright: ignore[reportPrivateImportUsage]
         else:
             return word
     except ValueError as e:

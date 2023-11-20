@@ -40,8 +40,6 @@ class MainWindow(MainWindowBase):
     def __init__(self) -> None:
         super().__init__()
         self.datapath = datapath
-        self.dictdb = LocalDictionary(self.datapath)
-        self.splitter = SentenceSplitter(language=self.settings.value("target_language", "en"))
         self.setupMenu()
         self.setupButtons()
         self.startServer()
@@ -223,7 +221,7 @@ class MainWindow(MainWindowBase):
         if not path:
             return
 
-        known_words, *_ = getKnownWords(self.settings, self.rec)
+        known_words, *_ = getKnownWords(self.settings, self.rec, self.dictdb)
         if self.settings.value('target_language', 'en') in ['ru', 'uk']:
             known_words = [word for word in known_words if starts_with_cyrillic(word)]
 
@@ -580,18 +578,7 @@ class MainWindow(MainWindowBase):
 
     def getLemGreedy(self) -> bool:
         return self.settings.value("lem_greedily", False, type=bool)  # type: ignore
-    
-    def getAnkiSettings(self) -> AnkiSettings:
-        return AnkiSettings(
-            deck=self.settings.value("deck_name", "Default"),
-            model=self.settings.value("note_type", "vocabsieve-notes"),
-            word_field=self.settings.value("word_field", "Word"),
-            sentence_field=self.settings.value("sentence_field", "Sentence"),
-            definition1_field=self.settings.value("definition1_field", "Definition"),
-            definition2_field=self.settings.value("definition2_field"),
-            audio_field=self.settings.value("pronunciation_field"),
-            image_field=self.settings.value("image_field"),
-        )
+
 
     def createNote(self) -> None:
         if self.checkAnkiConnect() == 0:

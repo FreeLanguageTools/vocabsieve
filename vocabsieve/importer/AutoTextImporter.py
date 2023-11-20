@@ -1,3 +1,4 @@
+from sentence_splitter import SentenceSplitter
 from .GenericImporter import GenericImporter
 from .utils import *
 from datetime import datetime as dt
@@ -6,13 +7,15 @@ import re
 from ..known_words import getKnownWords
 from ..lemmatizer import lem_word, lem_pre
 from ..tools import *
+from ..ui.main_window_base import MainWindowBase
+
 from .models import ReadingNote
 import itertools
 
 class AutoTextImporter(GenericImporter):
-    def __init__(self, parent, path):
-        self.path = path
-        self.splitter = parent.splitter
+    def __init__(self, parent: MainWindowBase, path):
+        self.path: str = path
+        self.splitter: SentenceSplitter= parent.splitter
         super().__init__(parent, "Auto vocab detection", path, "auto")
 
     def getNotes(self):

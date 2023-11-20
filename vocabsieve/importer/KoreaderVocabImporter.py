@@ -11,12 +11,15 @@ from .GenericImporter import GenericImporter
 from .utils import *
 from ..tools import *
 from .models import ReadingNote
+from ..models import LookupRecord
+from ..lemmatizer import lem_word
 from ..global_names import settings
+from ..ui.main_window_base import MainWindowBase
 import time
 
 
 def getBookMetadata(path):
-    basename, ext = os.path.splitext(path)
+    _, ext = os.path.splitext(path)
     notepath = os.path.join(path.removesuffix(ext) + ".sdr", f"metadata{ext}.lua")
             
     with open(notepath, encoding='utf8') as f:
@@ -31,7 +34,7 @@ def getBookMetadata(path):
 
 
 class KoreaderVocabImporter(GenericImporter):
-    def __init__(self, parent, path):
+    def __init__(self, parent: MainWindowBase, path):
         self.splitter = parent.splitter
         super().__init__(parent, "KOReader vocab builder", path, "koreader-vocab")
 
@@ -111,7 +114,18 @@ class KoreaderVocabImporter(GenericImporter):
             for word, booktitle, timestamp in entries:
                 if booktitle in books_in_lang:
                     count += 1
-                    self.parent.rec.recordLookup(word, langcode, True, "koreader", True, timestamp, commit=False)
+                    self.parent.rec.recordLookup(
+                        LookupRecord(
+                            word=word, 
+                            lemma=lem_word(word, langcode),
+                            language=langcode, 
+                            source="koreader", 
+                            lemmatization=False,
+                            success=True,
+                        ), 
+                        timestamp, 
+                        commit=False
+                    )
             print("Added lookups at ", time.time() - start)
             self.parent.rec.conn.commit()
             lookups_count_after = self.parent.rec.countLookups(langcode)
@@ -119,9 +133,7 @@ class KoreaderVocabImporter(GenericImporter):
             self._layout.addRow(QLabel("Lookup history: " + self.histpath))
             self._layout.addRow(QLabel(f"Found {count} lookups in {langcode}, added { lookups_count_after - lookups_count_before } to lookup database."))
         except Exception as e:
-            print(e)
+            print(repr(e))
             self._layout.addRow(QLabel("Failed to find/read lookup_history.lua. Lookups will not be tracked this time."))
-        if reading_notes == []:
-            return ([], [], [], [])
-        else:
-            return reading_notes
+
+        return reading_notes

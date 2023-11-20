@@ -1,10 +1,13 @@
+import imp
 import sqlite3
 import os
 import time
 from bidict import bidict
+from typing import Optional
 from datetime import datetime
 from .constants import langcodes
 from .lemmatizer import lem_word
+from .models import LookupRecord
 
 dictionaries = bidict({"Wiktionary (English)": "wikt-en",
                        "Google Translate": "gtrans"})
@@ -275,27 +278,23 @@ class Record():
         self.c.execute("VACUUM")
 
 
-    def recordLookup(
-            self,
-            word: str,
-            language: str,
-            lemmatization: bool,
-            source: str,
-            success: bool,
-            timestamp: float,
-            commit: bool = True):
-        lemma = lem_word(word, language) # For statistics, so it is used even if lemmatization is off
+    def recordLookup(self, lr: LookupRecord, timestamp: Optional[float] = None, commit: bool = True):
+        if timestamp is None:
+            timestamp = time.time()
         sql = """INSERT OR IGNORE INTO lookups(timestamp, word, lemma, language, lemmatization, source, success)
                 VALUES(?,?,?,?,?,?,?)"""
         self.c.execute(
             sql,
-            (timestamp,
-            word,
-            lemma,
-            language,
-            lemmatization,
-            source,
-            success))
+            (
+                timestamp,
+                lr.word,
+                lr.lemma,
+                lr.language,
+                lr.lemmatization,
+                lr.source,
+                lr.success
+            )
+        )
         if commit:
             self.conn.commit()
 

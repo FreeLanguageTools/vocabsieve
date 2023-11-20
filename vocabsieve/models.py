@@ -12,6 +12,7 @@ from .lemmatizer import lem_word
 class Definition:
     '''Represents a result returned by a dictionary'''
     headword: str
+    lookup_term: str
     source: str
     definition: Optional[str] = None
     error: Optional[str] = None
@@ -21,6 +22,16 @@ class LookupResult:
     '''Represents the definition returned by a dictionary'''
     definition: Optional[str] = None
     error: Optional[str] = None
+
+@dataclass(frozen=True, slots=True)
+class LookupRecord:
+    '''Represents a lookup record in the database'''
+    word: str
+    lemma: str
+    language: str
+    lemmatization: bool
+    source: str
+    success: bool
 
 @dataclass(frozen=True, slots=True)
 class SRSNote:
@@ -121,43 +132,43 @@ class DictionarySource(Source):
         items = []
         lemma = lem_word(word, self.langcode)
         if no_lemma:
-            return [self._fmt_lookup(word)]
+            return [self._fmt_lookup(word, word)]
         
         if self.lemma_policy == LemmaPolicy.no_lemma:
-            items.append(self._fmt_lookup(word))
+            items.append(self._fmt_lookup(word, word))
 
         elif self.lemma_policy == LemmaPolicy.only_lemma:
-            items.append(self._fmt_lookup(lemma))
+            items.append(self._fmt_lookup(lemma, word))
 
         elif self.lemma_policy == LemmaPolicy.try_original:
-            items.append(self._fmt_lookup(word))
+            items.append(self._fmt_lookup(word, word))
             if items[0].error is not None:
-                items.append(self._fmt_lookup(lemma))
+                items.append(self._fmt_lookup(lemma, word))
 
         elif self.lemma_policy == LemmaPolicy.try_lemma:
-            items.append(self._fmt_lookup(lemma))
+            items.append(self._fmt_lookup(lemma, word))
             if items[0].error is not None:
-                items.append(self._fmt_lookup(word))
+                items.append(self._fmt_lookup(word, word))
 
         elif self.lemma_policy == LemmaPolicy.first_lemma:
-            items.append(self._fmt_lookup(lemma))
+            items.append(self._fmt_lookup(lemma, word))
             if word != lemma:
-                items.append(self._fmt_lookup(word))
+                items.append(self._fmt_lookup(word, word))
         
         elif self.lemma_policy == LemmaPolicy.first_original:
-            items.append(self._fmt_lookup(word))
+            items.append(self._fmt_lookup(word, word))
             if word != lemma:
-                items.append(self._fmt_lookup(lemma))
+                items.append(self._fmt_lookup(lemma, word))
         
         return items
     
-    def _fmt_lookup(self, word: str) -> Definition:
+    def _fmt_lookup(self, word: str, lookup_term: str) -> Definition:
         '''Format a LookupResult as a Definition'''
         result = self._lookup(word)
         if result.definition is not None:
-            return Definition(headword=word, source=self.name, definition=self.format(result.definition))
+            return Definition(headword=word, source=self.name, definition=self.format(result.definition), lookup_term=lookup_term)
         else:
-            return Definition(headword=word, source=self.name, error=result.error)
+            return Definition(headword=word, source=self.name, error=result.error, lookup_term=lookup_term)
 
     def _lookup(self, word: str) -> LookupResult:
         '''Lookup a word in the dictionary

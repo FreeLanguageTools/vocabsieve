@@ -8,7 +8,6 @@ from vocabsieve.tools import addNotes
 from vocabsieve.dictionary import getAudio
 from datetime import datetime as dt
 from itertools import compress
-
 from .utils import *
 from .BatchNotePreviewer import BatchNotePreviewer
 from ..ui.main_window_base import MainWindowBase
@@ -24,14 +23,14 @@ class GenericImporter(QDialog):
     This class implements the UI for extracting highlights.
     Subclass it and override getNotes to have a new importer
     """
-    def __init__(self, parent: MainWindowBase, src_name="Generic", path=None, methodname="generic"):
+    def __init__(self, parent: MainWindowBase, src_name: str = "Generic", path: Optional[str] = None, methodname: str ="generic"):
         super().__init__(parent)
         self.settings = parent.settings
         self.notes: Optional[set[tuple[str, str]]] = None # Used for filtering
         self.lang = parent.settings.value('target_language')
         self.methodname = methodname
         self.setWindowTitle(f"Import {src_name}")
-        self.parent = parent # type: ignore
+        self.parent: MainWindowBase = parent
         self.path = path
         self.setMinimumWidth(500)
         self.src_name = src_name

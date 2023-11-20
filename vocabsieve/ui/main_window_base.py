@@ -10,12 +10,15 @@ from ..global_names import app_title, settings, datapath
 
 from ..audio_player import AudioPlayer
 from ..record import Record
+from ..local_dictionary import LocalDictionary
 from .searchable_boldable_text_edit import SearchableBoldableTextEdit
 from .about import AboutDialog
+from ..models import AnkiSettings
 
 import platform
 import os
 from typing import Optional
+from sentence_splitter import SentenceSplitter
 
 
 # If on macOS, display the modifier key as "Cmd", else display it as "Ctrl".
@@ -38,6 +41,8 @@ class MainWindowBase(QMainWindow):
         self.audio_fetched.connect(self.updateAudioUI)
 
         self.rec = Record(self, datapath)
+        self.dictdb = LocalDictionary(datapath)
+        self.splitter = SentenceSplitter(language=self.settings.value("target_language", "en"))
         self.setCentralWidget(self.widget)
         self.previousWord = ""
         self.audio_path = ""
@@ -307,6 +312,18 @@ class MainWindowBase(QMainWindow):
         layout.setRowStretch(6, 0)
 
         return layout
+    
+    def getAnkiSettings(self) -> AnkiSettings:
+        return AnkiSettings(
+            deck=self.settings.value("deck_name", "Default"),
+            model=self.settings.value("note_type", "vocabsieve-notes"),
+            word_field=self.settings.value("word_field", "Word"),
+            sentence_field=self.settings.value("sentence_field", "Sentence"),
+            definition1_field=self.settings.value("definition1_field", "Definition"),
+            definition2_field=self.settings.value("definition2_field"),
+            audio_field=self.settings.value("pronunciation_field"),
+            image_field=self.settings.value("image_field"),
+        )
 
 
 
