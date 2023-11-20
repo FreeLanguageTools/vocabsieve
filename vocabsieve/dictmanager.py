@@ -9,11 +9,11 @@ from .local_dictionary import LocalDictionary
 
 
 class DictManager(QDialog):
-    def __init__(self, parent):
+    def __init__(self, parent) -> None:
         super().__init__(parent)
         self.settings = parent.settings
         self.setWindowTitle("Manage Local Dictionaries")
-        self.parent = parent
+        self.parent = parent # type: ignore
         self.dictdb: LocalDictionary = parent.dictdb
         self.resize(500, 400)
         self.initWidgets()

@@ -144,6 +144,7 @@ class LocalDictionary():
         elif dicttype == "audiolib":
             # Audios will be stored as a serialized json list
             filelist = []
+            list_d: dict[str, list[str]] = {}
             d = {}
             for root, dirs, files in os.walk(path):
                 for item in files:
@@ -153,13 +154,13 @@ class LocalDictionary():
                                 root, item), path))
             for item in filelist:
                 headword = os.path.basename(os.path.splitext(item)[0]).lower()
-                if not d.get(headword):
-                    d[headword] = [item]
+                if not list_d.get(headword):
+                    list_d[headword] = [item]
                 else:
-                    d[headword].append(item)
-            for word in d.keys():
-                d[word] = json.dumps(d[word])
-            self.importdict(d, lang, name)
+                    list_d[headword].append(item)
+            for word in list_d.keys():
+                d[word] = json.dumps(list_d[word])
+            self.importdict(list_d, lang, name)
         elif dicttype == 'mdx':
             d = parseMDX(path)
             self.importdict(d, lang, name)
@@ -174,9 +175,9 @@ class LocalDictionary():
             self.importdict(d, lang, name)
         elif dicttype == "cognates":
             with zopen(path) as f:
-                d = json.load(f)
-            for lang in d:
-                data = {k: json.dumps(v) for k, v in d[lang].items()}
+                cognates_d: dict[str, dict[str, list[str]]] = json.load(f)
+            for lang in cognates_d:
+                data = {k: json.dumps(v) for k, v in cognates_d[lang].items()}
                 self.importdict(data, lang, name)
 
 

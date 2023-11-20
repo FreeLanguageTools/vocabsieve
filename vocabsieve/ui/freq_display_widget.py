@@ -3,7 +3,7 @@ from ..models import FreqSource
 from typing import Optional
 
 class FreqDisplayWidget(QLineEdit):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.setReadOnly(True)
         self.source: Optional[FreqSource] = None

@@ -192,7 +192,7 @@ class Record():
             langiter = self.c.execute("""
                 SELECT DISTINCT language FROM lookups
             """)
-            word_to_lemma = {}
+            word_to_lemma: dict[str, dict[str, str]] = {}
             for lang in langiter:
                 print("Found lang:", lang[0])
                 word_to_lemma[lang[0]] = {} #Make 2d dict

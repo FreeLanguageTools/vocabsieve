@@ -123,3 +123,5 @@ class MultiDefinitionWidget(SearchableTextEdit):
                 return markdown_nop(self.toMarkdown())
             case DisplayMode.html:
                 return self.original
+            case _:
+                raise NotImplementedError(f"Unknown display mode {source.display_mode}")

@@ -36,8 +36,8 @@ class KindleVocabImporter(GenericImporter):
 
         try:
             with open(clippings_path) as file:
-                clippings_titleauthors, _, _, clippings_words, _ = zip(*list(grouper(file.read().splitlines(), 5)))
-                clippings_words = [re.sub('[\\?\\.!«»…,()\\[\\]]*', "", str(word)).lower() for word in clippings_words]
+                clippings_titleauthors, _, _, clippings_words, _ = zip(*list(grouper(file.read().splitlines(), 5))) # type: ignore
+                clippings_words = [re.sub('[\\?\\.!«»…,()\\[\\]]*', "", str(word)).lower() for word in clippings_words] # type: ignore
                 clippings_titles = [remove_author(titleauthor.strip("\ufeff")) for titleauthor in clippings_titleauthors]
                 self.clippings_items = set(zip(clippings_words, clippings_titles))
                 clippings_only = QCheckBox(f"Only select highlighted words ({str(len(clippings_words))} entries found)")

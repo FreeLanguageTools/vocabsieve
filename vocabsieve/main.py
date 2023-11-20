@@ -493,7 +493,7 @@ class MainWindow(MainWindowBase):
         self.image_viewer.setPixmap(content)
 
     def getConvertToUppercase(self) -> bool:
-        return self.settings.value("capitalize_first_letter", False, type=bool)
+        return bool(self.settings.value("capitalize_first_letter", False, type=bool))
 
     def clipboardChanged(self, evenWhenFocused=False, selection=False):
         """

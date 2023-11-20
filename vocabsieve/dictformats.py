@@ -39,7 +39,7 @@ def zopen(path):
     else:
         return open(path, encoding='utf-8')
 
-def dictinfo(path) -> Dict[str, str]:
+def dictinfo(path) -> dict[str, str]:
     "Get information about dictionary from file path"
     basename, ext = os.path.splitext(path)
     basename = os.path.basename(basename)
@@ -56,12 +56,15 @@ def dictinfo(path) -> Dict[str, str]:
                         "type": "freq",
                         "basename": basename,
                         "path": path}
-                return {
-                    "type": "migaku",
-                    "basename": basename,
-                    "path": path}
+                else:
+                    return {
+                        "type": "migaku",
+                        "basename": basename,
+                        "path": path}
             elif isinstance(d, dict):
                 return {"type": "json", "basename": basename, "path": path}
+            else:
+                raise NotImplementedError("Unsupported format")
     elif ext == ".ifo":
         return {"type": "stardict", "basename": basename, "path": path}
     elif ext == ".mdx":
@@ -71,6 +74,8 @@ def dictinfo(path) -> Dict[str, str]:
     elif ext == ".dz":
         if basename.endswith(".dsl"):
             return {"type": "dsl", "basename": basename.rstrip(".dsl"), "path": path}
+        else:
+            raise NotImplementedError("Unsupported format")
     elif ext == ".tsv":
         return {"type": "tsv", "basename": basename, "path": path}
     elif ext == ".csv":
@@ -102,17 +107,24 @@ def dictinfo(path) -> Dict[str, str]:
                             "basename": basename,
                             "path": path
                         }
+                    else:
+                        raise NotImplementedError("Unsupported format")
+                else:
+                    raise NotImplementedError("Unsupported format")
+        else:
+            raise NotImplementedError("Unsupported format")
+    else:
         raise NotImplementedError("Unsupported format" + basename + ext)
 
 def parseMDX(path) -> Dict[str, str]:
     mdx = MDX(path)
     stylesheet_lines = mdx.header[b'StyleSheet'].decode().splitlines()
-    stylesheet_map = {}
+    stylesheet_map: dict[int, str] = {}
     for line in stylesheet_lines:
         if line.isnumeric():
             number = int(line)
             stylesheet_map[number] = stylesheet_map.get(number, "") + line
-    newdict = {}  # This temporarily stores the new entries
+    newdict: dict[str, str] = {}  # This temporarily stores the new entries
     i = 0
     prev_headword = ""
     for item in mdx.items():
@@ -123,7 +135,7 @@ def parseMDX(path) -> Dict[str, str]:
         if stylesheet_map:
             entry = re.sub(
                 r'`(\d+)`',
-                lambda g: stylesheet_map.get(g.group().strip('`')),
+                lambda g: stylesheet_map.get(int(g.group().strip('`'))), # type:ignore
                 entry
             )
         entry = entry.replace("\n", "").replace("\r", "")

@@ -23,7 +23,10 @@ def getBookMetadata(path):
         try:
             booklang = data['doc_props']['language'] # type: ignore
             booktitle = data['doc_props']['title'] # type: ignore
-        except KeyError or TypeError:
+        except TypeError:
+            booklang = settings.value("target_language", "en")
+            booktitle = os.path.basename(path).removesuffix(ext)
+        except KeyError:
             booklang = settings.value("target_language", "en")
             booktitle = os.path.basename(path).removesuffix(ext)
     return booklang, booktitle

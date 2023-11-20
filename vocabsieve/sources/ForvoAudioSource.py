@@ -1,4 +1,4 @@
-
+# mypy: ignore-errors
 from ..models import AudioSource, LemmaPolicy, AudioLookupResult
 
 from bs4 import BeautifulSoup
@@ -34,12 +34,12 @@ class PronunciationList:
 class Forvo:
     def __init__(self, word, lang, accent=""):
         self.url = "https://forvo.com/word/" + quote(word)
-        self.pronunciations: List[Pronunciation] = []
+        self.pronunciations = []
         self.session = requests.Session()
         self.language = lang
         self.accent = accent
 
-    def get_pronunciations(self) -> 'Forvo':
+    def get_pronunciations(self):
         res = requests.get(self.url, headers=FORVO_HEADERS)
         if res.status_code == 200:
             page = res.text
@@ -135,9 +135,9 @@ class Forvo:
         return self
 
 
-def fetch_audio_all(word: str, lang: str) -> Dict[str, str]:
+def fetch_audio_all(word: str, lang: str) -> dict[str, str]:
     sounds = Forvo(word, lang).get_pronunciations().pronunciations
-    result = {}
+    result: dict[str, str] = {}
     if len(sounds) == 0:
         return result
     for item in sounds:

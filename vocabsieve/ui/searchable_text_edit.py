@@ -6,10 +6,10 @@ from ..global_names import settings
 class SearchableTextEdit(QTextEdit):
 
     @pyqtSlot()
-    def mouseDoubleClickEvent(self, e):
+    def mouseDoubleClickEvent(self, e) -> None:
         super().mouseDoubleClickEvent(e)
         if not settings.value("lookup_definition_on_doubleclick", True, type=bool):
             return
         GlobalObject().dispatchEvent("double clicked")
         self.textCursor().clearSelection()
-        self.original = ""
+        self.original: str = ""

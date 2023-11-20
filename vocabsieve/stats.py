@@ -33,14 +33,13 @@ class StatisticsWindow(QDialog):
         self._layout = QVBoxLayout(self)
         self._layout.addWidget(self.tabs)
 
-    def initMLW(self):
+    def initMLW(self) -> None:
         items = self.rec.countAllLemmaLookups(self.langcode)
         items = sorted(items, key=itemgetter(1), reverse=True) # Sort by counts, descending
         self.mlw_layout: QVBoxLayout = QVBoxLayout(self.mlw)
         
         levels = [5, 8, 12, 20]
         level_prev = 1e9
-        words_for_level = {}
         lws = {}
         for level in reversed(levels):
             count = 0
@@ -98,7 +97,7 @@ class StatisticsWindow(QDialog):
         #timestamp_180d_ago = today_midnight - 180 * 24 * 60 * 60
 
         # 30 days
-        words_looked_up = {} # List of sets of lemmas looked up, 0 is today, 1 is yesterday, etc.
+        words_looked_up: dict[int, set[str]] = {} # List of sets of lemmas looked up, 0 is today, 1 is yesterday, etc.
         for i in range(31):
             words_looked_up[i] = set()
         for timestamp, word, lemma, language, lemmatization, source, success in data:

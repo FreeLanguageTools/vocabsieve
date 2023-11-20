@@ -77,13 +77,13 @@ def prepareAnkiNoteDict(anki_settings: AnkiSettings, note: SRSNote) -> dict:
         "tags": []
     }
     if anki_settings.tags:
-        content["tags"].extend(anki_settings.tags)
+        content["tags"].extend(anki_settings.tags) # type: ignore
     if note.tags:
-        content["tags"].extend(note.tags)
+        content["tags"].extend(note.tags) # type: ignore
     if note.audio_path:
-        content["audio"] = [
-                    {
-                        "path": note.audio_path,
+        content["audio"] = [ 
+                    { # type: ignore
+                        "path": note.audio_path, 
                         "filename": os.path.basename(note.audio_path),
                         "fields": [
                             anki_settings.audio_field
@@ -92,7 +92,7 @@ def prepareAnkiNoteDict(anki_settings: AnkiSettings, note: SRSNote) -> dict:
                 ]
     if note.image:
         content["picture"] = [
-            {
+            { # type: ignore
                 "path": note.image,
                 "filename": note.image,
                 "fields": [
@@ -231,9 +231,9 @@ def ebook2text(path) -> tuple[list[str], dict[int, str]]:
             position += len(content)
             chapters.append(content)
     elif ext == '.fb2':
-        with open(path, 'rb') as f:
+        with open(path, 'r') as f:
             data = f.read()
-            tree = etree.fromstring(data)
+            tree = etree.frombytes(data)
         chapters = []
         already_seen = False
         for el in tree:

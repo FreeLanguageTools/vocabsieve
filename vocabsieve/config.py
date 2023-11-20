@@ -1048,21 +1048,21 @@ class SettingsDialog(QDialog):
             model = widget.model()
             model.rowsMoved.connect(
                 lambda: update_json(
-                    [widget.item(i).text() for i in range(widget.count())]
+                    [widget.item(i).text() for i in range(widget.count())] # type: ignore
                     )
                 )
             # Need to use a QTimer here to delay accessing the model until after the rows have been inserted
             model.rowsInserted.connect(
                 lambda: QTimer.singleShot(0, 
                         lambda: update_json(
-                            [widget.item(i).text() for i in range(widget.count())]
+                            [widget.item(i).text() for i in range(widget.count())] # type: ignore
                         )
                     )
                 )
             model.rowsRemoved.connect(
                 lambda: QTimer.singleShot(0, 
                         lambda: update_json(
-                            [widget.item(i).text() for i in range(widget.count())]
+                            [widget.item(i).text() for i in range(widget.count())] # type: ignore
                         )
                     )
                 )

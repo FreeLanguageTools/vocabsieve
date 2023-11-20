@@ -19,8 +19,8 @@ internal stuff. Tag class
 """
 
 
+# mypy: ignore-errors
 from collections import namedtuple
-
 
 Tag = namedtuple("Tag", ["opening", "closing"])
 

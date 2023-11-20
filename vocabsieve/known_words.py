@@ -7,7 +7,7 @@ from .tools import getVersion, findNotes, notesInfo
 from .lemmatizer import lem_word
 
 last_known_data = None
-last_known_data_date = 0 # 1970-01-01
+last_known_data_date = 0.0 # 1970-01-01
 
 def getKnownWords(settings, rec, dictdb):
     langcode = settings.value('target_language', 'en')
@@ -51,7 +51,7 @@ def _getKnownData(settings, rec):
     w_anki_word_y = settings.value('tracking/w_anki_word_y', 40, type=int) # W for being on the word field of a young card
     langcode = settings.value('target_language', 'en')
 
-    score = {}
+    score: dict[str, int] = {}
 
     start = time.time()
 
@@ -120,10 +120,10 @@ def _getKnownData(settings, rec):
                     except KeyError:
                         score[lemma] = w_anki_word
                 if ctx:
-                    ctx = set(map(lambda w: lem_word(w, langcode), re.sub(r"<.*?>", " ", ctx).split()))
-                    ctx.discard(lemma)
+                    this_ctx_lemmas = set(map(lambda w: lem_word(w, langcode), re.sub(r"<.*?>", " ", ctx).split()))
+                    this_ctx_lemmas.discard(lemma)
                     for ctx_lemma in ctx:
-                        ctx_lemmas.append(ctx_lemma)
+                        ctx_lemmas.append(this_ctx_lemmas)
                         try:
                             score[ctx_lemma] += w_anki_ctx
                         except KeyError:
@@ -150,9 +150,10 @@ def _getKnownData(settings, rec):
                 else:
                     continue #skip this one if no word
                 if ctx:
-                    ctx = set(map(lambda w: lem_word(w, langcode), re.sub(r"<.*?>", " ", ctx).split()))
-                    ctx.discard(lemma)
-                    for ctx_lemma in ctx:
+                    this_ctx_lemmas = set(map(lambda w: lem_word(w, langcode), re.sub(r"<.*?>", " ", ctx).split()))
+                    this_ctx_lemmas.discard(lemma)
+                    for ctx_lemma in this_ctx_lemmas:
+                        ctx_lemmas.append(this_ctx_lemmas)
                         try:
                             score[ctx_lemma] += w_anki_ctx_y
                         except KeyError:

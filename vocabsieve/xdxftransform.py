@@ -2,6 +2,7 @@
 # and Ashwin V. Mohanan (ashwinvis)
 # Obtained and modified from pyglossary library
 # Using under the terms of the GNU GPLv3
+# mypy: ignore-errors
 from typing import Union
 import lxml
 from io import BytesIO

@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 # -*- coding: utf-8 -*-
 # dsl/__init__.py
 # Read ABBYY Lingvo DSL dictionary format

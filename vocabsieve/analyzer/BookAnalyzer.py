@@ -221,9 +221,9 @@ class BookAnalyzer(QDialog):
         start = time.time()
         unique_count = []
         new_unique_count = []
-        already_seen = set()
+        already_seen: set[str] = set()
         window_size = 1000
-        startlens = []
+        startlens: list[int] = []
         for n, w in enumerate(window(words, window_size)):
             if n % step_size == 0:
                 already_seen = already_seen.union(set(w)).difference(self.known_words)

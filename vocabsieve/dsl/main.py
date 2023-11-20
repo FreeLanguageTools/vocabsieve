@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 # -*- coding: utf-8 -*-
 #
 # Copyright © 2016 Ratijas <ratijas.t@me.com>

@@ -5,7 +5,7 @@ from ..audio_player import AudioPlayer
 from ..models import AudioDefinition, AudioSourceGroup, Definition
 
 class AudioSelector(QListWidget):
-    def __init__(self, settings):
+    def __init__(self, settings) -> None:
         super().__init__()
         self.setMinimumHeight(50)
         self.settings = settings
@@ -13,11 +13,11 @@ class AudioSelector(QListWidget):
         self.setResizeMode(QListView.Adjust)
         self.setWrapping(True)
         self.audio_player = AudioPlayer()
-        self.audios = {}
+        self.audios: dict[str, str] = {}
         self.sg: Optional[AudioSourceGroup] = None
         self.connect_signals()
 
-    def setSourceGroup(self, sg: AudioSourceGroup):
+    def setSourceGroup(self, sg: AudioSourceGroup) -> None:
         self.sg = sg
 
     def getDefinitions(self, word: str) -> list[AudioDefinition]:

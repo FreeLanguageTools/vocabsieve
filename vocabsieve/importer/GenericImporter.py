@@ -36,7 +36,7 @@ class GenericImporter(QDialog):
         self.lang = parent.settings.value('target_language')
         self.methodname = methodname
         self.setWindowTitle(f"Import {src_name}")
-        self.parent: MainWindowBase = parent
+        self._parent: MainWindowBase = parent
         self.path = path
         self.setMinimumWidth(500)
         self.src_name = src_name
@@ -91,7 +91,7 @@ class GenericImporter(QDialog):
         self._layout.addRow(self.progressbar)
         self._layout.addRow(self.definition_count_label, self.anki_button)
         try:
-            last_import_date = self.parent.settings.value(f'last_import_date_{self.methodname}', possible_start_dates[0])
+            last_import_date = self._parent.settings.value(f'last_import_date_{self.methodname}', possible_start_dates[0])
             self.datewidget.setCurrentText(max(d for d in possible_start_dates if d <= last_import_date))
         except Exception:
             pass
@@ -139,13 +139,13 @@ class GenericImporter(QDialog):
 
 
 
-    def defineWords(self):
+    def defineWords(self) -> None:
         add_even_if_no_definition = self.settings.value("add_even_if_no_definition", False, type=bool)
         self.anki_notes: list[SRSNote] = []
         self.book_names: list[str] = []
         self.lastDate = "1970-01-01 00:00:00"
-        defi1 = self.parent.definition
-        defi2 = self.parent.definition2
+        defi1 = self._parent.definition
+        defi2 = self._parent.definition2
         definition2_enabled = self.settings.value("sg2_enabled", False, type=bool)
 
         # No using any of these buttons to prevent race conditions
@@ -184,9 +184,11 @@ class GenericImporter(QDialog):
                 audio_path = ""
                 if self.settings.value("audio_dict", "Forvo (all)") != "<disabled>":
                     try:
-                        audio_definitions = self.parent.audio_selector.getDefinitions(word)
+                        audio_definitions = self._parent.audio_selector.getDefinitions(word)
                         if audio_definitions and audio_definitions[0].audios is not None:
                             audios = audio_definitions[0].audios
+                        else:
+                            audios = {}
                     except Exception:
                         audios = {}
                     if audios:
@@ -218,15 +220,15 @@ class GenericImporter(QDialog):
         notes_data = []
         for note in self.anki_notes:
             notes_data.append(
-                prepareAnkiNoteDict(self.parent.getAnkiSettings(), note)
+                prepareAnkiNoteDict(self._parent.getAnkiSettings(), note)
                 )
 
-        res = addNotes(self.parent.settings.value("anki_api"), notes_data)
+        res = addNotes(self._parent.settings.value("anki_api"), notes_data)
         # Record last import data
         if self.methodname != "auto": # don't save for auto vocab extraction
-            self.parent.settings.setValue("last_import_method", self.methodname)
-            self.parent.settings.setValue("last_import_path", self.path)
-            self.parent.settings.setValue(f"last_import_date_{self.methodname}", self.lastDate[:10])
+            self._parent.settings.setValue("last_import_method", self.methodname)
+            self._parent.settings.setValue("last_import_path", self.path)
+            self._parent.settings.setValue(f"last_import_date_{self.methodname}", self.lastDate[:10])
 
         self._layout.addRow(QLabel(
             QDateTime.currentDateTime().toString('[hh:mm:ss]') + " "

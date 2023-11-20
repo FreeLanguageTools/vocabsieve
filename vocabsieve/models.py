@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Optional
 from enum import Enum
 from bs4 import BeautifulSoup
 import re
@@ -106,7 +106,7 @@ class Source:
         self.name = name
         self.langcode = langcode
     
-    def define(self, word: str) -> list:
+    def define(self, word: str) -> Any:
         '''Get definitions for a word'''
         raise NotImplementedError
 

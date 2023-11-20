@@ -5,7 +5,7 @@ from werkzeug.utils import secure_filename
 import os
 import re
 from ..global_names import datapath
-from .utils import parseBook
+from .utils import parseBook, allowed_file
 from PyQt5.QtCore import QStandardPaths, QCoreApplication, QObject
 from pathlib import Path
 # The following import is to avoid cxfreeze error
@@ -85,7 +85,7 @@ class ReaderServer(QObject):
         def update_progress(id):
             if request.form and request.form.get('progress'):
                 # keep values between 0 and 1 million
-                prog = min(int(float(request.form.get('progress'))), 1_000_000)
+                prog = min(int(float(request.form.get('progress', 0))), 1_000_000)
                 prog = max(prog, 0)
                 text = Text.query.get(id)
                 text.progress = int(prog)
@@ -104,12 +104,12 @@ class ReaderServer(QObject):
                             content="\n".join([
                                 f"<p>{item}</p>"
                                 for item in
-                                request.form.get('text').splitlines()
+                                request.form.get('text', "").splitlines()
                             ]),
                             length=len(
                                 re.findall(
                                     r'\w+',
-                                    request.form.get('text'))))
+                                    request.form.get('text', ""))))
                         db.session.add(new_item)
                         db.session.commit()
                         return redirect(url_for('home'))
@@ -122,7 +122,7 @@ class ReaderServer(QObject):
                 if file.filename == '':
                     flash('No selected file')
                     return redirect(request.url)
-                if file and allowed_file(file.filename):
+                if file and file.filename and allowed_file(file.filename):
                     filename = secure_filename(file.filename)
                     file.save(
                         fpath := os.path.join(
