@@ -4,9 +4,8 @@ from PyQt5.QtGui import *
 from .dictionary import *
 from .tools import *
 from .dictformats import supported_dict_formats, dictinfo
-from bidict import bidict
 import json
-import os
+from .local_dictionary import LocalDictionary
 
 
 class DictManager(QDialog):
@@ -15,13 +14,13 @@ class DictManager(QDialog):
         self.settings = parent.settings
         self.setWindowTitle("Manage Local Dictionaries")
         self.parent = parent
+        self.dictdb: LocalDictionary = parent.dictdb
         self.resize(500, 400)
         self.initWidgets()
         self.setupWidgets()
         self.refresh()
         self.showStats()
-        # self.loadSettings()
-        # self.setupAutosave()
+
 
     def initWidgets(self):
         self.tview = QTreeWidget()
@@ -62,7 +61,7 @@ to be reimported, otherwise this operation will fail.\
     def rebuildDB(self):
         start = time.time()
         dicts = json.loads(self.settings.value("custom_dicts", '[]'))
-        dictdb.purge()
+        self.dictdb.purge()
         n_dicts = len(dicts)
         failed_reads = []
         for (i, item) in enumerate(dicts):
@@ -70,7 +69,7 @@ to be reimported, otherwise this operation will fail.\
                 self.status(f"Rebuilding database: dictionary ({i+1}/{n_dicts})"
                             ".. this can take a while.")
                 QCoreApplication.processEvents()
-                dictimport(item['path'], item['type'], item['lang'], item['name'])
+                self.dictdb.dictimport(item['path'], item['type'], item['lang'], item['name'])
             except Exception as e:
                 # Delete dictionary if read fails
                 failed_reads.append(item['name'])
@@ -112,7 +111,7 @@ to be reimported, otherwise this operation will fail.\
         dicts = json.loads(self.settings.value("custom_dicts", '[]'))
         if dicts == []:
             return
-        dictdelete(dicts[index.row()]['name'])
+        self.dictdb.dictdelete(dicts[index.row()]['name'])
         del dicts[index.row()]
         self.settings.setValue("custom_dicts", json.dumps(dicts))
         self.refresh()
@@ -127,7 +126,7 @@ to be reimported, otherwise this operation will fail.\
                     item['name'],
                     supported_dict_formats[item['type']],
                     langcodes[item['lang']],
-                    str(dictdb.countEntriesDict(item['name']))
+                    str(self.dictdb.countEntriesDict(item['name']))
                 ]
             )
             self.tview.addTopLevelItem(treeitem)
@@ -147,8 +146,8 @@ to be reimported, otherwise this operation will fail.\
         event.accept()
 
     def showStats(self):
-        n_dicts = dictdb.countDicts()
-        n_entries = dictdb.countEntries()
+        n_dicts = self.dictdb.countDicts()
+        n_entries = self.dictdb.countEntries()
         self.status(f"Total: {n_dicts} dictionaries, {n_entries} entries.", t=0)
         # t=0 means it will not disappear
 
@@ -229,7 +228,7 @@ class AddDictDialog(QDialog):
             )
             return
 
-        dictimport(
+        self.parent.dictdb.dictimport(
             self.path,
             supported_dict_formats.inverse[self.type.currentText()],
             lang,

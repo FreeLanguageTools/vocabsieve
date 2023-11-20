@@ -6,7 +6,7 @@ import re
 from markdownify import markdownify
 from .format import markdown_nop
 
-from .dictionary import lem_word
+from .lemmatizer import lem_word
 
 @dataclass(frozen=True, slots=True)
 class Definition:
@@ -87,7 +87,11 @@ class FreqSource(Source):
         self.lemmatized = lemmatized
     
     def define(self, word: str) -> int:
-        return self._lookup(word)
+        '''Get the frequency of a word'''
+        if self.lemmatized:
+            return self._lookup(lem_word(word, self.langcode))
+        else:
+            return self._lookup(word)
     
     def _lookup(self, word: str) -> int:
         raise NotImplementedError
@@ -104,12 +108,10 @@ class DictionarySource(Source):
 
     def format(self, defi: str) -> str:
         '''Format a definition according to the SourceOptions'''
-        print("Formatting", defi)
         result = defi
         result = convert_display_mode(result, self.display_mode)
         result = skip_lines(result, self.skip_top)
         result = collapse_newlines(result, self.collapse_newlines)
-        print("Formatted", result)
         return result
 
         
@@ -205,7 +207,6 @@ def is_html(s: str) -> bool:
 
 def skip_lines(entry: str, number: int) -> str:
     if is_html(entry):
-        print("this is html")
         # Try to replace all the weird <br> tags with the standard one
         entry = entry.replace("<BR>", "<br>")\
                     .replace("<br/>", "<br>")\

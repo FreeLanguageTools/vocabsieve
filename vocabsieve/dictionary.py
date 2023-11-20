@@ -1,12 +1,9 @@
-from typing import Optional, Dict, Tuple
-import time
+from typing import Optional
 from bidict import bidict
 
-from .db import *
-from .forvo import *
+from .constants import langcodes
+from .forvo import fetch_audio_all, fetch_audio_best
 
-
-dictdb = LocalDictionary(datapath)
 
 gtrans_languages = ['af', 'sq', 'am', 'ar', 'hy', 'az', 'eu', 'be', 'bn',
                     'bs', 'bg', 'ca', 'ceb', 'ny', 'zh', 'zh_HANT', 'co', 'hr', 'cs',
@@ -44,32 +41,10 @@ def preprocess_clipboard(s: str, lang: str, should_convert_to_uppercase: bool = 
     else:
         return s
 
-
-
-
-
-
-def getCognatesData(language: str, known_langs: list) -> Optional[List[str]]:
-    "Get all cognates from the local database in a given language"
-    start = time.time()
-    data = dictdb.getCognates(language)
-    if not known_langs:
-        return []
-    if not known_langs[0]:
-        return []
-    cognates = []
-    for word, cognates_in in data:
-        for lang in known_langs:
-            if lang in cognates_in:
-                cognates.append(word)
-                break
-    print("Got all cognates in", time.time() - start, "seconds")
-    return cognates
-
 def getAudio(word: str,
              language: str,
              dictionary: str="Forvo (all)",
-             custom_dicts:Optional[list]=None) -> Dict[str, str]:
+             custom_dicts:Optional[list]=None) -> dict[str, str]:
     if custom_dicts is None:
         custom_dicts = []
 
@@ -106,7 +81,3 @@ def getAudioDictsForLang(lang: str, dicts: list):
 def getFreqlistsForLang(lang: str, dicts: list):
     return [item['name']
             for item in dicts if item['lang'] == lang and item['type'] == "freq"]
-
-
-forvopath = os.path.join(QStandardPaths.writableLocation(QStandardPaths.DataLocation), "forvo")
-

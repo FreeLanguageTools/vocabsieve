@@ -16,6 +16,7 @@ class StatisticsWindow(QDialog):
         super().__init__(parent)
         self.settings = parent.settings
         self.rec = parent.rec
+        self.dictdb = parent.dictdb
         self.setWindowTitle(f"Statistics")
         self.tabs = QTabWidget()
         self.known = QWidget()  # Known words
@@ -35,7 +36,7 @@ class StatisticsWindow(QDialog):
     def initMLW(self):
         items = self.rec.countAllLemmaLookups(self.langcode)
         items = sorted(items, key=itemgetter(1), reverse=True) # Sort by counts, descending
-        self.mlw._layout = QVBoxLayout(self.mlw)
+        self.mlw._layout = QVBoxLayout(self.mlw) # type: ignore
         
         levels = [5, 8, 12, 20]
         level_prev = 1e9
@@ -57,8 +58,8 @@ class StatisticsWindow(QDialog):
                     content += item[0] + " "
                     count += 1
             lws[level].setText(content)
-            self.mlw._layout.addWidget(QLabel(f"<h3>{level}+ lookups (<i>{count}</i>)</h3>"))
-            self.mlw._layout.addWidget(lws[level])
+            self.mlw._layout.addWidget(QLabel(f"<h3>{level}+ lookups (<i>{count}</i>)</h3>")) 
+            self.mlw._layout.addWidget(lws[level]) 
             level_prev = level
 
     def initKnown(self):
@@ -67,8 +68,8 @@ class StatisticsWindow(QDialog):
         self.known_langs = [l.strip() for l in self.settings.value('tracking/known_langs', 'en').split(",")]
         langcode = self.settings.value('target_language', 'en')
         start = time.time()
-        self.known._layout = QVBoxLayout(self.known)
-        hasCognates = dictdb.hasCognatesData()
+        self.known._layout = QVBoxLayout(self.known) 
+        hasCognates = self.dictdb.hasCognatesData()
         if not hasCognates:
             self.known._layout.addWidget(label:=QLabel('No cognates data installed. Please download <a href="https://raw.githubusercontent.com/FreeLanguageTools/CogNet-processing/master/cognates.json.xz">this file</a> and import it in the configuration tool.'))
             label.setOpenExternalLinks(True)

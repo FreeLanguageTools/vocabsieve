@@ -157,7 +157,3 @@ def fetch_audio_best(word: str, lang: str) -> Dict[str, str]:
         "/" +
         sounds[0].headword: sounds[0].download_url}
 
-
-if __name__ == "__main__":
-    print(fetch_audio_all("delicate", "en"))
-    #print(fetch_audio_best("goodbye", "en"))

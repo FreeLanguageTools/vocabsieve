@@ -1,4 +1,4 @@
-from .dictionary import lem_word
+from .lemmatizer import lem_word
 import re
 from typing import Callable, Iterable
 import string

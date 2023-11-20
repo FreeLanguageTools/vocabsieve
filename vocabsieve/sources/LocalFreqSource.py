@@ -1,6 +1,5 @@
-from vocabsieve.db import LocalDictionary
-from ..models import FreqSource, SourceOptions, LookupResult
-from ..db import LocalDictionary
+from ..models import FreqSource
+from ..local_dictionary import LocalDictionary
 
 class LocalFreqSource(FreqSource):
     def __init__(self, langcode: str, lemmatized: bool, db: LocalDictionary, dictname: str) -> None:

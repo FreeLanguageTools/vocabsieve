@@ -30,7 +30,7 @@ from .contentmanager import ContentManager
 from .global_events import GlobalObject
 from .tools import is_json, prepareAnkiNoteDict, preprocess_clipboard, starts_with_cyrillic, is_oneword, addNote, make_source_group
 from .ui.main_window_base import MainWindowBase
-from .db import LocalDictionary
+from .local_dictionary import LocalDictionary
 from .models import AnkiSettings, DictionarySourceGroup, SRSNote
 
 

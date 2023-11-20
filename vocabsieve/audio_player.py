@@ -6,6 +6,7 @@ from typing import Dict
 import requests
 from .forvo import *
 from .dictionary import *
+from .global_names import forvopath
 
 class AudioPlayer:
   def __init__(self) -> None:

@@ -1,41 +1,10 @@
 import sqlite3
-from os import path
+import os
 import time
 from bidict import bidict
-import re
 from datetime import datetime
 from .constants import langcodes
-import unicodedata
 from .lemmatizer import lem_word
-
-def removeAccents(word):
-    #print("Removing accent marks from query ", word)
-    ACCENT_MAPPING = {
-        '́': '',
-        '̀': '',
-        'а́': 'а',
-        'а̀': 'а',
-        'е́': 'е',
-        'ѐ': 'е',
-        'и́': 'и',
-        'ѝ': 'и',
-        'о́': 'о',
-        'о̀': 'о',
-        'у́': 'у',
-        'у̀': 'у',
-        'ы́': 'ы',
-        'ы̀': 'ы',
-        'э́': 'э',
-        'э̀': 'э',
-        'ю́': 'ю',
-        '̀ю': 'ю',
-        'я́́': 'я',
-        'я̀': 'я',
-    }
-    word = unicodedata.normalize('NFKC', word)
-    for old, new in ACCENT_MAPPING.items():
-        word = word.replace(old, new)
-    return word
 
 dictionaries = bidict({"Wiktionary (English)": "wikt-en",
                        "Google Translate": "gtrans"})
@@ -44,7 +13,7 @@ dictionaries = bidict({"Wiktionary (English)": "wikt-en",
 class Record():
     def __init__(self, parent, datapath):
         self.conn = sqlite3.connect(
-            path.join(
+            os.path.join(
                 datapath,
                 "records.db"),
             check_same_thread=False)
@@ -409,105 +378,3 @@ class Record():
         self.c.execute("VACUUM")
 
 
-class LocalDictionary():
-    def __init__(self, datapath):
-        _path = path.join(datapath, "dict.db")
-        print("Initializing local dictionary object at ", _path)
-        self.conn = sqlite3.connect(_path, check_same_thread=False)
-        self.c = self.conn.cursor()
-        self.createTables()
-
-    def createTables(self):
-        self.c.execute("""
-        CREATE TABLE IF NOT EXISTS dictionary (
-            word TEXT,
-            definition TEXT,
-            language TEXT,
-            dictname TEXT
-        )
-        """)
-        self.conn.commit()
-
-    def importdict(self, data: dict, lang: str, name: str):
-        for item in data.items():
-            # Handle escape sequences
-            self.c.execute("""
-                INSERT INTO dictionary(word, definition, language, dictname)
-                VALUES(?, ?, ?, ?)
-                """,
-                           (
-                               removeAccents(item[0].lower() if item[0].isupper() else item[0]),  # no caps
-                               item[1].replace("\\n", "\n"),
-                               lang,
-                               name
-                           )
-                           )
-        self.conn.commit()
-
-    def deletedict(self, name: str):
-        self.c.execute("""
-            DELETE FROM dictionary
-            WHERE dictname=?
-        """, (name,))
-        self.conn.commit()
-        self.c.execute("VACUUM")
-
-    def getCognates(self, lang: str):
-        return self.c.execute("""
-            SELECT word, definition FROM dictionary
-            WHERE language=?
-            AND dictname='cognates'
-            """, (lang,))
-
-    def hasCognatesData(self):
-        self.c.execute("""
-            SELECT COUNT(*) FROM dictionary
-            WHERE dictname='cognates'
-            """)
-        return self.c.fetchone()[0] > 0
-
-    def define(self, word: str, lang: str, name: str) -> str:
-        self.c.execute("""
-        SELECT definition FROM dictionary
-        WHERE word=?
-        AND language=?
-        AND dictname=?
-        """, (word, lang, name))
-        print("Looking up", word, "in", name)
-        return str(self.c.fetchone()[0])
-
-    def countEntries(self) -> int:
-        self.c.execute("""
-        SELECT COUNT(*) FROM dictionary
-        """)
-        return int(self.c.fetchone()[0])
-
-    def countEntriesDict(self, name) -> int:
-        self.c.execute("""
-        SELECT COUNT(*) FROM dictionary
-        WHERE dictname=?
-        """, (name,))
-        return int(self.c.fetchone()[0])
-
-    def countDicts(self) -> int:
-        self.c.execute("""
-        SELECT COUNT(DISTINCT dictname) FROM dictionary
-        """)
-        return int(self.c.fetchone()[0])
-
-    def getNamesForLang(self, lang: str):
-        self.c.row_factory = lambda cursor, row: row[0]
-        self.c.execute("""
-        SELECT DISTINCT dictname FROM dictionary
-        WHERE language=?
-        """, (lang,))
-        res = self.c.fetchall()
-        self.c.row_factory = None
-        return res
-
-    def purge(self):
-        self.c.execute("""
-        DROP TABLE IF EXISTS dictionary
-        """)
-        self.createTables()
-        self.c.execute("VACUUM")

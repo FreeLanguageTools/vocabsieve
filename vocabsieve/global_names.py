@@ -1,5 +1,6 @@
 from .constants import DEBUG_ENV
 from PyQt5.QtCore import QStandardPaths, QSettings, QCoreApplication
+import os
 from . import __version__
 
 def _get_debug_description():
@@ -26,4 +27,4 @@ QCoreApplication.setOrganizationName(app_organization)
 
 settings = QSettings(app_organization, app_name)
 datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
-
+forvopath = os.path.join(datapath, "forvo")

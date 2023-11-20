@@ -9,7 +9,7 @@ from vocabsieve.ui.multi_definition_widget import MultiDefinitionWidget
 from ..global_names import app_title, settings, datapath
 
 from ..audio_player import AudioPlayer
-from ..db import Record
+from ..record import Record
 from .searchable_boldable_text_edit import SearchableBoldableTextEdit
 from .about import AboutDialog
 
