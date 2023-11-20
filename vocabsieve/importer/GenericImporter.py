@@ -13,7 +13,6 @@ import re
 import json
 
 from vocabsieve.tools import addNotes
-from vocabsieve.dictionary import getAudio
 from datetime import datetime as dt
 from .BatchNotePreviewer import BatchNotePreviewer
 from ..ui.main_window_base import MainWindowBase
@@ -185,12 +184,9 @@ class GenericImporter(QDialog):
                 audio_path = ""
                 if self.settings.value("audio_dict", "Forvo (all)") != "<disabled>":
                     try:
-                        audios = getAudio(
-                                word,
-                                self.settings.value("target_language", 'en'),
-                                dictionary=self.settings.value("audio_dict", "Forvo (all)"),
-                                custom_dicts=json.loads(
-                                    self.settings.value("custom_dicts", '[]')))
+                        audio_definitions = self.parent.audio_selector.getDefinitions(word)
+                        if audio_definitions and audio_definitions[0].audios is not None:
+                            audios = audio_definitions[0].audios
                     except Exception:
                         audios = {}
                     if audios:

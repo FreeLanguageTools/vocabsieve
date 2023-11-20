@@ -4,6 +4,7 @@ import os
 import re
 import unicodedata
 from itertools import zip_longest
+
 from .vsnt import FIELDS, CARDS, CSS
 from bs4 import BeautifulSoup
 from typing import List
@@ -18,7 +19,12 @@ from .sources.WiktionarySource import WiktionarySource
 from .sources.GoogleTranslateSource import GoogleTranslateSource
 from .sources.LocalDictionarySource import LocalDictionarySource
 from .sources.LocalFreqSource import LocalFreqSource
-from .models import LemmaPolicy, DictionarySourceGroup, DisplayMode, SRSNote, SourceOptions, DictionarySource, FreqSource, AnkiSettings
+from .sources.LocalAudioSource import LocalAudioSource
+from .sources.ForvoAudioSource import ForvoAudioSource
+from .models import (LemmaPolicy, DictionarySourceGroup, DisplayMode, SRSNote, 
+                     SourceOptions, DictionarySource, FreqSource, AnkiSettings,
+                     AudioSource, AudioSourceGroup
+                     )
 from .global_names import settings
 
 def request(action, **params):
@@ -295,6 +301,33 @@ def make_freq_source(src_name: str, dictdb: LocalDictionary) -> FreqSource:
     langcode = settings.value("target_language", "en")
     lemmatized = settings.value("lemfreq", True, type=bool)
     return LocalFreqSource(langcode, lemmatized, dictdb, src_name)
+
+def make_audio_source(src_name: str, dictdb: LocalDictionary) -> AudioSource:
+    langcode = settings.value("target_language", "en")
+    if policy_string:=settings.value(f"audio_lemma_policy"):
+        lemma_policy = LemmaPolicy(policy_string)
+    else:
+        lemma_policy = LemmaPolicy.first_original
+    if src_name == "Forvo":
+        return ForvoAudioSource(langcode, lemma_policy)
+    else:
+        custom_dicts = json.loads(settings.value("custom_dicts", "[]"))
+        this_dict = next((x for x in custom_dicts if x["name"] == src_name), None)
+        if this_dict:
+            return LocalAudioSource(langcode, lemma_policy, dictdb, src_name, this_dict["path"])
+        else:
+            raise Exception("Custom dictionary not found")
+    
+def make_audio_source_group(src_names: list[str], dictdb: LocalDictionary) -> AudioSourceGroup:
+    source_list = []
+    for src_name in src_names:
+        source_list.append(
+            make_audio_source(
+                src_name,
+                dictdb
+            )
+        )
+    return AudioSourceGroup(source_list)
 
 def make_dict_source(src_name: str, dictdb: LocalDictionary) -> DictionarySource:
     if policy_string:=settings.value(f"{src_name}/lemma_policy"):

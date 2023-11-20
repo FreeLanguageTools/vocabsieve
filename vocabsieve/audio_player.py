@@ -4,7 +4,7 @@ from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from PyQt5.QtCore import QUrl
 from typing import Dict
 import requests
-from .forvo import HEADERS
+from .constants import FORVO_HEADERS
 from .global_names import forvopath
 
 class AudioPlayer:
@@ -24,7 +24,7 @@ class AudioPlayer:
     if audiopath.startswith("https://"):
       fpath = os.path.join(forvopath, lang, name)
       if not os.path.exists(fpath):
-          res = requests.get(audiopath, headers=HEADERS)
+          res = requests.get(audiopath, headers=FORVO_HEADERS)
 
           if res.status_code != 200:
               # /TODO: Maybe display error to the user?

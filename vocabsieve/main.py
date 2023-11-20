@@ -23,12 +23,12 @@ from .known_words import getKnownData, getKnownWords
 from .analyzer import BookAnalyzer
 from .config import SettingsDialog
 from .stats import StatisticsWindow
-from .dictionary import getAudio, preprocess_clipboard
+from .dictionary import preprocess_clipboard
 from .importer import KindleVocabImporter, KoreaderVocabImporter, AutoTextImporter
 from .reader import ReaderServer
 from .contentmanager import ContentManager
 from .global_events import GlobalObject
-from .tools import is_json, prepareAnkiNoteDict, starts_with_cyrillic, is_oneword, addNote, make_source_group, getVersion, make_freq_source
+from .tools import is_json, make_audio_source_group, prepareAnkiNoteDict, starts_with_cyrillic, is_oneword, addNote, make_source_group, getVersion, make_freq_source
 from .ui.main_window_base import MainWindowBase
 from .local_dictionary import LocalDictionary
 from .models import AnkiSettings, DictionarySourceGroup, SRSNote
@@ -78,6 +78,10 @@ class MainWindow(MainWindowBase):
         else:
             self.sg2 = DictionarySourceGroup([])
             self.definition2.setSourceGroup(self.sg2) 
+
+        if audio_src_list:=json.loads(self.settings.value("audio_sg", '["Forvo"]')):
+            self.audio_sg = make_audio_source_group(audio_src_list, self.dictdb)
+            self.audio_selector.setSourceGroup(self.audio_sg)
 
     def checkUpdates(self) -> None:
         if self.settings.value("check_updates") is None:
@@ -464,13 +468,9 @@ class MainWindow(MainWindowBase):
             self.definition.lookup(target)
             if self.settings.value("sg2_enabled", False, type=bool):
                 self.definition2.lookup(target)
-            self.getAudio(target)
+            self.audio_selector.lookup(target)
             self.freq_widget.lookup(target)
         
-    def getAudio(self, target: str):
-        self.audio_path = ""
-        if self.settings.value("audio_dict", "Forvo (all)") != "<disabled>":
-            threading.Thread(target=self.fetchAudioInBackground, args=(target,)).start()
 
     def setSentence(self, content) -> None:
         self.sentence.setText(str.strip(content))
@@ -534,20 +534,6 @@ class MainWindow(MainWindowBase):
             self.lookup(text)
         else:
             self.setSentence(preprocess_clipboard(text, lang, should_convert_to_uppercase))
-
-    def fetchAudioInBackground(self, word):
-        try:
-            audios = getAudio(
-                word,
-                self.settings.value("target_language", 'en'),
-                dictionary=self.settings.value("audio_dict", "Forvo (all)"),
-                custom_dicts=json.loads(
-                    self.settings.value("custom_dicts", '[]')))
-
-            self.audio_fetched.emit(audios)
-        except Exception as e:
-            self.audio_fetched.emit({})
-            print("Failed to fetch audio:", repr(e))
 
     def discard_current_audio(self):
         self.audio_selector.clear()

@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QMainWindow, QWidget, QGridLayout, QLabel, QPushButt
                         QSizePolicy, QApplication, QLineEdit
 from PyQt5.QtGui import  QFocusEvent, QDesktopServices
 from PyQt5.QtCore import QUrl, QCoreApplication, pyqtSignal, Qt
+from vocabsieve.ui.audio_selector import AudioSelector
 
 from vocabsieve.ui.multi_definition_widget import MultiDefinitionWidget
 
@@ -38,9 +39,6 @@ class MainWindowBase(QMainWindow):
         self.setFocusPolicy(Qt.StrongFocus)
         self.widget = QWidget()
         self.settings = settings
-        self.audio_player = AudioPlayer()
-        self.audio_fetched.connect(self.updateAudioUI)
-
         self.rec = Record(self, datapath)
         self.dictdb = LocalDictionary(datapath)
         self.splitter = SentenceSplitter(language=self.settings.value("target_language", "en"))
@@ -131,19 +129,9 @@ class MainWindowBase(QMainWindow):
 
         self.discard_audio_button = QPushButton("Discard audio [Ctrl+Shift+X]")
         self.discard_audio_button.setToolTip("This will remove audio from the current working note.")
-        self.audio_selector = QListWidget()
-        self.audio_selector.setMinimumHeight(50)
-        self.audio_selector.setFlow(QListView.TopToBottom)
-        self.audio_selector.setResizeMode(QListView.Adjust)
-        self.audio_selector.setWrapping(True)
 
-        def play_audio_if_exists(x):
-            if x is not None:
-                self.play_audio(x.text()[2:])
-
-        self.audio_selector.currentItemChanged.connect(play_audio_if_exists)
-        self.audio_selector.itemDoubleClicked.connect(play_audio_if_exists)
-
+        self.audio_selector = AudioSelector(self.settings)
+        
         self.definition.setReadOnly(
             not (
                 self.settings.value(
@@ -173,20 +161,6 @@ class MainWindowBase(QMainWindow):
         self.lookup_hist_label = QLabel("")
 
 
-    def play_audio(self, x: Optional[str]) -> None:
-        QCoreApplication.processEvents()
-        if x is None:
-            return
-
-        self.audio_path = self.audio_player.play_audio(x, self.audios, self.settings.value("target_language", "en"))
-
-    def updateAudioUI(self, audios):
-        self.audios = audios
-        self.audio_selector.clear()
-        if len(self.audios):
-            for item in self.audios:
-                self.audio_selector.addItem("🔊 " + item)
-            self.audio_selector.setCurrentItem(self.audio_selector.item(0))
 
     def setupWidgetsV(self) -> QGridLayout:
         """Prepares vertical layout"""

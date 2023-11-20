@@ -18,9 +18,24 @@ class Definition:
     error: Optional[str] = None
 
 @dataclass(frozen=True, slots=True)
+class AudioDefinition:
+    '''Represents a result returned by an audio dictionary'''
+    headword: str
+    lookup_term: str
+    source: str
+    audios: Optional[dict[str, str]] = None
+    error: Optional[str] = None
+
+@dataclass(frozen=True, slots=True)
 class LookupResult:
     '''Represents the definition returned by a dictionary'''
     definition: Optional[str] = None
+    error: Optional[str] = None
+
+@dataclass(frozen=True, slots=True)
+class AudioLookupResult:
+    '''Represents the definition returned by an audio dictionary'''
+    audios: Optional[dict[str, str]] = None
     error: Optional[str] = None
 
 @dataclass(frozen=True, slots=True)
@@ -90,6 +105,10 @@ class Source:
     def __init__(self, name: str, langcode: str) -> None:
         self.name = name
         self.langcode = langcode
+    
+    def define(self, word: str) -> list:
+        '''Get definitions for a word'''
+        raise NotImplementedError
 
 class FreqSource(Source):
     '''Represents an interface to a frequency list'''
@@ -106,7 +125,80 @@ class FreqSource(Source):
     
     def _lookup(self, word: str) -> int:
         raise NotImplementedError
+
+class AudioSource(Source):
+    def __init__(self, name: str, langcode: str, lemma_policy: LemmaPolicy) -> None:
+        super().__init__(name, langcode)
+        self.lemma_policy = lemma_policy
     
+    def define(self, word: str, no_lemma=False) -> list[AudioDefinition]:
+        "Get definitions according to LemmaPolicy"
+        items = []
+        lemma = lem_word(word, self.langcode)
+        if no_lemma:
+            return [self._fmt_lookup(word, word)]
+        
+        if self.lemma_policy == LemmaPolicy.no_lemma:
+            items.append(self._fmt_lookup(word, word))
+
+        elif self.lemma_policy == LemmaPolicy.only_lemma:
+            items.append(self._fmt_lookup(lemma, word))
+
+        elif self.lemma_policy == LemmaPolicy.try_original:
+            items.append(self._fmt_lookup(word, word))
+            if items[0].error is not None:
+                items.append(self._fmt_lookup(lemma, word))
+
+        elif self.lemma_policy == LemmaPolicy.try_lemma:
+            items.append(self._fmt_lookup(lemma, word))
+            if items[0].error is not None:
+                items.append(self._fmt_lookup(word, word))
+
+        elif self.lemma_policy == LemmaPolicy.first_lemma:
+            items.append(self._fmt_lookup(lemma, word))
+            if word != lemma:
+                items.append(self._fmt_lookup(word, word))
+        
+        elif self.lemma_policy == LemmaPolicy.first_original:
+            items.append(self._fmt_lookup(word, word))
+            if word != lemma:
+                items.append(self._fmt_lookup(lemma, word))
+        
+        return items
+    
+    def _fmt_lookup(self, word: str, lookup_term: str) -> AudioDefinition:
+        '''Format a LookupResult as a Definition'''
+        print("Got to _fmt_lookup")
+        result = self._lookup(word)
+        newdict = {}
+        if result.audios is not None:
+            for key in result.audios:
+                newdict[self.name + "::" + key] = result.audios[key]
+            return AudioDefinition(headword=word, source=self.name, audios=newdict, lookup_term=lookup_term)
+        else:
+            return AudioDefinition(headword=word, source=self.name, error=result.error, lookup_term=lookup_term)
+
+    def _lookup(self, word: str) -> AudioLookupResult:
+        raise NotImplementedError
+
+class AudioSourceGroup:
+    '''Wrapper for a group of Sources associated with a textbox on the main window'''
+    def __init__(self, sources: list[AudioSource]) -> None:
+        self.sources = sources
+
+    def getSource(self, name: str) -> Optional[AudioSource]:
+        '''Get a Source by name'''
+        for source in self.sources:
+            if source.name == name:
+                return source
+        return None
+
+    def define(self, word: str) -> list[AudioDefinition]:
+        '''Get definitions from all sources'''
+        definitions = []
+        for source in self.sources:
+            definitions.extend(source.define(word))
+        return definitions
 
 class DictionarySource(Source):
     '''Represents a an interface to a dictionary'''
@@ -194,6 +286,8 @@ class DictionarySourceGroup:
         for source in self.sources:
             definitions.extend(source.define(word))
         return definitions
+    
+
     
 def convert_display_mode(entry: str, mode: DisplayMode) -> str:
         if mode in ['Raw', 'HTML']:

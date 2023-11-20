@@ -142,7 +142,6 @@ to be reimported, otherwise this operation will fail.\
     def closeEvent(self, event):
         self.parent.loadDictionaries()
         self.parent.loadFreqSources()
-        self.parent.loadAudioDictionaries()
         event.accept()
 
     def showStats(self):

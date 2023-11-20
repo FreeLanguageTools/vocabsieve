@@ -33,7 +33,7 @@ class SettingsDialog(QDialog):
         self.dictdb = parent.dictdb
         user_note_type = self.settings.value("note_type")
         self.parent = parent
-        self.resize(500,400)
+        self.resize(700,500)
         self.setWindowTitle("Configure VocabSieve")
         self.initWidgets()
         self.initTabs()
@@ -43,8 +43,6 @@ class SettingsDialog(QDialog):
         self.setupProcessing()
         self.deactivateProcessing()
         self.getMatchedCards()
-        self.twodictmode = self.settings.value(
-            "dict_source2", "<disabled>") != "<disabled>"
 
         if not user_note_type and not self.settings.value("internal/added_default_note_type"):
             try:
@@ -99,7 +97,6 @@ class SettingsDialog(QDialog):
         self.definition_field = QComboBox()
         self.definition2_field = QComboBox()
         self.pronunciation_field = QComboBox()
-        self.audio_dict = QComboBox()
         self.bold_style = QComboBox()
         self.bold_style.setToolTip(
             '"Font weight" bolds words directly on the textbox.\n'
@@ -255,6 +252,9 @@ class SettingsDialog(QDialog):
         self.sg2_widget = SourceGroupWidget()
         self.all_sources_widget = AllSourcesWidget()
         self.sg2_enabled = QCheckBox("Enable Dictionary Group 2")
+        self.audio_sg_widget = SourceGroupWidget()
+        self.all_audio_sources_widget = AllSourcesWidget()
+        self.audio_lemma_policy = QComboBox()
 
 
     def dictmanager(self):
@@ -262,7 +262,6 @@ class SettingsDialog(QDialog):
         importer.exec()
         self.loadDictionaries()
         self.loadFreqSources()
-        self.loadAudioDictionaries()
 
 
     def initTabs(self):
@@ -271,6 +270,8 @@ class SettingsDialog(QDialog):
         self.tab_g_layout = QFormLayout(self.tab_g) 
         self.tab_s = QWidget()
         self.tab_s_layout = QGridLayout(self.tab_s)
+        self.tab_r = QWidget()  # Pronunciation
+        self.tab_r_layout = QGridLayout(self.tab_r)
         self.tab_a = QWidget()  # Anki
         self.tab_a_layout = QFormLayout(self.tab_a)
         self.tab_n = QWidget()  # Network
@@ -292,6 +293,7 @@ class SettingsDialog(QDialog):
 
         self.tabs.addTab(self.tab_g, "General")
         self.tabs.addTab(self.tab_s, "Dictionaries")
+        self.tabs.addTab(self.tab_r, "Pronunciation")
         self.tabs.addTab(self.tab_p, "Processing")
         self.tabs.addTab(self.tab_a, "Anki")
         self.tabs.addTab(self.tab_n, "Network")
@@ -391,9 +393,6 @@ class SettingsDialog(QDialog):
 
         self.tab_g_layout.addRow(QLabel("Bold words"), self.bold_style)
 
-        self.tab_g_layout.addRow(
-            QLabel("Pronunciation source"),
-            self.audio_dict)
         self.tab_g_layout.addRow(QLabel("Forvo audio format"), self.audio_format)
         self.tab_g_layout.addRow(QLabel("<i>◊ Choose mp3 for playing on iOS, but ogg may save space</i>"))
         self.tab_g_layout.addRow(QLabel("Frequency list"), self.freq_source)
@@ -545,8 +544,21 @@ class SettingsDialog(QDialog):
         self.tab_s_layout.addWidget(self.sg2_widget, 4, 0, 1, 1)
         self.tab_s_layout.addWidget(self.all_sources_widget, 2, 1, 3, 1)
 
+        self.tab_r_layout.addWidget(QLabel("<h3>Pronunciation sources</h3>"), 0, 0, 1, 2)
+        self.tab_r_layout.addWidget(QLabel("Enabled pronunciation sources"), 1, 0, 1, 1)
+        self.tab_r_layout.addWidget(QLabel("Available pronunciation sources"), 1, 1, 1, 1)
+        self.tab_r_layout.addWidget(QLabel("Lemmatization policy"), 2, 0, 1, 1)
+        self.tab_r_layout.addWidget(self.audio_lemma_policy, 2, 1, 1, 1)
+        self.tab_r_layout.addWidget(self.audio_sg_widget, 3, 0, 1, 1)
+        self.tab_r_layout.addWidget(self.all_audio_sources_widget, 3, 1, 1, 1)
+
         self.sg2_enabled.stateChanged.connect(lambda value: self.sg2_widget.setEnabled(value))
         self.sg2_widget.setEnabled(self.sg2_enabled.isChecked())
+
+        for policy in LemmaPolicy:
+            self.audio_lemma_policy.addItem(policy.value, policy)
+
+        
 
     def getMatchedCards(self):
         if self.settings.value("enable_anki", True):
@@ -652,7 +664,6 @@ class SettingsDialog(QDialog):
             self.register_config_handler(self.image_field, 'image_field', "<disabled>")
 
         self.loadDictionaries()
-        self.loadAudioDictionaries()
         self.loadFreqSources()
 
         self.sg2_enabled.clicked.connect(self.changeMainLayout)
@@ -675,7 +686,6 @@ class SettingsDialog(QDialog):
             'gtrans_lang',
             'en',
             code_translate=True)
-        self.register_config_handler(self.audio_dict, 'audio_dict', 'Forvo (all)')
         self.register_config_handler(
             self.freq_source, 'freq_source', '<disabled>')
         self.register_config_handler(
@@ -730,11 +740,12 @@ class SettingsDialog(QDialog):
         self.register_config_handler(self.sg1_widget, 'sg1', [])
         self.register_config_handler(self.sg2_widget, 'sg2', [])
 
+        self.register_config_handler(self.audio_sg_widget, 'audio_sg', [])
+        self.register_config_handler(self.audio_lemma_policy, 'audio_lemma_policy', LemmaPolicy.first_lemma)
+
         self.theme.currentTextChanged.connect(qdarktheme.setup_theme)
 
         self.target_language.currentTextChanged.connect(self.loadDictionaries)
-        self.target_language.currentTextChanged.connect(
-            self.loadAudioDictionaries)
         self.target_language.currentTextChanged.connect(self.loadFreqSources)
         self.target_language.currentTextChanged.connect(self.loadUrl)
         self.web_preset.currentTextChanged.connect(self.loadUrl)
@@ -774,24 +785,20 @@ class SettingsDialog(QDialog):
         self.preview_young_button.setEnabled(value)
         self.open_fieldmatcher.setEnabled(value)
 
-    def loadAudioDictionaries(self):
-        custom_dicts = json.loads(self.settings.value("custom_dicts", '[]'))
-        self.audio_dict.blockSignals(True)
-        self.audio_dict.clear()
-        dicts = getAudioDictsForLang(
-            langcodes.inverse[self.target_language.currentText()], custom_dicts)
-        self.audio_dict.addItems(dicts)
-        self.audio_dict.setCurrentText(
-            self.settings.value(
-                'audio_dict', "Forvo (all)"))
-        self.audio_dict.blockSignals(False)
 
     def loadDictionaries(self):
         custom_dicts = json.loads(self.settings.value("custom_dicts", '[]'))
         self.postproc_selector.blockSignals(True)
         self.postproc_selector.clear()
         dicts = getDictsForLang(
-            langcodes.inverse[self.target_language.currentText()], custom_dicts)
+            langcodes.inverse[self.target_language.currentText()], custom_dicts
+            )
+        
+        audioDicts = getAudioDictsForLang(
+            langcodes.inverse[self.target_language.currentText()], custom_dicts
+        )
+        self.all_audio_sources_widget.clear()
+        self.all_audio_sources_widget.addItems(audioDicts)
 
         self.all_sources_widget.clear()
         self.all_sources_widget.addItems(dicts)

@@ -9,5 +9,5 @@ class LocalFreqSource(FreqSource):
     def _lookup(self, word: str) -> int:
         try:
             return int(self.db.define(word, self.langcode, self.name))
-        except KeyError:
+        except TypeError:
             return -1
