@@ -1,17 +1,19 @@
 import time
 import json
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
+from PyQt5.QtWidgets import QMessageBox, QProgressDialog
+from PyQt5.QtCore import Qt
+import re
 from .tools import *
+from .lemmatizer import lem_word
 
 last_known_data = None
-last_known_data_date = None
+last_known_data_date = 0 # 1970-01-01
 
-def getKnownWords(settings, rec):
+def getKnownWords(settings, rec, dictdb):
     langcode = settings.value('target_language', 'en')
     known_langs = [l.strip() for l in settings.value('tracking/known_langs', 'en').split(",")]
     score, count_seen_data, count_lookup_data, count_tgt_lemmas, count_ctx_lemmas = getKnownData(settings, rec)
-    cognates = set(getCognatesData(langcode, known_langs))
+    cognates = set(dictdb.getCognatesData(langcode, known_langs))
     threshold = settings.value('tracking/known_threshold', 100, type=int)
     threshold_cognate = settings.value('tracking/known_threshold_cognate', 25, type=int)
     start = time.time()
@@ -92,7 +94,7 @@ def _getKnownData(settings, rec):
                 )
             young_notes = [note for note in young_notes if note not in mature_notes]
             n_mature = len(mature_notes)
-            progress = QProgressDialog("Computing Anki data...", None, 0, n_mature+len(young_notes), None)
+            progress = QProgressDialog("Computing Anki data...", "", 0, n_mature+len(young_notes), None)
             progress.setWindowModality(Qt.WindowModal)  
             print("Got anki data from AnkiConnect in", time.time() - start, "seconds")
             start = time.time()
@@ -105,6 +107,7 @@ def _getKnownData(settings, rec):
                 word_field, ctx_field = fieldmap.get(model) or ("<Ignore>", "<Ignore>")
                 word = ""
                 ctx = ""
+                lemma = ""
                 if word_field != "<Ignore>":
                     word = info['fields'][word_field]['value']
                 if ctx_field != "<Ignore>":
@@ -126,6 +129,7 @@ def _getKnownData(settings, rec):
                         except KeyError:
                             score[ctx_lemma] = w_anki_ctx
 
+            n = 0
             for n, info in enumerate(young_notes_info):
                 progress.setValue(n_mature+n)
                 model = info['modelName']
@@ -143,6 +147,8 @@ def _getKnownData(settings, rec):
                         score[lemma] += w_anki_word_y
                     except KeyError:
                         score[lemma] = w_anki_word_y
+                else:
+                    continue #skip this one if no word
                 if ctx:
                     ctx = set(map(lambda w: lem_word(w, langcode), re.sub(r"<.*?>", " ", ctx).split()))
                     ctx.discard(lemma)

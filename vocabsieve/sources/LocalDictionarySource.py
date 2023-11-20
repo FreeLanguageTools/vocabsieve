@@ -9,9 +9,7 @@ class LocalDictionarySource(DictionarySource):
 
     def _lookup(self, word: str) -> LookupResult:
         try:
-            print("Looking up the ", word, "in", self.name)
             definition = self.dictdb.define(word, self.langcode, self.name)
-            print("Definition:", definition)
             return LookupResult(definition=definition)
         except Exception as e:
             print(f"Word not found in {self.name}", e)

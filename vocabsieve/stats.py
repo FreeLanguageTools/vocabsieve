@@ -73,7 +73,7 @@ class StatisticsWindow(QDialog):
         if not hasCognates:
             self.known._layout.addWidget(label:=QLabel('No cognates data installed. Please download <a href="https://raw.githubusercontent.com/FreeLanguageTools/CogNet-processing/master/cognates.json.xz">this file</a> and import it in the configuration tool.'))
             label.setOpenExternalLinks(True)
-        known_words, known_cognates, total_score, count_seen_data, count_lookup_data, count_tgt_lemmas, count_ctx_lemmas = getKnownWords(self.settings, self.rec)
+        known_words, known_cognates, total_score, count_seen_data, count_lookup_data, count_tgt_lemmas, count_ctx_lemmas = getKnownWords(self.settings, self.rec, self.dictdb)
         print("Got known data in", time.time() - start, "seconds")
 
         if langcode in ['ru', 'uk']:

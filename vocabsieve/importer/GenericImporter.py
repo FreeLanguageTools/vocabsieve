@@ -14,6 +14,7 @@ from .BatchNotePreviewer import BatchNotePreviewer
 from ..ui.main_window_base import MainWindowBase
 from .models import ReadingNote
 from ..models import SRSNote
+from ..tools import prepareAnkiNoteDict
 
 def date_to_timestamp(datestr: str):
     return dt.strptime(datestr, "%Y-%m-%d %H:%M:%S").timestamp()
@@ -207,55 +208,18 @@ class GenericImporter(QDialog):
                 self.preview_widget.appendNoteItem(new_note_item)
                 self.anki_notes.append(new_note_item)
             self.progressbar.setValue(n_looked_up+1)
-            
         
         # Unlock buttons again now
         self.lookup_button.setEnabled(True)
         self.anki_button.setEnabled(True)
-        print("Lengths", len(self.anki_notes), len(self.selected_reading_notes))
     def to_anki(self):
-        notes = []
-        for word, sentence, definition, definition2, audio_path, book_name in zip(
-                self.words, self.sentences, self.definitions, self.definition2s, self.audio_paths, self.book_names):
-            if word and sentence and definition:
-                if self.settings.value("bold_word", 1, type=int):
-                    sentence = re.sub(
-                        r"__(.+?)__",
-                        r"<strong>\1</strong>",
-                        sentence
-                        )
-                tags = " ".join([
-                    self.parent.settings.value("tags", "vocabsieve").strip(),
-                    self.methodname,
-                    book_name.replace(" ","_")
-                    ]
-                    )
-                content = {
-                    "deckName": self.parent.settings.value("deck_name"),
-                    "modelName": self.parent.settings.value("note_type"),
-                    "fields": {
-                        self.parent.settings.value("sentence_field"): sentence,
-                        self.parent.settings.value("word_field"): word,
-                    },
-                    "tags": tags.split(" ")
-                }
-                definition = definition.replace("\n", "<br>")
-                content['fields'][self.parent.settings.value(
-                    'definition_field')] = definition
-                if self.settings.value("dict_source2", "<disabled>") != '<disabled>':
-                    definition2 = definition2.replace("\n", "<br>")
-                    content['fields'][self.parent.settings.value('definition2_field')] = definition2
-                if self.settings.value("audio_dict", "<disabled>") != '<disabled>' and audio_path:
-                    content['audio'] = {}
-                    if audio_path.startswith("https://") or audio_path.startswith("http://"):
-                        content['audio']['url'] = audio_path
-                    else:
-                        content['audio']['path'] = audio_path
-                    content['audio']['filename'] = audio_path.replace("\\", "/").split("/")[-1]
-                    content['audio']['fields'] = [self.settings.value('pronunciation_field')]
+        notes_data = []
+        for note in self.anki_notes:
+            notes_data.append(
+                prepareAnkiNoteDict(self.parent.getAnkiSettings(), note)
+                )
 
-                notes.append(content)
-        res = addNotes(self.parent.settings.value("anki_api"), notes)
+        res = addNotes(self.parent.settings.value("anki_api"), notes_data)
         # Record last import data
         if self.methodname != "auto": # don't save for auto vocab extraction
             self.parent.settings.setValue("last_import_method", self.methodname)
@@ -264,7 +228,7 @@ class GenericImporter(QDialog):
 
         self._layout.addRow(QLabel(
             QDateTime.currentDateTime().toString('[hh:mm:ss]') + " "
-            + str(len(notes)) 
+            + str(len(notes_data)) 
             + " notes have been exported, of which " 
             + str(len([i for i in res if i]))
             + " were successfully added to your collection."))
