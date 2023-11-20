@@ -116,11 +116,8 @@ class KoreaderVocabImporter(GenericImporter):
                     self.parent.rec.recordLookup(
                         LookupRecord(
                             word=word, 
-                            lemma=lem_word(word, langcode),
                             language=langcode, 
-                            source="koreader", 
-                            lemmatization=False,
-                            success=True,
+                            source="koreader"
                         ), 
                         timestamp, 
                         commit=False

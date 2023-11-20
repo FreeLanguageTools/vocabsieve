@@ -62,11 +62,8 @@ class KindleVocabImporter(GenericImporter):
                 self.parent.rec.recordLookup(
                     LookupRecord(
                         word=word, 
-                        lemma=lem_word(word, langcode),
                         language=langcode, 
                         source="kindle", 
-                        lemmatization=False,
-                        success=True,
                     ), 
                     timestamp/1000, 
                     commit=False

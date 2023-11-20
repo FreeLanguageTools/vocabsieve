@@ -16,7 +16,7 @@ from PyQt5.QtGui import QClipboard, QKeySequence, QPixmap, QDesktopServices
 from PyQt5.QtWidgets import QApplication, QMessageBox, QAction, QShortcut, QFileDialog
 import qdarktheme
 import json
-
+from .lemmatizer import lem_word
 from .global_names import datapath
 from .text_manipulation import apply_bold_char, apply_bold_tags, bold_word_in_text
 from .known_words import getKnownData, getKnownWords
@@ -31,7 +31,7 @@ from .global_events import GlobalObject
 from .tools import is_json, make_audio_source_group, prepareAnkiNoteDict, starts_with_cyrillic, is_oneword, addNote, make_source_group, getVersion, make_freq_source
 from .ui.main_window_base import MainWindowBase
 from .local_dictionary import LocalDictionary
-from .models import AnkiSettings, DictionarySourceGroup, SRSNote
+from .models import AnkiSettings, DictionarySourceGroup, LookupRecord, SRSNote
 from sentence_splitter import SentenceSplitter, SentenceSplitterException
 
 
@@ -465,6 +465,13 @@ class MainWindow(MainWindowBase):
     def lookup(self, target: str) -> None:
         self.boldWordInSentence(target)
         if target:
+            self.rec.recordLookup(
+                LookupRecord(
+                    word=target,
+                    language=self.getLanguage(),
+                    source="vocabsieve"
+                )
+            )
             self.definition.lookup(target)
             if self.settings.value("sg2_enabled", False, type=bool):
                 self.definition2.lookup(target)

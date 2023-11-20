@@ -42,11 +42,8 @@ class AudioLookupResult:
 class LookupRecord:
     '''Represents a lookup record in the database'''
     word: str
-    lemma: str
     language: str
-    lemmatization: bool
     source: str
-    success: bool
 
 @dataclass(frozen=True, slots=True)
 class SRSNote:

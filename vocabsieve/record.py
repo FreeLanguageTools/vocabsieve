@@ -288,11 +288,11 @@ class Record():
             (
                 timestamp,
                 lr.word,
-                lr.lemma,
+                lem_word(lr.word, lr.language),
                 lr.language,
-                lr.lemmatization,
+                True,
                 lr.source,
-                lr.success
+                True
             )
         )
         if commit:
