@@ -88,7 +88,7 @@ class DisplayMode(str, Enum):
     markdown_html = "Markdown-HTML"
     html = "HTML"
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class SourceOptions:
     '''Represents options for a Source'''
     lemma_policy: LemmaPolicy
@@ -96,6 +96,22 @@ class SourceOptions:
     skip_top: int
     collapse_newlines: int
 
+
+@dataclass(slots=True)
+class WordRecord:
+    """Represents a user's knowledge of a word in the database
+    Can be used to calculate score
+    """
+    lemma: str
+    language: str
+    n_seen: int = 0
+    n_lookups: int = 0
+    anki_young_ctx: int = 0
+    anki_young_tgt: int = 0
+    anki_mature_ctx: int = 0
+    anki_mature_tgt: int = 0
+    
+    
 
 class Source:
     '''Represents an abstract interface to a source of information in a language'''

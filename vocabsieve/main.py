@@ -1,7 +1,6 @@
 import csv
-from multiprocessing import set_forkserver_preload
+import dataclasses
 from operator import ge
-import threading
 import importlib.metadata
 import os
 import sys
@@ -17,10 +16,9 @@ from PyQt5.QtGui import QClipboard, QKeySequence, QPixmap, QDesktopServices
 from PyQt5.QtWidgets import QApplication, QMessageBox, QAction, QShortcut, QFileDialog
 import qdarktheme
 import json
-from .lemmatizer import lem_word
+
 from .global_names import datapath
 from .text_manipulation import apply_bold_char, apply_bold_tags, bold_word_in_text
-from .known_words import getKnownData, getKnownWords
 from .analyzer import BookAnalyzer
 from .config import SettingsDialog
 from .stats import StatisticsWindow
@@ -31,10 +29,9 @@ from .contentmanager import ContentManager
 from .global_events import GlobalObject
 from .tools import is_json, make_audio_source_group, prepareAnkiNoteDict, starts_with_cyrillic, is_oneword, addNote, make_source_group, getVersion, make_freq_source
 from .ui.main_window_base import MainWindowBase
-from .local_dictionary import LocalDictionary
-from .models import AnkiSettings, DictionarySourceGroup, LookupRecord, SRSNote
-from sentence_splitter import SentenceSplitter, SentenceSplitterException
-
+from .models import DictionarySourceGroup, LookupRecord, SRSNote, WordRecord
+from sentence_splitter import SentenceSplitter
+from .lemmatizer import lem_word
 
 
 class MainWindow(MainWindowBase):
@@ -188,7 +185,7 @@ class MainWindow(MainWindowBase):
         self.stats_action.triggered.connect(self.onStats)
         self.analyze_book_action.triggered.connect(self.onAnalyzeBook)
         self.export_known_words_action.triggered.connect(self.exportKnownWords)
-        self.export_word_scores_action.triggered.connect(self.exportWordScores)
+        self.export_word_scores_action.triggered.connect(self.exportWordData)
 
         importmenu.addActions(
             [
@@ -233,14 +230,14 @@ class MainWindow(MainWindowBase):
         if not path:
             return
 
-        known_words, *_ = getKnownWords(self.settings, self.rec, self.dictdb)
+        known_words = self.rec.getKnownWords()
         if self.settings.value('target_language', 'en') in ['ru', 'uk']:
             known_words = [word for word in known_words if starts_with_cyrillic(word)]
 
         with open(path, 'w', encoding='utf-8') as file:
             json.dump(known_words, file, indent=4, ensure_ascii=False)
 
-    def exportWordScores(self):
+    def exportWordData(self):
         path, _ = QFileDialog.getSaveFileName(
             self,
             "Save word scores to JSON file",
@@ -253,11 +250,10 @@ class MainWindow(MainWindowBase):
         if not path:
             return
 
-        score, *_ = getKnownData(self.settings, self.rec)
-        score = {k:v for k,v in score.items() if not k.startswith('http') and " " not in k and not k.isnumeric()}
+        data = self.rec.getKnownData()
 
         with open(path, 'w', encoding='utf-8') as file:
-            json.dump(score, file, indent=4, ensure_ascii=False)
+            json.dump([dataclasses.asdict(item) for item in data.values()], file, indent=4, ensure_ascii=False)
 
     def onContentManager(self):
         ContentManager(self).exec()
@@ -468,7 +464,9 @@ class MainWindow(MainWindowBase):
     
     def lookup(self, target: str, no_lemma=False) -> None:
         self.boldWordInSentence(target)
+        langcode = self.settings.value("target_language", "en")
         if target:
+            lemma = lem_word(target, langcode)
             self.rec.recordLookup(
                 LookupRecord(
                     word=target,
@@ -476,6 +474,11 @@ class MainWindow(MainWindowBase):
                     source="vocabsieve"
                 )
             )
+            word_record = self.rec.getKnownData().get(
+                lemma, 
+                WordRecord(lemma=lemma, language=langcode)
+                )
+            self.word_record_display.setWordRecord(word_record)
             self.definition.lookup(target, no_lemma)
             if self.settings.value("sg2_enabled", False, type=bool):
                 self.definition2.lookup(target, no_lemma)

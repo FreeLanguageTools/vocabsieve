@@ -1,15 +1,15 @@
 from PyQt5.QtWidgets import QMainWindow, QWidget, QGridLayout, QLabel, QPushButton, QCheckBox, \
-                        QStatusBar, QMenuBar, QListView, QListWidget, \
+                        QStatusBar, QMenuBar, \
                         QSizePolicy, QApplication, QLineEdit
 from PyQt5.QtGui import  QFocusEvent, QDesktopServices
-from PyQt5.QtCore import QUrl, QCoreApplication, pyqtSignal, Qt
-from vocabsieve.ui.audio_selector import AudioSelector
+from PyQt5.QtCore import QUrl, pyqtSignal, Qt
+from .audio_selector import AudioSelector
 
-from vocabsieve.ui.multi_definition_widget import MultiDefinitionWidget
+from .multi_definition_widget import MultiDefinitionWidget
+from .word_record_display import WordRecordDisplay
 
 from ..global_names import app_title, settings, datapath
 
-from ..audio_player import AudioPlayer
 from ..record import Record
 from ..local_dictionary import LocalDictionary
 from .searchable_boldable_text_edit import SearchableBoldableTextEdit
@@ -19,7 +19,6 @@ from ..models import AnkiSettings
 
 import platform
 import os
-from typing import Optional
 from sentence_splitter import SentenceSplitter
 
 
@@ -155,7 +154,7 @@ class MainWindowBase(QMainWindow):
                 border: 1px solid black;
             '''
         )
-        self.lookup_hist_label = QLabel("")
+        self.word_record_display = WordRecordDisplay()
 
 
 
@@ -177,7 +176,7 @@ class MainWindowBase(QMainWindow):
 
         layout.addWidget(self.word, 6, 0)
         layout.addWidget(self.freq_widget, 6, 1)
-        layout.addWidget(self.lookup_hist_label, 6, 2)
+        layout.addWidget(self.word_record_display, 6, 2)
         
         layout.setRowStretch(8, 2)
         layout.setRowStretch(10, 2)

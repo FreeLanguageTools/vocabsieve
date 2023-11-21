@@ -1,19 +1,25 @@
-import imp
+from calendar import c
 import sqlite3
 import os
 import time
+import re
 from bidict import bidict
 from typing import Optional
+import json
+from PyQt5.QtWidgets import QMessageBox, QProgressDialog
+from PyQt5.QtCore import Qt
 from datetime import datetime
 from .constants import langcodes
 from .lemmatizer import lem_word
-from .models import LookupRecord
+from .models import LookupRecord, WordRecord
+from .tools import getVersion, findNotes, notesInfo
 
 dictionaries = bidict({"Wiktionary (English)": "wikt-en",
                        "Google Translate": "gtrans"})
 
 
 class Record():
+    """Class to store user data"""
     def __init__(self, parent, datapath):
         self.conn = sqlite3.connect(
             os.path.join(
@@ -22,6 +28,7 @@ class Record():
             check_same_thread=False)
         self.c = self.conn.cursor()
         self.c.execute("PRAGMA foreign_keys = ON")
+        self.settings = parent.settings
         self.createTables()
         self.fixOld()
         if not parent.settings.value("internal/db_has_lemma"):
@@ -43,7 +50,9 @@ class Record():
         if not parent.settings.value("internal/lookup_unique_index"):
             self.makeLookupUnique()
             parent.settings.setValue("internal/lookup_unique_index", True)
-        self.conn.commit()
+
+        self.last_known_data: Optional[dict[str, WordRecord]] = None
+        self.last_known_data_date: float = 0.0 # 1970-01-01
 
     def fixSeen(self):
         try:
@@ -395,4 +404,144 @@ class Record():
         self.createTables()
         self.c.execute("VACUUM")
 
+    def getKnownData(self) -> dict[str, WordRecord]:
+        lifetime = self.settings.value('tracking/known_data_lifetime', 1800, type=int) # Seconds
+        if self.last_known_data is None:
+            self.last_known_data = self._refreshKnownData()
+            self.last_known_data_date = time.time()
+            return self.last_known_data
+        else:
+            if time.time() - self.last_known_data_date > lifetime:
+                self.last_known_data = self._refreshKnownData()
+                self.last_known_data_date = time.time()
+                return self.last_known_data
+            else:
+                return self.last_known_data
 
+    def _refreshKnownData(self) -> dict[str, WordRecord]:
+
+        langcode = self.settings.value('target_language', 'en')
+
+        result: dict[str, WordRecord] = {}
+
+        start = time.time()
+
+        count_lookup_data = 0
+        for lemma, count in self.countAllLemmaLookups(langcode):
+            count_lookup_data += 1
+            result[lemma] = WordRecord(lemma=lemma, language=langcode, n_lookups=count)
+
+        print("Prepared lookup data in", time.time() - start, "seconds")
+
+        start = time.time()
+        count_seen_data = 0
+        for lemma, count in self.getSeen(langcode):
+            count_seen_data += 1
+            try:
+                result[lemma].n_seen = count
+            except KeyError:
+                result[lemma] = WordRecord(lemma=lemma, language=langcode, n_seen=count)
+
+        print("Prepared seen data in", time.time() - start, "seconds")
+
+        start = time.time()
+        
+        fieldmap = json.loads(self.settings.value("tracking/fieldmap",  "{}"))
+        if not fieldmap:
+            QMessageBox.warning(None, "No Anki notes field matching data",
+                "Use 'Match fields' in settings.")
+
+        anki_api = self.settings.value("anki_api", "127.0.0.1:8765")
+
+        tgt_lemmas = []
+        ctx_lemmas = []
+        if self.settings.value('enable_anki', True, type=bool):
+            try:
+                _ = getVersion(anki_api)
+                mature_notes = findNotes(
+                    anki_api,
+                    self.settings.value("tracking/anki_query_mature")
+                    )
+                young_notes = findNotes(
+                    anki_api,
+                    self.settings.value("tracking/anki_query_young")
+                    )
+                young_notes = [note for note in young_notes if note not in mature_notes]
+                n_mature = len(mature_notes)
+                progress = QProgressDialog("Computing Anki data...", "", 0, n_mature+len(young_notes), None)
+                progress.setWindowModality(Qt.WindowModal)  
+                print("Got anki data from AnkiConnect in", time.time() - start, "seconds")
+                start = time.time()
+                mature_notes_info = notesInfo(anki_api, mature_notes)
+                young_notes_info = notesInfo(anki_api, young_notes)
+
+                for n, info in enumerate(mature_notes_info):
+                    progress.setValue(n)
+                    model = info['modelName']
+                    word_field, ctx_field = fieldmap.get(model) or ("<Ignore>", "<Ignore>")
+                    word = ""
+                    ctx = ""
+                    lemma = ""
+                    if word_field != "<Ignore>":
+                        word = info['fields'][word_field]['value']
+                    if ctx_field != "<Ignore>":
+                        ctx = info['fields'][ctx_field]['value']
+                    if word:
+                        lemma = word # word field is assumed to be already lemmatized
+                        tgt_lemmas.append(lemma)
+                        try:
+                            result[lemma].anki_mature_tgt += 1
+                        except KeyError:
+                            result[lemma] = WordRecord(lemma=lemma, language=langcode, anki_mature_tgt=1)
+                    if ctx:
+                        this_ctx_lemmas = set(map(lambda w: lem_word(w, langcode), re.sub(r"<.*?>", " ", ctx).split()))
+                        if lemma: # Don't count if already counted as word
+                            this_ctx_lemmas.discard(lemma)
+                        for ctx_lemma in this_ctx_lemmas:
+                            ctx_lemmas.append(ctx_lemma)
+                            print("Mature ctx_lemma", ctx_lemma)
+                            try:
+                                result[ctx_lemma].anki_mature_ctx += 1
+                            except KeyError:
+                                result[ctx_lemma] = WordRecord(lemma=ctx_lemma, language=langcode, anki_mature_ctx=1)
+
+                n = 0
+                for n, info in enumerate(young_notes_info):
+                    progress.setValue(n_mature+n)
+                    model = info['modelName']
+                    word_field, ctx_field = fieldmap.get(model) or ("<Ignore>", "<Ignore>")
+                    word = ""
+                    lemma = ""
+                    ctx = ""
+                    if word_field != "<Ignore>":
+                        word = info['fields'][word_field]['value']
+                    if ctx_field != "<Ignore>":
+                        ctx = info['fields'][ctx_field]['value']
+                    if word:
+                        lemma = word # word field is assumed to be already lemmatized
+                        tgt_lemmas.append(lemma)
+                        try:
+                            result[lemma].anki_young_tgt += 1
+                        except KeyError:
+                            result[lemma] = WordRecord(lemma=lemma, language=langcode, anki_young_tgt=1)
+                    if ctx:
+                        this_ctx_lemmas = set(map(lambda w: lem_word(w, langcode), re.sub(r"<.*?>", " ", ctx).split()))
+                        if lemma: # Don't count if already counted as word
+                            this_ctx_lemmas.discard(lemma)
+                        for ctx_lemma in this_ctx_lemmas:
+                            ctx_lemmas.append(ctx_lemma)
+                            print("Young ctx_lemma", ctx_lemma)
+                            try:
+                                result[ctx_lemma].anki_young_ctx += 1
+                            except KeyError:
+                                result[ctx_lemma] = WordRecord(lemma=ctx_lemma, language=langcode, anki_young_ctx=1)
+                progress.setValue(n_mature+n+1)
+            except Exception as e:
+                if self.settings.value("enable_anki"):
+                    QMessageBox.warning(None, "Cannot access AnkiConnect", 
+                        "Check if AnkiConnect is installed and Anki is running. <br>Re-open statistics to view the whole data.\n\n" + repr(e))
+            result = {k: v for k, v in result.items() if k.isalpha() and not k.startswith('http') and " " not in k}
+            return result
+
+    def getKnownWords(self):
+        pass
