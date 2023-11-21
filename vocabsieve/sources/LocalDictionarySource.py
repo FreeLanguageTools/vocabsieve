@@ -11,6 +11,6 @@ class LocalDictionarySource(DictionarySource):
         try:
             definition = self.dictdb.define(word, self.langcode, self.name)
             return LookupResult(definition=definition)
-        except Exception as e:
-            print(f"Word not found in {self.name}", e)
+        except KeyError as e:
+            print(repr(e))
             return LookupResult(error=repr(e))

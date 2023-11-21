@@ -1,10 +1,14 @@
-from PyQt5.QtWidgets import QListWidget, QListView
-from PyQt5.QtCore import QCoreApplication
+from PyQt5.QtWidgets import QListWidget, QListView, QToolButton, QVBoxLayout
+from PyQt5.QtCore import QCoreApplication, pyqtSignal, QSize
+from PyQt5.QtWidgets import QStyle
 from typing import Optional
+
 from ..audio_player import AudioPlayer
 from ..models import AudioDefinition, AudioSourceGroup, Definition
+import threading
 
 class AudioSelector(QListWidget):
+    audio_fetched = pyqtSignal(AudioDefinition)    
     def __init__(self, settings) -> None:
         super().__init__()
         self.setMinimumHeight(50)
@@ -13,36 +17,67 @@ class AudioSelector(QListWidget):
         self.setResizeMode(QListView.Adjust)
         self.setWrapping(True)
         self.audio_player = AudioPlayer()
+        self.discard_audio_button = QToolButton(self)
+
+        
+        self.discard_audio_button.clicked.connect(self.clear)
+        icon = self.style().standardIcon(QStyle.SP_TrashIcon)
+        self.discard_audio_button.setIcon(icon)
+        
+
+        self.current_audio_path = ""
         self.audios: dict[str, str] = {}
         self.sg: Optional[AudioSourceGroup] = None
+        self.audio_fetched.connect(self.appendDefinition)
         self.connect_signals()
 
     def setSourceGroup(self, sg: AudioSourceGroup) -> None:
         self.sg = sg
 
-    def getDefinitions(self, word: str) -> list[AudioDefinition]:
+    def getDefinitions(self, word: str, no_lemma: bool = False) -> list[AudioDefinition]:
         if self.sg is None:
             return []
         return self.sg.define(word)
     
-    def lookup(self, word: str):
-        self.clear()
+    def lookup(self, word: str, no_lemma: bool = False):
         self.audios = {}
-        for definition in self.getDefinitions(word):
-            self.appendDefinition(definition)
-        self.updateAudioUI()
+        threading.Thread(
+            target=self.lookup_on_thread, 
+            args=(word, no_lemma)).start()
+
+    def lookup_on_thread(self, word: str, no_lemma: bool = False):
+        self.audios = {}
+        for definition in self.getDefinitions(word, no_lemma):
+            self.audio_fetched.emit(definition)
 
     def appendDefinition(self, defi: AudioDefinition):
         if defi.audios is None:
             return
         self.audios.update(defi.audios)
+        print("Audio fetched: ", defi.headword, defi.audios)
+        self.updateAudioUI()
     
-
+    def clear(self):
+        super().clear()
+        self.audios = {}
+        self.current_audio_path = ""
 
 
     def play_audio_if_exists(self, x):
         if x is not None:
-            self.play_audio(x.text()[2:])
+            self.current_audio_path = x.text()[2:]
+            self.play_audio(self.current_audio_path)
+        else:
+            self.current_audio_path = ""
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.alignDiscardButton()
+
+    def alignDiscardButton(self):
+        padding = QSize(5,5) # optional
+        newSize = self.size() - self.discard_audio_button.size() - padding
+        self.discard_audio_button.move(newSize.width(), 0) 
 
     def updateAudioUI(self):
         for item in self.audios:

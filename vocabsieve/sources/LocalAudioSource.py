@@ -17,6 +17,6 @@ class LocalAudioSource(AudioSource):
             for file in audio_files:
                 audios[file] = os.path.join(self.base_path, file)
             return AudioLookupResult(audios=audios)
-        except Exception as e:
-            print(f"Word not found in {self.name}", e)
+        except KeyError as e:
+            print(repr(e))
             return AudioLookupResult(error=repr(e))

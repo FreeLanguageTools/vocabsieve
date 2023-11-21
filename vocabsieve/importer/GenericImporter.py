@@ -182,7 +182,7 @@ class GenericImporter(QDialog):
                 QApplication.processEvents()
 
                 audio_path = ""
-                if self.settings.value("audio_dict", "Forvo (all)") != "<disabled>":
+                if json.loads(self.settings.value("audio_sg", "[]")) != []:
                     try:
                         audio_definitions = self._parent.audio_selector.getDefinitions(word)
                         if audio_definitions and audio_definitions[0].audios is not None:

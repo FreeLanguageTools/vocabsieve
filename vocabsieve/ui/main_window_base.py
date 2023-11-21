@@ -51,12 +51,12 @@ class MainWindowBase(QMainWindow):
         self.scaleFont()
         self.initWidgets()
 
-        if self.settings.value("orientation", "Vertical") == "Vertical":
-            self.resize(400, 730)
-            self._layout = self.setupWidgetsV()  # type: ignore
-        else:
-            self.resize(1000, 300)
-            self._layout = self.setupWidgetsH()  # type: ignore
+        #if self.settings.value("orientation", "Vertical") == "Vertical":
+        self.resize(500, 800)
+        self.setupWidgetsV() 
+        #else:
+        #    self.resize(1000, 300)
+        #    self.setupWidgetsH()
 
     def scaleFont(self) -> None:
         font = QApplication.font()
@@ -85,7 +85,8 @@ class MainWindowBase(QMainWindow):
         self.sentence.setMinimumHeight(50)
         #self.sentence.setMaximumHeight(300)
         self.word = QLineEdit()
-        self.word.setPlaceholderText("Word will appear here when looked up.")
+        self.word.setPlaceholderText("Word")
+        self.src_name_label = QLabel()
         self.definition = MultiDefinitionWidget(self.word)
         self.definition.setMinimumHeight(70)
         #self.definition.setMaximumHeight(1800)
@@ -94,7 +95,7 @@ class MainWindowBase(QMainWindow):
         #self.definition2.setMaximumHeight(1800)
         self.tags = QLineEdit()
         self.tags.setPlaceholderText(
-            "Type in a list of tags to be used, separated by spaces (same as in Anki).")
+            "Tags to be used, separated by spaces")
         self.sentence.setToolTip(
             "Look up a word by double clicking it. Or, select it"
             ", then press \"Get definition\".")
@@ -105,7 +106,6 @@ class MainWindowBase(QMainWindow):
             "This will look up the word without lemmatization.")
         self.toanki_button = QPushButton(f"Add note [{MOD}-S]")
 
-        self.config_button = QPushButton("Configure..")
         self.read_button = QPushButton(f"Read clipboard [{MOD}-V]")
         self.bar = QStatusBar()
         self.setStatusBar(self.bar)
@@ -126,9 +126,6 @@ class MainWindowBase(QMainWindow):
         self.web_button = QPushButton(f"Open webpage [{MOD}-1]")
         self.freq_widget = FreqDisplayWidget()
         self.freq_widget.setPlaceholderText("Word frequency")
-
-        self.discard_audio_button = QPushButton("Discard audio [Ctrl+Shift+X]")
-        self.discard_audio_button.setToolTip("This will remove audio from the current working note.")
 
         self.audio_selector = AudioSelector(self.settings)
         
@@ -162,7 +159,7 @@ class MainWindowBase(QMainWindow):
 
 
 
-    def setupWidgetsV(self) -> QGridLayout:
+    def setupWidgetsV(self) -> None:
         """Prepares vertical layout"""
 
         layout = QGridLayout(self.widget)
@@ -171,27 +168,17 @@ class MainWindowBase(QMainWindow):
         layout.addWidget(self.single_word, 1, 0, 1, 2)
         layout.addWidget(self.lookup_definition_on_doubleclick, 2, 0, 1, 2)
 
-        layout.addWidget(
-            QLabel("<h3 style=\"font-weight: normal;\">Sentence</h3>"), 3, 0)
-        layout.addWidget(self.read_button, 3, 1)
+        layout.addWidget(self.read_button, 3, 0)
+        layout.addWidget(self.web_button, 3, 1)
         layout.addWidget(self.image_viewer, 0, 2, 4, 1)
         layout.addWidget(self.sentence, 4, 0, 1, 3)
         layout.setRowStretch(4, 1)
-        layout.addWidget(
-            QLabel("<h3 style=\"font-weight: normal;\">Word</h3>"), 5, 0)
+        
 
-        if self.settings.value("lemmatization", True, type=bool):
-            layout.addWidget(self.lookup_button, 5, 1)
-            layout.addWidget(self.lookup_exact_button, 5, 2)
-        else:
-            layout.addWidget(self.lookup_button, 5, 1, 1, 2)
-
-        layout.addWidget(self.word, 6, 0, 1, 2)
+        layout.addWidget(self.word, 6, 0)
+        layout.addWidget(self.freq_widget, 6, 1)
         layout.addWidget(self.lookup_hist_label, 6, 2)
-        layout.addWidget(
-            QLabel("<h3 style=\"font-weight: normal;\">Definition</h3>"), 7, 0)
-        layout.addWidget(self.freq_widget, 7, 1)
-        layout.addWidget(self.web_button, 7, 2)
+        
         layout.setRowStretch(8, 2)
         layout.setRowStretch(10, 2)
         if self.settings.value("sg2_enabled", False, type=bool):
@@ -200,28 +187,16 @@ class MainWindowBase(QMainWindow):
         else:
             layout.addWidget(self.definition, 8, 0, 4, 3)
 
-        layout.addWidget(
-            QLabel("<h3 style=\"font-weight: normal;\">Pronunciation</h3>"),
-            12,
-            0,
-            1,
-            0)
-        layout.addWidget(self.discard_audio_button, 12, 1, 1, 2, Qt.AlignRight)
         layout.addWidget(self.audio_selector, 13, 0, 1, 3)
         layout.setRowStretch(13, 1)
-        layout.addWidget(
-            QLabel("<h3 style=\"font-weight: normal;\">Additional tags</h3>"),
-            14,
-            0,
-            1,
-            3)
 
-        layout.addWidget(self.tags, 15, 0, 1, 3)
+        layout.addWidget(self.tags, 14, 0, 1, 3)
 
         layout.addWidget(self.toanki_button, 16, 0, 1, 3)
-        layout.addWidget(self.config_button, 17, 0, 1, 3)
 
-        return layout
+        layout.setColumnStretch(0, 2)
+        layout.setColumnStretch(1, 2)
+        layout.setColumnStretch(2, 5)
 
     
 
@@ -233,7 +208,7 @@ class MainWindowBase(QMainWindow):
         self.about_dialog = AboutDialog()
         self.about_dialog.exec_()
 
-    def setupWidgetsH(self) -> QGridLayout:
+    def setupWidgetsH(self) -> None:
         """Prepares horizontal layout"""
 
         layout = QGridLayout(self.widget)
@@ -247,7 +222,6 @@ class MainWindowBase(QMainWindow):
             QLabel("<h3 style=\"font-weight: normal;\">Sentence</h3>"), 1, 0)
         layout.addWidget(self.freq_widget, 0, 2)
         layout.addWidget(self.read_button, 6, 1)
-        layout.addWidget(self.discard_audio_button, 6, 0)
 
         layout.addWidget(self.sentence, 2, 0, 3, 2)
         layout.addWidget(self.audio_selector, 5, 0, 1, 2)
@@ -272,7 +246,6 @@ class MainWindowBase(QMainWindow):
         layout.addWidget(self.tags, 6, 2)
 
         layout.addWidget(self.toanki_button, 6, 3, 1, 1)
-        layout.addWidget(self.config_button, 6, 4, 1, 1)
         layout.setColumnStretch(0, 2)
         layout.setColumnStretch(1, 2)
         layout.setColumnStretch(2, 0)
@@ -286,7 +259,6 @@ class MainWindowBase(QMainWindow):
         layout.setRowStretch(5, 5)
         layout.setRowStretch(6, 0)
 
-        return layout
     
     def getAnkiSettings(self) -> AnkiSettings:
         return AnkiSettings(

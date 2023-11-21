@@ -190,11 +190,11 @@ class AudioSourceGroup:
                 return source
         return None
 
-    def define(self, word: str) -> list[AudioDefinition]:
+    def define(self, word: str, no_lemma: bool = False) -> list[AudioDefinition]:
         '''Get definitions from all sources'''
         definitions = []
         for source in self.sources:
-            definitions.extend(source.define(word))
+            definitions.extend(source.define(word, no_lemma))
         return definitions
 
 class DictionarySource(Source):
@@ -277,11 +277,11 @@ class DictionarySourceGroup:
                 return source
         return None
 
-    def define(self, word: str) -> list[Definition]:
+    def define(self, word: str, no_lemma: bool = False) -> list[Definition]:
         '''Get definitions from all sources'''
         definitions = []
         for source in self.sources:
-            definitions.extend(source.define(word))
+            definitions.extend(source.define(word, no_lemma=no_lemma))
         return definitions
     
 

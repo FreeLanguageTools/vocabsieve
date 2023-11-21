@@ -8,7 +8,6 @@ from .GenericImporter import GenericImporter
 from .utils import koreader_scandir, findDBpath, findHistoryPath
 from .models import ReadingNote
 from ..models import LookupRecord
-from ..lemmatizer import lem_word
 from ..global_names import settings
 from ..ui.main_window_base import MainWindowBase
 import time

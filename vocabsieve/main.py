@@ -1,4 +1,5 @@
 import csv
+from multiprocessing import set_forkserver_preload
 from operator import ge
 import threading
 import importlib.metadata
@@ -60,7 +61,7 @@ class MainWindow(MainWindowBase):
         if not self.settings.value("internal/configured"):
             self.configure()
             self.settings.setValue("internal/configured", True)
-    
+
     def initSources(self):
         sg1_src_list = json.loads(self.settings.value("sg1", '["Wiktionary (English)"]'))
         self.sg1 = make_source_group(sg1_src_list, self.dictdb)
@@ -121,12 +122,11 @@ class MainWindow(MainWindowBase):
 
     def setupButtons(self) -> None:
         self.lookup_button.clicked.connect(self.lookupSelected)
+        self.lookup_exact_button.clicked.connect(lambda: self.lookupSelected(no_lemma=True))
 
 
         self.web_button.clicked.connect(self.onWebButton)
-        self.discard_audio_button.clicked.connect(self.discard_current_audio)
 
-        self.config_button.clicked.connect(self.configure)
         self.toanki_button.clicked.connect(self.createNote)
         self.read_button.clicked.connect(lambda: self.clipboardChanged(True))
 
@@ -135,6 +135,7 @@ class MainWindow(MainWindowBase):
 
     def setupMenu(self) -> None:
         readermenu = self.menu.addMenu("&Reader")
+        configmenu = self.menu.addMenu("&Configure")
         importmenu = self.menu.addMenu("&Import")
         recordmenu = self.menu.addMenu("&Track")
         exportmenu = self.menu.addMenu("&Export")
@@ -143,6 +144,7 @@ class MainWindow(MainWindowBase):
         helpmenu = self.menu.addMenu("&Help")
 
         self.open_reader_action = QAction("&Reader")
+        self.config_action = QAction("&Configure")
         self.stats_action = QAction("S&tatistics")
         self.help_action = QAction("&Setup guide")
         self.about_action = QAction("&About")
@@ -155,6 +157,7 @@ class MainWindow(MainWindowBase):
             self.open_reader_action.setEnabled(False)
 
         readermenu.addAction(self.open_reader_action)
+        configmenu.addAction(self.config_action)
         statsmenu.addAction(self.stats_action)
         helpmenu.addAction(self.help_action)
         helpmenu.addAction(self.about_action)
@@ -175,6 +178,7 @@ class MainWindow(MainWindowBase):
         self.help_action.triggered.connect(self.onHelp)
         self.about_action.triggered.connect(self.onAbout)
         self.open_reader_action.triggered.connect(self.onReaderOpen)
+        self.config_action.triggered.connect(self.configure)
         self.repeat_last_import_action.triggered.connect(self.repeatLastImport)
         self.import_koreader_vocab_action.triggered.connect(self.importKoreader)
         self.import_kindle_vocab_action.triggered.connect(self.importKindle)
@@ -425,7 +429,7 @@ class MainWindow(MainWindowBase):
         self.shortcut_clearimage = QShortcut(QKeySequence('Ctrl+I'), self)
         self.shortcut_clearimage.activated.connect(lambda: self.setImage(None))
         self.shortcut_clearaudio = QShortcut(QKeySequence('Ctrl+Shift+X'), self)
-        self.shortcut_clearaudio.activated.connect(self.discard_audio_button.animateClick)
+        self.shortcut_clearaudio.activated.connect(self.audio_selector.discard_audio_button.animateClick)
 
     def getCurrentWord(self) -> str:
         """Returns currently selected word. If there isn't any, last selected word is returned"""
@@ -458,11 +462,11 @@ class MainWindow(MainWindowBase):
         url = f"http://{self.settings.value('reader_host', '127.0.0.1', type=str)}:{self.settings.value('reader_port', '39285', type=str)}"
         QDesktopServices.openUrl(QUrl(url))
 
-    def lookupSelected(self) -> None:
+    def lookupSelected(self, no_lemma=False) -> None:
         target = self.getCurrentWord()
-        self.lookup(target)
+        self.lookup(target, no_lemma)
     
-    def lookup(self, target: str) -> None:
+    def lookup(self, target: str, no_lemma=False) -> None:
         self.boldWordInSentence(target)
         if target:
             self.rec.recordLookup(
@@ -472,10 +476,10 @@ class MainWindow(MainWindowBase):
                     source="vocabsieve"
                 )
             )
-            self.definition.lookup(target)
+            self.definition.lookup(target, no_lemma)
             if self.settings.value("sg2_enabled", False, type=bool):
-                self.definition2.lookup(target)
-            self.audio_selector.lookup(target)
+                self.definition2.lookup(target, no_lemma)
+            self.audio_selector.lookup(target, no_lemma)
             self.freq_widget.lookup(target)
         
 
@@ -544,7 +548,6 @@ class MainWindow(MainWindowBase):
 
     def discard_current_audio(self):
         self.audio_selector.clear()
-        self.audio_path = ""
 
     def boldWordInSentence(self, word) -> None:
         sentence_text = self.sentence.unboldedText
@@ -589,7 +592,7 @@ class MainWindow(MainWindowBase):
             sentence=self.sentence.textBoldedByTags.replace("\n", "<br>"),
             definition1=self.definition.process_defi_anki(),
             definition2=self.definition2.process_defi_anki(),
-            audio_path=self.audio_path,
+            audio_path=self.audio_selector.current_audio_path,
             image=self.image_path,
             tags=self.settings.value("tags", "vocabsieve").strip().split() + self.tags.text().strip().split()
         )
@@ -607,7 +610,7 @@ class MainWindow(MainWindowBase):
             self.word.setText("")
             self.definition.reset()
             self.definition2.reset()
-            self.discard_current_audio()
+            self.audio_selector.clear()
             
         except Exception as e:
             print(repr(e))
@@ -683,4 +686,5 @@ def main():
         qdarktheme.setup_theme("auto")
 
     w.show()
+    w.audio_selector.alignDiscardButton() # fix annoying issue of misalignment
     sys.exit(app.exec())

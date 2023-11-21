@@ -2,6 +2,7 @@
 import sqlite3
 import os
 import time
+
 from .dictformats import parseMDX, parseDSL, parseCSV, parseTSV, zopen
 from .xdxftransform import xdxf2html
 from .lemmatizer import removeAccents
@@ -67,7 +68,7 @@ class LocalDictionary():
             """)
         return self.c.fetchone()[0] > 0
 
-    def define(self, word: str, lang: str, name: str) -> str:
+    def  define(self, word: str, lang: str, name: str) -> str:
         "Get definition from database"
         "Should not raise an exception"
         self.c.execute("""
@@ -79,7 +80,7 @@ class LocalDictionary():
         if results:=self.c.fetchone():
             return str(results[0])
         else:
-            return ""
+            raise KeyError(f"Word {word} not found in {name}")
 
     def countEntries(self) -> int:
         self.c.execute("""
