@@ -52,7 +52,7 @@ class MultiDefinitionWidget(SearchableTextEdit):
         buttons_box_widget = ButtonsBoxWidget(self)
         self._layout.addWidget(buttons_box_widget)
         buttons_box_layout = QHBoxLayout(buttons_box_widget)
-        buttons_box_widget.scrolled.connect(self.move)
+        buttons_box_widget.scrolled.connect(self.move_)
 
 
         prev_button = QPushButton("<")
@@ -102,7 +102,7 @@ class MultiDefinitionWidget(SearchableTextEdit):
         self.currentIndex = index
         self.updateIndex()
     
-    def move(self, amount: int):
+    def move_(self, amount: int):
         if amount > 0:
             for _ in range(amount):
                 self.forward()

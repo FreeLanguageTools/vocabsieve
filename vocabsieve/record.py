@@ -499,7 +499,6 @@ class Record():
                             this_ctx_lemmas.discard(lemma)
                         for ctx_lemma in this_ctx_lemmas:
                             ctx_lemmas.append(ctx_lemma)
-                            print("Mature ctx_lemma", ctx_lemma)
                             try:
                                 result[ctx_lemma].anki_mature_ctx += 1
                             except KeyError:
@@ -530,7 +529,6 @@ class Record():
                             this_ctx_lemmas.discard(lemma)
                         for ctx_lemma in this_ctx_lemmas:
                             ctx_lemmas.append(ctx_lemma)
-                            print("Young ctx_lemma", ctx_lemma)
                             try:
                                 result[ctx_lemma].anki_young_ctx += 1
                             except KeyError:
@@ -540,8 +538,9 @@ class Record():
                 if self.settings.value("enable_anki"):
                     QMessageBox.warning(None, "Cannot access AnkiConnect", 
                         "Check if AnkiConnect is installed and Anki is running. <br>Re-open statistics to view the whole data.\n\n" + repr(e))
-            result = {k: v for k, v in result.items() if k.isalpha() and not k.startswith('http') and " " not in k}
-            return result
+        print("Anki data summary: ", len(tgt_lemmas), "tgt lemmas,", len(ctx_lemmas), "ctx lemmas")
+        result = {k: v for k, v in result.items() if k.isalpha() and not k.startswith('http') and " " not in k}
+        return result
 
     def getKnownWords(self):
         pass

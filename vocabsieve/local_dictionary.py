@@ -191,7 +191,7 @@ class LocalDictionary():
     def dictdelete(self, name) -> None:
         self.deletedict(name)
 
-    def getCognatesData(self, language: str, known_langs: list) -> Optional[list[str]]:
+    def getCognatesData(self, language: str, known_langs: list) -> list[str]:
         "Get all cognates from the local database in a given language"
         start = time.time()
         data = self.getCognates(language)

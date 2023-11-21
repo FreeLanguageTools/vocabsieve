@@ -27,7 +27,7 @@ from .importer import KindleVocabImporter, KoreaderVocabImporter, AutoTextImport
 from .reader import ReaderServer
 from .contentmanager import ContentManager
 from .global_events import GlobalObject
-from .tools import is_json, make_audio_source_group, prepareAnkiNoteDict, starts_with_cyrillic, is_oneword, addNote, make_source_group, getVersion, make_freq_source
+from .tools import compute_word_score, is_json, make_audio_source_group, prepareAnkiNoteDict, starts_with_cyrillic, is_oneword, addNote, make_source_group, getVersion, make_freq_source
 from .ui.main_window_base import MainWindowBase
 from .models import DictionarySourceGroup, LookupRecord, SRSNote, WordRecord
 from sentence_splitter import SentenceSplitter
@@ -229,11 +229,29 @@ class MainWindow(MainWindowBase):
         )
         if not path:
             return
+        
+        langcode = self.settings.value('target_language', 'en')
 
-        known_words = self.rec.getKnownWords()
-        if self.settings.value('target_language', 'en') in ['ru', 'uk']:
-            known_words = [word for word in known_words if starts_with_cyrillic(word)]
-
+        #known_words = self.rec.getKnownWords()
+        #if self.settings.value('target_language', 'en') in ['ru', 'uk']:
+        #    known_words = [word for word in known_words if starts_with_cyrillic(word)]
+        known_data = self.rec.getKnownData()
+        known_threshold = self.settings.value('tracking/known_threshold', 100, type=int)
+        known_threshold_cognate = self.settings.value('tracking/known_threshold_cognate', 25, type=int)
+        known_words: list[str] = []
+        cognates: list[str] = []
+        if self.dictdb.hasCognatesData():
+            known_langs = self.settings.value('tracking/known_langs', 'en').split(",")
+            cognates = self.dictdb.getCognatesData(langcode, known_langs)
+        
+        cognates_set = set(cognates)
+        waw = self.getWordActionWeights()
+        for word, word_record in known_data.items():
+            if score:=compute_word_score(word_record, waw) >= known_threshold:
+                known_words.append(word)
+            elif score >= known_threshold_cognate and word in cognates_set:
+                known_words.append(word)
+                
         with open(path, 'w', encoding='utf-8') as file:
             json.dump(known_words, file, indent=4, ensure_ascii=False)
 
