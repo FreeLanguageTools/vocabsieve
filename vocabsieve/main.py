@@ -479,7 +479,7 @@ class MainWindow(MainWindowBase):
             self.definition.lookup(target, no_lemma)
             if self.settings.value("sg2_enabled", False, type=bool):
                 self.definition2.lookup(target, no_lemma)
-            self.audio_selector.lookup(target, no_lemma)
+            self.audio_selector.lookup(target)
             self.freq_widget.lookup(target)
         
 

@@ -34,20 +34,20 @@ class AudioSelector(QListWidget):
     def setSourceGroup(self, sg: AudioSourceGroup) -> None:
         self.sg = sg
 
-    def getDefinitions(self, word: str, no_lemma: bool = False) -> list[AudioDefinition]:
+    def getDefinitions(self, word: str) -> list[AudioDefinition]:
         if self.sg is None:
             return []
         return self.sg.define(word)
     
-    def lookup(self, word: str, no_lemma: bool = False):
+    def lookup(self, word: str):
         self.audios = {}
         threading.Thread(
             target=self.lookup_on_thread, 
-            args=(word, no_lemma)).start()
+            args=(word,)).start()
 
-    def lookup_on_thread(self, word: str, no_lemma: bool = False):
+    def lookup_on_thread(self, word: str):
         self.audios = {}
-        for definition in self.getDefinitions(word, no_lemma):
+        for definition in self.getDefinitions(word):
             self.audio_fetched.emit(definition)
 
     def appendDefinition(self, defi: AudioDefinition):
