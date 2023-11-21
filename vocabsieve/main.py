@@ -478,7 +478,7 @@ class MainWindow(MainWindowBase):
                 lemma, 
                 WordRecord(lemma=lemma, language=langcode)
                 )
-            self.word_record_display.setWordRecord(word_record)
+            self.word_record_display.setWordRecord(word_record, self.getWordActionWeights())
             self.definition.lookup(target, no_lemma)
             if self.settings.value("sg2_enabled", False, type=bool):
                 self.definition2.lookup(target, no_lemma)

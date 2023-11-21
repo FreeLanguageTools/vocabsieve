@@ -15,7 +15,7 @@ from ..local_dictionary import LocalDictionary
 from .searchable_boldable_text_edit import SearchableBoldableTextEdit
 from .freq_display_widget import FreqDisplayWidget
 from .about import AboutDialog
-from ..models import AnkiSettings
+from ..models import AnkiSettings, WordActionWeights
 
 import platform
 import os
@@ -271,6 +271,17 @@ class MainWindowBase(QMainWindow):
             image_field=self.settings.value("image_field"),
         )
 
+    def getWordActionWeights(self) -> WordActionWeights:
+        return WordActionWeights(
+            seen=self.settings.value("tracking/w_seen", 8, type=int),
+            lookup=self.settings.value("tracking/w_lookup", 15, type=int),
+            anki_mature_ctx=self.settings.value("tracking/w_anki_ctx", 30, type=int),
+            anki_mature_tgt=self.settings.value("tracking/w_anki_word", 70, type=int),
+            anki_young_ctx=self.settings.value("tracking/w_anki_ctx_y", 20, type=int),
+            anki_young_tgt=self.settings.value("tracking/w_anki_word_y", 40, type=int),
+            threshold=self.settings.value("tracking/known_threshold", 100, type=int),
+            threshold_cognate=self.settings.value("tracking/known_threshold_cognate", 25, type=int)
+        )
 
 
 

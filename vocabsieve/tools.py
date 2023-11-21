@@ -23,7 +23,7 @@ from .sources.LocalAudioSource import LocalAudioSource
 from .sources.ForvoAudioSource import ForvoAudioSource
 from .models import (LemmaPolicy, DictionarySourceGroup, DisplayMode, SRSNote, 
                      SourceOptions, DictionarySource, FreqSource, AnkiSettings,
-                     AudioSource, AudioSourceGroup
+                     AudioSource, AudioSourceGroup, WordRecord, WordActionWeights
                      )
 from .global_names import settings
 
@@ -372,3 +372,13 @@ def make_source_group(src_names: list[str], dictdb: LocalDictionary):
             )
         )
     return DictionarySourceGroup(source_list)
+
+def compute_word_score(wr: WordRecord, waw: WordActionWeights):
+    return (
+        waw.seen * wr.n_seen + 
+        waw.lookup * wr.n_lookups + 
+        waw.anki_mature_ctx * wr.anki_mature_ctx + 
+        waw.anki_mature_tgt * wr.anki_mature_tgt + 
+        waw.anki_young_ctx * wr.anki_young_ctx + 
+        waw.anki_young_tgt * wr.anki_young_tgt
+    )

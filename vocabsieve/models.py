@@ -110,6 +110,18 @@ class WordRecord:
     anki_young_tgt: int = 0
     anki_mature_ctx: int = 0
     anki_mature_tgt: int = 0
+
+@dataclass(frozen=True)
+class WordActionWeights:
+    """Represents the weights for each action in the score calculations"""
+    seen: int
+    lookup: int
+    anki_young_ctx: int
+    anki_young_tgt: int
+    anki_mature_ctx: int
+    anki_mature_tgt: int
+    threshold: int
+    threshold_cognate: int
     
     
 
