@@ -12,6 +12,7 @@ from typing import Optional
 class LocalDictionary():
     def __init__(self, datapath):
         path = os.path.join(datapath, "dict.db")
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         print("Initializing local dictionary object at ", path)
         self.conn = sqlite3.connect(path, check_same_thread=False)
         self.c = self.conn.cursor()
@@ -67,13 +68,18 @@ class LocalDictionary():
         return self.c.fetchone()[0] > 0
 
     def define(self, word: str, lang: str, name: str) -> str:
+        "Get definition from database"
+        "Should not raise an exception"
         self.c.execute("""
         SELECT definition FROM dictionary
         WHERE word=?
         AND language=?
         AND dictname=?
         """, (word, lang, name))
-        return str(self.c.fetchone()[0])
+        if results:=self.c.fetchone():
+            return str(results[0])
+        else:
+            return ""
 
     def countEntries(self) -> int:
         self.c.execute("""

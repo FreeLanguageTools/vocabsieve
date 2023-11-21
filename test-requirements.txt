@@ -1,0 +1,8 @@
+lxml-stubs
+PyQt5-stubs
+types-requests
+types-Markdown
+types-html5lib
+types-beautifulsoup4
+mypy
+pytest
