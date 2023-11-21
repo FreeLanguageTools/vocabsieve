@@ -39,14 +39,8 @@ class AudioSelector(QListWidget):
             return []
         return self.sg.define(word)
     
-    def lookup(self, word: str):
-        self.audios = {}
-        threading.Thread(
-            target=self.lookup_on_thread, 
-            args=(word,)).start()
 
     def lookup_on_thread(self, word: str):
-        self.audios = {}
         for definition in self.getDefinitions(word):
             self.audio_fetched.emit(definition)
 
@@ -62,6 +56,11 @@ class AudioSelector(QListWidget):
         self.audios = {}
         self.current_audio_path = ""
 
+    def lookup(self, word: str):
+        self.clear()
+        threading.Thread(
+            target=self.lookup_on_thread, 
+            args=(word,)).start()
 
     def play_audio_if_exists(self, x):
         if x is not None:
