@@ -581,6 +581,7 @@ class SettingsDialog(QDialog):
         curr_dict = self.postproc_selector.currentText()
         # Remove all existing connections
         try:
+            self.lemma_policy.currentTextChanged.disconnect()
             self.display_mode.currentTextChanged.disconnect()
             self.skip_top.valueChanged.disconnect()
             self.collapse_newlines.valueChanged.disconnect()

@@ -22,6 +22,7 @@ class AudioPlayer:
         return ""
 
     if audiopath.startswith("https://"):
+      name = name.replace("::", "__") # Windows doesn't like colons in filenames
       fpath = os.path.join(forvopath, lang, name)
       if not os.path.exists(fpath):
           res = requests.get(audiopath, headers=FORVO_HEADERS)
