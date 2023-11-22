@@ -239,17 +239,16 @@ class MainWindow(MainWindowBase):
         known_threshold = self.settings.value('tracking/known_threshold', 100, type=int)
         known_threshold_cognate = self.settings.value('tracking/known_threshold_cognate', 25, type=int)
         known_words: list[str] = []
-        cognates: list[str] = []
+        cognates: set[str] = set()
         if self.dictdb.hasCognatesData():
             known_langs = self.settings.value('tracking/known_langs', 'en').split(",")
             cognates = self.dictdb.getCognatesData(langcode, known_langs)
         
-        cognates_set = set(cognates)
         waw = self.getWordActionWeights()
         for word, word_record in known_data.items():
             if score:=compute_word_score(word_record, waw) >= known_threshold:
                 known_words.append(word)
-            elif score >= known_threshold_cognate and word in cognates_set:
+            elif score >= known_threshold_cognate and word in cognates:
                 known_words.append(word)
                 
         with open(path, 'w', encoding='utf-8') as file:

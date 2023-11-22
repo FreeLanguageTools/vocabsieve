@@ -11,7 +11,7 @@ import json
 from typing import Optional
 
 class LocalDictionary():
-    def __init__(self, datapath):
+    def __init__(self, datapath) -> None:
         path = os.path.join(datapath, "dict.db")
         os.makedirs(os.path.dirname(path), exist_ok=True)
         print("Initializing local dictionary object at ", path)
@@ -19,7 +19,7 @@ class LocalDictionary():
         self.c = self.conn.cursor()
         self.createTables()
 
-    def createTables(self):
+    def createTables(self) -> None:
         self.c.execute("""
         CREATE TABLE IF NOT EXISTS dictionary (
             word TEXT,
@@ -30,7 +30,7 @@ class LocalDictionary():
         """)
         self.conn.commit()
 
-    def importdict(self, data: dict, lang: str, name: str):
+    def importdict(self, data: dict[str, str], lang: str, name: str) -> None:
         for item in data.items():
             # Handle escape sequences
             self.c.execute("""
@@ -46,7 +46,7 @@ class LocalDictionary():
                            )
         self.conn.commit()
 
-    def deletedict(self, name: str):
+    def deletedict(self, name: str) -> None:
         self.c.execute("""
             DELETE FROM dictionary
             WHERE dictname=?
@@ -54,14 +54,14 @@ class LocalDictionary():
         self.conn.commit()
         self.c.execute("VACUUM")
 
-    def getCognates(self, lang: str):
+    def getCognates(self, lang: str) -> sqlite3.Cursor:
         return self.c.execute("""
             SELECT word, definition FROM dictionary
             WHERE language=?
             AND dictname='cognates'
             """, (lang,))
 
-    def hasCognatesData(self):
+    def hasCognatesData(self) -> bool:
         self.c.execute("""
             SELECT COUNT(*) FROM dictionary
             WHERE dictname='cognates'
@@ -101,7 +101,7 @@ class LocalDictionary():
         """)
         return int(self.c.fetchone()[0])
 
-    def getNamesForLang(self, lang: str):
+    def getNamesForLang(self, lang: str) -> list[str]:
         self.c.row_factory = lambda cursor, row: row[0]
         self.c.execute("""
         SELECT DISTINCT dictname FROM dictionary
@@ -111,7 +111,7 @@ class LocalDictionary():
         self.c.row_factory = None
         return res
 
-    def purge(self):
+    def purge(self) -> None:
         self.c.execute("""
         DROP TABLE IF EXISTS dictionary
         """)
@@ -152,7 +152,7 @@ class LocalDictionary():
             # Audios will be stored as a serialized json list
             filelist = []
             list_d: dict[str, list[str]] = {}
-            d = {}
+            d: dict[str, str] = {}
             for root, dirs, files in os.walk(path):
                 for item in files:
                     filelist.append(
@@ -165,9 +165,9 @@ class LocalDictionary():
                     list_d[headword] = [item]
                 else:
                     list_d[headword].append(item)
-            for word in list_d.keys():
+            for word in list_d:
                 d[word] = json.dumps(list_d[word])
-            self.importdict(list_d, lang, name)
+            self.importdict(d, lang, name)
         elif dicttype == 'mdx':
             d = parseMDX(path)
             self.importdict(d, lang, name)
@@ -191,19 +191,17 @@ class LocalDictionary():
     def dictdelete(self, name) -> None:
         self.deletedict(name)
 
-    def getCognatesData(self, language: str, known_langs: list) -> list[str]:
+    def getCognatesData(self, language: str, known_langs: list[str]) -> set[str]:
         "Get all cognates from the local database in a given language"
-        start = time.time()
         data = self.getCognates(language)
         if not known_langs:
-            return []
+            return set()
         if not known_langs[0]:
-            return []
+            return set()
         cognates = []
         for word, cognates_in in data:
             for lang in known_langs:
                 if lang in cognates_in:
                     cognates.append(word)
                     break
-        print("Got all cognates in", time.time() - start, "seconds")
-        return cognates
+        return set(cognates)

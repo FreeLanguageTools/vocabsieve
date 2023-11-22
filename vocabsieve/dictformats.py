@@ -1,7 +1,5 @@
 from readmdict import MDX
-from .dsl import Reader
 from bidict import bidict
-from typing import Dict, List
 import os
 import re
 import lzma
@@ -38,6 +36,38 @@ def zopen(path):
         return bz2.open(path, 'rt', encoding='utf-8')
     else:
         return open(path, encoding='utf-8')
+    
+def dslopen(path):
+    "Open dsl. Can be .dsl or .dsl.dz. Can be UTF-8 or UTF-16"
+    correct_encoding = ""
+    for testEncoding in ["utf-8", "utf-16"]:
+        if path.endswith(".dsl.dz"):
+            with gzip.open(path, mode="rt", encoding=testEncoding) as f:
+                try:
+                    for _ in range(50):
+                        f.readline()
+                except UnicodeDecodeError:
+                    continue
+                else:
+                    correct_encoding = testEncoding
+                    break
+        else:
+            with open(path, mode="rt", encoding=testEncoding) as f:
+                try:
+                    for _ in range(50):
+                        f.readline()
+                except UnicodeDecodeError:
+                    continue
+                else:
+                    correct_encoding = testEncoding
+                    break
+        raise ValueError("Could not detect encoding of DSL file")
+    if path.endswith(".dsl.dz"):
+        return gzip.open(path, mode="rt", encoding=correct_encoding)
+    elif path.endswith(".dsl"):
+        return open(path, mode="rt", encoding=correct_encoding)
+    else:
+        raise ValueError("Not a DSL file")
 
 def dictinfo(path) -> dict[str, str]:
     "Get information about dictionary from file path"
@@ -116,7 +146,7 @@ def dictinfo(path) -> dict[str, str]:
     else:
         raise NotImplementedError("Unsupported format" + basename + ext)
 
-def parseMDX(path) -> Dict[str, str]:
+def parseMDX(path) -> dict[str, str]:
     mdx = MDX(path)
     stylesheet_lines = mdx.header[b'StyleSheet'].decode().splitlines()
     stylesheet_map: dict[int, str] = {}
@@ -149,21 +179,46 @@ def parseMDX(path) -> Dict[str, str]:
     return newdict
 
 
-def parseDSL(path) -> Dict[str, str]:
-    r = Reader()
-    r.open(path)
-    newdict = {}
-    for headwords, definition in iter(r):
-        for headword in headwords:
-            if "{" in headword:
-                headword = re.sub(r'\{[^}]+\}', "", headword)
-            definition = re.sub(r'(\<b\>\d+\.\</b\>)\s+\<br>', r'\1 ', definition)
-            newdict[headword] = definition.removeprefix("<br>")
-    return newdict
+def parseDSL(path) -> dict[str, str]:
+    with dslopen(path) as f: # type:ignore
+        lines: list[str] = f.readlines() # type:ignore
+    allLines = "".join(lines[5:])
+    allLines = allLines.replace("[", "<")
+    allLines = allLines.replace("]", ">")
+    allLines = allLines.replace("{{", "<")
+    allLines = allLines.replace("}}", ">")
+    allLines = allLines.replace("<m0>", "")
+    allLines = allLines.replace("<m1>", "  ")
+    allLines = allLines.replace("<m2>", "    ")
+    allLines = allLines.replace("<m3>", "      ")
+    allLines = allLines.replace("\\", "/")
+
+    allLines = re.sub('<[^<]+?>', '', allLines)
+    allLines = allLines.replace("&quot;", '"')
+    allLines = allLines.replace("{}", "")
+
+    current_term = ""
+    current_defi = ""
+    data = {}
+    items = []
+    for item in allLines.splitlines():
+        if not item.startswith("#") and not item.startswith("\t"):
+            data[current_term] = re.sub(r'(\d+\.)<br>\s*(\D+)', r'\1 \2', current_defi)\
+                                   .removesuffix("<br>")
+
+            current_defi = ""
+            current_term = item
+        if item.startswith("\t"):
+            items.append(item)
+            if item.endswith(".wav"): # Don't include audio file names
+                continue
+            current_defi += item.removeprefix("\t").replace("~", current_term) + "<br>"
+
+    return data
 
 
 
-def parseCSV(path) -> Dict[str, str]:
+def parseCSV(path) -> dict[str, str]:
     newdict = {}
     with open(path, newline="") as csvfile:
         data = csv.reader(csvfile)
@@ -172,7 +227,7 @@ def parseCSV(path) -> Dict[str, str]:
     return newdict
 
 
-def parseTSV(path) -> Dict[str, str]:
+def parseTSV(path) -> dict[str, str]:
     newdict = {}
     with open(path, newline="") as csvfile:
         data = csv.reader(csvfile, delimiter="\t")
