@@ -50,12 +50,8 @@ class MainWindowBase(QMainWindow):
         self.scaleFont()
         self.initWidgets()
 
-        #if self.settings.value("orientation", "Vertical") == "Vertical":
         self.resize(500, 800)
         self.setupWidgetsV() 
-        #else:
-        #    self.resize(1000, 300)
-        #    self.setupWidgetsH()
 
     def scaleFont(self) -> None:
         font = QApplication.font()

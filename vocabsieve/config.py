@@ -110,7 +110,7 @@ class SettingsDialog(QDialog):
         self.custom_url.setText("https://example.com/@@@@")
         self.custom_url.setEnabled(False)
 
-        self.orientation = QComboBox()
+        #self.orientation = QComboBox()
         self.text_scale = QSlider(Qt.Horizontal)
 
         self.text_scale.setTickPosition(QSlider.TicksBelow)
@@ -126,15 +126,15 @@ class SettingsDialog(QDialog):
         self.text_scale_box_layout.addWidget(self.text_scale)
         self.text_scale_box_layout.addWidget(self.text_scale_label)
 
-        self.orientation.addItems(["Vertical", "Horizontal"])
+        #self.orientation.addItems(["Vertical", "Horizontal"])
         self.gtrans_api = QLineEdit()
         self.anki_api = QLineEdit()
 
-        self.api_enabled = QCheckBox("Enable VocabSieve local API")
-        self.api_host = QLineEdit()
-        self.api_port = QSpinBox()
-        self.api_port.setMinimum(1024)
-        self.api_port.setMaximum(49151)
+        #self.api_enabled = QCheckBox("Enable VocabSieve local API")
+        #self.api_host = QLineEdit()
+        #self.api_port = QSpinBox()
+        #self.api_port.setMinimum(1024)
+        #self.api_port.setMaximum(49151)
 
         self.reader_enabled = QCheckBox("Enable VocabSieve Web Reader")
         self.reader_host = QLineEdit()
@@ -445,10 +445,10 @@ class SettingsDialog(QDialog):
             '<br>◊ Most users should not need to change these settings.</i>'
         ))
         self.tab_n_layout.addRow(self.check_updates)
-        self.tab_n_layout.addRow(QLabel("<h4>Local API</h4>"))
-        self.tab_n_layout.addRow(self.api_enabled)
-        self.tab_n_layout.addRow(QLabel("API host"), self.api_host)
-        self.tab_n_layout.addRow(QLabel("API port"), self.api_port)
+        #self.tab_n_layout.addRow(QLabel("<h4>Local API</h4>"))
+        #self.tab_n_layout.addRow(self.api_enabled)
+        #self.tab_n_layout.addRow(QLabel("API host"), self.api_host)
+        #self.tab_n_layout.addRow(QLabel("API port"), self.api_port)
         self.tab_n_layout.addRow(QLabel("<h4>Web Reader</h4>"))
         self.tab_n_layout.addRow(self.reader_enabled)
         self.tab_n_layout.addRow(QLabel("Web reader host"), self.reader_host)
@@ -469,7 +469,7 @@ class SettingsDialog(QDialog):
         self.tab_i_layout.addRow("Accent color", self.accent_color)
         self.tab_i_layout.addRow(self.allow_editing)
         self.tab_i_layout.addRow(QLabel("Frequency display mode"), self.freq_display_mode)
-        self.tab_i_layout.addRow(QLabel("*Interface layout orientation"), self.orientation)
+        #self.tab_i_layout.addRow(QLabel("*Interface layout orientation"), self.orientation)
         self.tab_i_layout.addRow(QLabel("*Text scale"), self.text_scale_box)
         self.tab_i_layout.addRow(
             QLabel("<h4>These settings require a page refresh to take effect.</h4>"))
@@ -670,7 +670,7 @@ class SettingsDialog(QDialog):
         self.sg2_enabled.clicked.connect(self.changeMainLayout)
         self.postproc_selector.currentTextChanged.connect(self.setupProcessing)
         self.note_type.currentTextChanged.connect(self.loadFields)
-        self.api_enabled.clicked.connect(self.setAvailable)
+        #self.api_enabled.clicked.connect(self.setAvailable)
         self.reader_enabled.clicked.connect(self.setAvailable)
         self.register_config_handler(self.lemmatization, 'lemmatization', True)
         self.register_config_handler(self.lem_greedily, 'lem_greedily', False)
@@ -695,9 +695,9 @@ class SettingsDialog(QDialog):
             'English Wiktionary')
         self.register_config_handler(self.custom_url, 'custom_url', "https://en.wiktionary.org/wiki/@@@@")
 
-        self.register_config_handler(self.api_enabled, 'api_enabled', True)
-        self.register_config_handler(self.api_host, 'api_host', '127.0.0.1')
-        self.register_config_handler(self.api_port, 'api_port', 39284)
+        #self.register_config_handler(self.api_enabled, 'api_enabled', True)
+        #self.register_config_handler(self.api_host, 'api_host', '127.0.0.1')
+        #self.register_config_handler(self.api_port, 'api_port', 39284)
         self.register_config_handler(
             self.reader_enabled, 'reader_enabled', True)
         self.register_config_handler(
@@ -713,8 +713,8 @@ class SettingsDialog(QDialog):
         self.register_config_handler(self.freq_display_mode, "freq_display", "Stars (like Migaku)")
         self.register_config_handler(self.allow_editing, 'allow_editing', True)
         self.register_config_handler(self.primary, 'primary', False)
-        self.register_config_handler(
-            self.orientation, 'orientation', 'Vertical')
+        #self.register_config_handler(
+        #    self.orientation, 'orientation', 'Vertical')
         self.register_config_handler(self.text_scale, 'text_scale', '100')
 
         self.register_config_handler(self.capitalize_first_letter, 'capitalize_first_letter', False)
@@ -759,8 +759,8 @@ class SettingsDialog(QDialog):
         self.loadUrl()
 
     def setAvailable(self):
-        self.api_host.setEnabled(self.api_enabled.isChecked())
-        self.api_port.setEnabled(self.api_enabled.isChecked())
+        #self.api_host.setEnabled(self.api_enabled.isChecked())
+        #self.api_port.setEnabled(self.api_enabled.isChecked())
         self.reader_host.setEnabled(self.reader_enabled.isChecked())
         self.reader_port.setEnabled(self.reader_enabled.isChecked())
 
