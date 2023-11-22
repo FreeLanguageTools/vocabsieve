@@ -193,7 +193,6 @@ class AudioSource(Source):
     
     def _fmt_lookup(self, word: str, lookup_term: str) -> AudioDefinition:
         '''Format a LookupResult as a Definition'''
-        print("Got to _fmt_lookup")
         result = self._lookup(word)
         newdict = {}
         if result.audios is not None:
@@ -315,20 +314,26 @@ class DictionarySourceGroup:
 
     
 def convert_display_mode(entry: str, mode: DisplayMode) -> str:
-        if mode in ['Raw', 'HTML']:
-            return entry
-        elif mode == 'Markdown':
-            return markdownify(entry)  # type: ignore
-        elif mode == "Markdown-HTML":
-            return markdown_nop(markdownify(entry))
-        elif mode == 'Plaintext':
-            entry = entry.replace("<br>", "\n")\
-                        .replace("<br/>", "\n")\
-                        .replace("<BR>", "\n")
-            entry = re.sub(r"<.*?>", "", entry)
-            return entry
-        else:
-            raise NotImplementedError("Mode not supported")
+        match mode:
+            case DisplayMode.raw | DisplayMode.html:
+                return entry
+            case DisplayMode.markdown:
+                return markdownify(entry)  # type: ignore
+            case DisplayMode.markdown_html: 
+                print(entry)
+                print()
+                print(markdownify(entry))
+                print()
+                print(markdown_nop(markdownify(entry)))
+                return markdown_nop(markdownify(entry))
+            case DisplayMode.plaintext:
+                entry = entry.replace("<br>", "\n")\
+                            .replace("<br/>", "\n")\
+                            .replace("<BR>", "\n")
+                entry = re.sub(r"<.*?>", "", entry)
+                return entry
+            case _:
+                raise NotImplementedError(f"Mode {mode} not supported")
 
 
 def is_html(s: str) -> bool:

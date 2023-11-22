@@ -91,12 +91,21 @@ class MultiDefinitionWidget(SearchableTextEdit):
             return
         self.counter.setText(f"{self.currentIndex+1}/{len(self.definitions)}")
         if defi:=self.definitions[self.currentIndex]:
-            self.currentDefinition = defi
-            if defi.definition is not None:
-                self.setText(defi.definition)
-                self.info_label.setText(f"<strong>{defi.headword}</strong> in <em>{defi.source}</em>")
-                if self.word_widget:
-                    self.word_widget.setText(defi.headword)
+            self.setCurrentDefinition(defi)
+
+    def setCurrentDefinition(self, defi: Definition):
+        self.currentDefinition = defi
+        source_name = defi.source
+        source = self.sg.getSource(source_name)
+        if defi.definition is not None and source is not None:
+            match source.display_mode:
+                case DisplayMode.markdown_html | DisplayMode.html:
+                    self.setHtml(defi.definition)
+                case _:
+                    self.setText(defi.definition)
+            self.info_label.setText(f"<strong>{defi.headword}</strong> in <em>{defi.source}</em>")
+            if self.word_widget:
+                self.word_widget.setText(defi.headword)
 
     def setCurrentIndex(self, index: int):
         self.currentIndex = index

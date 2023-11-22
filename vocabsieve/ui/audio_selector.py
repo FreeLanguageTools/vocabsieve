@@ -48,7 +48,6 @@ class AudioSelector(QListWidget):
         if defi.audios is None:
             return
         self.audios.update(defi.audios)
-        print("Audio fetched: ", defi.headword, defi.audios)
         self.updateAudioUI()
     
     def clear(self):

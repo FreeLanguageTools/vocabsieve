@@ -468,15 +468,13 @@ class Record():
                     )
                 young_notes = [note for note in young_notes if note not in mature_notes]
                 n_mature = len(mature_notes)
-                progress = QProgressDialog("Computing Anki data...", "", 0, n_mature+len(young_notes), None)
-                progress.setWindowModality(Qt.WindowModal)  
+
                 print("Got anki data from AnkiConnect in", time.time() - start, "seconds")
                 start = time.time()
                 mature_notes_info = notesInfo(anki_api, mature_notes)
                 young_notes_info = notesInfo(anki_api, young_notes)
 
                 for n, info in enumerate(mature_notes_info):
-                    progress.setValue(n)
                     model = info['modelName']
                     word_field, ctx_field = fieldmap.get(model) or ("<Ignore>", "<Ignore>")
                     word = ""
@@ -506,7 +504,6 @@ class Record():
 
                 n = 0
                 for n, info in enumerate(young_notes_info):
-                    progress.setValue(n_mature+n)
                     model = info['modelName']
                     word_field, ctx_field = fieldmap.get(model) or ("<Ignore>", "<Ignore>")
                     word = ""
@@ -533,7 +530,6 @@ class Record():
                                 result[ctx_lemma].anki_young_ctx += 1
                             except KeyError:
                                 result[ctx_lemma] = WordRecord(lemma=ctx_lemma, language=langcode, anki_young_ctx=1)
-                progress.setValue(n_mature+n+1)
             except Exception as e:
                 if self.settings.value("enable_anki"):
                     QMessageBox.warning(None, "Cannot access AnkiConnect", 

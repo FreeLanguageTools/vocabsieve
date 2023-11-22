@@ -8,16 +8,18 @@ import time
 import re
 from datetime import datetime
 from typing import Optional
-from markdown import markdown
 import requests
 from packaging import version
-from PyQt5.QtCore import QCoreApplication, QStandardPaths, QTimer, QDateTime, QThread, QUrl
-from PyQt5.QtGui import QClipboard, QKeySequence, QPixmap, QDesktopServices
-from PyQt5.QtWidgets import QApplication, QMessageBox, QAction, QShortcut, QFileDialog
 import qdarktheme
 import json
+import threading
 
+from markdown import markdown
+from PyQt5.QtCore import QCoreApplication, QStandardPaths, QTimer, QDateTime, QThread, QUrl, pyqtSlot, QThreadPool, pyqtSignal
+from PyQt5.QtGui import QClipboard, QKeySequence, QPixmap, QDesktopServices
+from PyQt5.QtWidgets import QApplication, QMessageBox, QAction, QShortcut, QFileDialog
 from .global_names import datapath
+
 from .text_manipulation import apply_bold_char, apply_bold_tags, bold_word_in_text
 from .analyzer import BookAnalyzer
 from .config import SettingsDialog
@@ -34,17 +36,22 @@ from sentence_splitter import SentenceSplitter
 from .lemmatizer import lem_word
 
 
+
 class MainWindow(MainWindowBase):
+    got_updates = pyqtSignal(list)
     def __init__(self) -> None:
         super().__init__()
         self.datapath = datapath
+        self.thread_manager = QThreadPool()
         self.setupMenu()
         self.setupButtons()
         self.startServer()
-        self.initTimer()
         self.setupShortcuts()
-        self.checkUpdates()
+        self.checkUpdatesOnThread()
         self.initSources()
+        self.known_data: Optional[dict[str, WordRecord]] = None
+        #self.getKnownDataOnThread()
+        self.got_updates.connect(self.gotUpdatesInfo)
 
         GlobalObject().addEventListener("double clicked", self.lookupSelected)
         if self.settings.value("primary", False, type=bool)\
@@ -81,10 +88,12 @@ class MainWindow(MainWindowBase):
             self.audio_sg = make_audio_source_group(audio_src_list, self.dictdb)
             self.audio_selector.setSourceGroup(self.audio_sg)
 
-    def checkUpdates(self) -> None:
+    @pyqtSlot()
+    def checkUpdatesOnThread(self) -> None:
+        print("Started checking updates")
         if self.settings.value("check_updates") is None:
             answer = QMessageBox.question(
-                self,
+                None,
                 "Check updates",
                 "<h2>Would you like VocabSieve to check for updates automatically on launch?</h2>"
                 "Currently, the repository and releases are hosted on GitHub's servers, "
@@ -97,25 +106,30 @@ class MainWindow(MainWindowBase):
             if answer == QMessageBox.No:
                 self.settings.setValue("check_updates", False)
             self.settings.sync()
-        elif self.settings.value("check_updates", True, type=bool):
-            try:
-                res = requests.get("https://api.github.com/repos/FreeLanguageTools/vocabsieve/releases")
-                data = res.json()
-            except Exception:
-                return
-            latest_version = (current := data[0])['tag_name'].strip('v')
-            current_version = importlib.metadata.version('vocabsieve')
-            if version.parse(latest_version) > version.parse(current_version):
-                answer2 = QMessageBox.information(
-                    self,
-                    "New version",
-                    "<h2>There is a new version available!</h2>"
-                    + f"<h3>Version {latest_version}</h3>"
-                    + markdown(current['body']),
-                    buttons=QMessageBox.Open | QMessageBox.Ignore
-                )
-                if answer2 == QMessageBox.Open:
-                    QDesktopServices.openUrl(QUrl(current['html_url']))
+        if self.settings.value("check_updates", True, type=bool):
+            self.thread_manager.start(self.checkUpdates)
+        print("Finished checking updates")
+
+    def checkUpdates(self) -> None:
+        res = requests.get("https://api.github.com/repos/FreeLanguageTools/vocabsieve/releases")
+        data = res.json()
+        self.got_updates.emit(data)
+
+    def gotUpdatesInfo(self, data: dict) -> None:
+        latest_version = (current := data[0])['tag_name'].strip('v')
+        current_version = importlib.metadata.version('vocabsieve')
+        if version.parse(latest_version) > version.parse(current_version):
+            answer2 = QMessageBox.information(
+                None,
+                "New version",
+                "<h2>There is a new version available!</h2>"
+                + f"<h3>Version {latest_version}</h3>"
+                + markdown(current['body']),
+                buttons=QMessageBox.Open | QMessageBox.Ignore
+            )
+            if answer2 == QMessageBox.Open:
+                QDesktopServices.openUrl(QUrl(current['html_url']))
+        
 
     def setupButtons(self) -> None:
         self.lookup_button.clicked.connect(self.lookupSelected)
@@ -254,6 +268,15 @@ class MainWindow(MainWindowBase):
         with open(path, 'w', encoding='utf-8') as file:
             json.dump(known_words, file, indent=4, ensure_ascii=False)
 
+    @pyqtSlot()
+    def getKnownDataOnThread(self) -> None:
+        self.thread_manager.start(self.getKnownData)
+
+    @pyqtSlot()
+    def getKnownData(self) -> None:
+        self.known_data = self.rec.getKnownData()
+
+    
     def exportWordData(self):
         path, _ = QFileDialog.getSaveFileName(
             self,
@@ -491,11 +514,12 @@ class MainWindow(MainWindowBase):
                     source="vocabsieve"
                 )
             )
-            word_record = self.rec.getKnownData().get(
-                lemma, 
-                WordRecord(lemma=lemma, language=langcode)
-                )
-            self.word_record_display.setWordRecord(word_record, self.getWordActionWeights())
+            if self.known_data:
+                word_record = self.known_data.get(
+                    lemma, 
+                    WordRecord(lemma=lemma, language=langcode)
+                    )
+                self.word_record_display.setWordRecord(word_record, self.getWordActionWeights())
             self.definition.lookup(target, no_lemma)
             if self.settings.value("sg2_enabled", False, type=bool):
                 self.definition2.lookup(target, no_lemma)
@@ -696,14 +720,15 @@ class MainWindow(MainWindowBase):
 def main():
     qdarktheme.enable_hi_dpi()
     app = QApplication(sys.argv)
-    w = MainWindow()
-    if theme:=w.settings.value("theme"):
-        if color:=w.settings.value("accent_color"):
+    from .global_names import settings
+    if theme:=settings.value("theme"):
+        if color:=settings.value("accent_color"):
             qdarktheme.setup_theme(theme, custom_colors={"primary": color})
         else:
             qdarktheme.setup_theme(theme)
     else:
         qdarktheme.setup_theme("auto")
+    w = MainWindow()
 
     w.show()
     w.audio_selector.alignDiscardButton() # fix annoying issue of misalignment
