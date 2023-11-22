@@ -52,14 +52,14 @@ class KindleVocabImporter(GenericImporter):
         bookdata = list(cur.execute("SELECT * FROM book_info"))
         bookid2name = dict(zip(list(zip(*bookdata))[2],list(zip(*bookdata))[4]))
         reading_notes = []
-        langcode = self.parent.settings.value("target_language", 'en')
+        langcode = self._parent.settings.value("target_language", 'en')
         count = 0
-        lookups_count_before = self.parent.rec.countLookups(langcode)
+        lookups_count_before = self._parent.rec.countLookups(langcode)
         for _, lword, bookid, _, _, sentence, timestamp in cur.execute("SELECT * FROM lookups"):
             if lword.startswith(langcode):
                 word = lword.removeprefix(langcode+":")
                 count += 1
-                self.parent.rec.recordLookup(
+                self._parent.rec.recordLookup(
                     LookupRecord(
                         word=word, 
                         language=langcode, 
@@ -77,8 +77,8 @@ class KindleVocabImporter(GenericImporter):
                     
                     )
                 )
-        lookups_count_after = self.parent.rec.countLookups(langcode)
+        lookups_count_after = self._parent.rec.countLookups(langcode)
         self._layout.addRow(QLabel("Vocabulary database: " + vocab_db_path))
         self._layout.addRow(QLabel(f"Found {count} lookups in {langcode}, added { lookups_count_after - lookups_count_before } to lookup database."))
-        self.parent.rec.conn.commit()
+        self._parent.rec.conn.commit()
         return reading_notes

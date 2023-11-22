@@ -69,10 +69,10 @@ def prepareAnkiNoteDict(anki_settings: AnkiSettings, note: SRSNote) -> dict:
         "deckName": anki_settings.deck,
         "modelName": anki_settings.model,
         "fields": {
-            anki_settings.word_field: note.word,
-            anki_settings.sentence_field: note.sentence,
-            anki_settings.definition1_field: note.definition1,
-            anki_settings.definition2_field: note.definition2
+            anki_settings.word_field: note.word or "",
+            anki_settings.sentence_field: note.sentence or "",
+            anki_settings.definition1_field: note.definition1 or "",
+            anki_settings.definition2_field: note.definition2 or ""
         },
         "tags": []
     }
@@ -83,13 +83,19 @@ def prepareAnkiNoteDict(anki_settings: AnkiSettings, note: SRSNote) -> dict:
     if note.audio_path:
         content["audio"] = [ 
                     { # type: ignore
-                        "path": note.audio_path, 
-                        "filename": os.path.basename(note.audio_path),
+                        #"filename": os.path.basename(note.audio_path),
                         "fields": [
                             anki_settings.audio_field
                         ]
                     }
                 ]
+        # Support both url and path
+        if note.audio_path.startswith("http://") or note.audio_path.startswith("https://"):
+            content["audio"][0]["url"] = note.audio_path # type: ignore
+            content["audio"][0]["filename"] = os.path.basename(note.audio_path) # type: ignore
+        else:
+            content["audio"][0]["path"] = note.audio_path # type: ignore
+            content["audio"][0]["filename"] = os.path.basename(note.audio_path) # type: ignore
     if note.image:
         content["picture"] = [
             { # type: ignore

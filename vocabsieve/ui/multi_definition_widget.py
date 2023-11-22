@@ -1,3 +1,4 @@
+from unittest import result
 from PyQt5.QtGui import QWheelEvent
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QHBoxLayout
 from PyQt5.QtCore import Qt, pyqtSignal
@@ -76,10 +77,13 @@ class MultiDefinitionWidget(SearchableTextEdit):
 
         return [defi for defi in self.sg.define(word, no_lemma=no_lemma) if defi.definition is not None]
 
-    def lookup(self, word: str, no_lemma: bool = False):
+    def lookup(self, word: str, no_lemma: bool = False) -> bool:
         self.reset()
+        result = False
         for definition in self.getDefinitions(word, no_lemma):
             self.appendDefinition(definition)
+            result = True
+        return result
 
 
     def appendDefinition(self, definition: Definition):
@@ -147,9 +151,12 @@ class MultiDefinitionWidget(SearchableTextEdit):
         self.info_label.setText("")
         self.counter.setText("0/0")
 
-    def process_defi_anki(self) -> str:
+    def process_defi_anki(self, defi: Optional[Definition] = None) -> str:
         """Process definitions before sending to Anki"""
         # Figure out display mode of current source
+        if defi is not None:
+            self.setCurrentDefinition(defi) # for non interactive use
+        
         if self.currentDefinition is None:
             return ""
         

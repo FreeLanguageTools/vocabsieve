@@ -40,7 +40,7 @@ class KoreaderVocabImporter(GenericImporter):
         start = time.time()
         bookfiles = koreader_scandir(self.path)
         print("Scanned dir at ", time.time() - start)
-        langcode = self.parent.settings.value("target_language", "en")
+        langcode = self._parent.settings.value("target_language", "en")
         metadata = []
         for bookfile in bookfiles:
             metadata.append(getBookMetadata(bookfile))
@@ -108,11 +108,11 @@ class KoreaderVocabImporter(GenericImporter):
             entries = [(entry['word'], entry['book_title'], entry['time']) for entry in entries]
             print("Processed entries at ", time.time() - start)
             count = 0
-            lookups_count_before = self.parent.rec.countLookups(langcode)
+            lookups_count_before = self._parent.rec.countLookups(langcode)
             for word, booktitle, timestamp in entries:
                 if booktitle in books_in_lang:
                     count += 1
-                    self.parent.rec.recordLookup(
+                    self._parent.rec.recordLookup(
                         LookupRecord(
                             word=word, 
                             language=langcode, 
@@ -122,8 +122,8 @@ class KoreaderVocabImporter(GenericImporter):
                         commit=False
                     )
             print("Added lookups at ", time.time() - start)
-            self.parent.rec.conn.commit()
-            lookups_count_after = self.parent.rec.countLookups(langcode)
+            self._parent.rec.conn.commit()
+            lookups_count_after = self._parent.rec.countLookups(langcode)
             print("Committed ", time.time() - start)
             self._layout.addRow(QLabel("Lookup history: " + self.histpath))
             self._layout.addRow(QLabel(f"Found {count} lookups in {langcode}, added { lookups_count_after - lookups_count_before } to lookup database."))

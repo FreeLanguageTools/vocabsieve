@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import (QDialog, QFormLayout, QLabel, QComboBox, QWidget, 
                              QVBoxLayout, QCheckBox, QScrollArea, QPushButton, 
                              QProgressBar, QSizePolicy, QApplication)
-from PyQt5.QtCore import QDateTime
+from PyQt5.QtCore import QDateTime, QCoreApplication
 from .BatchNotePreviewer import BatchNotePreviewer
 from ..ui.main_window_base import MainWindowBase
 from .models import ReadingNote
@@ -154,8 +154,9 @@ class GenericImporter(QDialog):
         self.preview_widget.reset()
         count = 0
         for n_looked_up, note in enumerate(self.selected_reading_notes):
+            QCoreApplication.processEvents()
+            self.lastDate = max(note.date, self.lastDate)
             # Remove punctuations
-            self.lastDate = note.date
             word = re.sub('[\\?\\.!«»…,()\\[\\]]*', "", note.lookup_term)
             if note.sentence:
                 if self.settings.value("bold_word", True, type=bool):
@@ -179,7 +180,7 @@ class GenericImporter(QDialog):
                 count += 1
                 self.definition_count_label.setText(
                     str(count) + " definitions found")
-                QApplication.processEvents()
+                QCoreApplication.processEvents()
 
                 audio_path = ""
                 if json.loads(self.settings.value("audio_sg", "[]")) != []:
@@ -200,12 +201,13 @@ class GenericImporter(QDialog):
                     tags.extend(self.settings.value("tags", "vocabsieve").strip().split())
                 tags.append(self.methodname)
                 tags.append(note.book_name.replace(" ","_"))
-                
+                print(definition1)
+                print(definition2)
                 new_note_item = SRSNote(
                         word=definition1.headword,
                         sentence=sentence,
-                        definition1=definition1.definition,
-                        definition2=definition2.definition if definition2 else None,
+                        definition1=self._parent.definition.process_defi_anki(definition1) if definition1 is not None else None,
+                        definition2=self._parent.definition2.process_defi_anki(definition2) if definition2 is not None else None,
                         audio_path=audio_path,
                         tags=tags
                         )
@@ -216,12 +218,14 @@ class GenericImporter(QDialog):
         # Unlock buttons again now
         self.lookup_button.setEnabled(True)
         self.anki_button.setEnabled(True)
+        print(self.anki_notes)
     def to_anki(self):
         notes_data = []
         for note in self.anki_notes:
             notes_data.append(
                 prepareAnkiNoteDict(self._parent.getAnkiSettings(), note)
                 )
+        print(notes_data)
 
         res = addNotes(self._parent.settings.value("anki_api"), notes_data)
         # Record last import data
