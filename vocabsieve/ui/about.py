@@ -16,21 +16,20 @@ class AboutDialog(QDialog):
         self.buttonBox = QDialogButtonBox(QBtn)
         self.buttonBox.accepted.connect(self.accept)
 
-        self._layout = QVBoxLayout() # type: ignore
+        self._layout = QVBoxLayout()
         message = QLabel(
             f'''
 VocabSieve version: {__version__}<br>
 Python version: {sys.version}<br>
 PyQt5 (Qt bindings) version: {QT_VERSION_STR}, Qt {PYQT_VERSION_STR}<br><br>
 © 2022 FreeLanguageTools<br><br>
-Visit <a href="https://wiki.freelanguagetools.org">FreeLanguageTools Wiki</a> for more info on how to use this tool.<br>
-You can also talk to us on <a href="https://webchat.kde.org/#/room/#flt:midov.pl">Matrix</a>
-or <a href="https://t.me/fltchat">Telegram</a> for support.<br><br>
+Read the <a href="https://docs.freelanguagetools.org/">manual</a> for more info on how to use this tool.<br>
 
-Consult <a href="https://wiki.freelanguagetools.org/vocabsieve_dicts">this wiki page</a>
+
+Consult <a href="https://docs.freelanguagetools.org/resources.html">the Resources page</a>
 to find compatible dictionaries. <br><br>
 
-VocabSieve (formerly SSM, ssmtool) is free software available to you under the terms of
+VocabSieve is free software available to you under the terms of
 <a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GNU GPLv3</a>.
 If you found a bug, or have enhancement ideas, please open an issue on the
 Github <a href=https://github.com/FreeLanguageTools/vocabsieve>repository</a>.<br><br>

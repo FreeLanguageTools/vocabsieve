@@ -69,6 +69,15 @@ class AnkiSettings:
     image_field: Optional[str] = None
     tags: Optional[list[str]] = None
 
+@dataclass(slots=True)
+class KnownMetadata:
+    '''Represents metadata about calculated known data'''
+    n_lookups: int = 0
+    n_seen: int = 0
+    n_mature_tgt: int = 0
+    n_mature_ctx: int = 0
+    n_young_tgt: int = 0
+    n_young_ctx: int = 0
 
 
 class LemmaPolicy(str, Enum):
@@ -95,6 +104,13 @@ class SourceOptions:
     display_mode: DisplayMode
     skip_top: int
     collapse_newlines: int
+
+class TrackingDataError(Enum):
+    '''Represents an error that occurred during tracking'''
+    no_errors = 0
+    anki_enabled_but_not_running = 1
+    anki_enabled_running_but_no_fieldmap = 2
+
 
 
 @dataclass(slots=True)

@@ -4,7 +4,6 @@ from .utils import *
 from datetime import datetime as dt
 import os
 import re
-from ..known_words import getKnownWords
 from ..lemmatizer import lem_word, lem_pre
 from ..tools import *
 from ..ui.main_window_base import MainWindowBase
@@ -16,6 +15,7 @@ class AutoTextImporter(GenericImporter):
     def __init__(self, parent: MainWindowBase, path):
         self.path: str = path
         self.splitter: SentenceSplitter= parent.splitter
+        self.known_words = self.parent.getKnownWords()
         super().__init__(parent, "Auto vocab detection", path, "auto")
 
     def getNotes(self):
@@ -27,8 +27,7 @@ class AutoTextImporter(GenericImporter):
                 ) 
             if sentence)
 
-        known_words, *_ = getKnownWords(self.parent.settings, self.parent.rec, self.parent.dictdb)
-        known_words = set(known_words)
+        known_words = set(self.known_words)
         already_mined = set()
         reading_notes = []
         norepeat = True

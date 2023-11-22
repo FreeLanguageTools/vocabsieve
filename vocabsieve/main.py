@@ -31,11 +31,12 @@ from .contentmanager import ContentManager
 from .global_events import GlobalObject
 from .tools import compute_word_score, is_json, make_audio_source_group, prepareAnkiNoteDict, starts_with_cyrillic, is_oneword, addNote, make_source_group, getVersion, make_freq_source
 from .ui.main_window_base import MainWindowBase
-from .models import DictionarySourceGroup, LookupRecord, SRSNote, WordRecord
+from .models import (DictionarySourceGroup, KnownMetadata, LookupRecord, SRSNote, TrackingDataError, 
+                     WordRecord)
 from sentence_splitter import SentenceSplitter
 from .lemmatizer import lem_word
 
-
+lock = threading.Lock()
 
 class MainWindow(MainWindowBase):
     got_updates = pyqtSignal(list)
@@ -43,14 +44,16 @@ class MainWindow(MainWindowBase):
         super().__init__()
         self.datapath = datapath
         self.thread_manager = QThreadPool()
+        self.known_data: Optional[dict[str, WordRecord]] = None
+        self.known_metadata: Optional[KnownMetadata] = None
+        self.known_data_timestamp: float = 0
         self.setupMenu()
         self.setupButtons()
         self.startServer()
         self.setupShortcuts()
         self.checkUpdatesOnThread()
         self.initSources()
-        self.known_data: Optional[dict[str, WordRecord]] = None
-        #self.getKnownDataOnThread()
+        self.initTimers()
         self.got_updates.connect(self.gotUpdatesInfo)
 
         GlobalObject().addEventListener("double clicked", self.lookupSelected)
@@ -77,7 +80,7 @@ class MainWindow(MainWindowBase):
 
 
         if self.settings.value("sg2_enabled", False, type=bool):
-            sg2_src_list = json.loads(self.settings.value("sg2", '["Google Translate"]'))
+            sg2_src_list = json.loads(self.settings.value("sg2", '[]'))
             self.sg2 = make_source_group(sg2_src_list, self.dictdb)
             self.definition2.setSourceGroup(self.sg2)
         else:
@@ -222,14 +225,41 @@ class MainWindow(MainWindowBase):
         self.setMenuBar(self.menu)
 
     def onAnalyzeBook(self):
-        path = QFileDialog.getOpenFileName(
-            parent=self,
-            caption="Select book",
-            filter="Ebook files (*.epub *.fb2 *.mobi *.html *.azw *.azw3 *.kfx)",
-            directory=QStandardPaths.writableLocation(QStandardPaths.HomeLocation)
-            )[0]
-        if path:
-            BookAnalyzer(self, path).open()
+        if self.checkAnkiConnect() and self.known_data is not None:
+            path = QFileDialog.getOpenFileName(
+                parent=self,
+                caption="Select book",
+                filter="Ebook files (*.epub *.fb2 *.mobi *.html *.azw *.azw3 *.kfx)",
+                directory=QStandardPaths.writableLocation(QStandardPaths.HomeLocation)
+                )[0]
+            if path:
+                BookAnalyzer(self, path).open()
+        elif self.known_data is None:
+            self.warnKnownDataNotReady()
+
+    def getKnownWords(self) -> tuple[list[str], list[str]]:
+        if self.known_data is not None:
+            langcode = self.settings.value('target_language', 'en')
+            known_threshold = self.settings.value('tracking/known_threshold', 100, type=int)
+            known_threshold_cognate = self.settings.value('tracking/known_threshold_cognate', 25, type=int)
+            known_words: list[str] = []
+            known_cognates: list[str] = []
+            cognates: set[str] = set()
+            if self.dictdb.hasCognatesData():
+                known_langs = self.settings.value('tracking/known_langs', 'en').split(",")
+                cognates = self.dictdb.getCognatesData(langcode, known_langs)
+            waw = self.getWordActionWeights()
+            for word, word_record in self.known_data.items():
+                score=compute_word_score(word_record, waw)
+                if score >= known_threshold:
+                    known_words.append(word)
+                elif (score >= known_threshold_cognate) and (word in cognates):
+                    known_words.append(word)
+                    known_cognates.append(word)
+            return known_words, known_cognates
+        else:
+            return [], []
+            
 
     def exportKnownWords(self):
         path, _ = QFileDialog.getSaveFileName(
@@ -243,38 +273,45 @@ class MainWindow(MainWindowBase):
         )
         if not path:
             return
-        
-        langcode = self.settings.value('target_language', 'en')
-
-        #known_words = self.rec.getKnownWords()
-        #if self.settings.value('target_language', 'en') in ['ru', 'uk']:
-        #    known_words = [word for word in known_words if starts_with_cyrillic(word)]
-        known_data = self.rec.getKnownData()
-        known_threshold = self.settings.value('tracking/known_threshold', 100, type=int)
-        known_threshold_cognate = self.settings.value('tracking/known_threshold_cognate', 25, type=int)
-        known_words: list[str] = []
-        cognates: set[str] = set()
-        if self.dictdb.hasCognatesData():
-            known_langs = self.settings.value('tracking/known_langs', 'en').split(",")
-            cognates = self.dictdb.getCognatesData(langcode, known_langs)
-        
-        waw = self.getWordActionWeights()
-        for word, word_record in known_data.items():
-            if score:=compute_word_score(word_record, waw) >= known_threshold:
-                known_words.append(word)
-            elif score >= known_threshold_cognate and word in cognates:
-                known_words.append(word)
-                
+        if self.known_data is None:
+            self.warnKnownDataNotReady()
+            return
+        known_words, _ = self.getKnownWords()
         with open(path, 'w', encoding='utf-8') as file:
             json.dump(known_words, file, indent=4, ensure_ascii=False)
 
-    @pyqtSlot()
-    def getKnownDataOnThread(self) -> None:
-        self.thread_manager.start(self.getKnownData)
+    def checkDataAvailability(self) -> TrackingDataError:
+        # Check is Anki enabled
+        # Can proceed is anki is disabled
+        if not self.settings.value("enable_anki", True, type=bool):
+            return TrackingDataError.no_errors
+        # Anki is enabled
+        # Check if AnkiConnect is running
+        if not self.checkAnkiConnect() == 1:
+            return TrackingDataError.anki_enabled_but_not_running
+        # AnkiConnect is running
+        # Check if fieldmap is set
+        fieldmap = json.loads(self.settings.value("tracking/fieldmap",  "{}"))
+        if not fieldmap:
+            return TrackingDataError.anki_enabled_running_but_no_fieldmap
+        # fieldmap is set
+        return TrackingDataError.no_errors
 
     @pyqtSlot()
-    def getKnownData(self) -> None:
-        self.known_data = self.rec.getKnownData()
+    def getKnownDataOnThread(self) -> None:
+        if self.checkDataAvailability() != TrackingDataError.no_errors:
+            print("Data isn't available, not getting known data now")
+            return
+        self.thread_manager.start(self._refreshKnownData)
+
+    @pyqtSlot()
+    def _refreshKnownData(self) -> None:
+        try:
+            lock.acquire(True)
+            self.known_data, self.known_metadata = self.rec.getKnownData()
+            self.known_data_timestamp = time.time()
+        finally:
+            lock.release()
 
     
     def exportWordData(self):
@@ -289,19 +326,30 @@ class MainWindow(MainWindowBase):
         )
         if not path:
             return
-
-        data = self.rec.getKnownData()
-
+        if self.known_data is None:
+            self.warnKnownDataNotReady()
+            return
         with open(path, 'w', encoding='utf-8') as file:
-            json.dump([dataclasses.asdict(item) for item in data.values()], file, indent=4, ensure_ascii=False)
+            json.dump([dataclasses.asdict(item) for item in self.known_data.values()], file, indent=4, ensure_ascii=False)
 
     def onContentManager(self):
         ContentManager(self).exec()
 
     def onStats(self):
-        if self.checkAnkiConnect():
+        if self.checkAnkiConnect() and self.known_data is not None:
             stats_window = StatisticsWindow(self)
             stats_window.open()
+        elif self.known_data is None:
+            self.warnKnownDataNotReady()
+            
+    def warnKnownDataNotReady(self):
+        QMessageBox.warning(
+            self,
+            "Known data is not ready",
+            "Known data is not ready yet. Please try again in a few seconds, and make sure AnkiConnect is available if Anki support is enabled."
+        )
+        
+
 
     def exportNotes(self) -> None:
         """
@@ -351,7 +399,7 @@ class MainWindow(MainWindowBase):
             writer.writerows(self.rec.getAllLookups())
 
     def onHelp(self) -> None:
-        url = f"https://wiki.freelanguagetools.org/vocabsieve_setup"
+        url = f"https://docs.freelanguagetools.org/"
         QDesktopServices.openUrl(QUrl(url))
 
     def checkAnkiConnect(self) -> int:
@@ -679,11 +727,18 @@ class MainWindow(MainWindowBase):
             "\nbe sure to change it in the configuration.")
         msg.exec()
 
-    def initTimer(self) -> None:
-        self.showStats()
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.showStats)
-        self.timer.start(2000)
+    def initTimers(self) -> None:
+        print("Got here")
+        #self.showStats()
+        #_timer = QTimer()
+        #_timer.timeout.connect(self.showStats)
+        #_timer.start(2000)
+        timer_known_data = QTimer(self)
+        timer_known_data.setInterval(30000) # Attempt to refresh every 30s, but refresh will only happen if data is expired
+        timer_known_data.timeout.connect(self.getKnownDataOnThread)
+        timer_known_data.start()
+        self.getKnownDataOnThread()
+
 
     def showStats(self) -> None:
         lookups = self.rec.countLookupsToday()
@@ -732,4 +787,8 @@ def main():
 
     w.show()
     w.audio_selector.alignDiscardButton() # fix annoying issue of misalignment
-    sys.exit(app.exec())
+    try:
+        app.exec()
+    except KeyboardInterrupt:
+        print("Exiting...")
+        sys.exit(0)

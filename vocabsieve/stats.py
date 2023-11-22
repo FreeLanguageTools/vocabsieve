@@ -1,5 +1,6 @@
 
 
+from typing import TYPE_CHECKING
 from PyQt5.QtWidgets import QDialog, QTabWidget, QWidget, QLabel, QVBoxLayout, QPlainTextEdit
 from PyQt5.QtGui import QPalette
 from operator import itemgetter
@@ -8,13 +9,15 @@ from datetime import datetime
 import time
 import math
 from .tools import starts_with_cyrillic, prettydigits
-from .known_words import getKnownWords
 
+if TYPE_CHECKING:
+    from .main import MainWindow
 
 class StatisticsWindow(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
         self.settings = parent.settings
+        self._parent: "MainWindow" = parent
         self.rec = parent.rec
         self.dictdb = parent.dictdb
         self.setWindowTitle(f"Statistics")
@@ -72,17 +75,21 @@ class StatisticsWindow(QDialog):
         if not hasCognates:
             self.known_layout.addWidget(label:=QLabel('No cognates data installed. Please download <a href="https://raw.githubusercontent.com/FreeLanguageTools/CogNet-processing/master/cognates.json.xz">this file</a> and import it in the configuration tool.'))
             label.setOpenExternalLinks(True)
-        known_words, known_cognates, total_score, count_seen_data, count_lookup_data, count_tgt_lemmas, count_ctx_lemmas = getKnownWords(self.settings, self.rec, self.dictdb)
+        known_data = self._parent.known_data
+        known_metadata = self._parent.known_metadata
+        known_words, known_cognates = self._parent.getKnownWords()
         print("Got known data in", time.time() - start, "seconds")
 
-        if langcode in ['ru', 'uk']:
+        if langcode in ['ru', 'uk', 'bg']: # /TODO: Do this properly with a name in constants.py
             known_words = [word for word in known_words if starts_with_cyrillic(word)]
-        self.known_layout.addWidget(QLabel(f"<h3>Known words: {prettydigits(len(known_words))} ({prettydigits(len(known_cognates))} cognates)</h3>"))
-        self.known_layout.addWidget(QLabel(f"<h4>Your total score: {prettydigits(int(total_score))}</h4>"))
-        self.known_layout.addWidget(
-            QLabel(
-                f"Lemmas: {prettydigits(count_seen_data)} seen, {prettydigits(count_lookup_data)} looked up, "
-                f"{prettydigits(count_tgt_lemmas)} as Anki targets, {prettydigits(count_ctx_lemmas)} in Anki context"))
+
+        if known_data is not None and known_metadata is not None:
+            self.known_layout.addWidget(QLabel(f"<h3>Known words: {prettydigits(len(known_words))} ({prettydigits(len(known_cognates))} cognates)</h3>"))
+            self.known_layout.addWidget(
+                QLabel(
+                    f"Words: {prettydigits(known_metadata.n_seen)} seen, {prettydigits(known_metadata.n_lookups)} looked up, "
+                    f"{prettydigits(known_metadata.n_mature_tgt + known_metadata.n_young_tgt)} as Anki targets, "
+                    f"{prettydigits(known_metadata.n_mature_ctx + known_metadata.n_young_ctx)} in Anki context"))
         known_words_widget = QPlainTextEdit(" ".join(known_words))
         known_words_widget.setReadOnly(True)
         self.known_layout.addWidget(known_words_widget)

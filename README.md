@@ -26,8 +26,8 @@ VocabSieve (originally Simple Sentence Mining, `ssmtool`) is a program for sente
 - **Book analysis**: Not sure what to read? Once VocabSieve gets enough data of what words you know, it can quickly scan books and predict your level of understanding. 
 
 ## Tutorials
-[Wiki page](https://wiki.freelanguagetools.org/vocabsieve_setup)
-(The text originally on this document or the blog post has since been moved there, with some updates.)
+[Manual](https://docs.freelanguagetools.org/)
+(The text originally on the wiki or this document or the blog post has since been moved there, with some updates.)
 
 [New video tutorial](https://www.youtube.com/watch?v=EHW-kBLmuHU)
 
@@ -87,18 +87,6 @@ You are welcome to report bugs, suggest features/enhancements, or ask for clarif
 
 ## Donations
 I don't really need donations. If you appreciate this tool, consider making a donation to the [Free Software Foundation](https://www.fsf.org/) or the [Electronic Frontier Foundation](https://www.eff.org/) to protect our digital future and defend our freedom.
-
-<details><summary>Click to show donation information</summary>
-Send me some Monero to support this work! If you can [prove](https://www.getmonero.org/resources/user-guides/prove-payment.html) a payment of more than 0.05 XMR, you can receive prioritized support and consideration for feature requests (still, no guarantees!).
-
-XMR Address: `89AZiqM7LD66XE9s5G7iBu4CU3i6qUu2ieCq4g3JKacn7e1xKuwe2tvWApLFvhaMR47kwNzjC4B5VL3N32MCokE2U9tGXzX`
-
-Monero is a private, censorship-resistant cryptocurrency. Transactions are anonymous and essentially impossible to track by authorities or third-party analytics companies.
-
-[Learn more about Monero](https://www.getmonero.org/)
-
-If you do not have any Monero, a good way to get it is through [ChangeNow](https://changenow.io/) or [SimpleSwap](https://simpleswap.io/).
-</details>
 
 ## Credits
 The definitions provided by the program by default come from English Wiktionary, without which this program would never have been created. [LingvaTranslate](https://github.com/thedaviddelta/lingva-translate) is used to obtain Google Translate results. Fоrvо scraping code is inspired by this [repository](https://github.com/Rascalov/Anki-Simple-Forvo-Audio). Lemmatization capabilities come from [simplemma](https://github.com/adbar/simplemma) and [pymorphy3](https://github.com/kmike/pymorphy3).

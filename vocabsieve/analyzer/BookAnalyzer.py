@@ -8,7 +8,6 @@ import time
 from statistics import stdev, mean
 from ..lemmatizer import lem_word
 import itertools
-from ..known_words import getKnownWords
 import random
 import numpy as np
 from pyqtgraph import PlotWidget, AxisItem
@@ -30,7 +29,7 @@ class BookAnalyzer(QDialog):
         self.chapters, self.ch_pos = ebook2text(self.path)
         self._layout = QGridLayout(self)
         self._layout.addWidget(QLabel("<h1>Analysis of \"" + bookname + "\"</h1>"), 0, 0, 1, 2)
-        self.known_words, *_ = getKnownWords(self.parent.settings, self.parent.rec, self.parent.dictdb)
+        self.known_words, _ = parent.getKnownWords()
         self.is_drawing = False
         self.initWidgets()
         self.show()

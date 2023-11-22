@@ -968,6 +968,7 @@ class SettingsDialog(QDialog):
         msg.exec()
 
     def changeMainLayout(self):
+        print("Got to change main layout")
         if self.sg2_enabled.isChecked():
             # This means user has changed from one source to two source mode,
             # need to redraw main window
@@ -977,13 +978,6 @@ class SettingsDialog(QDialog):
                     self.parent.definition, 7, 0, 2, 3)
                 self.parent._layout.addWidget(
                     self.parent.definition2, 9, 0, 2, 3)
-                self.parent.definition2.setVisible(True)
-            else:
-                self.parent._layout.removeWidget(self.parent.definition)
-                self.parent._layout.addWidget(
-                    self.parent.definition, 2, 3, 4, 1)
-                self.parent._layout.addWidget(
-                    self.parent.definition2, 2, 4, 4, 1)
                 self.parent.definition2.setVisible(True)
         else:
             self.parent._layout.removeWidget(self.parent.definition)

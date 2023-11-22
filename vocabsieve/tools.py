@@ -231,9 +231,9 @@ def ebook2text(path) -> tuple[list[str], dict[int, str]]:
             position += len(content)
             chapters.append(content)
     elif ext == '.fb2':
-        with open(path, 'r') as f:
-            data = f.read()
-            tree = etree.frombytes(data)
+        with open(path, 'rt') as f:
+            data = f.read().encode()
+            tree = etree.fromstring(data)
         chapters = []
         already_seen = False
         for el in tree:
