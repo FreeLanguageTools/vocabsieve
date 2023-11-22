@@ -12,7 +12,7 @@ class LocalAudioSource(AudioSource):
     def _lookup(self, word: str) -> AudioLookupResult:
         try:
             audios = {}
-            audio_files = json.loads(self.dictdb.define(word, self.langcode, self.name))
+            audio_files = json.loads(self.dictdb.define(word, self.langcode, self.name) or "[]")
             print("audio_files", audio_files)
             for file in audio_files:
                 audios[file] = os.path.join(self.base_path, file)

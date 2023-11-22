@@ -1,8 +1,9 @@
 from .constants import DEBUG_ENV
 from PyQt5.QtCore import QStandardPaths, QSettings, QCoreApplication
 import os
+import threading
 from . import __version__
-
+lock = threading.Lock()
 def _get_debug_description():
     return "(debug=" + DEBUG_ENV + ")"
 

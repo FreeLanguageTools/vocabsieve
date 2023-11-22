@@ -9,6 +9,7 @@ from .lemmatizer import removeAccents
 from pystardict import Dictionary
 import json
 from typing import Optional
+from .global_names import lock
 
 class LocalDictionary():
     def __init__(self, datapath) -> None:
@@ -18,6 +19,16 @@ class LocalDictionary():
         self.conn = sqlite3.connect(path, check_same_thread=False)
         self.c = self.conn.cursor()
         self.createTables()
+        self.makeIndex()
+
+    def makeIndex(self) -> None:
+        try:
+            self.c.execute("""
+            CREATE UNIQUE INDEX IF NOT EXISTS dictionary_index ON dictionary(language, dictname, word)
+            """)
+            print("Either successfully made unique index, or there is already one")
+        except sqlite3.IntegrityError:
+            print("Unable to make unique index")
 
     def createTables(self) -> None:
         self.c.execute("""
@@ -38,7 +49,7 @@ class LocalDictionary():
                 VALUES(?, ?, ?, ?)
                 """,
                            (
-                               removeAccents(item[0].lower() if item[0].isupper() else item[0]),  # no caps
+                               item[0],
                                item[1].replace("\\n", "\n"),
                                lang,
                                name
@@ -68,19 +79,28 @@ class LocalDictionary():
             """)
         return self.c.fetchone()[0] > 0
 
-    def  define(self, word: str, lang: str, name: str) -> str:
+    def define(self, word: str, lang: str, name: str) -> str:
         "Get definition from database"
-        "Should not raise an exception"
-        self.c.execute("""
-        SELECT definition FROM dictionary
-        WHERE word=?
-        AND language=?
-        AND dictname=?
-        """, (word, lang, name))
-        if results:=self.c.fetchone():
-            return str(results[0])
-        else:
-            raise KeyError(f"Word {word} not found in {name}")
+        "Should raise KeyError if word not found"
+        start = time.time()
+        for _ in range(10):
+            try:
+                lock.acquire(True) 
+                self.c.execute("""
+                SELECT definition FROM dictionary
+                WHERE word=?
+                AND language=?
+                AND dictname=?
+                """, (word, lang, name))
+                if results:=self.c.fetchone():
+                    print("Query took", time.time() - start)
+                    return str(results[0])
+                else:
+                    raise KeyError(f"Word {word} not found in {name}")
+            finally:
+                lock.release()
+                print("Failed", _, "times")
+        raise RuntimeError(f"Cannot ")
 
     def countEntries(self) -> int:
         self.c.execute("""
@@ -117,6 +137,11 @@ class LocalDictionary():
         """)
         self.createTables()
         self.c.execute("VACUUM")
+    
+    @staticmethod
+    def regularize_headword(word: str) -> str:
+        "If headword is all caps, convert it to all lowercase"
+        return removeAccents(word.lower() if word.isupper() else word)
 
     def dictimport(self, path, dicttype, lang, name) -> None:
         "Import dictionary from file to database"
@@ -125,10 +150,11 @@ class LocalDictionary():
             d = {}
             if stardict.ifo.sametypesequence == 'x':
                 for key in stardict.idx.keys():
-                    d[key] = xdxf2html(stardict.dict[key])
+
+                    d[self.regularize_headword(key)] = xdxf2html(stardict.dict[key])
             else:
                 for key in stardict.idx.keys():
-                    d[key] = stardict.dict[key]
+                    d[self.regularize_headword(key)] = stardict.dict[key]
             self.importdict(d, lang, name)
         elif dicttype == "json":
             with zopen(path) as f:
@@ -139,14 +165,14 @@ class LocalDictionary():
                 data = json.load(f)
                 d = {}
                 for item in data:
-                    d[item['term']] = item['definition']
+                    d[self.regularize_headword(item['term'])] = item['definition']
                 self.importdict(d, lang, name)
         elif dicttype == "freq":
             with zopen(path) as f:
                 data = json.load(f)
                 d = {}
                 for i, word in enumerate(data):
-                    d[word] = str(i + 1)
+                    d[self.regularize_headword(word)] = str(i + 1)
                 self.importdict(d, lang, name)
         elif dicttype == "audiolib":
             # Audios will be stored as a serialized json list
@@ -162,9 +188,9 @@ class LocalDictionary():
             for item in filelist:
                 headword = os.path.basename(os.path.splitext(item)[0]).lower()
                 if not list_d.get(headword):
-                    list_d[headword] = [item]
+                    list_d[self.regularize_headword(headword)] = [item]
                 else:
-                    list_d[headword].append(item)
+                    list_d[self.regularize_headword(headword)].append(item)
             for word in list_d:
                 d[word] = json.dumps(list_d[word])
             self.importdict(d, lang, name)

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Any, Optional
 from enum import Enum
 from bs4 import BeautifulSoup
+import time
 import re
 from markdownify import markdownify
 from .format import markdown_nop
@@ -235,9 +236,11 @@ class AudioSourceGroup:
 
     def define(self, word: str, no_lemma: bool = False) -> list[AudioDefinition]:
         '''Get definitions from all sources'''
+        start = time.time()
         definitions = []
         for source in self.sources:
             definitions.extend(source.define(word, no_lemma))
+        print(f"Took {time.time() - start} to get definitions in audio SG")
         return definitions
 
 class DictionarySource(Source):
@@ -323,8 +326,10 @@ class DictionarySourceGroup:
     def define(self, word: str, no_lemma: bool = False) -> list[Definition]:
         '''Get definitions from all sources'''
         definitions = []
+        start = time.time()
         for source in self.sources:
             definitions.extend(source.define(word, no_lemma=no_lemma))
+        print(f"Took {time.time() - start} to get definitions in SG")
         return definitions
     
 
@@ -336,11 +341,6 @@ def convert_display_mode(entry: str, mode: DisplayMode) -> str:
             case DisplayMode.markdown:
                 return markdownify(entry)  # type: ignore
             case DisplayMode.markdown_html: 
-                print(entry)
-                print()
-                print(markdownify(entry))
-                print()
-                print(markdown_nop(markdownify(entry)))
                 return markdown_nop(markdownify(entry))
             case DisplayMode.plaintext:
                 entry = entry.replace("<br>", "\n")\

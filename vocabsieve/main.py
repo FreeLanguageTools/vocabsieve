@@ -18,7 +18,7 @@ from markdown import markdown
 from PyQt5.QtCore import QCoreApplication, QStandardPaths, QTimer, QDateTime, QThread, QUrl, pyqtSlot, QThreadPool, pyqtSignal
 from PyQt5.QtGui import QClipboard, QKeySequence, QPixmap, QDesktopServices
 from PyQt5.QtWidgets import QApplication, QMessageBox, QAction, QShortcut, QFileDialog
-from .global_names import datapath
+from .global_names import datapath, lock
 
 from .text_manipulation import apply_bold_char, apply_bold_tags, bold_word_in_text
 from .analyzer import BookAnalyzer
@@ -36,7 +36,6 @@ from .models import (DictionarySourceGroup, KnownMetadata, LookupRecord, SRSNote
 from sentence_splitter import SentenceSplitter
 from .lemmatizer import lem_word
 
-lock = threading.Lock()
 
 class MainWindow(MainWindowBase):
     got_updates = pyqtSignal(list)
@@ -690,7 +689,6 @@ class MainWindow(MainWindowBase):
         )
         
         content = prepareAnkiNoteDict(anki_settings, note)
-        print(content)
         try: 
             addNote(
                 self.settings.value("anki_api", "http://127.0.0.1:8765"),

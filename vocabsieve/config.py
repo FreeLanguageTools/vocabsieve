@@ -968,27 +968,22 @@ class SettingsDialog(QDialog):
         msg.exec()
 
     def changeMainLayout(self):
-        print("Got to change main layout")
         if self.sg2_enabled.isChecked():
             # This means user has changed from one source to two source mode,
             # need to redraw main window
             if self.settings.value("orientation", "Vertical") == "Vertical":
                 self.parent._layout.removeWidget(self.parent.definition)
                 self.parent._layout.addWidget(
-                    self.parent.definition, 7, 0, 2, 3)
+                    self.parent.definition, 6, 0, 2, 3)
                 self.parent._layout.addWidget(
-                    self.parent.definition2, 9, 0, 2, 3)
+                    self.parent.definition2, 8, 0, 2, 3)
                 self.parent.definition2.setVisible(True)
         else:
             self.parent._layout.removeWidget(self.parent.definition)
             self.parent._layout.removeWidget(self.parent.definition2)
             self.parent.definition2.setVisible(False)
-            if self.settings.value("orientation", "Vertical") == "Vertical":
-                self.parent._layout.addWidget(
-                    self.parent.definition, 7, 0, 4, 3)
-            else:
-                self.parent._layout.addWidget(
-                    self.parent.definition, 2, 3, 4, 2)
+            self.parent._layout.addWidget(self.parent.definition, 6, 0, 4, 3)
+
 
     def status(self, msg):
         self.bar.showMessage(self.parent.time() + " " + msg, 4000)

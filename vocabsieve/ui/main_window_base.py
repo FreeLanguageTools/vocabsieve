@@ -192,6 +192,7 @@ class MainWindowBase(QMainWindow):
         layout.setColumnStretch(0, 2)
         layout.setColumnStretch(1, 2)
         layout.setColumnStretch(2, 5)
+        self._layout = layout
 
     
 
