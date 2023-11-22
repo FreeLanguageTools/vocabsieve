@@ -1,3 +1,4 @@
+from typing import TextIO
 from readmdict import MDX
 from bidict import bidict
 import os
@@ -27,7 +28,7 @@ supported_dict_extensions = [
 ]
 
 
-def zopen(path):
+def zopen(path) -> TextIO:
     if path.endswith('.xz'):
         return lzma.open(path, 'rt', encoding='utf-8')
     elif path.endswith('.gz'):
@@ -37,7 +38,7 @@ def zopen(path):
     else:
         return open(path, encoding='utf-8')
     
-def dslopen(path):
+def dslopen(path) -> TextIO:
     "Open dsl. Can be .dsl or .dsl.dz. Can be UTF-8 or UTF-16"
     correct_encoding = ""
     for testEncoding in ["utf-8", "utf-16"]:
@@ -180,6 +181,9 @@ def parseMDX(path) -> dict[str, str]:
 
 
 def parseDSL(path) -> dict[str, str]:
+    """Parse Lingvo DSL dictionary
+    This produces much simpler markup than the pyglossary implementation
+    """
     with dslopen(path) as f: # type:ignore
         lines: list[str] = f.readlines() # type:ignore
     allLines = "".join(lines[5:])
@@ -204,7 +208,7 @@ def parseDSL(path) -> dict[str, str]:
     for item in allLines.splitlines():
         if not item.startswith("#") and not item.startswith("\t"):
             data[current_term] = re.sub(r'(\d+\.)<br>\s*(\D+)', r'\1 \2', current_defi)\
-                                   .removesuffix("<br>")
+                                   .removesuffix("<br>").strip()
 
             current_defi = ""
             current_term = item
