@@ -54,3 +54,12 @@ def test_import_dsl():
     assert dictdb.define("зубчатый", "ru", "dsl_test2") == '''serrated, toothed'''
     assert dictdb.define("лиственный", "ru", "dsl_test2") == '''broadleaf; deciduous; leafy'''
     assert dictdb.define("окорять", "ru", "dsl_test2") == '''bark, peel'''
+    dictdb.dictimport("testdata/dsl/universal.dsl.dz",
+                      dicttype="dsl",
+                      lang="ru",
+                      name="dsl_test3"
+                      )
+    assert dictdb.countDicts() == 3
+    assert dictdb.define("ямчатость", "ru", "dsl_test3") == '''ж. с.-х.<br>  (патологическое свойство плодов) pit<br>'''
+    assert dictdb.define("эмиграция", "ru", "dsl_test3") == '''ж.<br>  1) (переселение из своего отечества) emigration<br>  2) (пребывание в другой стране) life in emigration<br>    жить в эмиграции — live as an emigrant / émigré (фр.) /<'emɪgreɪ/><br>  3) собир. emigrants pl; émigrés (фр.) /<'emɪgreɪz/> pl<br>'''
+    assert dictdb.define("щемящий", "ru", "dsl_test3") == '''1) (ноющий, тупой) aching /<'eɪk-/>, nagging<br>    щемящая боль — nagging ache /<eɪk/><br>  2) (мучительный, гнетущий) painful, melancholy, oppressive<br>    щемящий душу напев — plaintive / melancholy /<-k-/> tune<br>'''
