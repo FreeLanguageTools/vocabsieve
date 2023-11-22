@@ -14,6 +14,10 @@ def fmt_result(definitions):
 
 class WiktionarySource(DictionarySource):
     def __init__(self, langcode: str, options: SourceOptions) -> None:
+        # Wiktionary lists all Bosnian, Croatian, Serbian as "sh" (Serbo-Croatian)
+        # We need to map this to the correct language code
+        if langcode in ["sr", "hr", "bs"]:
+            langcode = "sh"
         super().__init__("Wiktionary (English)", langcode, options)
 
     def _lookup(self, word: str) -> LookupResult:
