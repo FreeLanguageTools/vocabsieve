@@ -64,6 +64,7 @@ to be reimported, otherwise this operation will fail.\
         self.dictdb.purge()
         n_dicts = len(dicts)
         failed_reads = []
+        failed_errors = []
         for (i, item) in enumerate(dicts):
             try:
                 self.status(f"Rebuilding database: dictionary ({i+1}/{n_dicts})"
@@ -73,11 +74,14 @@ to be reimported, otherwise this operation will fail.\
             except Exception as e:
                 # Delete dictionary if read fails
                 failed_reads.append(item['name'])
+                failed_errors.append("\tError:" + repr(e))
                 del dicts[i]
                 self.settings.setValue("custom_dicts", json.dumps(dicts))
-                print(e)
+        self.dictdb.makeIndex()
+        failures = [name + ": Error: " + error for name, error in zip(failed_reads, failed_errors)]
+        failed_msg = ("\nThe following dictionaries could not be imported, and have been removed: \n" 
+                      + "\n\t".join(failures) if failures else "")
         
-        failed_msg = ("\nThe following dictionaries could not be found, and have been removed: \n" + "\n\t- ".join(failed_reads)) if failed_reads else ""
         QMessageBox.information(self, "Database rebuilt",
                                 f"Database rebuilt in {format(time.time()-start, '.3f')} seconds.{failed_msg}")
         self.refresh()
