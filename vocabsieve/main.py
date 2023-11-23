@@ -1,5 +1,6 @@
 import csv
 import dataclasses
+from mimetypes import init
 from operator import ge
 import importlib.metadata
 import os
@@ -11,13 +12,14 @@ from typing import Optional
 import requests
 from packaging import version
 import qdarktheme
+import platform
 import json
 import threading
 from loguru import logger
 
 from markdown import markdown
 from PyQt5.QtCore import QCoreApplication, QStandardPaths, QTimer, QDateTime, QThread, QUrl, pyqtSlot, QThreadPool, pyqtSignal
-from PyQt5.QtGui import QClipboard, QKeySequence, QPixmap, QDesktopServices
+from PyQt5.QtGui import QClipboard, QKeySequence, QPixmap, QDesktopServices, QImage
 from PyQt5.QtWidgets import QApplication, QMessageBox, QAction, QShortcut, QFileDialog
 
 from .global_names import datapath, lock # First local import
@@ -40,6 +42,8 @@ from .lemmatizer import lem_word
 
 class MainWindow(MainWindowBase):
     got_updates = pyqtSignal(list)
+    polled_clipboard_changed = pyqtSignal()
+    polled_selection_changed = pyqtSignal()
     def __init__(self) -> None:
         super().__init__()
         self.datapath = datapath
@@ -56,18 +60,55 @@ class MainWindow(MainWindowBase):
         self.initTimers()
         self.got_updates.connect(self.gotUpdatesInfo)
 
-        GlobalObject().addEventListener("double clicked", self.lookupSelected)
-        if self.settings.value("primary", False, type=bool)\
-                and QClipboard.supportsSelection(QApplication.clipboard())\
-                and not os.environ.get("XDG_SESSION_TYPE") == "wayland":
-            QApplication.clipboard().selectionChanged.connect(
-                lambda: self.clipboardChanged(False, True))
-        if not os.environ.get("XDG_SESSION_TYPE") == "wayland":
-            QApplication.clipboard().dataChanged.connect(self.clipboardChanged)
+        self.setupClipboardMonitor()
 
         if not self.settings.value("internal/configured"):
             self.configure()
             self.settings.setValue("internal/configured", True)
+
+    def setupClipboardMonitor(self):
+        GlobalObject().addEventListener("double clicked", self.lookupSelected)
+        cant_listen_to_clipboard = (os.environ.get("XDG_SESSION_TYPE") == "wayland" 
+                                    or platform.system() == "Darwin")
+        if self.settings.value("primary", False, type=bool)\
+                and QClipboard.supportsSelection(QApplication.clipboard())\
+                and not os.environ.get("XDG_SESSION_TYPE") == "wayland": # No selection support on Wayland
+            QApplication.clipboard().selectionChanged.connect(
+                lambda: self.clipboardChanged(selection=True))
+        if not cant_listen_to_clipboard:
+            QApplication.clipboard().dataChanged.connect(self.clipboardChanged)
+        else:
+            logger.info("Clipboard monitoring is not supported on Wayland and MacOS, will poll instead")
+            self.initPollingClipboard()
+            self.polled_clipboard_changed.connect(self.clipboardChanged)
+            self.polled_selection_changed.connect(lambda: self.clipboardChanged(selection=True))
+
+    def initPollingClipboard(self):
+        self.last_clipboard: str = ""
+        self.last_selection: str = ""
+        self.last_image: Optional[QImage] = None
+        clipboard_timer = QTimer(self)
+        clipboard_timer.timeout.connect(self.pollClipboard)
+        clipboard_timer.start(50)
+
+
+    def pollClipboard(self):
+        mimedata = QApplication.clipboard().mimeData()
+        if mimedata.hasImage():
+            if self.last_image is None or self.last_image != QApplication.clipboard().image():
+                self.last_image = QApplication.clipboard().image()
+                logger.debug(f"Polling: Clipboard image changed")
+                self.polled_clipboard_changed.emit()
+        elif mimedata.hasText():
+            if QApplication.clipboard().text() != self.last_clipboard:
+                self.last_clipboard = QApplication.clipboard().text()
+                logger.debug(f"Polling: Clipboard text changed to {self.last_clipboard}")
+                self.polled_clipboard_changed.emit()
+        if QApplication.clipboard().supportsSelection() and self.settings.value("primary", False, type=bool):
+            if self.last_selection != QApplication.clipboard().text(QClipboard.Selection):
+                self.last_selection = QApplication.clipboard().text(QClipboard.Selection)
+                logger.debug(f"Polling: Clipboard selection changed to {self.last_selection}")
+                self.polled_selection_changed.emit()
 
     def initSources(self):
         logger.debug("Initializing sources")
@@ -147,7 +188,7 @@ class MainWindow(MainWindowBase):
         self.web_button.clicked.connect(self.onWebButton)
 
         self.toanki_button.clicked.connect(self.createNote)
-        self.read_button.clicked.connect(lambda: self.clipboardChanged(True))
+        self.read_button.clicked.connect(lambda: self.clipboardChanged(even_when_focused=True))
 
 
         self.bar.addPermanentWidget(self.stats_label)
@@ -605,7 +646,7 @@ class MainWindow(MainWindowBase):
     def getConvertToUppercase(self) -> bool:
         return bool(self.settings.value("capitalize_first_letter", False, type=bool))
 
-    def clipboardChanged(self, evenWhenFocused=False, selection=False):
+    def clipboardChanged(self, even_when_focused=False, selection=False):
         """
         If the input is just a single word, we look it up right away.
         If it's a json and has the required fields, we use these fields to
@@ -627,7 +668,7 @@ class MainWindow(MainWindowBase):
 
         should_convert_to_uppercase = self.getConvertToUppercase()
         lang = self.settings.value("target_language", "en")
-        if self.isActiveWindow() and not evenWhenFocused:
+        if self.isActiveWindow() and not even_when_focused:
             return
         if is_json(text):
             copyobj = json.loads(text)
