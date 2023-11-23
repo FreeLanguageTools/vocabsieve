@@ -13,13 +13,14 @@ from packaging import version
 import qdarktheme
 import json
 import threading
+from loguru import logger
 
 from markdown import markdown
 from PyQt5.QtCore import QCoreApplication, QStandardPaths, QTimer, QDateTime, QThread, QUrl, pyqtSlot, QThreadPool, pyqtSignal
 from PyQt5.QtGui import QClipboard, QKeySequence, QPixmap, QDesktopServices
 from PyQt5.QtWidgets import QApplication, QMessageBox, QAction, QShortcut, QFileDialog
-from .global_names import datapath, lock
 
+from .global_names import datapath, lock # First local import
 from .text_manipulation import apply_bold_char, apply_bold_tags, bold_word_in_text
 from .analyzer import BookAnalyzer
 from .config import SettingsDialog
@@ -69,9 +70,11 @@ class MainWindow(MainWindowBase):
             self.settings.setValue("internal/configured", True)
 
     def initSources(self):
+        logger.debug("Initializing sources")
         sg1_src_list = json.loads(self.settings.value("sg1", '["Wiktionary (English)"]'))
         self.sg1 = make_source_group(sg1_src_list, self.dictdb)
         self.definition.setSourceGroup(self.sg1)
+        logger.debug(f"Source Group 1: {sg1_src_list} has been created.")
         self.splitter = SentenceSplitter(language=self.settings.value("target_language", "en"))
 
         if self.settings.value("freq_source", "<disabled>") != "<disabled>":
@@ -80,15 +83,18 @@ class MainWindow(MainWindowBase):
 
         if self.settings.value("sg2_enabled", False, type=bool):
             sg2_src_list = json.loads(self.settings.value("sg2", '[]'))
+            logger.debug(f"Source Group 2: {sg2_src_list} has been created.")
             self.sg2 = make_source_group(sg2_src_list, self.dictdb)
             self.definition2.setSourceGroup(self.sg2)
         else:
+            logger.debug("Source Group 2 is disabled, emptying source widget.")
             self.sg2 = DictionarySourceGroup([])
             self.definition2.setSourceGroup(self.sg2) 
 
         if audio_src_list:=json.loads(self.settings.value("audio_sg", '["Forvo"]')):
             self.audio_sg = make_audio_source_group(audio_src_list, self.dictdb)
             self.audio_selector.setSourceGroup(self.audio_sg)
+            logger.debug(f"Audio source group: {audio_src_list} has been created")
 
     @pyqtSlot()
     def checkUpdatesOnThread(self) -> None:
@@ -299,7 +305,7 @@ class MainWindow(MainWindowBase):
     @pyqtSlot()
     def getKnownDataOnThread(self) -> None:
         if self.checkDataAvailability() != TrackingDataError.no_errors:
-            print("Data isn't available, not getting known data now")
+            logger.debug("Some data sources aren't available, not getting known data now")
             return
         self.thread_manager.start(self._refreshKnownData)
 
@@ -311,6 +317,7 @@ class MainWindow(MainWindowBase):
             self.known_data_timestamp = time.time()
         finally:
             lock.release()
+ 
 
     
     def exportWordData(self):
@@ -547,6 +554,7 @@ class MainWindow(MainWindowBase):
 
     def lookupSelected(self, no_lemma=False) -> None:
         target = self.getCurrentWord()
+        logger.info(f"Triggered lookup on {target}")
         self.lookup(target, no_lemma)
     
     def lookup(self, target: str, no_lemma=False) -> None:
@@ -726,7 +734,7 @@ class MainWindow(MainWindowBase):
         msg.exec()
 
     def initTimers(self) -> None:
-        print("Got here")
+        logger.debug("Initializing timers")
         #self.showStats()
         #_timer = QTimer()
         #_timer.timeout.connect(self.showStats)

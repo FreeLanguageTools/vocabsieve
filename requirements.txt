@@ -27,3 +27,4 @@ readmdict
 python-lzo
 packaging
 typing_extensions
+loguru

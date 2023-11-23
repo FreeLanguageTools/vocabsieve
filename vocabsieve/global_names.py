@@ -2,6 +2,9 @@ from .constants import DEBUG_ENV
 from PyQt5.QtCore import QStandardPaths, QSettings, QCoreApplication
 import os
 import threading
+from datetime import datetime
+from loguru import logger
+import gzip
 from . import __version__
 lock = threading.Lock()
 def _get_debug_description():
@@ -18,6 +21,7 @@ def app_title(include_version: bool):
 
     return title
 
+
 app_organization = "FreeLanguageTools"
 def _get_settings_app_title():
     return title_prefix + DEBUG_ENV if DEBUG_ENV else title_prefix
@@ -29,3 +33,10 @@ QCoreApplication.setOrganizationName(app_organization)
 settings = QSettings(app_organization, app_name)
 datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
 forvopath = os.path.join(datapath, "forvo")
+
+_today_log_name = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+os.makedirs(os.path.join(datapath, "log"), exist_ok=True)
+_log_path = os.path.join(datapath, "log", f"session-{_today_log_name}.txt")
+
+logger.add(_log_path, format="{time} {level} {message}", level="DEBUG")
+ 

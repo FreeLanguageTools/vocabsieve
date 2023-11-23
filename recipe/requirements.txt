@@ -25,4 +25,5 @@ markdown
 markdownify
 readmdict
 packaging
+loguru
 typing_extensions

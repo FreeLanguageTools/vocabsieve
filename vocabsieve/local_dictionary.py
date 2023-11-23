@@ -82,7 +82,6 @@ class LocalDictionary():
     def define(self, word: str, lang: str, name: str) -> str:
         "Get definition from database"
         "Should raise KeyError if word not found"
-        start = time.time()
         for _ in range(10):
             try:
                 lock.acquire(True) 
@@ -93,13 +92,11 @@ class LocalDictionary():
                 AND dictname=?
                 """, (word, lang, name))
                 if results:=self.c.fetchone():
-                    print("Query took", time.time() - start)
                     return str(results[0])
                 else:
                     raise KeyError(f"Word {word} not found in {name}")
             finally:
                 lock.release()
-                print("Failed", _, "times")
         raise RuntimeError(f"Cannot ")
 
     def countEntries(self) -> int:

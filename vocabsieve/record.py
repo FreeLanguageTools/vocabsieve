@@ -13,6 +13,7 @@ from .constants import langcodes
 from .lemmatizer import lem_word
 from .models import LookupRecord, WordRecord, KnownMetadata
 from .tools import getVersion, findNotes, notesInfo
+from loguru import logger
 
 dictionaries = bidict({"Wiktionary (English)": "wikt-en",
                        "Google Translate": "gtrans"})
@@ -407,15 +408,21 @@ class Record():
     def getKnownData(self) -> tuple[dict[str, WordRecord], KnownMetadata]:
         lifetime = self.settings.value('tracking/known_data_lifetime', 1800, type=int) # Seconds
         if self.last_known_data is None:
+            logger.debug("No known data in this session. Creating known data from database..")
             self.last_known_data = self._refreshKnownData()
             self.last_known_data_date = time.time()
             return self.last_known_data
         else:
-            if time.time() - self.last_known_data_date > lifetime:
+            known_data_age = time.time() - self.last_known_data_date
+            if known_data_age > lifetime:
+                logger.debug(f"Known data is {known_data_age:.2f} s old, " 
+                             f"which is older than the specified lifetime of {lifetime} s. Refreshing..")
                 self.last_known_data = self._refreshKnownData()
                 self.last_known_data_date = time.time()
                 return self.last_known_data
             else:
+                logger.debug(f"Known data is {known_data_age:.2f} s old, " 
+                             f"which is newer than the specified lifetime of {lifetime} s. Not refreshing now.")
                 return self.last_known_data
             
     @staticmethod
@@ -470,7 +477,7 @@ class Record():
             metadata.n_lookups += 1
             result[lemma] = WordRecord(lemma=lemma, language=langcode, n_lookups=count)
 
-        print("Prepared lookup data in", time.time() - start, "seconds")
+        logger.debug(f"Processed lookup data in {time.time() - start:.2f} seconds")
 
         start = time.time()
         for lemma, count in self.getSeen(langcode):
@@ -480,12 +487,12 @@ class Record():
             except KeyError:
                 result[lemma] = WordRecord(lemma=lemma, language=langcode, n_seen=count)
 
-        print("Prepared seen data in", time.time() - start, "seconds")
+        logger.debug(f"Processed seen data in {time.time() - start:.2f} seconds")
 
         start = time.time()
         
         if not self.settings.value('enable_anki', True, type=bool):
-            print("Anki disabled, skipping")
+            logger.debug("Anki disabled, skipping")
             result = {k: v for k, v in result.items() if k.isalpha() and not k.startswith('http') and " " not in k}
             return result, metadata
         fieldmap = json.loads(self.settings.value("tracking/fieldmap",  "{}"))
@@ -503,7 +510,7 @@ class Record():
             )
         young_notes = [note for note in young_notes if note not in mature_notes]
 
-        print("Got anki data from AnkiConnect in", time.time() - start, "seconds")
+        logger.debug(f"Received anki data from AnkiConnect in {time.time() - start:.2f} seconds")
         start = time.time()
         mature_notes_info = notesInfo(anki_api, mature_notes)
         young_notes_info = notesInfo(anki_api, young_notes)
@@ -528,6 +535,8 @@ class Record():
         metadata.n_mature_tgt = len(mature_tgt_lemmas)
         metadata.n_young_ctx = len(young_ctx_lemmas)
         metadata.n_young_tgt = len(young_tgt_lemmas)
+
+        logger.debug(f"Processed anki data in {time.time() - start:.2f} seconds")
 
         result = {k: v for k, v in result.items() if k.isalpha() and not k.startswith('http') and " " not in k}
         return result, metadata
