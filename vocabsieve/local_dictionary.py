@@ -220,6 +220,7 @@ class LocalDictionary():
     def getCognatesData(self, language: str, known_langs: list[str]) -> set[str]:
         "Get all cognates from the local database in a given language"
         data = self.getCognates(language)
+        known_langs = [lang.strip() for lang in known_langs]
         if not known_langs:
             return set()
         if not known_langs[0]:

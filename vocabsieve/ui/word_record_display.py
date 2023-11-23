@@ -16,6 +16,16 @@ def pretty_symbol_display(symbol: str, number: int) -> str:
 class WordRecordDisplay(QLabel):
     def __init__(self):
         super().__init__()
+        self.setToolTip(
+"""Number shown is total score
+S: times seen
+L: times looked up
+T: number of mature anki cards as word
+t: number of young anki cards as word
+C: number of mature anki cards as context
+c: number of young anki cards as context
+Weights can be changed in the Tracking tab"""
+        )
 
     def setWordRecord(self, wr: WordRecord, waw: WordActionWeights):
         self.setText(

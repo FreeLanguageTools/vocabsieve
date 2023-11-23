@@ -81,7 +81,6 @@ class MainWindowBase(QMainWindow):
         #self.sentence.setMaximumHeight(300)
         self.word = QLineEdit()
         self.word.setPlaceholderText("Word")
-        self.src_name_label = QLabel()
         self.definition = MultiDefinitionWidget(self.word)
         self.definition.setMinimumHeight(70)
         #self.definition.setMaximumHeight(1800)
@@ -137,11 +136,11 @@ class MainWindowBase(QMainWindow):
                     True,
                     type=bool)))
         self.definition.setPlaceholderText(
-            'Look up a word by double clicking it. Or, select it, then press "Get definition".')
+            f'Look up a word by double clicking it or by selecting it, then pressing {MOD}-D.\nUse Shift-{MOD}-D to look up the word without lemmatization.')
         self.definition2.setPlaceholderText(
-            'Look up a word by double clicking it. Or, select it, then press "Get definition".')
+            f'Look up a word by double clicking it or by selecting it, then pressing {MOD}-D.\nUse Shift-{MOD}-D to look up the word without lemmatization.')
 
-        self.image_viewer = QLabel("<center><b>&lt;No image selected&gt;</center>")
+        self.image_viewer = QLabel("<center><b>&lt;No image&gt;</center>")
         self.image_viewer.setScaledContents(True)
         self.image_viewer.setToolTip(f"{MOD}-I to clear the image.")
         self.image_viewer.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
@@ -151,7 +150,6 @@ class MainWindowBase(QMainWindow):
             '''
         )
         self.word_record_display = WordRecordDisplay()
-
 
 
     def setupWidgetsV(self) -> None:
@@ -197,7 +195,7 @@ class MainWindowBase(QMainWindow):
     
 
     def onHelp(self) -> None:
-        url = f"https://wiki.freelanguagetools.org/vocabsieve_setup"
+        url = f"https://docs.freelanguagetools.org/"
         QDesktopServices.openUrl(QUrl(url))
 
     def onAbout(self) -> None:
