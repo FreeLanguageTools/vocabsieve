@@ -88,13 +88,16 @@ class MainWindowBase(QMainWindow):
             "Look up a word by double clicking it. Or, select it"
             ", then press \"Get definition\".")
 
-        self.lookup_button = QPushButton(f"Define [{MOD}-D]")
+        self.lookup_button = QPushButton(f"Define [{MOD}-D]") 
         self.lookup_exact_button = QPushButton(f"Define direct [Shift-{MOD}-D]")
         self.lookup_exact_button.setToolTip(
             "This will look up the word without lemmatization.")
         self.toanki_button = QPushButton(f"Add note [{MOD}-S]")
 
-        self.read_button = QPushButton(f"Read clipboard [{MOD}-V]")
+        self.read_button = QPushButton(f"Read clipboard")
+        self.read_button.setToolTip(
+            "Read the clipboard contents to Sentence field [{MOD}-V]"
+            )
         self.bar = QStatusBar()
         self.setStatusBar(self.bar)
         self.stats_label = QLabel()
@@ -111,7 +114,9 @@ class MainWindowBase(QMainWindow):
         self.lookup_definition_on_doubleclick.clicked.connect(lambda v: self.settings.setValue("lookup_definition_on_doubleclick", v))
         self.lookup_definition_on_doubleclick.setChecked(self.settings.value("lookup_definition_on_doubleclick", True, type=bool))
 
-        self.web_button = QPushButton(f"Open webpage [{MOD}-1]")
+        self.web_button = QPushButton(f"Open webpage")
+        self.web_button.setToolTip(
+            "Open the webpage for the selected word. [{MOD}+I]")
         self.freq_widget = FreqDisplayWidget()
         self.freq_widget.setPlaceholderText("Word frequency")
 

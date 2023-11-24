@@ -25,5 +25,5 @@ markdown
 markdownify
 readmdict
 packaging
-loguru
+loguru>=0.6,<0.7
 typing_extensions
