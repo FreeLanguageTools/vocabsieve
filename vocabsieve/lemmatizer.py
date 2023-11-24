@@ -40,7 +40,7 @@ def lem_word(word, language, greedy=False):
     return lemmatize(lem_pre(word, language), language, greedy)
 
 
-def removeAccents(word):
+def removeAccents(word) -> str:
     #print("Removing accent marks from query ", word)
     ACCENT_MAPPING = {
         '́': '',

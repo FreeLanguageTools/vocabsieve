@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QStyle
 from typing import Optional
 
 from ..audio_player import AudioPlayer
+from ..global_names import MOD
 from ..models import AudioDefinition, AudioSourceGroup, Definition
 import threading
 
@@ -21,7 +22,7 @@ class AudioSelector(QListWidget):
 
         
         self.discard_audio_button.clicked.connect(self.clear)
-        self.discard_audio_button.setToolTip("Discard audio")
+        self.discard_audio_button.setToolTip(f"Discard audio [{MOD}+X]")
         
         icon = self.style().standardIcon(QStyle.SP_TrashIcon)
         self.discard_audio_button.setIcon(icon)

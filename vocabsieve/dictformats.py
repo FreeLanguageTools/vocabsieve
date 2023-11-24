@@ -30,13 +30,13 @@ supported_dict_extensions = [
 
 def zopen(path) -> TextIO:
     if path.endswith('.xz'):
-        return lzma.open(path, 'rt', encoding='utf-8')
+        return lzma.open(path, 'rt', encoding='utf-8') # type:ignore
     elif path.endswith('.gz'):
-        return gzip.open(path, 'rt', encoding='utf-8')
+        return gzip.open(path, 'rt', encoding='utf-8') # type:ignore
     elif path.endswith('.bz2'):
-        return bz2.open(path, 'rt', encoding='utf-8')
+        return bz2.open(path, 'rt', encoding='utf-8') # type:ignore
     else:
-        return open(path, encoding='utf-8')
+        return open(path, 'rt', encoding='utf-8') # type:ignore
     
 def dslopen(path) -> TextIO:
     "Open dsl. Can be .dsl or .dsl.dz. Can be UTF-8 or UTF-16"
@@ -52,7 +52,7 @@ def dslopen(path) -> TextIO:
                 else:
                     correct_encoding = testEncoding
                     break
-        else:
+        elif path.endswith(".dsl"):
             with open(path, mode="rt", encoding=testEncoding) as f:
                 try:
                     for _ in range(50):
@@ -62,9 +62,10 @@ def dslopen(path) -> TextIO:
                 else:
                     correct_encoding = testEncoding
                     break
-        raise ValueError("Could not detect encoding of DSL file")
+    else:
+        raise ValueError("Failed to detect encoding")
     if path.endswith(".dsl.dz"):
-        return gzip.open(path, mode="rt", encoding=correct_encoding)
+        return gzip.open(path, mode="rt", encoding=correct_encoding) # type:ignore
     elif path.endswith(".dsl"):
         return open(path, mode="rt", encoding=correct_encoding)
     else:

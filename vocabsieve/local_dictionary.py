@@ -77,7 +77,7 @@ class LocalDictionary():
             SELECT COUNT(*) FROM dictionary
             WHERE dictname='cognates'
             """)
-        return self.c.fetchone()[0] > 0
+        return bool(self.c.fetchone()[0] > 0)
 
     def define(self, word: str, lang: str, name: str) -> str:
         "Get definition from database"
@@ -142,9 +142,9 @@ class LocalDictionary():
 
     def dictimport(self, path, dicttype, lang, name) -> None:
         "Import dictionary from file to database"
+        d: dict[str, str] = {}
         if dicttype == "stardict":
             stardict = Dictionary(os.path.splitext(path)[0], in_memory=True)
-            d = {}
             if stardict.ifo.sametypesequence == 'x':
                 for key in stardict.idx.keys():
 
@@ -160,14 +160,12 @@ class LocalDictionary():
         elif dicttype == "migaku":
             with zopen(path) as f:
                 data = json.load(f)
-                d = {}
                 for item in data:
                     d[self.regularize_headword(item['term'])] = item['definition']
                 self.importdict(d, lang, name)
         elif dicttype == "freq":
             with zopen(path) as f:
                 data = json.load(f)
-                d = {}
                 for i, word in enumerate(data):
                     d[self.regularize_headword(word)] = str(i + 1)
                 self.importdict(d, lang, name)
@@ -175,7 +173,6 @@ class LocalDictionary():
             # Audios will be stored as a serialized json list
             filelist = []
             list_d: dict[str, list[str]] = {}
-            d: dict[str, str] = {}
             for root, dirs, files in os.walk(path):
                 for item in files:
                     filelist.append(

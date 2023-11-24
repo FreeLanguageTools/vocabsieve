@@ -4,7 +4,8 @@ import os
 import threading
 from datetime import datetime
 from loguru import logger
-import gzip
+import platform
+
 from . import __version__
 lock = threading.Lock()
 def _get_debug_description():
@@ -21,6 +22,10 @@ def app_title(include_version: bool):
 
     return title
 
+if platform.system() == "Darwin":
+    MOD = "Cmd"
+else:
+    MOD = "Ctrl"
 
 app_organization = "FreeLanguageTools"
 def _get_settings_app_title():

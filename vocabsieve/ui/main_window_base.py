@@ -8,7 +8,7 @@ from .audio_selector import AudioSelector
 from .multi_definition_widget import MultiDefinitionWidget
 from .word_record_display import WordRecordDisplay
 
-from ..global_names import app_title, settings, datapath
+from ..global_names import app_title, settings, datapath, MOD
 
 from ..record import Record
 from ..local_dictionary import LocalDictionary
@@ -25,10 +25,6 @@ from sentence_splitter import SentenceSplitter
 # If on macOS, display the modifier key as "Cmd", else display it as "Ctrl".
 # For whatever reason, Qt automatically uses Cmd key when Ctrl is specified on Mac
 # so there is no need to change the keybind, only the display text
-if platform.system() == "Darwin":
-    MOD = "Cmd"
-else:
-    MOD = "Ctrl"
 
 class MainWindowBase(QMainWindow):
     audio_fetched = pyqtSignal(dict)
@@ -88,15 +84,15 @@ class MainWindowBase(QMainWindow):
             "Look up a word by double clicking it. Or, select it"
             ", then press \"Get definition\".")
 
-        self.lookup_button = QPushButton(f"Define [{MOD}-D]") 
-        self.lookup_exact_button = QPushButton(f"Define direct [Shift-{MOD}-D]")
+        self.lookup_button = QPushButton(f"Define [{MOD}+D]") 
+        self.lookup_exact_button = QPushButton(f"Define direct [Shift-{MOD}+D]")
         self.lookup_exact_button.setToolTip(
             "This will look up the word without lemmatization.")
-        self.toanki_button = QPushButton(f"Add note [{MOD}-S]")
+        self.toanki_button = QPushButton(f"Add note [{MOD}+S]")
 
         self.read_button = QPushButton(f"Read clipboard")
         self.read_button.setToolTip(
-            "Read the clipboard contents to Sentence field [{MOD}-V]"
+            "Read the clipboard contents to Sentence field [{MOD}+V]"
             )
         self.bar = QStatusBar()
         self.setStatusBar(self.bar)
@@ -116,7 +112,7 @@ class MainWindowBase(QMainWindow):
 
         self.web_button = QPushButton(f"Open webpage")
         self.web_button.setToolTip(
-            "Open the webpage for the selected word. [{MOD}+I]")
+            "Open the webpage for the selected word. [{MOD}+1]")
         self.freq_widget = FreqDisplayWidget()
         self.freq_widget.setPlaceholderText("Word frequency")
 
@@ -135,13 +131,13 @@ class MainWindowBase(QMainWindow):
                     True,
                     type=bool)))
         self.definition.setPlaceholderText(
-            f'Look up a word by double clicking it or by selecting it, then pressing {MOD}-D.\nUse Shift-{MOD}-D to look up the word without lemmatization.')
+            f'Look up a word by double clicking it or by selecting it, then pressing {MOD}+D.\nUse Shift-{MOD}+D to look up the word without lemmatization.')
         self.definition2.setPlaceholderText(
-            f'Look up a word by double clicking it or by selecting it, then pressing {MOD}-D.\nUse Shift-{MOD}-D to look up the word without lemmatization.')
+            f'Look up a word by double clicking it or by selecting it, then pressing {MOD}+D.\nUse Shift-{MOD}+D to look up the word without lemmatization.')
 
         self.image_viewer = QLabel("<center><b>&lt;No image&gt;</center>")
         self.image_viewer.setScaledContents(True)
-        self.image_viewer.setToolTip(f"{MOD}-I to clear the image.")
+        self.image_viewer.setToolTip(f"{MOD}+W to clear the image.")
         self.image_viewer.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
         self.image_viewer.setStyleSheet(
             '''
