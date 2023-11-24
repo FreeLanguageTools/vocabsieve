@@ -3,8 +3,7 @@ import sqlite3
 import os
 import time
 
-from .dictformats import parseMDX, parseDSL, parseCSV, parseTSV, zopen
-from .xdxftransform import xdxf2html
+from .dictformats import parseMDX, parseDSL, parseCSV, parseTSV, xdxf2text, zopen
 from .lemmatizer import removeAccents
 from pystardict import Dictionary
 import json
@@ -148,7 +147,7 @@ class LocalDictionary():
             if stardict.ifo.sametypesequence == 'x':
                 for key in stardict.idx.keys():
 
-                    d[self.regularize_headword(key)] = xdxf2html(stardict.dict[key])
+                    d[self.regularize_headword(key)] = xdxf2text(stardict.dict[key])
             else:
                 for key in stardict.idx.keys():
                     d[self.regularize_headword(key)] = stardict.dict[key]

@@ -30,9 +30,19 @@ def test_import_stardict_xdxf():
                       lang="fr",
                       name="fr-universal")
     assert dictdb.countDicts() == 1
-    assert dictdb.define("bromisme", "fr", "fr-universal") == '''<div class="article"><div class="k"><b>bromisme</b></div><i><font color="green"><span class="abr"><font color="green"><i>m</i></font></span> <span class="abr"><font color="green"><i>мед.</i></font></span></font></i><br/> бром'изм (<i>отравление бромом</i>)</div>'''
-    assert dictdb.define("dédié", "fr", "fr-universal") == '''<div class="article"><div class="k"><b>dédié</b></div><font color="green"><i><span class="abr"><font color="green"><i>adj</i></font></span> <span class="abr"><font color="green"><i>вчт.</i></font></span></i> (<span class="abr"><font color="green"><i><i>fém</i></i></font></span> - dédiée); <span class="abr"><font color="green"><i><i>см.</i></i></font></span> <a class="kref" href="bword://d&#xE9;dicac&#xE9;">dédicacé</a> 2)</font></div>'''
-    assert dictdb.define("usurpateur", "fr", "fr-universal") == '''<div class="article"><div class="k"><b>usurpateur</b></div><b>1.</b> <font color="green"><span class="abr"><font color="green"><i><i>m</i></i></font></span> (<span class="abr"><font color="green"><i><i>f</i></i></font></span> - usurpatrice)</font>узурп'атор, захв'атчик<br/><b>2.</b> <font color="green"><span class="abr"><font color="green"><i><i>adj</i></i></font></span> (<span class="abr"><font color="green"><i><i>fém</i></i></font></span> - usurpatrice)</font>узурп'аторский</div>'''
+    assert dictdb.define("accouchement", "fr", "fr-universal") == '''<i>m</i>
+ 1) р'оды
+  accouchement avant terme, accouchement prématuré — преждевр'еменные р'оды
+  accouchement après terme, accouchement tardif — запозд'алые р'оды
+  accouchement sans douleur — обезб'оливание р'одов
+  douleurs de l'accouchement — родов'ые б'оли
+ 2) <i>перен.</i> дл'ительное созрев'ание, тр'удное осуществл'ение'''
+    assert dictdb.define("persévérant", "fr", "fr-universal") == '''<i>adj</i>, <i>subst</i> (<i>fém</i> - persévérante)
+ 1) наст'ойчивый [наст'ойчивая], уп'орный [уп'орная]; твёрдый [твёрдая]
+ 2) посто'янный [посто'янная]'''
+    assert dictdb.define("pièce-raccord", "fr", "fr-universal") == '''pièce-raccord
+ <i>m</i>
+ <i>(pl s + s</i> ) соедин'ительная часть, соедин'ительная дет'аль'''
 
 def test_import_dsl():
     dictdb = LocalDictionary("testdir/dsl")

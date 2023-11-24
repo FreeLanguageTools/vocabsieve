@@ -221,7 +221,25 @@ def parseDSL(path) -> dict[str, str]:
 
     return data
 
-
+def xdxf2text(xdxf_string: str) -> str:
+    """Transform an XDXF stardict entry into plain text
+    This largely follows the implementation in sdcv without the color"""
+    # Remove content in <k> tags
+    s = re.sub(r"<k>\w+</k>", "", xdxf_string, flags=re.IGNORECASE)
+    # Convert <tr> into [ ]
+    s = s.replace("<tr>", "[").replace("</tr>", "]").replace("<TR>", "[").replace("</TR>", "]")
+    # Remove blockquotes because they start with b
+    s = re.sub(r"</?blockquote>", "", s, flags=re.IGNORECASE)
+    # Convert kref to bolds just like in sdcv
+    s = s.replace("<kref>", "<b>").replace("</kref>", "</b>").replace("<KREF>", "<b>").replace("</KREF>", "</b>")
+    # Remove all other tags than i and b
+    s = re.sub(r"<(?!i|/i|b|/b).*?>", "", s, flags=re.IGNORECASE)
+    # Substitute back in some symbols
+    s = s.replace("&gt;", ">").replace("&lt;", "<")
+    s = s.replace("&quot;", '"')
+    s = s.replace("&amp;", "&")
+    s = s.replace("&apos;", "'")
+    return s.strip()
 
 def parseCSV(path) -> dict[str, str]:
     newdict = {}

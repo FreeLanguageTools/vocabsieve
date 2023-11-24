@@ -56,10 +56,6 @@ class MainWindowBase(QMainWindow):
         self.setFont(font)
 
 
-    def clipboardChanged(self, evenWhenFocused=False, selection=False) -> None:
-        pass
-
-
     def initWidgets(self) -> None:
         self.namelabel = QLabel(
             "<h2 style=\"font-weight: normal;\">" + app_title(False) + "</h2>")
