@@ -532,7 +532,7 @@ class SettingsDialog(QDialog):
         self.nuke_button.clicked.connect(self.nuke_profile)
 
 
-        self.tab_s_layout.addWidget(QLabel("<h3>Dictionary ources</h3>"), 0, 0, 1, 2)
+        self.tab_s_layout.addWidget(QLabel("<h3>Dictionary sources</h3>"), 0, 0, 1, 2)
         self.tab_s_layout.addWidget(QLabel("Dictionary Group 1"), 1, 0, 1 ,1)
         self.tab_s_layout.addWidget(QLabel("Available dictionaries"), 1, 1, 1, 1)
         self.tab_s_layout.addWidget(self.sg1_widget, 2, 0, 1, 1)
@@ -541,7 +541,7 @@ class SettingsDialog(QDialog):
         self.tab_s_layout.addWidget(self.all_sources_widget, 2, 1, 3, 1)
 
         self.tab_s_layout.addWidget(QLabel("<h3>Pronunciation sources</h3>"), 5, 0, 1, 2)
-        self.tab_s_layout.addWidget(QLabel("Lemmatization policy"), 6, 0, 1, 1)
+        self.tab_s_layout.addWidget(QLabel("Lemmatization policy for pronunciation"), 6, 0, 1, 1)
         self.tab_s_layout.addWidget(self.audio_lemma_policy, 6, 1, 1, 1)
         self.tab_s_layout.addWidget(QLabel("Enabled pronunciation sources"), 7, 0, 1, 1)
         self.tab_s_layout.addWidget(QLabel("Available pronunciation sources"), 7, 1, 1, 1)
