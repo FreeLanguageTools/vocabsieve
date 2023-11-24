@@ -84,8 +84,10 @@ class MainWindow(MainWindowBase):
             self.polled_selection_changed.connect(lambda: self.clipboardChanged(selection=True))
 
     def initPollingClipboard(self):
-        self.last_clipboard: str = ""
+        self.last_clipboard: str = QApplication.clipboard().text()
         self.last_selection: str = ""
+        if QApplication.clipboard().supportsSelection():
+            self.last_selection = QApplication.clipboard().text(QClipboard.Selection)
         self.last_image: Optional[QImage] = None
         clipboard_timer = QTimer(self)
         clipboard_timer.timeout.connect(self.pollClipboard)
@@ -100,12 +102,14 @@ class MainWindow(MainWindowBase):
                 logger.debug(f"Polling: Clipboard image changed")
                 self.polled_clipboard_changed.emit()
         elif mimedata.hasText():
-            if QApplication.clipboard().text() != self.last_clipboard:
+            if QApplication.clipboard().text() != self.last_clipboard and QApplication.clipboard().text().strip() != "":
                 self.last_clipboard = QApplication.clipboard().text()
                 logger.debug(f"Polling: Clipboard text changed to '''{self.last_clipboard}'''")
                 self.polled_clipboard_changed.emit()
         if QApplication.clipboard().supportsSelection() and self.settings.value("primary", False, type=bool):
-            if self.last_selection != QApplication.clipboard().text(QClipboard.Selection):
+            if self.last_selection != QApplication.clipboard().text(QClipboard.Selection) \
+                and QApplication.clipboard().text(QClipboard.Selection) != self.last_clipboard \
+                and QApplication.clipboard().text(QClipboard.Selection).strip() != "":
                 self.last_selection = QApplication.clipboard().text(QClipboard.Selection)
                 logger.debug(f"Polling: Primary selction changed to '''{self.last_selection}'''")
                 self.polled_selection_changed.emit()

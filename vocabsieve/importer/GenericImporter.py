@@ -15,11 +15,13 @@ import json
 from vocabsieve.tools import addNotes
 from datetime import datetime as dt
 from .BatchNotePreviewer import BatchNotePreviewer
-from ..ui.main_window_base import MainWindowBase
 from .models import ReadingNote
 from ..models import SRSNote
 from ..tools import prepareAnkiNoteDict
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from ..main import MainWindow
 
 def date_to_timestamp(datestr: str):
     return dt.strptime(datestr, "%Y-%m-%d %H:%M:%S").timestamp()
@@ -29,7 +31,7 @@ class GenericImporter(QDialog):
     This class implements the UI for extracting highlights.
     Subclass it and override getNotes to have a new importer
     """
-    def __init__(self, parent: MainWindowBase, src_name: str = "Generic", path: Optional[str] = None, methodname: str ="generic"):
+    def __init__(self, parent: "MainWindow", src_name: str = "Generic", path: Optional[str] = None, methodname: str ="generic"):
         super().__init__(parent)
         self.settings = parent.settings
         self.notes: Optional[set[tuple[str, str]]] = None # Used for filtering

@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 from sentence_splitter import SentenceSplitter
 from .GenericImporter import GenericImporter
 from .utils import *
@@ -6,16 +7,18 @@ import os
 import re
 from ..lemmatizer import lem_word, lem_pre
 from ..tools import *
-from ..ui.main_window_base import MainWindowBase
+
+if TYPE_CHECKING:
+    from ..main import MainWindow
 
 from .models import ReadingNote
 import itertools
 
 class AutoTextImporter(GenericImporter):
-    def __init__(self, parent: MainWindowBase, path):
+    def __init__(self, parent: "MainWindow", path):
         self.path: str = path
         self.splitter: SentenceSplitter= parent.splitter
-        self.known_words = self.parent.getKnownWords()
+        self.known_words, _ = parent.getKnownWords()
         super().__init__(parent, "Auto vocab detection", path, "auto")
 
     def getNotes(self):
