@@ -270,8 +270,6 @@ class SettingsDialog(QDialog):
         self.tab_g_layout = QFormLayout(self.tab_g) 
         self.tab_s = QWidget()
         self.tab_s_layout = QGridLayout(self.tab_s)
-        self.tab_r = QWidget()  # Pronunciation
-        self.tab_r_layout = QGridLayout(self.tab_r)
         self.tab_a = QWidget()  # Anki
         self.tab_a_layout = QFormLayout(self.tab_a)
         self.tab_n = QWidget()  # Network
@@ -292,8 +290,7 @@ class SettingsDialog(QDialog):
         self._layout.addWidget(self.bar)
 
         self.tabs.addTab(self.tab_g, "General")
-        self.tabs.addTab(self.tab_s, "Dictionaries")
-        self.tabs.addTab(self.tab_r, "Pronunciation")
+        self.tabs.addTab(self.tab_s, "Sources")
         self.tabs.addTab(self.tab_p, "Processing")
         self.tabs.addTab(self.tab_a, "Anki")
         self.tabs.addTab(self.tab_n, "Network")
@@ -301,7 +298,6 @@ class SettingsDialog(QDialog):
         self.tabs.addTab(self.tab_i, "Interface")
         self.tabs.addTab(self.tab_m, "Misc")
 
-        self.tab_s
 
     def save_color(self):
         color = QColorDialog.getColor()
@@ -536,7 +532,7 @@ class SettingsDialog(QDialog):
         self.nuke_button.clicked.connect(self.nuke_profile)
 
 
-        self.tab_s_layout.addWidget(QLabel("<h3>Dictionary groups</h3>"), 0, 0, 1, 2)
+        self.tab_s_layout.addWidget(QLabel("<h3>Dictionary ources</h3>"), 0, 0, 1, 2)
         self.tab_s_layout.addWidget(QLabel("Dictionary Group 1"), 1, 0, 1 ,1)
         self.tab_s_layout.addWidget(QLabel("Available dictionaries"), 1, 1, 1, 1)
         self.tab_s_layout.addWidget(self.sg1_widget, 2, 0, 1, 1)
@@ -544,13 +540,13 @@ class SettingsDialog(QDialog):
         self.tab_s_layout.addWidget(self.sg2_widget, 4, 0, 1, 1)
         self.tab_s_layout.addWidget(self.all_sources_widget, 2, 1, 3, 1)
 
-        self.tab_r_layout.addWidget(QLabel("<h3>Pronunciation sources</h3>"), 0, 0, 1, 2)
-        self.tab_r_layout.addWidget(QLabel("Enabled pronunciation sources"), 1, 0, 1, 1)
-        self.tab_r_layout.addWidget(QLabel("Available pronunciation sources"), 1, 1, 1, 1)
-        self.tab_r_layout.addWidget(QLabel("Lemmatization policy"), 2, 0, 1, 1)
-        self.tab_r_layout.addWidget(self.audio_lemma_policy, 2, 1, 1, 1)
-        self.tab_r_layout.addWidget(self.audio_sg_widget, 3, 0, 1, 1)
-        self.tab_r_layout.addWidget(self.all_audio_sources_widget, 3, 1, 1, 1)
+        self.tab_s_layout.addWidget(QLabel("<h3>Pronunciation sources</h3>"), 5, 0, 1, 2)
+        self.tab_s_layout.addWidget(QLabel("Lemmatization policy"), 6, 0, 1, 1)
+        self.tab_s_layout.addWidget(self.audio_lemma_policy, 6, 1, 1, 1)
+        self.tab_s_layout.addWidget(QLabel("Enabled pronunciation sources"), 7, 0, 1, 1)
+        self.tab_s_layout.addWidget(QLabel("Available pronunciation sources"), 7, 1, 1, 1)
+        self.tab_s_layout.addWidget(self.audio_sg_widget, 8, 0, 1, 1)
+        self.tab_s_layout.addWidget(self.all_audio_sources_widget, 8, 1, 1, 1)
 
         self.sg2_enabled.stateChanged.connect(lambda value: self.sg2_widget.setEnabled(value))
         self.sg2_widget.setEnabled(self.sg2_enabled.isChecked())

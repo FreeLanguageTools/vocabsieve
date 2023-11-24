@@ -102,12 +102,12 @@ class MainWindow(MainWindowBase):
         elif mimedata.hasText():
             if QApplication.clipboard().text() != self.last_clipboard:
                 self.last_clipboard = QApplication.clipboard().text()
-                logger.debug(f"Polling: Clipboard text changed to {self.last_clipboard}")
+                logger.debug(f"Polling: Clipboard text changed to '''{self.last_clipboard}'''")
                 self.polled_clipboard_changed.emit()
         if QApplication.clipboard().supportsSelection() and self.settings.value("primary", False, type=bool):
             if self.last_selection != QApplication.clipboard().text(QClipboard.Selection):
                 self.last_selection = QApplication.clipboard().text(QClipboard.Selection)
-                logger.debug(f"Polling: Clipboard selection changed to {self.last_selection}")
+                logger.debug(f"Polling: Primary selction changed to '''{self.last_selection}'''")
                 self.polled_selection_changed.emit()
 
     def initSources(self):

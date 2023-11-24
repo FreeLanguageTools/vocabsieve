@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QMainWindow, QWidget, QGridLayout, QLabel, QPushButton, QCheckBox, \
                         QStatusBar, QMenuBar, \
                         QSizePolicy, QApplication, QLineEdit
-from PyQt5.QtGui import  QFocusEvent, QDesktopServices
+from PyQt5.QtGui import  QDesktopServices
 from PyQt5.QtCore import QUrl, pyqtSignal, Qt
 from .audio_selector import AudioSelector
 
@@ -59,12 +59,6 @@ class MainWindowBase(QMainWindow):
             int(font.pointSize() * self.settings.value("text_scale", type=int) / 100))
         self.setFont(font)
 
-    def focusInEvent(self, event: QFocusEvent) -> None:
-        if platform.system() == "Darwin" or (platform.system().startswith("Linux") and os.environ.get("XDG_SESSION_TYPE") == "wayland"):
-            if self.prev_clipboard != QApplication.clipboard().text() and len(QApplication.clipboard().text()):
-                self.clipboardChanged(evenWhenFocused=True)
-            self.prev_clipboard = QApplication.clipboard().text()
-        super().focusInEvent(event)
 
     def clipboardChanged(self, evenWhenFocused=False, selection=False) -> None:
         pass
