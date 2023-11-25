@@ -1,6 +1,7 @@
 from ..models import AudioSource, LemmaPolicy, AudioLookupResult
 from ..local_dictionary import LocalDictionary
 import json
+from loguru import logger
 import os
 
 class LocalAudioSource(AudioSource):
@@ -13,10 +14,9 @@ class LocalAudioSource(AudioSource):
         try:
             audios = {}
             audio_files = json.loads(self.dictdb.define(word, self.langcode, self.name) or "[]")
-            print("audio_files", audio_files)
             for file in audio_files:
                 audios[file] = os.path.join(self.base_path, file)
             return AudioLookupResult(audios=audios)
         except KeyError as e:
-            print(repr(e))
+            logger.debug(repr(e))
             return AudioLookupResult(error=repr(e))

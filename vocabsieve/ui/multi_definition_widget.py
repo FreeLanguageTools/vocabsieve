@@ -23,7 +23,6 @@ class ButtonsBoxWidget(QWidget):
         self.scrolled_amount = 0
 
     def wheelEvent(self, event: QWheelEvent):
-        print(event.angleDelta().y())
         if sign(event.angleDelta().y()) != sign(self.scrolled_amount):
             self.scrolled_amount = 0
         self.scrolled_amount += event.angleDelta().y()

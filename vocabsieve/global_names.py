@@ -1,3 +1,4 @@
+from io import StringIO
 from .constants import DEBUG_ENV
 from PyQt5.QtCore import QStandardPaths, QSettings, QCoreApplication
 import os
@@ -43,5 +44,7 @@ _today_log_name = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 os.makedirs(os.path.join(datapath, "log"), exist_ok=True)
 _log_path = os.path.join(datapath, "log", f"session-{_today_log_name}.txt")
 
-logger.add(_log_path, format="{time} {level} {message}", level="DEBUG")
- 
+logger.add(_log_path, level="DEBUG")
+
+session_logs = StringIO()
+logger.add(session_logs, level="DEBUG")

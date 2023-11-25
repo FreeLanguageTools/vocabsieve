@@ -15,6 +15,7 @@ from ..local_dictionary import LocalDictionary
 from .searchable_boldable_text_edit import SearchableBoldableTextEdit
 from .freq_display_widget import FreqDisplayWidget
 from .about import AboutDialog
+from .logview import LogView
 from ..models import AnkiSettings, WordActionWeights
 
 import platform
@@ -193,6 +194,9 @@ class MainWindowBase(QMainWindow):
         self.about_dialog = AboutDialog()
         self.about_dialog.exec_()
 
+    def onOpenLogs(self):
+        self.logview = LogView()
+        self.logview.exec_()
 
     
     def getAnkiSettings(self) -> AnkiSettings:

@@ -12,6 +12,7 @@ from .fieldmatcher import FieldMatcher
 from .ui.source_ordering_widget import SourceGroupWidget, AllSourcesWidget
 from .models import DisplayMode, LemmaPolicy
 from enum import Enum
+from loguru import logger
 from .dictmanager import DictManager
 from .tools import (addDefaultModel, getVersion, findNotes, 
                     guiBrowse, getDeckList,
@@ -29,20 +30,26 @@ BoldStyles = ["<disabled>", "Font weight", "Underscores"]
 class SettingsDialog(QDialog):
     def __init__(self, parent, ):
         super().__init__(parent)
+        logger.debug("Initializing settings dialog")
         self.settings = parent.settings
         self.dictdb = parent.dictdb
         user_note_type = self.settings.value("note_type")
         self.parent = parent
         self.resize(700,500)
         self.setWindowTitle("Configure VocabSieve")
+        logger.debug("Initializing widgets for settings dialog")
         self.initWidgets()
         self.initTabs()
-
+        logger.debug("Setting up widgets")
         self.setupWidgets()
+        logger.debug("Setting up autosave")
         self.setupAutosave()
+        logger.debug("Setting up processing")
         self.setupProcessing()
         self.deactivateProcessing()
+        logger.debug("Fetching matched cards from AnkiConnect")
         self.getMatchedCards()
+        logger.debug("Got matched cards")
 
         if not user_note_type and not self.settings.value("internal/added_default_note_type"):
             try:
@@ -636,7 +643,6 @@ class SettingsDialog(QDialog):
         except Exception as e:
             self.toggle_anki_settings(False)
             pass
-            # self.errorNoConnection(e)
         else:
             self.loadDecks()
             self.loadFields()
@@ -822,7 +828,7 @@ class SettingsDialog(QDialog):
             _ = getVersion(api:=self.settings.value('anki_api', 'http://127.0.0.1:8765'))
             guiBrowse(api, self.anki_query_mature.text())
         except Exception as e:
-            print(repr(e))
+            logger.warning(repr(e))
 
 
     def previewYoung(self):
@@ -830,7 +836,7 @@ class SettingsDialog(QDialog):
             _ = getVersion(api:=self.settings.value('anki_api', 'http://127.0.0.1:8765'))
             guiBrowse(api, self.anki_query_young.text())
         except Exception as e:
-            print(repr(e))
+            logger.warning(repr(e))
 
     def loadUrl(self):
         lang = self.settings.value("target_language", "en")
@@ -992,7 +998,7 @@ class SettingsDialog(QDialog):
             code_translate=False,
             no_initial_update=False):
         
-        name = widget.objectName()
+        logger.debug(f"Registering config handler for setting {key}")
         def update(v): 
             self.settings.setValue(key, v)
 
@@ -1052,3 +1058,4 @@ class SettingsDialog(QDialog):
                         )
                     )
                 )
+        logger.debug(f"Registered config handler for setting {key}")

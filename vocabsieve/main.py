@@ -216,6 +216,7 @@ class MainWindow(MainWindowBase):
         self.analyze_book_action = QAction("Analyze book")
         self.export_known_words_action = QAction("Export known words to JSON")
         self.export_word_scores_action = QAction("Export word scores to JSON")
+        self.open_logs_action = QAction("View session logs")
 
         if not self.settings.value("reader_enabled", True, type=bool):
             self.open_reader_action.setEnabled(False)
@@ -225,6 +226,7 @@ class MainWindow(MainWindowBase):
         statsmenu.addAction(self.stats_action)
         helpmenu.addAction(self.help_action)
         helpmenu.addAction(self.about_action)
+        helpmenu.addAction(self.open_logs_action)
         recordmenu.addAction(self.content_manager_action)
         analyzemenu.addAction(self.analyze_book_action)
 
@@ -241,6 +243,7 @@ class MainWindow(MainWindowBase):
 
         self.help_action.triggered.connect(self.onHelp)
         self.about_action.triggered.connect(self.onAbout)
+        self.open_logs_action.triggered.connect(self.onOpenLogs)
         self.open_reader_action.triggered.connect(self.onReaderOpen)
         self.config_action.triggered.connect(self.configure)
         self.repeat_last_import_action.triggered.connect(self.repeatLastImport)
@@ -273,6 +276,9 @@ class MainWindow(MainWindowBase):
         )
 
         self.setMenuBar(self.menu)
+
+
+        
 
     def onAnalyzeBook(self):
         if self.checkAnkiConnect() and self.known_data is not None:
@@ -761,8 +767,6 @@ class MainWindow(MainWindowBase):
             return
 
 
-
-
     def errorNoConnection(self, error) -> None:
         """
         Dialog window sent when something goes wrong in configuration step
@@ -785,7 +789,8 @@ class MainWindow(MainWindowBase):
         #_timer.timeout.connect(self.showStats)
         #_timer.start(2000)
         timer_known_data = QTimer(self)
-        timer_known_data.setInterval(30000) # Attempt to refresh every 30s, but refresh will only happen if data is expired
+        refresh_every = self.settings.value("tracking/known_data_lifetime", 1800, type=int) * 1000 // 10
+        timer_known_data.setInterval(refresh_every) # Attempt to refresh every 30s, but refresh will only happen if data is expired
         timer_known_data.timeout.connect(self.getKnownDataOnThread)
         timer_known_data.start()
         self.getKnownDataOnThread()
