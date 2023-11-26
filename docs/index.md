@@ -12,7 +12,7 @@ Welcome to VocabSieve manual.
 Go to [Installation]({{site.baseurl}}/installation.html) and [Configuration]({{site.baseurl}}/configuration.html) 
 if you are already familiar with immersion and Anki and just want to quickly set up VocabSieve.
 
-## Community
+## Community support
 
 You can join FreeLanguageTools chatrooms on multiple platforms. All chatrooms are bridged, so you will not miss any answers because you chose to use one over the other.
 
