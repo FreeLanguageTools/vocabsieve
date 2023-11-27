@@ -8,7 +8,7 @@ Note: All chat rooms are bridged/mirrored. You won't miss out on anything by cho
 
 | Platform                | Address                         | Notes |
 |  ---                    |    ----                         | ---   |
-| Matrix (Recommended)    | [#general:freelanguagetools.org](https://matrix.to/#/#general:freelanguagetools.org)  |       |
+| Matrix (Recommended)    | [#general:freelanguagetools.org](https://matrix.to/#/#general:freelanguagetools.org)  |   Requires a Matrix account on any homeserver. A list of homeservers can be found [here](https://tatsumoto-ren.github.io/blog/list-of-matrix-servers.html)    |
 | Telegram                | <https://t.me/fltchat>          |       |
 | Discord (*proprietary*) | <https://discord.gg/DNSsTtHRxz>              |       |
 

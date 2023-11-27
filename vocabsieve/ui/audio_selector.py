@@ -66,8 +66,9 @@ class AudioSelector(QListWidget):
 
     def play_audio_if_exists(self, x):
         if x is not None:
-            self.current_audio_path = x.text()[2:]
-            self.play_audio(self.current_audio_path)
+            audio_name = x.text()[2:]
+            self.current_audio_path = self.audios.get(audio_name, "")
+            self.play_audio(audio_name)
         else:
             self.current_audio_path = ""
 

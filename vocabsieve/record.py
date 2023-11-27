@@ -11,7 +11,7 @@ from PyQt5.QtCore import Qt
 from datetime import datetime
 from .constants import langcodes
 from .lemmatizer import lem_word
-from .models import LookupRecord, WordRecord, KnownMetadata
+from .models import LookupRecord, WordRecord, KnownMetadata, SRSNote
 from .tools import getVersion, findNotes, notesInfo
 from loguru import logger
 
@@ -310,7 +310,7 @@ class Record():
 
 
 
-    def recordNote(self, data, sentence, word, definition, definition2, pronunciation, image, tags, success):
+    def recordNote(self, nr: SRSNote):
         timestamp = time.time()
         sql = """INSERT INTO notes(
             timestamp, data, sentence, word, definition, definition2, pronunciation, image, tags, success
