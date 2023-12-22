@@ -628,9 +628,11 @@ class MainWindow(MainWindowBase):
                     WordRecord(lemma=lemma, language=langcode)
                     )
                 self.word_record_display.setWordRecord(word_record, self.getWordActionWeights())
-            self.definition.lookup(target, no_lemma)
-            if self.settings.value("sg2_enabled", False, type=bool):
-                self.definition2.lookup(target, no_lemma)
+            lookup1_result_success = self.definition.lookup(target, no_lemma)
+            lookup2_result_success = self.settings.value("sg2_enabled", False, type=bool) and self.definition2.lookup(target, no_lemma)
+            if not (lookup1_result_success or lookup2_result_success):
+                self.word.setText(target)
+
             self.audio_selector.lookup(target)
             self.freq_widget.lookup(target)
         
