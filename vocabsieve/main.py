@@ -580,9 +580,11 @@ class MainWindow(MainWindowBase):
         selected2 = cursor2.selectedText()
         cursor3 = self.definition2.textCursor()
         selected3 = cursor3.selectedText()
+        selected4 = self.word.selectedText()
         target = str.strip(selected
                            or selected2
                            or selected3
+                           or selected4
                            or self.previousWord
                            or self.word.text()
                            or "")
