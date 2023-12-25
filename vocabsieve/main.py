@@ -755,6 +755,7 @@ class MainWindow(MainWindowBase):
             )
             self.status("Added note to Anki")
             # Clear fields
+            self.setImage(None)
             self.sentence.setText("")
             self.word.setText("")
             self.definition.reset()
