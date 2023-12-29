@@ -92,8 +92,10 @@ class MainWindowBase(QMainWindow):
         self.toanki_button = QPushButton(f"Add note [{MOD}+S]")
         self.toanki_button.setEnabled(False)
         self.view_note_button = QPushButton(f"View note [{MOD}+F]")
-        self.view_note_button.setToolTip("If it is present, visualize the note in Anki Browse.")
+        self.view_note_button.setToolTip("If it is present, view the note in Anki Card Browser.")
         self.view_note_button.setEnabled(False)
+        self.view_last_note_button = QPushButton(f"View last note [{MOD}+Shift+F]")
+        self.view_last_note_button.setToolTip("View the last added note.")
 
         self.read_button = QPushButton(f"Read clipboard")
         self.read_button.setToolTip(
@@ -185,8 +187,9 @@ class MainWindowBase(QMainWindow):
 
         layout.addWidget(self.tags, 12, 0, 1, 3)
 
-        layout.addWidget(self.toanki_button, 13, 0, 1, 3)
-        layout.addWidget(self.view_note_button, 14, 0, 1, 3)
+        layout.addWidget(self.toanki_button, 13, 0)
+        layout.addWidget(self.view_note_button, 13, 1,)
+        layout.addWidget(self.view_last_note_button, 13, 2)
 
         layout.setColumnStretch(0, 2)
         layout.setColumnStretch(1, 2)

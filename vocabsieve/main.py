@@ -51,6 +51,7 @@ class MainWindow(MainWindowBase):
         self.known_data_timestamp: float = 0
         self.last_got_focus: float = time.time()
         self.last_target_word_id: int = -1
+        self.last_added_note_id: int = -1
         app.applicationStateChanged.connect(self.onApplicationStateChanged)
         self.setupMenu()
         self.setupButtons()
@@ -198,6 +199,7 @@ class MainWindow(MainWindowBase):
 
         self.toanki_button.clicked.connect(self.createNote)
         self.view_note_button.clicked.connect(self.viewNote)
+        self.view_last_note_button.clicked.connect(self.viewLastNote)
         self.read_button.clicked.connect(lambda: self.clipboardChanged(even_when_focused=True))
 
 
@@ -566,7 +568,9 @@ class MainWindow(MainWindowBase):
         self.shortcut_toanki = QShortcut(QKeySequence('Ctrl+S'), self)
         self.shortcut_toanki.activated.connect(self.toanki_button.animateClick)
         self.shortcut_view_note = QShortcut(QKeySequence('Ctrl+F'), self)
-        self.shortcut_view_note.activated.connect(self.view_note_button.animateClick) 
+        self.shortcut_view_note.activated.connect(self.view_note_button.animateClick)
+        self.shortcut_view_last_note = QShortcut(QKeySequence('Ctrl+Shift+F'), self)
+        self.shortcut_view_last_note.activated.connect(self.view_last_note_button.animateClick)
         self.shortcut_getdef_e = QShortcut(QKeySequence('Ctrl+Shift+D'), self)
         self.shortcut_getdef_e.activated.connect(self.lookup_exact_button.animateClick)
         self.shortcut_getdef = QShortcut(QKeySequence('Ctrl+D'), self)
@@ -653,11 +657,11 @@ class MainWindow(MainWindowBase):
 
             if len(notes_found) != 0:
                 note_found_id = notes_found[0]
+                logger.info(f"Found note with id {note_found_id}")
         except Exception as e:
             logger.error("Failed to find Anki note: " + repr(e))
             return
         
-        logger.info(f"Found note with id {note_found_id}")
         self.last_target_word_id = note_found_id
 
     
@@ -819,7 +823,7 @@ class MainWindow(MainWindowBase):
         content = prepareAnkiNoteDict(anki_settings, note)
         logger.debug("Prepared Anki note json" + json.dumps(content, indent=4, ensure_ascii=False))
         try: 
-            addNote(
+            self.last_added_note_id = addNote(
                 self.settings.value("anki_api", "http://127.0.0.1:8765"),
                 content
             )
@@ -839,24 +843,32 @@ class MainWindow(MainWindowBase):
 
 
     def viewNote(self) -> None:
-        """View the looked up word in the Anki Card Browser page in the sentence mining deck.
-        If the word is not added on anki, then the button won't do anything"""
-        
+        self.guiBrowseNote(self.last_target_word_id)
+
+
+    def viewLastNote(self) -> None:     
+        self.guiBrowseNote(self.last_added_note_id)
+
+
+    def guiBrowseNote(self, note_id: int) -> None:
+        """Visualize the card of the given id in the Anki Card Browser"""
+        if note_id == -1:
+            return
+
         if self.checkAnkiConnect() == 0:
             return
 
-        logger.info(f"Opening Anki Card Browser and looking up id {self.last_target_word_id}")
+        logger.info(f"Opening Anki Card Browser and looking up id {note_id}")
 
-        gui_query = f"nid:{self.last_target_word_id}"
+        gui_query = f"nid:{note_id}"
         try:
             guiBrowse(
                 self.settings.value("anki_api", "http://127.0.0.1:8765"),
                 gui_query
             )
         except Exception as e: # This shouldn't really be possible
-            logger.error(f"Unable to find a note for \"{self.last_target_word_id}\": " + repr(e))
+            logger.error(f"Unable to find a note for \"{note_id}\": " + repr(e))
             return
-
 
     def errorNoConnection(self, error) -> None:
         """
