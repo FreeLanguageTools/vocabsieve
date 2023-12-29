@@ -1,7 +1,5 @@
 import csv
 import dataclasses
-from mimetypes import init
-from operator import ge
 import importlib.metadata
 import os
 import sys
@@ -14,15 +12,14 @@ from packaging import version
 import qdarktheme
 import platform
 import json
-import threading
 from loguru import logger
 
 from markdown import markdown
-from PyQt5.QtCore import QCoreApplication, QStandardPaths, QTimer, QDateTime, QThread, QUrl, pyqtSlot, QThreadPool, pyqtSignal
+from PyQt5.QtCore import QCoreApplication, QStandardPaths, QTimer, QDateTime, QThread, QUrl, pyqtSlot, QThreadPool, pyqtSignal, Qt
 from PyQt5.QtGui import QClipboard, QKeySequence, QPixmap, QDesktopServices, QImage
 from PyQt5.QtWidgets import QApplication, QMessageBox, QAction, QShortcut, QFileDialog
 
-from .global_names import datapath, lock # First local import
+from .global_names import datapath, lock, app # First local import
 from .text_manipulation import apply_bold_char, apply_bold_tags, bold_word_in_text
 from .analyzer import BookAnalyzer
 from .config import SettingsDialog
@@ -32,7 +29,7 @@ from .importer import KindleVocabImporter, KoreaderVocabImporter, AutoTextImport
 from .reader import ReaderServer
 from .contentmanager import ContentManager
 from .global_events import GlobalObject
-from .tools import compute_word_score, is_json, make_audio_source_group, prepareAnkiNoteDict, starts_with_cyrillic, is_oneword, addNote, make_source_group, getVersion, make_freq_source
+from .tools import compute_word_score, is_json, make_audio_source_group, prepareAnkiNoteDict, is_oneword, addNote, make_source_group, getVersion, make_freq_source
 from .ui.main_window_base import MainWindowBase
 from .models import (DictionarySourceGroup, KnownMetadata, LookupRecord, SRSNote, TrackingDataError, 
                      WordRecord)
@@ -51,6 +48,8 @@ class MainWindow(MainWindowBase):
         self.known_data: Optional[dict[str, WordRecord]] = None
         self.known_metadata: Optional[KnownMetadata] = None
         self.known_data_timestamp: float = 0
+        self.last_got_focus: float = time.time()
+        app.applicationStateChanged.connect(self.onApplicationStateChanged)
         self.setupMenu()
         self.setupButtons()
         self.startServer()
@@ -65,6 +64,10 @@ class MainWindow(MainWindowBase):
         if not self.settings.value("internal/configured"):
             self.configure()
             self.settings.setValue("internal/configured", True)
+
+    def onApplicationStateChanged(self, state):
+        if state == Qt.ApplicationActive:
+            self.last_got_focus = time.time()
 
     def setupClipboardMonitor(self):
         GlobalObject().addEventListener("double clicked", self.lookupSelected)
@@ -580,9 +583,11 @@ class MainWindow(MainWindowBase):
         selected2 = cursor2.selectedText()
         cursor3 = self.definition2.textCursor()
         selected3 = cursor3.selectedText()
+        selected4 = self.word.selectedText()
         target = str.strip(selected
                            or selected2
                            or selected3
+                           or selected4
                            or self.previousWord
                            or self.word.text()
                            or "")
@@ -605,8 +610,9 @@ class MainWindow(MainWindowBase):
 
     def lookupSelected(self, no_lemma=False) -> None:
         target = self.getCurrentWord()
-        logger.info(f"Triggered lookup on {target}")
-        self.lookup(target, no_lemma)
+        if target: # If word not empty
+            logger.info(f"Triggered lookup on {target}")
+            self.lookup(target, no_lemma)
     
     def lookup(self, target: str, no_lemma=False) -> None:
         self.boldWordInSentence(target)
@@ -626,9 +632,11 @@ class MainWindow(MainWindowBase):
                     WordRecord(lemma=lemma, language=langcode)
                     )
                 self.word_record_display.setWordRecord(word_record, self.getWordActionWeights())
-            self.definition.lookup(target, no_lemma)
-            if self.settings.value("sg2_enabled", False, type=bool):
-                self.definition2.lookup(target, no_lemma)
+            lookup1_result_success = self.definition.lookup(target, no_lemma)
+            lookup2_result_success = self.settings.value("sg2_enabled", False, type=bool) and self.definition2.lookup(target, no_lemma)
+            if not (lookup1_result_success or lookup2_result_success):
+                self.word.setText(target)
+
             self.audio_selector.lookup(target)
             self.freq_widget.lookup(target)
         
@@ -656,6 +664,7 @@ class MainWindow(MainWindowBase):
     def getConvertToUppercase(self) -> bool:
         return bool(self.settings.value("capitalize_first_letter", False, type=bool))
 
+
     def clipboardChanged(self, even_when_focused=False, selection=False):
         """
         If the input is just a single word, we look it up right away.
@@ -678,7 +687,17 @@ class MainWindow(MainWindowBase):
 
         should_convert_to_uppercase = self.getConvertToUppercase()
         lang = self.settings.value("target_language", "en")
-        if self.isActiveWindow() and not even_when_focused:
+        # Check if any of the text box widgets are focused
+        # If they are, ignore the clipboard change
+        is_focused = (time.time() - self.last_got_focus > 0.2)\
+                    and (self.sentence.hasFocus()\
+                    or self.word.hasFocus()\
+                    or self.definition.hasFocus()\
+                    or self.definition2.hasFocus())
+                    # Allow pasting right after focus for wayland users
+                    # because wayland doesn't allow pasting from inactive windows
+        
+        if is_focused and not even_when_focused:
             return
         if is_json(text):
             copyobj = json.loads(text)
@@ -737,6 +756,8 @@ class MainWindow(MainWindowBase):
 
         anki_settings = self.getAnkiSettings()
 
+        logger.info("Creating note")
+
         note = SRSNote(
             word=self.word.text(),
             sentence=self.sentence.textBoldedByTags.replace("\n", "<br>"),
@@ -746,13 +767,16 @@ class MainWindow(MainWindowBase):
             image=self.image_path,
             tags=self.settings.value("tags", "vocabsieve").strip().split() + self.tags.text().strip().split()
         )
+
         
         content = prepareAnkiNoteDict(anki_settings, note)
+        logger.debug("Prepared Anki note json" + json.dumps(content, indent=4, ensure_ascii=False))
         try: 
             addNote(
                 self.settings.value("anki_api", "http://127.0.0.1:8765"),
                 content
             )
+            self.rec.recordNote(note, json.dumps(content, indent=4, ensure_ascii=False))
             self.status("Added note to Anki")
             # Clear fields
             self.setImage(None)
@@ -761,10 +785,9 @@ class MainWindow(MainWindowBase):
             self.definition.reset()
             self.definition2.reset()
             self.audio_selector.clear()
-            
+            logger.info("Note added to Anki")
         except Exception as e:
-            print(repr(e))
-            self.warn("Encountered error in adding note\n" + repr(e))
+            logger.error("Failed to add note to Anki: " + repr(e))
             return
 
 
@@ -825,13 +848,12 @@ class MainWindow(MainWindowBase):
                 self.thread2.started.connect(self.worker2.start_api)
                 self.thread2.start()
             except Exception as e:
-                print(repr(e))
+                logger.error(f"Failed to start reader server: {repr(e)}")
                 self.status("Failed to start reader server")
 
 
 def main():
     qdarktheme.enable_hi_dpi()
-    app = QApplication(sys.argv)
     from .global_names import settings
     if theme:=settings.value("theme"):
         if color:=settings.value("accent_color"):

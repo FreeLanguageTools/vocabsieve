@@ -1,5 +1,4 @@
 from PyQt5.QtWidgets import QLabel
-from PyQt5.QtWidgets import QLabel
 from ..models import WordActionWeights, WordRecord
 from ..tools import compute_word_score
 

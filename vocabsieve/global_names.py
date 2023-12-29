@@ -1,11 +1,13 @@
 from io import StringIO
 from .constants import DEBUG_ENV
 from PyQt5.QtCore import QStandardPaths, QSettings, QCoreApplication
+from PyQt5.QtWidgets import QApplication
 import os
 import threading
 from datetime import datetime
 from loguru import logger
 import platform
+import sys
 
 from . import __version__
 lock = threading.Lock()
@@ -35,7 +37,7 @@ app_name = _get_settings_app_title()
 
 QCoreApplication.setApplicationName(app_name)
 QCoreApplication.setOrganizationName(app_organization)
-
+app = QApplication(sys.argv)
 settings = QSettings(app_organization, app_name)
 datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
 forvopath = os.path.join(datapath, "forvo")

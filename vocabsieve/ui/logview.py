@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QLabel, QTextEdit, QPushButton
+from PyQt5.QtWidgets import QDialog, QApplication, QVBoxLayout, QLabel, QWidget, QTextEdit, QPushButton, QHBoxLayout
 from PyQt5.QtCore import Qt, QT_VERSION_STR, PYQT_VERSION_STR
 import sys
 
@@ -14,29 +14,32 @@ class LogView(QDialog):
         self.setWindowTitle("Session logs")
         self.resize(800, 600)
 
-        btn_ok = QDialogButtonBox.Ok
-        btn_cp = QPushButton("Copy to clipboard")
+        btn_copy = QPushButton("Copy to clipboard")
+        btn_dismiss = QPushButton("Dismiss")
+        btn_dismiss.clicked.connect(self.accept)
 
-        self.buttonBox = QDialogButtonBox(btn_ok)
-        self.buttonBox.accepted.connect(self.accept)
-
+        button_box = QWidget()
+        button_box_layout = QHBoxLayout(button_box)
+        button_box_layout.addWidget(btn_copy)
+        button_box_layout.addWidget(btn_dismiss)
         self._layout = QVBoxLayout()
-        message = QLabel(
-            f'''
-VocabSieve version: {__version__}<br>
-Python version: {sys.version}<br>
-PyQt5 (Qt bindings) version: {QT_VERSION_STR}, Qt {PYQT_VERSION_STR}<br><br>
-            '''
-        )
-        message.setTextFormat(Qt.RichText)
-        message.setOpenExternalLinks(True)
-        message.setWordWrap(True)
-        message.adjustSize()
+        message = f'''VocabSieve version: {__version__}
+Python version: {sys.version}
+PyQt5 (Qt bindings) version: {QT_VERSION_STR}, Qt {PYQT_VERSION_STR}\n\n'''
+        message_label = QLabel(message)
+        message_label.setTextFormat(Qt.PlainText)
+        message_label.setOpenExternalLinks(True)
+        message_label.setWordWrap(True)
+        message_label.adjustSize()
 
         log_textedit = QTextEdit()
         log_textedit.setReadOnly(True)
-        log_textedit.setPlainText(session_logs.getvalue())
-        self._layout.addWidget(message)
+        log_textedit.setPlainText(message + session_logs.getvalue())
+        btn_copy.clicked.connect(lambda: QApplication.clipboard().setText(
+                message + session_logs.getvalue()
+            )
+        )
+        self._layout.addWidget(message_label)
         self._layout.addWidget(log_textedit)
-        self._layout.addWidget(self.buttonBox)
+        self._layout.addWidget(button_box)
         self.setLayout(self._layout)
