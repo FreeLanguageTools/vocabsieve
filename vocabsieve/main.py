@@ -607,8 +607,9 @@ class MainWindow(MainWindowBase):
 
     def lookupSelected(self, no_lemma=False) -> None:
         target = self.getCurrentWord()
-        logger.info(f"Triggered lookup on {target}")
-        self.lookup(target, no_lemma)
+        if target: # If word not empty
+            logger.info(f"Triggered lookup on {target}")
+            self.lookup(target, no_lemma)
     
     def lookup(self, target: str, no_lemma=False) -> None:
         self.boldWordInSentence(target)
@@ -682,7 +683,13 @@ class MainWindow(MainWindowBase):
 
         should_convert_to_uppercase = self.getConvertToUppercase()
         lang = self.settings.value("target_language", "en")
-        if self.isActiveWindow() and not even_when_focused:
+        # Check if any of the text box widgets are focused
+        # If they are, ignore the clipboard change
+        is_focused = self.sentence.hasFocus()\
+                    or self.word.hasFocus()\
+                    or self.definition.hasFocus()\
+                    or self.definition2.hasFocus()
+        if is_focused and not even_when_focused:
             return
         if is_json(text):
             copyobj = json.loads(text)
@@ -755,12 +762,13 @@ class MainWindow(MainWindowBase):
 
         
         content = prepareAnkiNoteDict(anki_settings, note)
-        logger.debug("Prepared Anki note json" + json.dumps(content, indent=4))
+        logger.debug("Prepared Anki note json" + json.dumps(content, indent=4, ensure_ascii=False))
         try: 
             addNote(
                 self.settings.value("anki_api", "http://127.0.0.1:8765"),
                 content
             )
+            self.rec.recordNote(note, json.dumps(content, indent=4, ensure_ascii=False))
             self.status("Added note to Anki")
             # Clear fields
             self.sentence.setText("")

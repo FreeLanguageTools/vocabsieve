@@ -310,7 +310,7 @@ class Record():
 
 
 
-    def recordNote(self, nr: SRSNote):
+    def recordNote(self, sn: SRSNote, content: str, commit: bool = True):
         timestamp = time.time()
         sql = """INSERT INTO notes(
             timestamp, data, sentence, word, definition, definition2, pronunciation, image, tags, success
@@ -319,18 +319,19 @@ class Record():
         self.c.execute(sql, 
             (
                 timestamp, 
-                data, 
-                sentence or "", 
-                word or "", 
-                definition or "", 
-                definition2 or "", 
-                pronunciation or "", 
-                image or "", 
-                tags or "",
-                success
+                content, 
+                sn.sentence or "", 
+                sn.word or "", 
+                sn.definition1 or "", 
+                sn.definition2 or "", 
+                sn.audio_path or "", 
+                sn.image or "", 
+                " ".join(sn.tags) if sn.tags else "",
+                1
             )
         )
-        self.conn.commit()
+        if commit:
+            self.conn.commit()
 
     def getAllLookups(self):
         return self.c.execute("SELECT timestamp, word, lemma, language, lemmatization, source, success FROM lookups")
