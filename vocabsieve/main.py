@@ -633,10 +633,6 @@ class MainWindow(MainWindowBase):
                 # Disable the Add Note button (if pressed in this case, it would throw an error anyway)
                 self.toanki_button.setEnabled(False)
 
-                # NOTE: it would be possible to make the user choose to enable the Add Note button,
-                #       possibly through a checkbox setting, but the error thrown when adding an
-                #       already added note should be handled differently.
-
 
     def findSelected(self, target_word) -> None:
         if self.checkAnkiConnect() == 0:
@@ -646,7 +642,8 @@ class MainWindow(MainWindowBase):
 
         logger.info(f"Finding note for the word \"{target_word}\" in deck {deck_name}")
 
-        find_query = f"deck:{deck_name} {target_word}"
+        target_word_field = self.settings.value("word_field")
+        find_query = f"deck:{deck_name} \"{target_word_field}:{target_word}\""
         note_found_id = -1
         try:
             notes_found = findNotes(
@@ -654,7 +651,7 @@ class MainWindow(MainWindowBase):
                 find_query
             )
 
-            if notes_found is not None:
+            if len(notes_found) != 0:
                 note_found_id = notes_found[0]
         except Exception as e:
             logger.error("Failed to find Anki note: " + repr(e))
