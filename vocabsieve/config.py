@@ -746,7 +746,10 @@ class SettingsDialog(QDialog):
         self.register_config_handler(self.audio_sg_widget, 'audio_sg', [])
         self.register_config_handler(self.audio_lemma_policy, 'audio_lemma_policy', LemmaPolicy.first_lemma)
 
-        self.theme.currentTextChanged.connect(qdarktheme.setup_theme)
+        # Using the previous qdarktheme.setup_theme function would result in having
+        # the default accent color when changing theme. Instead, using the setupTheme
+        # function does not change the current accent color.
+        self.theme.currentTextChanged.connect(self.setupTheme)
 
         self.target_language.currentTextChanged.connect(self.loadDictionaries)
         self.target_language.currentTextChanged.connect(self.loadFreqSources)
@@ -787,6 +790,14 @@ class SettingsDialog(QDialog):
         self.preview_mature_button.setEnabled(value)
         self.preview_young_button.setEnabled(value)
         self.open_fieldmatcher.setEnabled(value)
+
+
+    def setupTheme(self) -> None:
+        accent_color = self.settings.value("accent_color", "default")
+        qdarktheme.setup_theme(
+            theme=self.settings.value("theme", "dark"),
+            custom_colors={"primary": accent_color},
+        )
 
 
     def loadDictionaries(self):
