@@ -101,7 +101,7 @@ class SettingsDialog(QDialog):
 
         self.word_field = QComboBox()
         self.frequency_field = QComboBox()
-        self.definition_field = QComboBox()
+        self.definition1_field = QComboBox()
         self.definition2_field = QComboBox()
         self.pronunciation_field = QComboBox()
         self.bold_style = QComboBox()
@@ -364,7 +364,7 @@ class SettingsDialog(QDialog):
         self.note_type.setCurrentText("vocabsieve-notes")
         self.sentence_field.setCurrentText("Sentence")
         self.word_field.setCurrentText("Word")
-        self.definition_field.setCurrentText("Definition")
+        self.definition1_field.setCurrentText("Definition")
         self.definition2_field.setCurrentText("Definition#2")
         self.pronunciation_field.setCurrentText("Pronunciation")
         self.image_field.setCurrentText("Image")
@@ -430,7 +430,7 @@ class SettingsDialog(QDialog):
         #    self.frequency_field)
         self.tab_a_layout.addRow(
             QLabel('Field name for "Definition"'),
-            self.definition_field)
+            self.definition1_field)
         self.tab_a_layout.addRow(
             QLabel('Field name for "Definition#2"'),
             self.definition2_field)
@@ -655,7 +655,7 @@ class SettingsDialog(QDialog):
             self.register_config_handler(self.word_field, 'word_field', 'Word')
             self.register_config_handler(self.frequency_field, 'frequency_field', 'Frequency Stars')
             self.register_config_handler(
-                self.definition_field, 'definition_field', 'Definition')
+                self.definition1_field, 'definition1_field', 'Definition')
             self.register_config_handler(
                 self.definition2_field,
                 'definition2_field',
@@ -781,7 +781,7 @@ class SettingsDialog(QDialog):
         self.sentence_field.setEnabled(value)
         self.word_field.setEnabled(value)
         self.frequency_field.setEnabled(value)
-        self.definition_field.setEnabled(value)
+        self.definition1_field.setEnabled(value)
         self.definition2_field.setEnabled(value)
         self.pronunciation_field.setEnabled(value)
         self.image_field.setEnabled(value)
@@ -899,7 +899,7 @@ class SettingsDialog(QDialog):
         sent = self.sentence_field.currentText()
         word = self.word_field.currentText()
         freq_stars = self.frequency_field.currentText()
-        def1 = self.definition_field.currentText()
+        def1 = self.definition1_field.currentText()
         def2 = self.definition2_field.currentText()
         pron = self.pronunciation_field.currentText()
         img = self.image_field.currentText()
@@ -908,7 +908,7 @@ class SettingsDialog(QDialog):
         self.sentence_field.blockSignals(True)
         self.word_field.blockSignals(True)
         self.frequency_field.blockSignals(True)
-        self.definition_field.blockSignals(True)
+        self.definition1_field.blockSignals(True)
         self.definition2_field.blockSignals(True)
         self.pronunciation_field.blockSignals(True)
         self.image_field.blockSignals(True)
@@ -923,8 +923,8 @@ class SettingsDialog(QDialog):
         self.frequency_field.addItem("<disabled>")
         self.frequency_field.addItems(fields)
 
-        self.definition_field.clear()
-        self.definition_field.addItems(fields)
+        self.definition1_field.clear()
+        self.definition1_field.addItems(fields)
 
         self.definition2_field.clear()
         self.definition2_field.addItem("<disabled>")
@@ -941,7 +941,7 @@ class SettingsDialog(QDialog):
         self.sentence_field.setCurrentText(self.settings.value("sentence_field"))
         self.word_field.setCurrentText(self.settings.value("word_field"))
         self.frequency_field.setCurrentText(self.settings.value("frequency_field"))
-        self.definition_field.setCurrentText(self.settings.value("definition_field"))
+        self.definition1_field.setCurrentText(self.settings.value("definition1_field"))
         self.definition2_field.setCurrentText(self.settings.value("definition2_field"))
         self.pronunciation_field.setCurrentText(self.settings.value("pronunciation_field"))
         self.image_field.setCurrentText(self.settings.value("image_field"))
@@ -952,8 +952,8 @@ class SettingsDialog(QDialog):
             self.word_field.setCurrentText(word)
         if self.frequency_field.findText(freq_stars) != -1:
             self.frequency_field.setCurrentText(freq_stars)
-        if self.definition_field.findText(def1) != -1:
-            self.definition_field.setCurrentText(def1)
+        if self.definition1_field.findText(def1) != -1:
+            self.definition1_field.setCurrentText(def1)
         if self.definition2_field.findText(def2) != -1:
             self.definition2_field.setCurrentText(def2)
         if self.pronunciation_field.findText(pron) != -1:
@@ -964,7 +964,7 @@ class SettingsDialog(QDialog):
         self.sentence_field.blockSignals(False)
         self.word_field.blockSignals(False)
         self.frequency_field.blockSignals(False)
-        self.definition_field.blockSignals(False)
+        self.definition1_field.blockSignals(False)
         self.definition2_field.blockSignals(False)
         self.pronunciation_field.blockSignals(False)
         self.image_field.blockSignals(False)
