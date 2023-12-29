@@ -2,7 +2,13 @@
 ![https://ci.appveyor.com/api/projects/status/32r7s2skrgm9ubva?svg=true](https://ci.appveyor.com/api/projects/status/32r7s2skrgm9ubva?svg=true)
 ![https://img.shields.io/pypi/v/vocabsieve.svg](https://img.shields.io/pypi/v/vocabsieve.svg)
 
-# Chatrooms
+## Manual
+
+[New manual, most up to date](https://docs.freelanguagetools.org/)
+
+[Old wiki, deprecated, but has a few more pages for the time being](https://wiki.freelanguagetools.org/start)
+
+## Support
 
 Note: All chat rooms are bridged/mirrored. You won't miss out on anything by choosing one over the other. We recommend you use Matrix if possible.
 
@@ -46,37 +52,6 @@ For a nightly build, please check the [CI artifacts page](https://nightly.link/F
 
 ## Linux distro packages
 [![Packaging status](https://repology.org/badge/vertical-allrepos/vocabsieve.svg)](https://repology.org/project/vocabsieve/versions)
-
-<details>
-  <summary>Click to show distro-specific installation instructions</summary>
-
-### Gentoo
-
-First, you need to add the ::guru overlay. Skip this section if you have already done so.
-```
-# eselect repository enable guru
-# emaint -r guru sync
-```
-Install the package:
-`# emerge -av app-misc/vocabsieve`
-
-### Arch
-
-Use your favorite AUR helper (or manually) to install the pacakge `vocabsieve`.
-
-### Other distros
-
-At this time, there are no packages for other distributions. If you are able to create packages for them, please tell me!
-
-The easiest method is to download an AppImage from for a release from the Releases tab on the right. You may also download an AppImage for a nightly build on the [CI artifacts page](https://nightly.link/FreeLanguageTools/vocabsieve/workflows/build-binaries/master). 
-
-Alternatively, you may also simply use `pip3` to install VocabSieve: `pip3 install --user -U vocabsieve`. Depends on your system, you may need to install `gcc` and `liblzo2` with headers. NOTE: do not use this if you don't know how to deal with Python environments. 
-
-Ubuntu: `apt install liblzo2-dev zlib1g-dev python3-pip python3-pyqt5 python3-pyqt5.qtsvg`, then `pip3 install --user -U vocabsieve`
-
-This should install an executable and a desktop icon and behave like any other GUI application you may have.
-
-</details>
   
 ## Development
 To run from source, simply use `pip3 -r requirements.txt` and then `python3 vocabsieve.py`.
@@ -89,7 +64,7 @@ Pull requests are welcome! If you want to implement a significant feature, be su
 You are welcome to report bugs, suggest features/enhancements, or ask for clarifications by opening a GitHub issue.
 
 ## Donations
-If you appreciate this tool, consider making a donation to the [Free Software Foundation](https://www.fsf.org/) or the [Electronic Frontier Foundation](https://www.eff.org/) to protect our digital future and defend our freedom.
+If you appreciate this tool, consider making a donation to the [Free Software Foundation](https://www.fsf.org/) or the [Electronic Frontier Foundation](https://www.eff.org/) to protect our digital future and defend our freedom. Do your part to refuse to pay for DRM'd content and devices. 
 
 ## Credits
 The definitions provided by the program by default come from English Wiktionary, without which this program would never have been created. [LingvaTranslate](https://github.com/thedaviddelta/lingva-translate) is used to obtain Google Translate results. Fоrvо scraping code is inspired by this [repository](https://github.com/Rascalov/Anki-Simple-Forvo-Audio). Lemmatization capabilities come from [simplemma](https://github.com/adbar/simplemma) and [pymorphy3](https://github.com/kmike/pymorphy3).

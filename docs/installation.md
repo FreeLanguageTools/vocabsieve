@@ -19,18 +19,25 @@ Arch Linux AUR: `vocabsieve`
 
 If you use other distributions, you should run it from an AppImage distributed on the [Github releases page](https://github.com/FreeLanguageTools/vocabsieve/releases).
 
-#### Advanced users
+<details markdown=1>
+<summary> Click to open instructions for advanced users </summary>
 If you prefer to install it anyways, you can use `pip3 install vocabsieve`  (add `-–user` if appropriate). (**Note**: Newer versions of Python will stop you from installing into your global Python environment by default. You may need to create a virtual environment). This will install a desktop file which you should be able to see from your launcher menu. If you do not use a desktop environment, you can launch it through the command line `vocabsieve`.
 
-If you want to test the latest features, you can go to [CI artifacts page](https://nightly.link/FreeLanguageTools/vocabsieve/workflows/build-binaries/master) page to obtain the latest builds, but they are not guaranteed to run. If you notice anything wrong from those builds, open an issue on GitHub. Note: ensure you are using the latest nightly build before reporting anything.
-
+If you want to test the latest features, you can go to [CI artifacts page](https://nightly.link/FreeLanguageTools/vocabsieve/workflows/build-binaries/master) page to obtain the latest builds, but they are not guaranteed to run. If you notice anything wrong from those builds, open an issue on GitHub. Ensure you are using the latest nightly build before reporting anything.
+</details>
 
 ### Windows
 
 Go to the [Github releases page](https://github.com/FreeLanguageTools/vocabsieve/releases) for standalone versions. You may have to dismiss some warnings from the browser or Windows to install it, as it is unsigned.
 
+<details markdown=1>
+<summary> Click to open instructions for advanced users </summary>
+
+If you want to test the latest features, you can go to [CI artifacts page](https://nightly.link/FreeLanguageTools/vocabsieve/workflows/build-binaries/master) page to obtain the latest builds, but they are not guaranteed to run. If you notice anything wrong from those builds, open an issue on GitHub. Note: ensure you are using the latest nightly build before reporting anything.
+</details>
+
 {: .note}
-Only 64 bit Windows 7+ is supported. (**Note**: There has been reports of it not working on Windows 8 due to a dependency on Windows 10's API. In any case, Windows 10 is routinely tested to work)
+Only 64 bit Windows 10+ is supported
 
 ### MacOS
 
@@ -45,9 +52,11 @@ The build is unsigned because I do not want to pay Apple US$100 a year just to d
 Open a new terminal window and type the following command
 `xattr -d com.apple.quarantine /path/to/app.app` (replacing "/path/to/app.app" with path to VocabSieve app). This unquarantines the app and allows it to run on your Mac without being certified by Apple.
 
-### Advanced users
+<details markdown=1>
+<summary> Click to open instructions for advanced users </summary>
 
 If you want to test the latest features, you can go to [CI artifacts page](https://nightly.link/FreeLanguageTools/vocabsieve/workflows/build-binaries/master) page to obtain the latest builds, but they are not guaranteed to run. If you notice anything wrong from those builds, open an issue on GitHub. Note: ensure you are using the latest nightly build before reporting anything.
+</details>
 
 ## AnkiConnect (Required for card creation)
 

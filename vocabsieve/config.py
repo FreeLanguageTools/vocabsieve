@@ -63,7 +63,7 @@ class SettingsDialog(QDialog):
         self.bar = QStatusBar()
         self.allow_editing = QCheckBox(
             "Allow directly editing definition fields")
-        self.primary = QCheckBox("Use primary selection")
+        self.primary = QCheckBox("*Use primary selection")
         self.register_config_handler(self.allow_editing, "allow_editing", True)
         self.capitalize_first_letter = QCheckBox(
             "Capitalize first letter of sentence")
