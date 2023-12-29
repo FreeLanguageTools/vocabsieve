@@ -6,8 +6,7 @@ import re
 from bidict import bidict
 from typing import Optional
 import json
-from PyQt5.QtWidgets import QMessageBox, QProgressDialog
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import QSettings
 from datetime import datetime
 from .constants import langcodes
 from .lemmatizer import lem_word
@@ -21,7 +20,7 @@ dictionaries = bidict({"Wiktionary (English)": "wikt-en",
 
 class Record():
     """Class to store user data"""
-    def __init__(self, parent, datapath):
+    def __init__(self, parent_settings: QSettings, datapath):
         self.conn = sqlite3.connect(
             os.path.join(
                 datapath,
@@ -29,28 +28,28 @@ class Record():
             check_same_thread=False)
         self.c = self.conn.cursor()
         self.c.execute("PRAGMA foreign_keys = ON")
-        self.settings = parent.settings
+        self.settings = parent_settings
         self.createTables()
         self.fixOld()
-        if not parent.settings.value("internal/db_has_lemma"):
+        if not parent_settings.value("internal/db_has_lemma"):
             self.lemmatizeLookups()
-            parent.settings.setValue("internal/db_has_lemma", True)
-        if not parent.settings.value("internal/db_no_definitions"):
+            parent_settings.setValue("internal/db_has_lemma", True)
+        if not parent_settings.value("internal/db_no_definitions"):
             self.dropDefinitions()
-            parent.settings.setValue("internal/db_no_definitions", True)
-        if not parent.settings.value("internal/db_new_source"):
+            parent_settings.setValue("internal/db_no_definitions", True)
+        if not parent_settings.value("internal/db_new_source"):
             self.fixSource()
-            parent.settings.setValue("internal/db_new_source", True)
+            parent_settings.setValue("internal/db_new_source", True)
         self.conn.commit()
-        if not parent.settings.value("internal/seen_has_no_word"):
+        if not parent_settings.value("internal/seen_has_no_word"):
             self.fixSeen()
-            parent.settings.setValue("internal/seen_has_no_word", True)
-        if not parent.settings.value("internal/timestamps_are_seconds", True):
+            parent_settings.setValue("internal/seen_has_no_word", True)
+        if not parent_settings.value("internal/timestamps_are_seconds", True):
             self.fixBadTimestamps()
-            parent.settings.setValue("internal/timestamps_are_seconds", True)
-        if not parent.settings.value("internal/lookup_unique_index"):
+            parent_settings.setValue("internal/timestamps_are_seconds", True)
+        if not parent_settings.value("internal/lookup_unique_index"):
             self.makeLookupUnique()
-            parent.settings.setValue("internal/lookup_unique_index", True)
+            parent_settings.setValue("internal/lookup_unique_index", True)
 
         self.last_known_data: Optional[tuple[dict[str, WordRecord], KnownMetadata]] = None
         self.last_known_data_date: float = 0.0 # 1970-01-01
