@@ -741,6 +741,8 @@ class MainWindow(MainWindowBase):
 
         anki_settings = self.getAnkiSettings()
 
+        logger.info("Creating note")
+
         note = SRSNote(
             word=self.word.text(),
             sentence=self.sentence.textBoldedByTags.replace("\n", "<br>"),
@@ -750,8 +752,10 @@ class MainWindow(MainWindowBase):
             image=self.image_path,
             tags=self.settings.value("tags", "vocabsieve").strip().split() + self.tags.text().strip().split()
         )
+
         
         content = prepareAnkiNoteDict(anki_settings, note)
+        logger.debug("Prepared Anki note json" + json.dumps(content, indent=4))
         try: 
             addNote(
                 self.settings.value("anki_api", "http://127.0.0.1:8765"),
@@ -764,10 +768,9 @@ class MainWindow(MainWindowBase):
             self.definition.reset()
             self.definition2.reset()
             self.audio_selector.clear()
-            
+            logger.info("Note added to Anki")
         except Exception as e:
-            print(repr(e))
-            self.warn("Encountered error in adding note\n" + repr(e))
+            logger.error("Failed to add note to Anki: " + repr(e))
             return
 
 
