@@ -16,11 +16,11 @@ if you are already familiar with immersion and Anki and just want to quickly set
 
 You can join FreeLanguageTools chatrooms on multiple platforms. All chatrooms are bridged, so you will not miss any answers by choosing to use one over the other. Please be civil and do not post adult content.
 
-| Platform                | Address                         | Notes |
-|  ---                    |    ----                         | ---   |
-| Matrix (Recommended)    | [#general:freelanguagetools.org](https://matrix.to/#/#general:freelanguagetools.org)  |       |
-| Telegram (*partly proprietary*)      | <https://t.me/fltchat>          |       |
-| Discord (*proprietary*) | <https://discord.gg/DNSsTtHRxz>              |       |
+| Platform                | Address                         |
+|  ---                    |    ----                         | 
+| Matrix (Recommended)    | [#general:freelanguagetools.org](https://matrix.to/#/#general:freelanguagetools.org)  |       
+| Telegram (*partly proprietary*)      | <https://t.me/fltchat>          |       
+| Discord (*proprietary with history of anti-user behavior*) | <https://discord.gg/DNSsTtHRxz>              |       
 
 ## Contributing
 
