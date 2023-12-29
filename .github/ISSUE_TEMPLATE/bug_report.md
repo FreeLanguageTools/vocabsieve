@@ -23,6 +23,9 @@ A clear and concise description of what you expected to happen.
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
+**Logs**
+Go to Help->View session logs, paste the log here. **Be sure to redact out any sensitive information. The log can contain clipboard content.**
+
 **Desktop (please complete the following information):**
  - OS: 
 - Vocabsieve version (if nightly, must be latest):
