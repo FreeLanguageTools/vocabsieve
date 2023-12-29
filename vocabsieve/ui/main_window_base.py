@@ -35,7 +35,7 @@ class MainWindowBase(QMainWindow):
         self.setFocusPolicy(Qt.StrongFocus)
         self.widget = QWidget()
         self.settings = settings
-        self.rec = Record(self, datapath)
+        self.rec = Record(self.settings, datapath)
         self.dictdb = LocalDictionary(datapath)
         self.splitter = SentenceSplitter(language=self.settings.value("target_language", "en"))
         self.setCentralWidget(self.widget)
@@ -47,13 +47,17 @@ class MainWindowBase(QMainWindow):
         self.scaleFont()
         self.initWidgets()
 
-        self.resize(500, 800)
+        # TODO: find if that works in other displays and OSes
+        # print(self.devicePixelRatioF())
+        self.resize(int(550 / self.devicePixelRatioF()), int(900 / self.devicePixelRatioF()))
+        # self.resize(500, 800)
         self.setupWidgetsV() 
 
     def scaleFont(self) -> None:
         font = QApplication.font()
         font.setPointSize(
             int(font.pointSize() * self.settings.value("text_scale", type=int) / 100))
+        QApplication.setFont(font)
         self.setFont(font)
 
 
@@ -86,10 +90,14 @@ class MainWindowBase(QMainWindow):
         self.lookup_exact_button.setToolTip(
             "This will look up the word without lemmatization.")
         self.toanki_button = QPushButton(f"Add note [{MOD}+S]")
+        self.toanki_button.setEnabled(False)
+        self.view_note_button = QPushButton(f"View note [{MOD}+F]")
+        self.view_note_button.setToolTip("If it is present, visualize the note in Anki Browse.")
+        self.view_note_button.setEnabled(False)
 
         self.read_button = QPushButton(f"Read clipboard")
         self.read_button.setToolTip(
-            "Read the clipboard contents to Sentence field [{MOD}+V]"
+            f"Read the clipboard contents to Sentence field [{MOD}+V]"
             )
         self.bar = QStatusBar()
         self.setStatusBar(self.bar)
@@ -109,7 +117,7 @@ class MainWindowBase(QMainWindow):
 
         self.web_button = QPushButton(f"Open webpage")
         self.web_button.setToolTip(
-            "Open the webpage for the selected word. [{MOD}+1]")
+            f"Open the webpage for the selected word. [{MOD}+1]")
         self.freq_widget = FreqDisplayWidget()
         self.freq_widget.setPlaceholderText("Word frequency")
 
@@ -178,6 +186,7 @@ class MainWindowBase(QMainWindow):
         layout.addWidget(self.tags, 12, 0, 1, 3)
 
         layout.addWidget(self.toanki_button, 13, 0, 1, 3)
+        layout.addWidget(self.view_note_button, 14, 0, 1, 3)
 
         layout.setColumnStretch(0, 2)
         layout.setColumnStretch(1, 2)

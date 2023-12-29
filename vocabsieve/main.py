@@ -29,7 +29,8 @@ from .importer import KindleVocabImporter, KoreaderVocabImporter, AutoTextImport
 from .reader import ReaderServer
 from .contentmanager import ContentManager
 from .global_events import GlobalObject
-from .tools import compute_word_score, is_json, make_audio_source_group, prepareAnkiNoteDict, is_oneword, addNote, make_source_group, getVersion, make_freq_source
+from .tools import (compute_word_score, is_json, make_audio_source_group, prepareAnkiNoteDict, is_oneword, addNote,
+                     findNotes, guiBrowse, make_source_group, getVersion, make_freq_source)
 from .ui.main_window_base import MainWindowBase
 from .models import (DictionarySourceGroup, KnownMetadata, LookupRecord, SRSNote, TrackingDataError, 
                      WordRecord)
@@ -49,6 +50,7 @@ class MainWindow(MainWindowBase):
         self.known_metadata: Optional[KnownMetadata] = None
         self.known_data_timestamp: float = 0
         self.last_got_focus: float = time.time()
+        self.last_target_word_id: int = -1
         app.applicationStateChanged.connect(self.onApplicationStateChanged)
         self.setupMenu()
         self.setupButtons()
@@ -195,6 +197,7 @@ class MainWindow(MainWindowBase):
         self.web_button.clicked.connect(self.onWebButton)
 
         self.toanki_button.clicked.connect(self.createNote)
+        self.view_note_button.clicked.connect(self.viewNote)
         self.read_button.clicked.connect(lambda: self.clipboardChanged(even_when_focused=True))
 
 
@@ -562,6 +565,8 @@ class MainWindow(MainWindowBase):
     def setupShortcuts(self) -> None:
         self.shortcut_toanki = QShortcut(QKeySequence('Ctrl+S'), self)
         self.shortcut_toanki.activated.connect(self.toanki_button.animateClick)
+        self.shortcut_view_note = QShortcut(QKeySequence('Ctrl+F'), self)
+        self.shortcut_view_note.activated.connect(self.view_note_button.animateClick) 
         self.shortcut_getdef_e = QShortcut(QKeySequence('Ctrl+Shift+D'), self)
         self.shortcut_getdef_e.activated.connect(self.lookup_exact_button.animateClick)
         self.shortcut_getdef = QShortcut(QKeySequence('Ctrl+D'), self)
@@ -613,6 +618,51 @@ class MainWindow(MainWindowBase):
         if target: # If word not empty
             logger.info(f"Triggered lookup on {target}")
             self.lookup(target, no_lemma)
+
+            # Find word in Anki sentence mining deck
+            self.findSelected(target)
+            
+            # Based on the search result, disable the appropriate button
+            if self.last_target_word_id == -1:
+                # target is not present in the deck, disable the View Note button
+                self.view_note_button.setEnabled(False)
+                self.toanki_button.setEnabled(True)
+            else:
+                # target had already been added in the deck, enable View Note button
+                self.view_note_button.setEnabled(True)
+                # Disable the Add Note button (if pressed in this case, it would throw an error anyway)
+                self.toanki_button.setEnabled(False)
+
+                # NOTE: it would be possible to make the user choose to enable the Add Note button,
+                #       possibly through a checkbox setting, but the error thrown when adding an
+                #       already added note should be handled differently.
+
+
+    def findSelected(self, target_word) -> None:
+        if self.checkAnkiConnect() == 0:
+            return
+        
+        deck_name = self.settings.value("deck_name")
+
+        logger.info(f"Finding note for the word \"{target_word}\" in deck {deck_name}")
+
+        find_query = f"deck:{deck_name} {target_word}"
+        note_found_id = -1
+        try:
+            notes_found = findNotes(
+                self.settings.value("anki_api", "http://127.0.0.1:8765"),
+                find_query
+            )
+
+            if notes_found is not None:
+                note_found_id = notes_found[0]
+        except Exception as e:
+            logger.error("Failed to find Anki note: " + repr(e))
+            return
+        
+        logger.info(f"Found note with id {note_found_id}")
+        self.last_target_word_id = note_found_id
+
     
     def lookup(self, target: str, no_lemma=False) -> None:
         self.boldWordInSentence(target)
@@ -791,6 +841,26 @@ class MainWindow(MainWindowBase):
             return
 
 
+    def viewNote(self) -> None:
+        """View the looked up word in the Anki Card Browser page in the sentence mining deck.
+        If the word is not added on anki, then the button won't do anything"""
+        
+        if self.checkAnkiConnect() == 0:
+            return
+
+        logger.info(f"Opening Anki Card Browser and looking up id {self.last_target_word_id}")
+
+        gui_query = f"nid:{self.last_target_word_id}"
+        try:
+            guiBrowse(
+                self.settings.value("anki_api", "http://127.0.0.1:8765"),
+                gui_query
+            )
+        except Exception as e: # This shouldn't really be possible
+            logger.error(f"Unable to find a note for \"{self.last_target_word_id}\": " + repr(e))
+            return
+
+
     def errorNoConnection(self, error) -> None:
         """
         Dialog window sent when something goes wrong in configuration step
@@ -853,7 +923,6 @@ class MainWindow(MainWindowBase):
 
 
 def main():
-    qdarktheme.enable_hi_dpi()
     from .global_names import settings
     if theme:=settings.value("theme"):
         if color:=settings.value("accent_color"):
@@ -862,8 +931,15 @@ def main():
             qdarktheme.setup_theme(theme)
     else:
         qdarktheme.setup_theme("auto")
-    w = MainWindow()
+   
+    # In Windows 11 QToolTip background color is not displayed correctly in dark theme.
+    # To get the theme to work properly on Windows 11, add an additional qss that removes the border.
+    # For whatever reason, this works and allows QT to render the tool boxes correctly.
+    # See https://github.com/5yutan5/PyQtDarkTheme/issues/239 for more info.
+    qdarktheme.setup_theme(additional_qss="QToolTip { border: 0px; }")
 
+    w = MainWindow()
+    
     w.show()
     w.audio_selector.alignDiscardButton() # fix annoying issue of misalignment
     try:
