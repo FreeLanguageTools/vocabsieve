@@ -1,7 +1,5 @@
 import csv
 import dataclasses
-from mimetypes import init
-from operator import ge
 import importlib.metadata
 import os
 import sys
@@ -14,15 +12,14 @@ from packaging import version
 import qdarktheme
 import platform
 import json
-import threading
 from loguru import logger
 
 from markdown import markdown
-from PyQt5.QtCore import QCoreApplication, QStandardPaths, QTimer, QDateTime, QThread, QUrl, pyqtSlot, QThreadPool, pyqtSignal
+from PyQt5.QtCore import QCoreApplication, QStandardPaths, QTimer, QDateTime, QThread, QUrl, pyqtSlot, QThreadPool, pyqtSignal, Qt
 from PyQt5.QtGui import QClipboard, QKeySequence, QPixmap, QDesktopServices, QImage
 from PyQt5.QtWidgets import QApplication, QMessageBox, QAction, QShortcut, QFileDialog
 
-from .global_names import datapath, lock # First local import
+from .global_names import datapath, lock, app # First local import
 from .text_manipulation import apply_bold_char, apply_bold_tags, bold_word_in_text
 from .analyzer import BookAnalyzer
 from .config import SettingsDialog
@@ -32,7 +29,7 @@ from .importer import KindleVocabImporter, KoreaderVocabImporter, AutoTextImport
 from .reader import ReaderServer
 from .contentmanager import ContentManager
 from .global_events import GlobalObject
-from .tools import compute_word_score, is_json, make_audio_source_group, prepareAnkiNoteDict, starts_with_cyrillic, is_oneword, addNote, make_source_group, getVersion, make_freq_source
+from .tools import compute_word_score, is_json, make_audio_source_group, prepareAnkiNoteDict, is_oneword, addNote, make_source_group, getVersion, make_freq_source
 from .ui.main_window_base import MainWindowBase
 from .models import (DictionarySourceGroup, KnownMetadata, LookupRecord, SRSNote, TrackingDataError, 
                      WordRecord)
@@ -51,6 +48,8 @@ class MainWindow(MainWindowBase):
         self.known_data: Optional[dict[str, WordRecord]] = None
         self.known_metadata: Optional[KnownMetadata] = None
         self.known_data_timestamp: float = 0
+        self.last_got_focus: float = time.time()
+        app.applicationStateChanged.connect(self.onApplicationStateChanged)
         self.setupMenu()
         self.setupButtons()
         self.startServer()
@@ -65,6 +64,10 @@ class MainWindow(MainWindowBase):
         if not self.settings.value("internal/configured"):
             self.configure()
             self.settings.setValue("internal/configured", True)
+
+    def onApplicationStateChanged(self, state):
+        if state == Qt.ApplicationActive:
+            self.last_got_focus = time.time()
 
     def setupClipboardMonitor(self):
         GlobalObject().addEventListener("double clicked", self.lookupSelected)
@@ -661,6 +664,7 @@ class MainWindow(MainWindowBase):
     def getConvertToUppercase(self) -> bool:
         return bool(self.settings.value("capitalize_first_letter", False, type=bool))
 
+
     def clipboardChanged(self, even_when_focused=False, selection=False):
         """
         If the input is just a single word, we look it up right away.
@@ -685,10 +689,14 @@ class MainWindow(MainWindowBase):
         lang = self.settings.value("target_language", "en")
         # Check if any of the text box widgets are focused
         # If they are, ignore the clipboard change
-        is_focused = self.sentence.hasFocus()\
+        is_focused = (time.time() - self.last_got_focus > 0.2)\
+                    and (self.sentence.hasFocus()\
                     or self.word.hasFocus()\
                     or self.definition.hasFocus()\
-                    or self.definition2.hasFocus()
+                    or self.definition2.hasFocus())
+                    # Allow pasting right after focus for wayland users
+                    # because wayland doesn't allow pasting from inactive windows
+        
         if is_focused and not even_when_focused:
             return
         if is_json(text):
@@ -839,13 +847,12 @@ class MainWindow(MainWindowBase):
                 self.thread2.started.connect(self.worker2.start_api)
                 self.thread2.start()
             except Exception as e:
-                print(repr(e))
+                logger.error(f"Failed to start reader server: {repr(e)}")
                 self.status("Failed to start reader server")
 
 
 def main():
     qdarktheme.enable_hi_dpi()
-    app = QApplication(sys.argv)
     from .global_names import settings
     if theme:=settings.value("theme"):
         if color:=settings.value("accent_color"):
