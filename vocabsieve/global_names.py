@@ -2,6 +2,7 @@ from io import StringIO
 from .constants import DEBUG_ENV
 from PyQt5.QtCore import QStandardPaths, QSettings, QCoreApplication
 from PyQt5.QtWidgets import QApplication
+import qdarktheme
 import os
 import threading
 from datetime import datetime
@@ -35,6 +36,8 @@ def _get_settings_app_title():
     return title_prefix + DEBUG_ENV if DEBUG_ENV else title_prefix
 app_name = _get_settings_app_title()
 
+# qdarktheme.enable_hi_dpi function must be called before QCoreApplication is created
+qdarktheme.enable_hi_dpi()
 QCoreApplication.setApplicationName(app_name)
 QCoreApplication.setOrganizationName(app_organization)
 app = QApplication(sys.argv)
