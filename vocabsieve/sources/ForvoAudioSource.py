@@ -13,6 +13,8 @@ from dataclasses import dataclass
 from ..global_names import settings
 from ..constants import FORVO_HEADERS
 
+from loguru import logger
+
 @dataclass
 class Pronunciation:
     language: str
@@ -163,7 +165,7 @@ class ForvoAudioSource(AudioSource):
         super().__init__("Forvo", langcode, lemma_policy)
     
     def _lookup(self, word: str) -> AudioLookupResult:
-        print("Forvo lookup", word)
+        logger.info(f"Forvo lookup {word}")
         try:
             return AudioLookupResult(audios=fetch_audio_all(word, self.langcode))
         except Exception as e:
