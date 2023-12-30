@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QMainWindow, QWidget, QGridLayout, QLabel, QPushButt
                         QStatusBar, QMenuBar, \
                         QSizePolicy, QApplication, QLineEdit
 from PyQt5.QtGui import  QDesktopServices
-from PyQt5.QtCore import QUrl, pyqtSignal, Qt
+from PyQt5.QtCore import QUrl, pyqtSignal, Qt, QObject, QEvent
 from .audio_selector import AudioSelector
 
 from .multi_definition_widget import MultiDefinitionWidget
@@ -51,7 +51,19 @@ class MainWindowBase(QMainWindow):
         # print(self.devicePixelRatioF())
         self.resize(int(550 / self.devicePixelRatioF()), int(900 / self.devicePixelRatioF()))
         # self.resize(500, 800)
-        self.setupWidgetsV() 
+        self.setupWidgetsV()
+
+        self.installEventFilter(self)
+        self.shift_pressed = False
+
+    def eventFilter(self, obj: QObject | None, event: QEvent | None) -> bool:
+        if event.type() == QEvent.Type.KeyPress and obj is self:
+            if event.key() == Qt.Key.Key_Shift:
+                self.shift_pressed: bool = True
+        if event.type() == QEvent.Type.KeyRelease and obj is self:
+            if event.key() == Qt.Key.Key_Shift:
+                self.shift_pressed: bool = False
+        return super().eventFilter(obj, event)
 
     def scaleFont(self) -> None:
         font = QApplication.font()
@@ -91,11 +103,11 @@ class MainWindowBase(QMainWindow):
             "This will look up the word without lemmatization.")
         self.toanki_button = QPushButton(f"Add note [{MOD}+S]")
         self.toanki_button.setEnabled(False)
-        self.view_note_button = QPushButton(f"View note [{MOD}+F]")
-        self.view_note_button.setToolTip("If it is present, view the note in Anki Card Browser.")
+        self.view_note_button = QPushButton("View note")
+        self.view_note_button.setToolTip(f"If it is present, view the note for the selected word in Anki Card Browser. [{MOD}+F]")
         self.view_note_button.setEnabled(False)
-        self.view_last_note_button = QPushButton(f"View last note [{MOD}+Shift+F]")
-        self.view_last_note_button.setToolTip("View the last added note.")
+        self.view_last_note_button = QPushButton("View last note")
+        self.view_last_note_button.setToolTip(f"View the last added note. [{MOD}+Shift+F]")
 
         self.read_button = QPushButton(f"Read clipboard")
         self.read_button.setToolTip(
@@ -116,6 +128,10 @@ class MainWindowBase(QMainWindow):
             "Disable this if you want to use 3rd party dictionaries with copied text (e.g. with mpvacious).")
         self.lookup_definition_on_doubleclick.clicked.connect(lambda v: self.settings.setValue("lookup_definition_on_doubleclick", v))
         self.lookup_definition_on_doubleclick.setChecked(self.settings.value("lookup_definition_on_doubleclick", True, type=bool))
+        self.lookup_definition_when_hovering = QCheckBox("Lookup definition when hovering")
+        self.lookup_definition_when_hovering.setToolTip("Hover over a word and press [Shift] to look its definition up")
+        self.lookup_definition_when_hovering.clicked.connect(lambda v: self.settings.setValue("lookup_definition_when_hovering", v))
+        self.lookup_definition_when_hovering.setChecked(self.settings.value("lookup_definition_when_hovering", True, type=bool))
 
         self.web_button = QPushButton(f"Open webpage")
         self.web_button.setToolTip(
@@ -162,34 +178,35 @@ class MainWindowBase(QMainWindow):
 
         layout.addWidget(self.single_word, 1, 0, 1, 2)
         layout.addWidget(self.lookup_definition_on_doubleclick, 2, 0, 1, 2)
+        layout.addWidget(self.lookup_definition_when_hovering, 3, 0, 1, 2)
 
-        layout.addWidget(self.read_button, 3, 0)
-        layout.addWidget(self.web_button, 3, 1)
-        layout.addWidget(self.image_viewer, 0, 2, 4, 1)
-        layout.addWidget(self.sentence, 4, 0, 1, 3)
-        layout.setRowStretch(4, 1)
+        layout.addWidget(self.read_button, 4, 0)
+        layout.addWidget(self.web_button, 4, 1)
+        layout.addWidget(self.image_viewer, 0, 2, 5, 1)
+        layout.addWidget(self.sentence, 5, 0, 1, 3)
+        layout.setRowStretch(5, 1)
         
 
-        layout.addWidget(self.word, 5, 0)
-        layout.addWidget(self.freq_widget, 5, 1)
-        layout.addWidget(self.word_record_display, 5, 2)
+        layout.addWidget(self.word, 6, 0)
+        layout.addWidget(self.freq_widget, 6, 1)
+        layout.addWidget(self.word_record_display, 6, 2)
         
-        layout.setRowStretch(6, 2)
-        layout.setRowStretch(8, 2)
+        layout.setRowStretch(7, 2)
+        layout.setRowStretch(9, 2)
         if self.settings.value("sg2_enabled", False, type=bool):
-            layout.addWidget(self.definition, 6, 0, 2, 3)
-            layout.addWidget(self.definition2, 8, 0, 2, 3)
+            layout.addWidget(self.definition, 7, 0, 2, 3)
+            layout.addWidget(self.definition2, 9, 0, 2, 3)
         else:
-            layout.addWidget(self.definition, 6, 0, 4, 3)
+            layout.addWidget(self.definition, 7, 0, 4, 3)
 
-        layout.addWidget(self.audio_selector, 11, 0, 1, 3)
-        layout.setRowStretch(11, 1)
+        layout.addWidget(self.audio_selector, 12, 0, 1, 3)
+        layout.setRowStretch(12, 1)
 
-        layout.addWidget(self.tags, 12, 0, 1, 3)
+        layout.addWidget(self.tags, 13, 0, 1, 3)
 
-        layout.addWidget(self.toanki_button, 13, 0)
-        layout.addWidget(self.view_note_button, 13, 1,)
-        layout.addWidget(self.view_last_note_button, 13, 2)
+        layout.addWidget(self.toanki_button, 14, 2)
+        layout.addWidget(self.view_note_button, 14, 1)
+        layout.addWidget(self.view_last_note_button, 14, 0)
 
         layout.setColumnStretch(0, 2)
         layout.setColumnStretch(1, 2)

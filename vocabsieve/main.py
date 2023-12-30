@@ -16,7 +16,7 @@ from loguru import logger
 
 from markdown import markdown
 from PyQt5.QtCore import QCoreApplication, QStandardPaths, QTimer, QDateTime, QThread, QUrl, pyqtSlot, QThreadPool, pyqtSignal, Qt
-from PyQt5.QtGui import QClipboard, QKeySequence, QPixmap, QDesktopServices, QImage
+from PyQt5.QtGui import QClipboard, QKeySequence, QPixmap, QDesktopServices, QImage, QTextCursor
 from PyQt5.QtWidgets import QApplication, QMessageBox, QAction, QShortcut, QFileDialog
 
 from .global_names import datapath, lock, app # First local import
@@ -52,6 +52,7 @@ class MainWindow(MainWindowBase):
         self.last_got_focus: float = time.time()
         self.last_target_word_id: int = -1
         self.last_added_note_id: int = -1
+        self.previous_word: str = ""
         app.applicationStateChanged.connect(self.onApplicationStateChanged)
         self.setupMenu()
         self.setupButtons()
@@ -74,6 +75,7 @@ class MainWindow(MainWindowBase):
 
     def setupClipboardMonitor(self):
         GlobalObject().addEventListener("double clicked", self.lookupSelected)
+        GlobalObject().addEventListener("hovered over", self.lookupHovered)
         cant_listen_to_clipboard = (os.environ.get("XDG_SESSION_TYPE") == "wayland" 
                                     or platform.system() == "Darwin")
         if self.settings.value("primary", False, type=bool)\
@@ -585,7 +587,7 @@ class MainWindow(MainWindowBase):
         self.shortcut_clearaudio.activated.connect(self.audio_selector.discard_audio_button.animateClick)
 
     def getCurrentWord(self) -> str:
-        """Returns currently selected word. If there isn't any, last selected word is returned"""
+        """Returns currently selected word"""
         cursor = self.sentence.textCursor()
         selected = cursor.selectedText()
         cursor2 = self.definition.textCursor()
@@ -593,15 +595,16 @@ class MainWindow(MainWindowBase):
         cursor3 = self.definition2.textCursor()
         selected3 = cursor3.selectedText()
         selected4 = self.word.selectedText()
+        hovered = self.sentence.word_under_cursor
         target = str.strip(selected
                            or selected2
                            or selected3
                            or selected4
-                           or self.previousWord
+                           or hovered # prioritize the hovered word over the previous one
+                           or self.previous_word
                            or self.word.text()
                            or "")
-        self.previousWord = target
-
+        
         return target
 
     def onWebButton(self) -> None:
@@ -617,11 +620,17 @@ class MainWindow(MainWindowBase):
         url = f"http://{self.settings.value('reader_host', '127.0.0.1', type=str)}:{self.settings.value('reader_port', '39285', type=str)}"
         QDesktopServices.openUrl(QUrl(url))
 
+    def lookupHovered(self) -> None:
+        if not self.shift_pressed:
+            return
+        self.lookupSelected()
+
     def lookupSelected(self, no_lemma=False) -> None:
         target = self.getCurrentWord()
-        if target: # If word not empty
+        if target and target != self.previous_word: # If word not empty
             logger.info(f"Triggered lookup on {target}")
             self.lookup(target, no_lemma)
+            self.previous_word = target
 
             # Find word in Anki sentence mining deck
             self.findSelected(target)
@@ -668,28 +677,29 @@ class MainWindow(MainWindowBase):
     def lookup(self, target: str, no_lemma=False) -> None:
         self.boldWordInSentence(target)
         langcode = self.settings.value("target_language", "en")
-        if target:
-            lemma = lem_word(target, langcode)
-            self.rec.recordLookup(
-                LookupRecord(
-                    word=target,
-                    language=self.getLanguage(),
-                    source="vocabsieve"
-                )
-            )
-            if self.known_data:
-                word_record = self.known_data.get(
-                    lemma, 
-                    WordRecord(lemma=lemma, language=langcode)
-                    )
-                self.word_record_display.setWordRecord(word_record, self.getWordActionWeights())
-            lookup1_result_success = self.definition.lookup(target, no_lemma)
-            lookup2_result_success = self.settings.value("sg2_enabled", False, type=bool) and self.definition2.lookup(target, no_lemma)
-            if not (lookup1_result_success or lookup2_result_success):
-                self.word.setText(target)
 
-            self.audio_selector.lookup(target)
-            self.freq_widget.lookup(target)
+        lemma = lem_word(target, langcode)
+        self.rec.recordLookup(
+            LookupRecord(
+                word=target,
+                language=self.getLanguage(),
+                source="vocabsieve"
+            )
+        )
+        if self.known_data:
+            word_record = self.known_data.get(
+                lemma, 
+                WordRecord(lemma=lemma, language=langcode)
+                )
+            self.word_record_display.setWordRecord(word_record, self.getWordActionWeights())
+
+        lookup1_result_success = self.definition.lookup(target, no_lemma)
+        lookup2_result_success = self.settings.value("sg2_enabled", False, type=bool) and self.definition2.lookup(target, no_lemma)
+        if not (lookup1_result_success or lookup2_result_success):
+            self.word.setText(target)
+
+        self.audio_selector.lookup(target)
+        self.freq_widget.lookup(target, True, self.settings.value("freq_display", "Stars"))
         
 
     def setSentence(self, content) -> None:
@@ -754,7 +764,7 @@ class MainWindow(MainWindowBase):
             copyobj = json.loads(text)
             target = copyobj['word']
             target = re.sub('[\\?\\.!«»…()\\[\\]]*', "", target)
-            self.previousWord = target
+            self.previous_word = target
             sentence = preprocess_clipboard(copyobj['sentence'], lang, should_convert_to_uppercase)
             self.setSentence(sentence)
             self.setWord(target)
