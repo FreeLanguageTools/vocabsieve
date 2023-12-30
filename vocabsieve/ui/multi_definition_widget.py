@@ -2,7 +2,7 @@ from unittest import result
 from PyQt5.QtGui import QWheelEvent
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QHBoxLayout
 from PyQt5.QtCore import Qt, pyqtSignal
-from .searchable_text_edit import SearchableTextEdit 
+from .searchable_text_edit import SearchableTextEdit
 from ..models import Definition, DictionarySourceGroup, DisplayMode
 from ..format import markdown_nop
 from typing import Optional
@@ -113,7 +113,7 @@ class MultiDefinitionWidget(SearchableTextEdit):
     def setCurrentIndex(self, index: int):
         self.currentIndex = index
         self.updateIndex()
-    
+        
     def move_(self, amount: int):
         if amount > 0:
             for _ in range(amount):
@@ -155,10 +155,8 @@ class MultiDefinitionWidget(SearchableTextEdit):
         # Figure out display mode of current source
         if defi is not None:
             self.setCurrentDefinition(defi) # for non interactive use
-        
         if self.currentDefinition is None:
             return ""
-        
         source_name = self.currentDefinition.source
         source = self.sg.getSource(source_name)
         if source is None:
