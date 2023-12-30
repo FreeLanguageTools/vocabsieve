@@ -98,6 +98,11 @@ class DisplayMode(str, Enum):
     markdown_html = "Markdown-HTML"
     html = "HTML"
 
+class FreqDisplayMode(str, Enum):
+    '''Represents how to display the frequency of a word'''
+    stars = "Stars"
+    rank = "Rank"
+
 @dataclass(frozen=True, slots=True)
 class SourceOptions:
     '''Represents options for a Source'''
