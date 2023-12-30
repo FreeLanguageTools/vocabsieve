@@ -16,11 +16,12 @@ from .searchable_boldable_text_edit import SearchableBoldableTextEdit
 from .freq_display_widget import FreqDisplayWidget
 from .about import AboutDialog
 from .logview import LogView
-from ..models import AnkiSettings, WordActionWeights
+from ..models import AnkiSettings, WordActionWeights, KeyAction
 
 import platform
 import os
 from sentence_splitter import SentenceSplitter
+from pynput import keyboard
 
 
 # If on macOS, display the modifier key as "Cmd", else display it as "Ctrl".
@@ -53,17 +54,21 @@ class MainWindowBase(QMainWindow):
         # self.resize(500, 800)
         self.setupWidgetsV()
 
-        self.installEventFilter(self)
-        self.shift_pressed = False
+        # Setup Key monitoring to monitor the shit key
+        self.monitor = KeyMonitor()
+        self.monitor.keyEvent.connect(self.monitorEvent)
+        self.monitor.start_monitoring()
+        self.shift_pressed: bool = False
 
-    def eventFilter(self, obj: QObject | None, event: QEvent | None) -> bool:
-        if event.type() == QEvent.Type.KeyPress and obj is self:
-            if event.key() == Qt.Key.Key_Shift:
-                self.shift_pressed: bool = True
-        if event.type() == QEvent.Type.KeyRelease and obj is self:
-            if event.key() == Qt.Key.Key_Shift:
-                self.shift_pressed: bool = False
-        return super().eventFilter(obj, event)
+    def monitorEvent(self, action):
+        match action:
+            case KeyAction.pressed:
+                self.shift_pressed = True
+            case KeyAction.released:
+                self.shift_pressed = False
+            case _:
+                self.shift_pressed = False
+
 
     def scaleFont(self) -> None:
         font = QApplication.font()
@@ -253,6 +258,24 @@ class MainWindowBase(QMainWindow):
         )
 
 
-
-
+class KeyMonitor(QObject):
+    """Monitors the activity of the shift key"""
+    keyEvent = pyqtSignal(KeyAction)
     
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.listener = keyboard.Listener(on_press=self.on_press,on_release=self.on_release)
+
+    def on_press(self, key):
+        if key == keyboard.Key.shift:
+            self.keyEvent.emit(KeyAction.pressed)
+
+    def on_release(self, key):
+        if key == keyboard.Key.shift:
+            self.keyEvent.emit(KeyAction.released)
+
+    def stop_monitoring(self):
+        self.listener.stop()
+
+    def start_monitoring(self):
+        self.listener.start()   

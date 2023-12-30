@@ -113,7 +113,7 @@ class MultiDefinitionWidget(SearchableTextEdit):
     def setCurrentIndex(self, index: int):
         self.currentIndex = index
         self.updateIndex()
-        
+
     def move_(self, amount: int):
         if amount > 0:
             for _ in range(amount):

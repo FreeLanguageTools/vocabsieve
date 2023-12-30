@@ -846,6 +846,7 @@ class MainWindow(MainWindowBase):
             self.definition.reset()
             self.definition2.reset()
             self.audio_selector.clear()
+            self.previous_word = ""
             logger.info("Note added to Anki")
         except Exception as e:
             logger.error("Failed to add note to Anki: " + repr(e))
@@ -963,6 +964,7 @@ def main():
     w.audio_selector.alignDiscardButton() # fix annoying issue of misalignment
     try:
         app.exec()
+        w.monitor.stop_monitoring()
     except KeyboardInterrupt:
         print("Exiting...")
         sys.exit(0)

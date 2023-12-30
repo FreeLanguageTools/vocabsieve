@@ -117,7 +117,10 @@ class TrackingDataError(Enum):
     anki_enabled_but_not_running = 1
     anki_enabled_running_but_no_fieldmap = 2
 
-
+class KeyAction(Enum):
+    '''Represents the specific action of a key'''
+    pressed = 0
+    released = 1
 
 @dataclass(slots=True)
 class WordRecord:
