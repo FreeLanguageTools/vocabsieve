@@ -10,7 +10,7 @@ import qdarktheme
 from shutil import rmtree
 from .fieldmatcher import FieldMatcher
 from .ui.source_ordering_widget import SourceGroupWidget, AllSourcesWidget
-from .models import DisplayMode, LemmaPolicy
+from .models import DisplayMode, FreqDisplayMode, LemmaPolicy
 from enum import Enum
 from loguru import logger
 from .dictmanager import DictManager
@@ -193,8 +193,8 @@ class SettingsDialog(QDialog):
 
         self.freq_display_mode = QComboBox()
         self.freq_display_mode.addItems([
-            "Stars",
-            "Rank"
+            FreqDisplayMode.stars,
+            FreqDisplayMode.rank
             #"Rank (LCD number)", # TODO implement these
             #"Zipf scale (text field)",
             #"Zipf scale (LCD number)"
@@ -750,7 +750,6 @@ class SettingsDialog(QDialog):
         # the default accent color when changing theme. Instead, using the setupTheme
         # function does not change the current accent color.
         self.theme.currentTextChanged.connect(self.setupTheme)
-
         self.target_language.currentTextChanged.connect(self.loadDictionaries)
         self.target_language.currentTextChanged.connect(self.loadFreqSources)
         self.target_language.currentTextChanged.connect(self.loadUrl)

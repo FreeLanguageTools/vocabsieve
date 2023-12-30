@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QLineEdit
-from ..models import FreqSource
+from ..models import FreqSource, FreqDisplayMode
 from typing import Optional
+from ..tools import freq_to_stars
 
 class FreqDisplayWidget(QLineEdit):
     def __init__(self) -> None:
@@ -17,5 +18,14 @@ class FreqDisplayWidget(QLineEdit):
             return -2
         return self.source.define(word)
 
-    def lookup(self, word: str):
-        self.setText(str(self.getFreq(word)))
+    def lookup(self, word: str, lemmatize: bool, display_mode):
+        word_freq = self.getFreq(word)
+        text = ""
+        match display_mode:
+            case FreqDisplayMode.stars:
+                text = freq_to_stars(word_freq, lemmatize)
+            case FreqDisplayMode.rank:
+                text = str(word_freq) if word_freq > 0 else ""
+            case _:
+                pass
+        self.setText(text)
