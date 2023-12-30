@@ -577,17 +577,13 @@ class MainWindow(MainWindowBase):
 
     def getCurrentWord(self) -> str:
         """Returns currently selected word. If there isn't any, last selected word is returned"""
-        cursor = self.sentence.textCursor()
-        selected = cursor.selectedText()
-        cursor2 = self.definition.textCursor()
-        selected2 = cursor2.selectedText()
-        cursor3 = self.definition2.textCursor()
-        selected3 = cursor3.selectedText()
-        selected4 = self.word.selectedText()
-        target = str.strip(selected
-                           or selected2
-                           or selected3
-                           or selected4
+        target = ''
+        for text_field in [self.sentence, self.definition, self.definition2]:
+            if text_field.hasFocus():
+                target = text_field.textCursor().selectedText()
+        if self.word.hasFocus():
+            target = self.word.selectedText()
+        target = str.strip(target
                            or self.previousWord
                            or self.word.text()
                            or "")
