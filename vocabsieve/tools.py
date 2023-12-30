@@ -168,6 +168,9 @@ def is_oneword(s) -> bool:
     return len(s.split()) == 1
 
 def freq_to_stars(freq_num, lemmatize):
+    if freq_num <= 0:
+        return ""
+
     if lemmatize:
         if freq_num <= 1000:
             return "★★★★★"
