@@ -653,10 +653,13 @@ class MainWindow(MainWindowBase):
         
         deck_name = self.settings.value("deck_name")
 
-        logger.info(f"Finding note for the word \"{target_word}\" in deck {deck_name}")
+        langcode = self.settings.value("target_language", "en")
+        lemma = lem_word(target_word, langcode)
+
+        logger.info(f"Finding note for the word \"{lemma}\" in deck {deck_name}")
 
         target_word_field = self.settings.value("word_field")
-        find_query = f"deck:{deck_name} \"{target_word_field}:{target_word}\""
+        find_query = f"deck:{deck_name} \"{target_word_field}:{lemma}\""
         note_found_id = -1
         try:
             notes_found = findNotes(
