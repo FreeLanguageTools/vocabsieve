@@ -793,8 +793,12 @@ class SettingsDialog(QDialog):
 
     def setupTheme(self) -> None:
         accent_color = self.settings.value("accent_color", "default")
+        if accent_color == "default": # default is not a color
+            qdarktheme.setup_theme(
+                theme=self.settings.value("theme", "auto") # auto is default theme
+            )
         qdarktheme.setup_theme(
-            theme=self.settings.value("theme", "dark"),
+            theme=self.settings.value("theme", "auto"),
             custom_colors={"primary": accent_color},
         )
 

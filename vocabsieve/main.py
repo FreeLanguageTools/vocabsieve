@@ -944,19 +944,21 @@ class MainWindow(MainWindowBase):
 
 def main():
     from .global_names import settings
-    if theme:=settings.value("theme"):
-        if color:=settings.value("accent_color"):
-            qdarktheme.setup_theme(theme, custom_colors={"primary": color})
-        else:
-            qdarktheme.setup_theme(theme)
-    else:
-        qdarktheme.setup_theme("auto")
-   
+
     # In Windows 11 QToolTip background color is not displayed correctly in dark theme.
     # To get the theme to work properly on Windows 11, add an additional qss that removes the border.
     # For whatever reason, this works and allows QT to render the tool boxes correctly.
     # See https://github.com/5yutan5/PyQtDarkTheme/issues/239 for more info.
-    qdarktheme.setup_theme(additional_qss="QToolTip { border: 0px; }")
+    qss = "QToolTip { border: 0px; }" if sys.platform == "win32" else ""
+
+    if theme:=settings.value("theme"):
+        if color:=settings.value("accent_color"):
+            qdarktheme.setup_theme(theme, custom_colors={"primary": color}, additional_qss=qss)
+        else:
+            qdarktheme.setup_theme(theme, additional_qss=qss)
+    else:
+        qdarktheme.setup_theme("auto")
+   
 
     w = MainWindow()
     
