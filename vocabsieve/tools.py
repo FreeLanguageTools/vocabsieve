@@ -108,7 +108,13 @@ def prepareAnkiNoteDict(anki_settings: AnkiSettings, note: SRSNote) -> dict:
         ]
     return content
 
-def addNote(server, content) -> int:
+def addNote(server, content, allow_duplicates=False) -> int:
+    if allow_duplicates:
+        content = dict(content) # deepcopy since we are modifying the dict
+        content['options'] = {
+            "allowDuplicate": True
+        }
+
     result = invoke('addNote', server, note=content)
     return int(result)
 
