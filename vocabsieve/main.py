@@ -200,7 +200,6 @@ class MainWindow(MainWindowBase):
         self.web_button.clicked.connect(self.onWebButton)
 
         self.toanki_button.clicked.connect(self.createNote)
-        self.view_note_button.clicked.connect(self.viewNote)
         self.view_last_note_button.clicked.connect(self.viewLastNote)
         self.read_button.clicked.connect(lambda: self.clipboardChanged(even_when_focused=True))
 
@@ -570,7 +569,6 @@ class MainWindow(MainWindowBase):
         self.shortcut_toanki = QShortcut(QKeySequence('Ctrl+S'), self)
         self.shortcut_toanki.activated.connect(self.toanki_button.animateClick)
         self.shortcut_view_note = QShortcut(QKeySequence('Ctrl+F'), self)
-        self.shortcut_view_note.activated.connect(self.view_note_button.animateClick)
         self.shortcut_view_last_note = QShortcut(QKeySequence('Ctrl+Shift+F'), self)
         self.shortcut_view_last_note.activated.connect(self.view_last_note_button.animateClick)
         self.shortcut_getdef_e = QShortcut(QKeySequence('Ctrl+Shift+D'), self)
@@ -632,35 +630,20 @@ class MainWindow(MainWindowBase):
             self.lookup(target, no_lemma)
             self.previous_word = target
 
-            # Find word in Anki sentence mining deck
-            self.findSelected(target)
             
-            # Based on the search result, disable the appropriate button
-            if self.last_target_word_id == -1:
-                # target is not present in the deck, disable the View Note button
-                self.view_note_button.setEnabled(False)
-                self.toanki_button.setEnabled(True)
-            else:
-                # target had already been added in the deck, enable View Note button
-                self.view_note_button.setEnabled(True)
-                # Disable the Add Note button (if pressed in this case, it would throw an error anyway)
-                self.toanki_button.setEnabled(False)
-
-
-    def findSelected(self, target_word) -> None:
+    def findSelected(self, word: str) -> Optional[int]:
+        """word is already lemmatized
+        Returns note id if card with word found in Anki, None if not found"""
         if self.checkAnkiConnect() == 0:
             return
         
         deck_name = self.settings.value("deck_name")
 
-        langcode = self.settings.value("target_language", "en")
-        lemma = lem_word(target_word, langcode)
 
-        logger.info(f"Finding note for the word \"{lemma}\" in deck {deck_name}")
+        logger.info(f"Trying to find note for the word \"{word}\" in deck {deck_name}")
 
         target_word_field = self.settings.value("word_field")
-        find_query = f"deck:{deck_name} \"{target_word_field}:{lemma}\""
-        note_found_id = -1
+        find_query = f"deck:{deck_name} \"{target_word_field}:{word}\""
         try:
             notes_found = findNotes(
                 self.settings.value("anki_api", "http://127.0.0.1:8765"),
@@ -669,12 +652,12 @@ class MainWindow(MainWindowBase):
 
             if len(notes_found) != 0:
                 note_found_id = notes_found[0]
-                logger.info(f"Found note with id {note_found_id}")
-        except Exception as e:
-            logger.error("Failed to find Anki note: " + repr(e))
+                logger.debug(f"Found note with id {note_found_id}")
+                return note_found_id
+        except Exception:
+            logger.debug("Did not find Anki note with query: " + find_query)
             return
         
-        self.last_target_word_id = note_found_id
 
     
     def lookup(self, target: str, no_lemma=False) -> None:
@@ -817,6 +800,21 @@ class MainWindow(MainWindowBase):
     def createNote(self) -> None:
         if self.checkAnkiConnect() == 0:
             return
+        
+        allow_duplicates = False
+        if last_note_id:=self.findSelected(self.word.text()):
+            answer = QMessageBox.warning(
+                self,
+                "Note already exists",
+                f"Note with word \"{self.word.text()}\" already exists in Anki. \n"
+                f"Do you still want to add the note?\n"
+                f"Note id: {last_note_id}",
+                buttons=QMessageBox.Ok | QMessageBox.Cancel,
+            )
+            if answer == QMessageBox.Cancel:
+                return
+            else:
+                allow_duplicates = True
 
         anki_settings = self.getAnkiSettings()
 
@@ -838,7 +836,8 @@ class MainWindow(MainWindowBase):
         try: 
             self.last_added_note_id = addNote(
                 self.settings.value("anki_api", "http://127.0.0.1:8765"),
-                content
+                content,
+                allow_duplicates
             )
             self.rec.recordNote(note, json.dumps(content, indent=4, ensure_ascii=False))
             self.status("Added note to Anki")
@@ -854,10 +853,6 @@ class MainWindow(MainWindowBase):
         except Exception as e:
             logger.error("Failed to add note to Anki: " + repr(e))
             return
-
-
-    def viewNote(self) -> None:
-        self.guiBrowseNote(self.last_target_word_id)
 
 
     def viewLastNote(self) -> None:     

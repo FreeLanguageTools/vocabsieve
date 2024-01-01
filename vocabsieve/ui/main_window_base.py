@@ -107,10 +107,6 @@ class MainWindowBase(QMainWindow):
         self.lookup_exact_button.setToolTip(
             "This will look up the word without lemmatization.")
         self.toanki_button = QPushButton(f"Add note [{MOD}+S]")
-        self.toanki_button.setEnabled(False)
-        self.view_note_button = QPushButton("View note")
-        self.view_note_button.setToolTip(f"If it is present, view the note for the selected word in Anki Card Browser. [{MOD}+F]")
-        self.view_note_button.setEnabled(False)
         self.view_last_note_button = QPushButton("View last note")
         self.view_last_note_button.setToolTip(f"View the last added note. [{MOD}+Shift+F]")
 
@@ -209,8 +205,7 @@ class MainWindowBase(QMainWindow):
 
         layout.addWidget(self.tags, 13, 0, 1, 3)
 
-        layout.addWidget(self.toanki_button, 14, 2)
-        layout.addWidget(self.view_note_button, 14, 1)
+        layout.addWidget(self.toanki_button, 14, 1, 1, 2)
         layout.addWidget(self.view_last_note_button, 14, 0)
 
         layout.setColumnStretch(0, 2)
