@@ -9,7 +9,6 @@ from datetime import datetime
 from typing import Optional
 import requests
 from packaging import version
-import qdarktheme
 import platform
 import json
 from loguru import logger
@@ -19,6 +18,7 @@ from PyQt5.QtCore import QCoreApplication, QStandardPaths, QTimer, QDateTime, QT
 from PyQt5.QtGui import QClipboard, QKeySequence, QPixmap, QDesktopServices, QImage, QTextCursor
 from PyQt5.QtWidgets import QApplication, QMessageBox, QAction, QShortcut, QFileDialog
 
+import qdarktheme
 from .global_names import datapath, lock, app # First local import
 from .text_manipulation import apply_bold_char, apply_bold_tags, bold_word_in_text
 from .analyzer import BookAnalyzer
