@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QTextEdit, QVBoxLayout, QWidget, QPushButton, QLabel, QHBoxLayout
 from PyQt5.QtCore import Qt
-from .utils import genPreviewHTML
+from ..tools import genPreviewHTML
 from ..models import SRSNote
 
 class BatchNotePreviewer(QTextEdit):

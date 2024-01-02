@@ -11,6 +11,7 @@ from typing import List
 from .local_dictionary import LocalDictionary
 
 import mobi
+from datetime import datetime
 from itertools import islice
 from lxml import etree
 from charset_normalizer import from_bytes
@@ -107,6 +108,9 @@ def prepareAnkiNoteDict(anki_settings: AnkiSettings, note: SRSNote) -> dict:
             }
         ]
     return content
+
+def unix_milliseconds_to_datetime_str(ms: int):
+    return datetime.fromtimestamp(ms / 1000).strftime("%Y-%m-%d %H:%M:%S")
 
 def addNote(server, content, allow_duplicates=False) -> int:
     if allow_duplicates:
@@ -397,3 +401,13 @@ def compute_word_score(wr: WordRecord, waw: WordActionWeights):
         waw.anki_young_ctx * wr.anki_young_ctx + 
         waw.anki_young_tgt * wr.anki_young_tgt
     )
+
+def genPreviewHTML(item: SRSNote) -> str:
+    result = f'''<center>{item.sentence}</center>
+        <hr>
+        <center>
+            <b>{item.word}</b>:
+            <br>{item.definition1}</center>'''
+    if item.definition2 is not None:
+        result += f"<hr><center>{item.definition2}</center>"
+    return result

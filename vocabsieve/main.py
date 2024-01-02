@@ -30,7 +30,7 @@ from .reader import ReaderServer
 from .contentmanager import ContentManager
 from .global_events import GlobalObject
 from .tools import (compute_word_score, is_json, make_audio_source_group, prepareAnkiNoteDict, is_oneword, addNote,
-                     findNotes, guiBrowse, make_source_group, getVersion, make_freq_source)
+                     findNotes, guiBrowse, make_source_group, getVersion, make_freq_source, unix_milliseconds_to_datetime_str)
 from .ui.main_window_base import MainWindowBase
 from .models import (DictionarySourceGroup, KnownMetadata, LookupRecord, SRSNote, TrackingDataError, 
                      WordRecord)
@@ -653,7 +653,7 @@ class MainWindow(MainWindowBase):
             if len(notes_found) != 0:
                 note_found_id = notes_found[0]
                 logger.debug(f"Found note with id {note_found_id}")
-                return note_found_id
+                return int(note_found_id)
         except Exception:
             logger.debug("Did not find Anki note with query: " + find_query)
             return
@@ -803,17 +803,28 @@ class MainWindow(MainWindowBase):
         
         allow_duplicates = False
         if last_note_id:=self.findSelected(self.word.text()):
-            answer = QMessageBox.warning(
-                self,
-                "Note already exists",
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Warning)
+            msgBox.setText(
                 f"Note with word \"{self.word.text()}\" already exists in Anki. \n"
                 f"Do you still want to add the note?\n"
-                f"Note id: {last_note_id}",
-                buttons=QMessageBox.Ok | QMessageBox.Cancel,
-            )
-            if answer == QMessageBox.Cancel:
+                f"Note id: {last_note_id}, created {unix_milliseconds_to_datetime_str(last_note_id)}"
+                )
+            msgBox.setWindowTitle("Note already exists")
+            button_ok = msgBox.addButton("Add anyway", QMessageBox.AcceptRole)
+            button_cancel = msgBox.addButton("Cancel", QMessageBox.RejectRole)
+            button_view = msgBox.addButton("View note", QMessageBox.HelpRole)
+            msgBox.exec()
+            result = msgBox.buttonRole(msgBox.clickedButton())
+            if result == QMessageBox.RejectRole:
+                logger.info("User cancelled adding duplicate note")
                 return
-            else:
+            elif result == QMessageBox.HelpRole:
+                logger.info("User pressed view while adding duplicate note")
+                self.guiBrowseNote(last_note_id)
+                return
+            elif result == QMessageBox.AcceptRole:
+                logger.info("User decided to add duplicate note")
                 allow_duplicates = True
 
         anki_settings = self.getAnkiSettings()

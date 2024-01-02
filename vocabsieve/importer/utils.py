@@ -18,16 +18,6 @@ def truncate_middle(s, n):
     n_1 = int(n - n_2 - 3)
     return '{0}...{1}'.format(s[:n_1], s[-n_2:])
 
-def genPreviewHTML(item: SRSNote) -> str:
-    result = f'''<center>{item.sentence}</center>
-        <hr>
-        <center>
-            <b>{item.word}</b>:
-            <br>{item.definition1}</center>'''
-    if item.definition2 is not None:
-        result += f"<hr><center>{item.definition2}</center>"
-    return result
-
 def date_to_timestamp(datestr: str):
     return dt.strptime(datestr, "%Y-%m-%d %H:%M:%S").timestamp()
 
