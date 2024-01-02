@@ -156,11 +156,11 @@ class MultiDefinitionWidget(SearchableTextEdit):
         if defi is not None:
             self.setCurrentDefinition(defi) # for non interactive use
         if self.currentDefinition is None:
-            return ""
+            return self.toPlainText().replace("\n", "<br>")
         source_name = self.currentDefinition.source
         source = self.sg.getSource(source_name)
         if source is None:
-            return ""
+            return self.toPlainText().replace("\n", "<br>")
 
         match source.display_mode:
             case DisplayMode.raw:
