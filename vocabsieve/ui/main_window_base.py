@@ -103,7 +103,7 @@ class MainWindowBase(QMainWindow):
             ", then press \"Get definition\".")
 
         self.lookup_button = QPushButton(f"Define [{MOD}+D]") 
-        self.lookup_exact_button = QPushButton(f"Define direct [Shift-{MOD}+D]")
+        self.lookup_exact_button = QPushButton(f"Define direct [Shift+{MOD}+D]")
         self.lookup_exact_button.setToolTip(
             "This will look up the word without lemmatization.")
         self.toanki_button = QPushButton(f"Add note [{MOD}+S]")
@@ -126,7 +126,7 @@ class MainWindowBase(QMainWindow):
         self.lookup_definition_on_doubleclick = QCheckBox(
             "Lookup definition on double click")
         self.lookup_definition_on_doubleclick.setToolTip(
-            "Disable this if you want to use 3rd party dictionaries with copied text (e.g. with mpvacious).")
+            f"Disable this if you want to use 3rd party dictionaries with copied text (e.g. with mpvacious).[{MOD}+2]")
         self.lookup_definition_on_doubleclick.clicked.connect(lambda v: self.settings.setValue("lookup_definition_on_doubleclick", v))
         self.lookup_definition_on_doubleclick.setChecked(self.settings.value("lookup_definition_on_doubleclick", True, type=bool))
         self.lookup_definition_when_hovering = QCheckBox("Lookup definition when hovering")

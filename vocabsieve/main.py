@@ -579,6 +579,8 @@ class MainWindow(MainWindowBase):
     def setupShortcuts(self) -> None:
         self.shortcut_toanki = QShortcut(QKeySequence('Ctrl+S'), self)
         self.shortcut_toanki.activated.connect(self.toanki_button.animateClick)
+        self.shortcut_double_click_toggle = QShortcut(QKeySequence('Ctrl+2'), self)
+        self.shortcut_double_click_toggle.activated.connect(self.lookup_definition_on_doubleclick.animateClick)
         self.shortcut_view_note = QShortcut(QKeySequence('Ctrl+F'), self)
         self.shortcut_view_last_note = QShortcut(QKeySequence('Ctrl+Shift+F'), self)
         self.shortcut_view_last_note.activated.connect(self.view_last_note_button.animateClick)
