@@ -121,6 +121,17 @@ class Record():
             content TEXT
         )
         """)
+        self.c.execute("""
+        CREATE TABLE IF NOT EXISTS modifiers (
+                        language TEXT,
+                        lemma TEXT,
+                        value FLOAT,
+                        UNIQUE(language, lemma)
+        )
+        """)
+        self.c.execute("""
+                       CREATE UNIQUE INDEX IF NOT EXISTS modifier_index ON modifiers (language, lemma)
+        """)
         self.conn.commit()
 
     def fixOld(self):
@@ -254,6 +265,23 @@ class Record():
             SELECT name, content, jd
             FROM contents
             WHERE language=?''', (language,))
+
+    def getModifier(self, language, lemma) -> float:
+        self.c.execute('''
+            SELECT value
+            FROM modifiers
+            WHERE language=? AND lemma=?''', (language, lemma))
+        value = self.c.fetchone()
+        if value:
+            return value
+        else:
+            return 1.0
+    
+    def setModifier(self, language, lemma, value):
+        self.c.execute('''
+            INSERT OR REPLACE INTO modifiers(language, lemma, value)
+            VALUES(?,?,?)''', (language, lemma, value))
+        self.conn.commit()
 
     def rebuildSeen(self):
         self.c.execute("DELETE FROM seen")
