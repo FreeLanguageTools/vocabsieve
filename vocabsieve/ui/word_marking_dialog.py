@@ -15,7 +15,11 @@ class TogglableLabel(QLabel):
     def setText(self, text: str):
         langcode = settings.value("target_language", "en")
         score = compute_word_score(self.parent_.known_data.get(text, WordRecord(text, langcode)), self.parent_.waw)
-        threshold = settings.value("tracking/known_threshold", 100) if text not in self.parent_.cognates else settings.value("tracking/known_threshold_cognate", 25)
+        threshold = settings.value("tracking/known_threshold", 100, type=int) if text not in self.parent_.cognates else settings.value("tracking/known_threshold_cognate", 25, type=int)
+        if score >= threshold:
+            self.setStyleSheet("background-color: #00ff00")
+        else:
+            self.setStyleSheet("")
         super().setText(text + f" ({score}/{threshold})")
         
 ROWS = 20
