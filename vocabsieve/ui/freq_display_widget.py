@@ -1,6 +1,8 @@
 from PyQt5.QtWidgets import QLineEdit
+from numpy import isin
 from ..models import FreqSource, FreqDisplayMode
-from typing import Optional
+from ..sources.LocalFreqSource import LocalFreqSource
+from typing import Optional, cast
 from ..tools import freq_to_stars
 
 class FreqDisplayWidget(QLineEdit):
@@ -29,3 +31,8 @@ class FreqDisplayWidget(QLineEdit):
             case _:
                 pass
         self.setText(text)
+    
+    def getAllWords(self) -> list[str]:
+        if isinstance(self.source, LocalFreqSource):
+            return cast(LocalFreqSource, self.source).getAllWords()
+        return []

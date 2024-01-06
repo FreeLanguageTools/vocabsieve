@@ -96,7 +96,24 @@ class LocalDictionary():
                     raise KeyError(f"Word {word} not found in {name}")
             finally:
                 lock.release()
-        raise RuntimeError(f"Cannot ")
+        raise RuntimeError(f"Cannot define word")
+    
+    def getAllWords(self, lang: str, name: str) -> list[tuple[str, str]]:
+        "Get all words from database"
+        "Should raise KeyError if word not found"
+        for _ in range(10):
+            try:
+                lock.acquire(True) 
+                self.c.execute("""
+                SELECT word, definition FROM dictionary
+                WHERE language=?
+                AND dictname=?
+                """, (lang, name))
+                return self.c.fetchall()
+            finally:
+                lock.release()
+        raise RuntimeError(f"Cannot access database for getting all words")
+
 
     def countEntries(self) -> int:
         self.c.execute("""

@@ -7,6 +7,7 @@ import time
 import re
 from datetime import datetime
 from typing import Optional
+from pytest import mark
 import requests
 from packaging import version
 import platform
@@ -223,6 +224,7 @@ class MainWindow(MainWindowBase):
         self.about_action = QAction("&About")
         self.content_manager_action = QAction("Content Manager")
         self.analyze_book_action = QAction("Analyze book")
+        self.mark_words_action = QAction("Mark words from frequency list")
         self.export_known_words_action = QAction("Export known words to JSON")
         self.export_word_scores_action = QAction("Export word scores to JSON")
         self.open_logs_action = QAction("View session logs")
@@ -265,6 +267,7 @@ class MainWindow(MainWindowBase):
         self.analyze_book_action.triggered.connect(self.onAnalyzeBook)
         self.export_known_words_action.triggered.connect(self.exportKnownWords)
         self.export_word_scores_action.triggered.connect(self.exportWordData)
+        self.mark_words_action.triggered.connect(self.markWords)
 
         importmenu.addActions(
             [
@@ -286,7 +289,10 @@ class MainWindow(MainWindowBase):
 
         self.setMenuBar(self.menu)
 
+    def markWords(self):
+        words = self.freq_widget.getAllWords()
 
+        
         
 
     def onAnalyzeBook(self):

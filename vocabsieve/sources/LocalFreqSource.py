@@ -11,3 +11,8 @@ class LocalFreqSource(FreqSource):
             return int(self.db.define(word, self.langcode, self.name))
         except KeyError:
             return -1
+        
+    def getAllWords(self) -> list[str]:
+        data = self.db.getAllWords(self.langcode, self.name)
+        d = {int(data[i][1]): data[i][0] for i in range(len(data))}
+        return [d[i] for i in sorted(d.keys())]
