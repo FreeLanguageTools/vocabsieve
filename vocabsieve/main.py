@@ -29,7 +29,7 @@ from .importer import KindleVocabImporter, KoreaderVocabImporter, AutoTextImport
 from .reader import ReaderServer
 from .contentmanager import ContentManager
 from .global_events import GlobalObject
-from .tools import (compute_word_score, is_json, make_audio_source_group, prepareAnkiNoteDict, is_oneword, addNote,
+from .tools import (compute_word_score, is_json, make_audio_source_group, modelFieldNames, prepareAnkiNoteDict, is_oneword, addNote,
                      findNotes, guiBrowse, make_source_group, getVersion, make_freq_source, unix_milliseconds_to_datetime_str)
 from .ui.main_window_base import MainWindowBase
 from .models import (DictionarySourceGroup, KnownMetadata, LookupRecord, SRSNote, TrackingDataError, 
@@ -631,24 +631,37 @@ class MainWindow(MainWindowBase):
             self.previous_word = target
 
             
-    def findSelected(self, word: str) -> list[int]:
-        """word is already lemmatized
-        Returns note id if card with word found in Anki, None if not found"""
+    def findDuplicates(self, word: str, sentence: str) -> list[int]:
+        """Check for duplicates of note in Anki
+        We support using either sentence or word as first field
+        word is already lemmatized
+        Returns note ids if card with word found in Anki, None if not found"""
         if self.checkAnkiConnect() == 0:
             return []
+        api = self.settings.value("anki_api", "http://127.0.0.1:8765")
         
-        deck_name = self.settings.value("deck_name")
+        note_type = self.settings.value("note_type")
+        logger.debug(f'Trying to obtain fields for note type "{note_type}"')
 
-
-        logger.info(f"Trying to find note for the word \"{word}\" in deck {deck_name}")
-
-        target_word_field = self.settings.value("word_field")
-        find_query = f"\"{target_word_field}:{word}\""
+        fields = modelFieldNames(api, note_type)
+        logger.debug(f'Fields for note type "{note_type}": {fields}')
+        if not fields:
+            logger.error(f"Could not obtain fields for note type {note_type}")
+            self.note_type_first_field = ""
+            return []
+        if fields[0] == self.settings.value("word_field"):
+            logger.info(f'First field is word field, trying to find a note with field "{fields[0]}" having value "{word}"')
+            find_query = f"\"{fields[0]}:{word}\""
+            self.note_type_first_field = "word"
+        elif fields[0] == self.settings.value("sentence_field"):
+            logger.info(f'First field is sentence field, trying to find a note with field "{fields[0]}" having value "{sentence}"')
+            find_query = f"\"{fields[0]}:{sentence}\""
+            self.note_type_first_field = "sentence"
+        else:
+            logger.error(f"First field is neither word field nor sentence field, skipping checking for duplicates")
+            return []
         try:
-            notes_found = findNotes(
-                self.settings.value("anki_api", "http://127.0.0.1:8765"),
-                find_query
-            )
+            notes_found = findNotes(api, find_query)
 
             if notes_found:
                 logger.debug(f"Found notes for \"{word}\": {notes_found}")
@@ -804,13 +817,14 @@ class MainWindow(MainWindowBase):
             return
         
         allow_duplicates = False
-        if note_ids:=self.findSelected(self.word.text()):
+        sentence = self.sentence.textBoldedByTags.replace("\n", "<br>")
+        if note_ids:=self.findDuplicates(self.word.text(), sentence):
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Warning)
             msgBox.setText(
-                f"Note(s) with word \"{self.word.text()}\" already exists in Anki. \n" +\
-                f"Do you still want to add the note?\n" +\
-                "\n".join(
+                f'Note(s) with {self.note_type_first_field} "{self.word.text() if self.note_type_first_field == "word" else sentence}" already exists in Anki. <br>' +\
+                f"Do you still want to add the note?<br>" +\
+                "<br>".join(
                     f"Note id: {id}, created {unix_milliseconds_to_datetime_str(id)}" for id in note_ids
                     )
                 )

@@ -143,6 +143,10 @@ def addDefaultModel(server):
         cardTemplates=CARDS
         )
 
+def modelFieldNames(server, modelName):
+    "Find the field names for a note type"
+    return invoke('modelFieldNames', server, modelName=modelName)
+
 def findNotes(server, query):
     return invoke('findNotes', server, query=query)
 

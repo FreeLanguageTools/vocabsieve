@@ -649,7 +649,7 @@ class SettingsDialog(QDialog):
             self.register_config_handler(
                 self.deck_name, 'deck_name', 'Default')
             self.register_config_handler(self.tags, 'tags', 'vocabsieve')
-            self.register_config_handler(self.note_type, 'note_type', 'Basic')
+            self.register_config_handler(self.note_type, 'note_type', 'vocabsieve-notes')
             self.register_config_handler(
                 self.sentence_field, 'sentence_field', 'Sentence')
             self.register_config_handler(self.word_field, 'word_field', 'Word')
