@@ -585,25 +585,26 @@ class MainWindow(MainWindowBase):
         self.shortcut_clearaudio.activated.connect(self.audio_selector.discard_audio_button.animateClick)
 
     def getCurrentWord(self) -> str:
-        """Returns currently selected word"""
-        cursor = self.sentence.textCursor()
-        selected = cursor.selectedText()
-        cursor2 = self.definition.textCursor()
-        selected2 = cursor2.selectedText()
-        cursor3 = self.definition2.textCursor()
-        selected3 = cursor3.selectedText()
-        selected4 = self.word.selectedText()
-        hovered = self.sentence.word_under_cursor
-        target = str.strip(selected
-                           or selected2
-                           or selected3
-                           or selected4
-                           or hovered # prioritize the hovered word over the previous one
-                           or self.previous_word
+        """Returns currently selected word. If there isn't any, last selected word is returned"""
+        target = ''
+
+        for text_field in [self.sentence, self.definition, self.definition2]:
+            if text_field.hasFocus():
+                target = text_field.textCursor().selectedText()
+                break
+        if self.word.hasFocus():
+            target = self.word.selectedText()
+        hovered = self.sentence.word_under_cursor # will only trigger if none of the text fields are focused, like hovering on inactive window
+        target = str.strip(target
+                           or hovered
+                           or self.previousWord
                            or self.word.text()
                            or "")
-        
+        self.previousWord = target
+
         return target
+
+
 
     def onWebButton(self) -> None:
         """Shows definitions of self.word.text() in wiktionoary in browser"""
