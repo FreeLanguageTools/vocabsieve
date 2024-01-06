@@ -33,6 +33,7 @@ from .global_events import GlobalObject
 from .tools import (compute_word_score, is_json, make_audio_source_group, modelFieldNames, prepareAnkiNoteDict, is_oneword, addNote,
                      findNotes, guiBrowse, make_source_group, getVersion, make_freq_source, unix_milliseconds_to_datetime_str)
 from .ui.main_window_base import MainWindowBase
+from .ui.word_marking_dialog import WordMarkingDialog
 from .models import (DictionarySourceGroup, KnownMetadata, LookupRecord, SRSNote, TrackingDataError, 
                      WordRecord)
 from sentence_splitter import SentenceSplitter
@@ -239,6 +240,7 @@ class MainWindow(MainWindowBase):
         helpmenu.addAction(self.about_action)
         helpmenu.addAction(self.open_logs_action)
         recordmenu.addAction(self.content_manager_action)
+        recordmenu.addAction(self.mark_words_action)
         analyzemenu.addAction(self.analyze_book_action)
 
 
@@ -291,7 +293,8 @@ class MainWindow(MainWindowBase):
 
     def markWords(self):
         words = self.freq_widget.getAllWords()
-
+        dialog = WordMarkingDialog(self, words)
+        dialog.exec()
         
         
 
