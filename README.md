@@ -54,7 +54,7 @@ For a nightly build, please check the [CI artifacts page](https://nightly.link/F
 [![Packaging status](https://repology.org/badge/vertical-allrepos/vocabsieve.svg)](https://repology.org/project/vocabsieve/versions)
   
 ## Development
-To run from source, simply use `pip3 -r requirements.txt` and then `python3 vocabsieve.py`.
+To run from source, simply use `pip3 install -r requirements.txt` and then `python3 vocabsieve.py`.
 
 For debugging purposes, set the environmental variable `VOCABSIEVE_DEBUG` to any value. This will create a separate profile (settings and databases for records and dictionaries) so you may perform tests without affecting your normal profile. For each different value of `VOCABSIEVE_DEBUG`, a separate profile is generated. This can be any number or string.
 
