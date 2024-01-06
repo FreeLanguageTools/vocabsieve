@@ -999,14 +999,12 @@ def main():
     # See https://github.com/5yutan5/PyQtDarkTheme/issues/239 for more info.
     qss = "QToolTip { border: 0px; }" if sys.platform == "win32" else ""
 
-    if theme:=settings.value("theme"):
+    if (theme:=settings.value("theme", 'auto' if platform.system() != "Linux" else 'system')) and theme != "system":
         if color:=settings.value("accent_color"):
             qdarktheme.setup_theme(theme, custom_colors={"primary": color}, additional_qss=qss)
         else:
             qdarktheme.setup_theme(theme, additional_qss=qss)
-    else:
-        qdarktheme.setup_theme("auto")
-   
+   # if using system, don't set up theme
 
     w = MainWindow()
     

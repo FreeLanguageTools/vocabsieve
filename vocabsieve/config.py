@@ -243,6 +243,7 @@ class SettingsDialog(QDialog):
 
         self.theme = QComboBox()
         self.theme.addItems(qdarktheme.get_themes())
+        self.theme.addItem("system")
 
         self.accent_color = QPushButton()
         self.accent_color.setText(self.settings.value("accent_color", "default"))
@@ -314,7 +315,7 @@ class SettingsDialog(QDialog):
 
     def save_accent_color(self):
         color = QColorDialog.getColor()
-        if color.isValid():
+        if color.isValid() and self.settings.value("theme") != "system":
             self.settings.setValue("accent_color", color.name())
             self.accent_color.setText(color.name())
             qdarktheme.setup_theme(
@@ -469,6 +470,7 @@ class SettingsDialog(QDialog):
             # Primary selection is only available on Linux
             self.tab_i_layout.addRow(self.primary)
         self.tab_i_layout.addRow("Theme", self.theme)
+        self.tab_i_layout.addRow(QLabel('<i>◊ Changing to "system" requires a restart.</i>'))
         self.tab_i_layout.addRow("Accent color", self.accent_color)
         self.tab_i_layout.addRow(self.allow_editing)
         self.tab_i_layout.addRow(QLabel("Frequency display mode"), self.freq_display_mode)
@@ -737,7 +739,7 @@ class SettingsDialog(QDialog):
         self.register_config_handler(self.w_anki_ctx_y, 'tracking/w_anki_ctx_y', 20)
         self.register_config_handler(self.known_data_lifetime, 'tracking/known_data_lifetime', 1800)
 
-        self.register_config_handler(self.theme, 'theme', 'auto')
+        self.register_config_handler(self.theme, 'theme', 'auto' if platform.system() != "Linux" else 'system') # default to native on Linux
         
         self.register_config_handler(self.sg2_enabled, 'sg2_enabled', False)
         self.register_config_handler(self.sg1_widget, 'sg1', [])
@@ -792,6 +794,8 @@ class SettingsDialog(QDialog):
 
 
     def setupTheme(self) -> None:
+        if self.theme.currentText() == "system":
+            return
         accent_color = self.settings.value("accent_color", "default")
         if accent_color == "default": # default is not a color
             qdarktheme.setup_theme(
