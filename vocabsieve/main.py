@@ -631,11 +631,11 @@ class MainWindow(MainWindowBase):
             self.previous_word = target
 
             
-    def findSelected(self, word: str) -> Optional[int]:
+    def findSelected(self, word: str) -> list[int]:
         """word is already lemmatized
         Returns note id if card with word found in Anki, None if not found"""
         if self.checkAnkiConnect() == 0:
-            return
+            return []
         
         deck_name = self.settings.value("deck_name")
 
@@ -643,20 +643,22 @@ class MainWindow(MainWindowBase):
         logger.info(f"Trying to find note for the word \"{word}\" in deck {deck_name}")
 
         target_word_field = self.settings.value("word_field")
-        find_query = f"deck:{deck_name} \"{target_word_field}:{word}\""
+        find_query = f"\"{target_word_field}:{word}\""
         try:
             notes_found = findNotes(
                 self.settings.value("anki_api", "http://127.0.0.1:8765"),
                 find_query
             )
 
-            if len(notes_found) != 0:
-                note_found_id = notes_found[0]
-                logger.debug(f"Found note with id {note_found_id}")
-                return int(note_found_id)
+            if notes_found:
+                logger.debug(f"Found notes for \"{word}\": {notes_found}")
+                return notes_found
+            else:
+                logger.debug("Did not find Anki note")
+                return []
         except Exception:
             logger.debug("Did not find Anki note with query: " + find_query)
-            return
+            return []
         
 
     
@@ -802,18 +804,20 @@ class MainWindow(MainWindowBase):
             return
         
         allow_duplicates = False
-        if last_note_id:=self.findSelected(self.word.text()):
+        if note_ids:=self.findSelected(self.word.text()):
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Warning)
             msgBox.setText(
-                f"Note with word \"{self.word.text()}\" already exists in Anki. \n"
-                f"Do you still want to add the note?\n"
-                f"Note id: {last_note_id}, created {unix_milliseconds_to_datetime_str(last_note_id)}"
+                f"Note(s) with word \"{self.word.text()}\" already exists in Anki. \n" +\
+                f"Do you still want to add the note?\n" +\
+                "\n".join(
+                    f"Note id: {id}, created {unix_milliseconds_to_datetime_str(id)}" for id in note_ids
+                    )
                 )
             msgBox.setWindowTitle("Note already exists")
             button_ok = msgBox.addButton("Add anyway", QMessageBox.AcceptRole)
             button_cancel = msgBox.addButton("Cancel", QMessageBox.RejectRole)
-            button_view = msgBox.addButton("View note", QMessageBox.HelpRole)
+            button_view = msgBox.addButton("View note(s)", QMessageBox.HelpRole)
             msgBox.exec()
             result = msgBox.buttonRole(msgBox.clickedButton())
             if result == QMessageBox.RejectRole:
@@ -821,7 +825,7 @@ class MainWindow(MainWindowBase):
                 return
             elif result == QMessageBox.HelpRole:
                 logger.info("User pressed view while adding duplicate note")
-                self.guiBrowseNote(last_note_id)
+                self.guiBrowseNotes(note_ids)
                 return
             elif result == QMessageBox.AcceptRole:
                 logger.info("User decided to add duplicate note")
@@ -887,7 +891,27 @@ class MainWindow(MainWindowBase):
                 gui_query
             )
         except Exception as e: # This shouldn't really be possible
-            logger.error(f"Unable to find a note for \"{note_id}\": " + repr(e))
+            logger.error(f"Unable to guiBrowse for \"{note_id}\": " + repr(e))
+            return
+        
+    def guiBrowseNotes(self, note_ids: list[int]) -> None:
+        """Visualize the card of the given id in the Anki Card Browser"""
+        if not note_ids:
+            return
+
+        if self.checkAnkiConnect() == 0:
+            return
+
+        logger.info(f"Opening Anki Card Browser and looking up id {note_ids}")
+
+        gui_query = f"nid:{','.join(str(id) for id in note_ids)}"
+        try:
+            guiBrowse(
+                self.settings.value("anki_api", "http://127.0.0.1:8765"),
+                gui_query
+            )
+        except Exception as e: # This shouldn't really be possible
+            logger.error(f"Unable to guiBrowse for \"{note_ids}\": " + repr(e))
             return
 
     def errorNoConnection(self, error) -> None:
