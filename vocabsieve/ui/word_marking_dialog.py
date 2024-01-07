@@ -70,7 +70,10 @@ class WordGridWidget(QWidget):
         self.known_data, _ = self.rec.getKnownData()
         self.layout_ = QGridLayout(self)
         self.index_offset_label = QLabel("<b>Rank 0</b>")
-        self.layout_.addWidget(self.index_offset_label, 0, 0, 1, COLS)
+        self.layout_.addWidget(self.index_offset_label, 0, 0, 1, COLS-2)
+        self.reset_button = QPushButton("Reset all modifiers to default")
+        self.reset_button.clicked.connect(self.resetModifiers)
+        self.layout_.addWidget(self.reset_button, 0, COLS-2, 1, 2)
         self.page_size = ROWS * COLS
         self.page = 1
         self.last_page = len(self.words) // self.page_size + 1
@@ -107,6 +110,11 @@ class WordGridWidget(QWidget):
 
     def last(self):
         self.page = self.last_page 
+        self.update()
+
+    def resetModifiers(self):
+        logger.info("Resetting all modifiers to default by user request")
+        self.rec.deleteModifiers(settings.value("target_language", "en"))
         self.update()
     
 

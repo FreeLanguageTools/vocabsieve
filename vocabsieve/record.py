@@ -314,6 +314,14 @@ class Record():
         self.conn.commit()
         self.c.execute("VACUUM")
 
+    def deleteModifiers(self, langcode: str):
+        "Drop all modifiers for given language"
+        self.c.execute("""
+            DELETE FROM modifiers
+            WHERE language=?
+        """, (langcode,))
+        self.conn.commit()
+        self.c.execute("VACUUM")
 
     def recordLookup(self, lr: LookupRecord, timestamp: Optional[float] = None, commit: bool = True):
         if timestamp is None:
