@@ -161,7 +161,7 @@ class MultiDefinitionWidget(SearchableTextEdit):
         source = self.sg.getSource(source_name)
         if source is None:
             return self.toPlainText().replace("\n", "<br>")
-
+        
         match source.display_mode:
             case DisplayMode.raw:
                 return self.toPlainText().replace("\n", "<br>")
@@ -172,6 +172,6 @@ class MultiDefinitionWidget(SearchableTextEdit):
             case DisplayMode.markdown_html:
                 return markdown_nop(self.toMarkdown())
             case DisplayMode.html:
-                return self.original # no editing, just send the original html, using toHtml will change the html
+                return self.currentDefinition.definition or "" # no editing, just send the original html, using toHtml will change the html
             case _:
                 raise NotImplementedError(f"Unknown display mode {source.display_mode}")
