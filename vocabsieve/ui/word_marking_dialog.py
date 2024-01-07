@@ -1,26 +1,60 @@
 from PyQt5.QtWidgets import QVBoxLayout, QDialog, QLabel, QGridLayout, QWidget, QHBoxLayout, QPushButton
+from PyQt5.QtGui import QMouseEvent
 from PyQt5.QtCore import Qt
 
 from ..models import WordRecord
 from .main_window_base import MainWindowBase
 from ..tools import compute_word_score
-from ..global_names import settings
+from ..global_names import settings, logger
 
 class TogglableLabel(QLabel):
     def __init__(self, parent: "WordGridWidget"):
         super().__init__()
         self.parent_ = parent
         self.rec = parent.rec
+        self.langcode = settings.value("target_language", "en")
+        self.mousePressEvent = self.onClicked
+        self.word = ""
 
     def setText(self, text: str):
-        langcode = settings.value("target_language", "en")
-        score = compute_word_score(self.parent_.known_data.get(text, WordRecord(text, langcode)), self.parent_.waw)
-        threshold = settings.value("tracking/known_threshold", 100, type=int) if text not in self.parent_.cognates else settings.value("tracking/known_threshold_cognate", 25, type=int)
-        if score >= threshold:
-            self.setStyleSheet("background-color: #00ff00")
+        self.score = compute_word_score(self.parent_.known_data.get(text, WordRecord(text, self.langcode)), self.parent_.waw)
+        self.threshold = settings.value("tracking/known_threshold", 100, type=int) if text not in self.parent_.cognates else settings.value("tracking/known_threshold_cognate", 25, type=int)
+        self.modifier: float = self.rec.getModifier(self.langcode, text)
+        self.known = False
+        stylesheet = "border: 2px solid transparent; border-radius: 5px; padding: 4px;"
+        if self.score >= self.threshold * self.modifier:
+            stylesheet += "background-color: rgba(50,205,50,0.6);"
+            self.known = True
+            if self.modifier != 1.0:
+                stylesheet += "border: 2px solid transparent; font-weight: bold; text-decoration: underline;" # Overridden as known: bold and underline
         else:
-            self.setStyleSheet("")
-        super().setText(text + f" ({score}/{threshold})")
+            if self.modifier != 1.0:
+                stylesheet += "border: 2px solid rgb(220,20,60); font-weight: bold; text-decoration: underline;" # Overridden as unknown: bold underline and red border
+        self.setStyleSheet(stylesheet)
+        self.word = text
+        super().setText((text + f" ({self.score}/{int(self.threshold * self.modifier)})") if text else "")
+    
+    def onClicked(self, ev: QMouseEvent):
+        if not self.word:
+            return
+        logger.debug(f"User pressed on {self.word} in mark words dialog")
+        if self.modifier == 1.0:
+        # Set modifier
+            if self.known:
+                self.modifier = self.score / self.threshold * 2
+                self.rec.setModifier(self.langcode, self.word, self.modifier)
+                logger.info(f"Seting modifier of {self.word} to {self.modifier} (as unknown)")
+            else:
+                self.modifier = 0.0
+                self.rec.setModifier(self.langcode, self.word, self.modifier)
+                logger.info(f"Seting modifier of {self.word} to {self.modifier} (as known)")
+        else:
+        # Reset modifier
+            self.modifier = 1.0
+            self.rec.setModifier(self.langcode, self.word, self.modifier)
+            logger.info(f"Resetting modifier of {self.word} to {self.modifier}")
+
+        self.setText(self.word)
         
 ROWS = 20
 COLS = 5
@@ -82,14 +116,14 @@ class WordMarkingDialog(QDialog):
     def __init__(self, parent: MainWindowBase, words: list[str] = []):
         super().__init__(parent)
         self.setWindowTitle("Mark words from frequency list")
-        self.resize(800, 500)
+        self.resize(1200, 700)
         self.rec = parent.rec
         langcode = settings.value("target_language", "en")
         known_langs = settings.value('tracking/known_langs', 'en').split(",")
         self.cognates = parent.dictdb.getCognatesData(langcode, known_langs)
         self.waw = parent.getWordActionWeights()
         self._layout = QVBoxLayout(self)
-        self._layout.addWidget(QLabel("Mark the following words by clicking to toggle their known status.\nChanges are saved automatically to the database."))
+        self._layout.addWidget(QLabel("Click on a word to toggle its known status. Clicking again resets the modifier to default. <br> Modified words are displayed in bold and underlined. Changes are saved automatically to the database."))
 
         first_button = QPushButton("<<")
         prev_button = QPushButton("<")

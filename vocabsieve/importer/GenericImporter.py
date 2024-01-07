@@ -203,8 +203,7 @@ class GenericImporter(QDialog):
                     tags.extend(self.settings.value("tags", "vocabsieve").strip().split())
                 tags.append(self.methodname)
                 tags.append(note.book_name.replace(" ","_"))
-                print(definition1)
-                print(definition2)
+
                 new_note_item = SRSNote(
                         word=definition1.headword,
                         sentence=sentence,
@@ -220,14 +219,12 @@ class GenericImporter(QDialog):
         # Unlock buttons again now
         self.lookup_button.setEnabled(True)
         self.anki_button.setEnabled(True)
-        print(self.anki_notes)
     def to_anki(self):
         notes_data = []
         for note in self.anki_notes:
             notes_data.append(
                 prepareAnkiNoteDict(self._parent.getAnkiSettings(), note)
                 )
-        print(notes_data)
 
         res = addNotes(self._parent.settings.value("anki_api"), notes_data)
         # Record last import data

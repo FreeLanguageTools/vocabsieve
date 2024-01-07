@@ -273,7 +273,7 @@ class Record():
             WHERE language=? AND lemma=?''', (language, lemma))
         value = self.c.fetchone()
         if value:
-            return value
+            return value[0]
         else:
             return 1.0
     

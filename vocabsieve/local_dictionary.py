@@ -182,8 +182,11 @@ class LocalDictionary():
         elif dicttype == "freq":
             with zopen(path) as f:
                 data = json.load(f)
-                for i, word in enumerate(data):
-                    d[self.regularize_headword(word)] = str(i + 1)
+                i = 0
+                for word in data:
+                    if word and not word[0].isupper(): # Ignore proper nouns
+                        d[self.regularize_headword(word)] = str(i + 1)
+                        i += 1
                 self.importdict(d, lang, name)
         elif dicttype == "audiolib":
             # Audios will be stored as a serialized json list
