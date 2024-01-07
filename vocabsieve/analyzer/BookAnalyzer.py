@@ -38,6 +38,8 @@ class BookAnalyzer(QDialog):
         self.basic_info_left = ""
         if self.langcode in ['ru', 'uk']:
             self.known_words = set([word for word in self.known_words if starts_with_cyrillic(word)])
+        else:
+            self.known_words = set([word for word in self.known_words])
         
         self.content = "\n".join(self.chapters)
         
