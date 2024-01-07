@@ -12,11 +12,18 @@ def pretty_symbol_display(symbol: str, number: int) -> str:
         return f"{number}{symbol} "
     return ""
 
+def modifier_threshold_display(modifier: float, threshold: int) -> str:
+    if modifier == 1.0:
+        return f"{threshold}"
+    else:
+        return f"<b>{int(threshold * modifier)}</b>"
+
 class WordRecordDisplay(QLabel):
     def __init__(self):
         super().__init__()
         self.setToolTip(
-"""Number shown is total score
+"""Total score / Threshold
+Bolded threshold means that the word is marked manually
 S: times seen
 L: times looked up
 T: number of mature anki cards as word
@@ -26,9 +33,9 @@ c: number of young anki cards as context
 Weights can be changed in the Tracking tab"""
         )
 
-    def setWordRecord(self, wr: WordRecord, waw: WordActionWeights):
+    def setWordRecord(self, wr: WordRecord, waw: WordActionWeights, threshold: int, modifier: float):
         self.setText(
-            f"{compute_word_score(wr, waw)} "
+            f"{compute_word_score(wr, waw)}/{modifier_threshold_display(modifier, threshold)} "
             f"({pretty_symbol_display('S', wr.n_seen)}"
             f"{pretty_symbol_display('L', wr.n_lookups)}" 
             f"{pretty_symbol_display('T', wr.anki_mature_tgt)}"

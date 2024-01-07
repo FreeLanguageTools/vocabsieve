@@ -55,6 +55,7 @@ class MainWindow(MainWindowBase):
         self.last_target_word_id: int = -1
         self.last_added_note_id: int = -1
         self.previous_word: str = ""
+        self.cognates: set[str] = set()
         app.applicationStateChanged.connect(self.onApplicationStateChanged)
         self.setupMenu()
         self.setupButtons()
@@ -318,21 +319,22 @@ class MainWindow(MainWindowBase):
             known_threshold_cognate = self.settings.value('tracking/known_threshold_cognate', 25, type=int)
             known_words: list[str] = []
             known_cognates: list[str] = []
-            cognates: set[str] = set()
+            self.cognates: set[str] = set()
             if self.dictdb.hasCognatesData():
                 known_langs = self.settings.value('tracking/known_langs', 'en').split(",")
-                cognates = self.dictdb.getCognatesData(langcode, known_langs)
+                self.cognates = self.dictdb.getCognatesData(langcode, known_langs)
             waw = self.getWordActionWeights()
             for word, word_record in self.known_data.items():
                 score=compute_word_score(word_record, waw)
                 if score >= known_threshold:
                     known_words.append(word)
-                elif (score >= known_threshold_cognate) and (word in cognates):
+                elif (score >= known_threshold_cognate) and (word in self.cognates):
                     known_words.append(word)
                     known_cognates.append(word)
             return known_words, known_cognates
         else:
             return [], []
+    
             
 
     def exportKnownWords(self):
@@ -702,7 +704,9 @@ class MainWindow(MainWindowBase):
                 lemma, 
                 WordRecord(lemma=lemma, language=langcode)
                 )
-            self.word_record_display.setWordRecord(word_record, self.getWordActionWeights())
+            threshold = self.settings.value("tracking/known_threshold", 100, type=int) if lemma not in self.cognates else self.settings.value("tracking/known_threshold_cognate", 25, type=int)
+            modifier = self.rec.getModifier(langcode, lemma)
+            self.word_record_display.setWordRecord(word_record, self.getWordActionWeights(), threshold, modifier)
 
         lookup1_result_success = self.definition.lookup(target, no_lemma)
         lookup2_result_success = self.settings.value("sg2_enabled", False, type=bool) and self.definition2.lookup(target, no_lemma)
