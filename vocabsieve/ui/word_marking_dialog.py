@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QVBoxLayout, QDialog, QLabel, QGridLayout, QWidget, 
 from PyQt5.QtGui import QMouseEvent
 from PyQt5.QtCore import Qt
 
+
 from ..models import WordRecord
 from .main_window_base import MainWindowBase
 from ..tools import compute_word_score
@@ -11,14 +12,14 @@ class TogglableLabel(QLabel):
     def __init__(self, parent: "WordGridWidget"):
         super().__init__()
         self.parent_ = parent
-        self.rec = parent.rec
+        self.rec = parent.rec # type: ignore
         self.langcode = settings.value("target_language", "en")
         self.mousePressEvent = self.onClicked
         self.word = ""
 
     def setText(self, text: str):
-        self.score = compute_word_score(self.parent_.known_data.get(text, WordRecord(text, self.langcode)), self.parent_.waw)
-        self.threshold = settings.value("tracking/known_threshold", 100, type=int) if text not in self.parent_.cognates else settings.value("tracking/known_threshold_cognate", 25, type=int)
+        self.score = compute_word_score(self.parent_.known_data.get(text, WordRecord(text, self.langcode)), self.parent_.waw) # type: ignore
+        self.threshold: int = settings.value("tracking/known_threshold", 100, type=int) if text not in self.parent_.cognates else settings.value("tracking/known_threshold_cognate", 25, type=int) # type: ignore
         self.modifier: float = self.rec.getModifier(self.langcode, text)
         self.known = False
         stylesheet = "border: 2px solid transparent; border-radius: 5px; padding: 4px;"
@@ -67,7 +68,7 @@ class WordGridWidget(QWidget):
         self.rec = parent.rec
         self.waw = parent.waw
         self.cognates = parent.cognates
-        self.known_data, _ = self.rec.getKnownData()
+        self.known_data, _ = parent.rec.getKnownData()
         self.layout_ = QGridLayout(self)
         self.index_offset_label = QLabel("<b>Rank 0</b>")
         self.layout_.addWidget(self.index_offset_label, 0, 0, 1, COLS-2)

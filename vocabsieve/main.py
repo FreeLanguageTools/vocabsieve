@@ -6,7 +6,7 @@ import sys
 import time
 import re
 from datetime import datetime
-from typing import Optional
+from typing import Optional, cast
 from pytest import mark
 import requests
 from packaging import version
@@ -319,7 +319,7 @@ class MainWindow(MainWindowBase):
             known_threshold_cognate = self.settings.value('tracking/known_threshold_cognate', 25, type=int)
             known_words: list[str] = []
             known_cognates: list[str] = []
-            self.cognates: set[str] = set()
+            self.cognates = set()
             if self.dictdb.hasCognatesData():
                 known_langs = self.settings.value('tracking/known_langs', 'en').split(",")
                 self.cognates = self.dictdb.getCognatesData(langcode, known_langs)
@@ -677,7 +677,7 @@ class MainWindow(MainWindowBase):
 
             if notes_found:
                 logger.debug(f"Found notes for \"{word}\": {notes_found}")
-                return notes_found
+                return cast(list[int], notes_found)
             else:
                 logger.debug("Did not find Anki note")
                 return []

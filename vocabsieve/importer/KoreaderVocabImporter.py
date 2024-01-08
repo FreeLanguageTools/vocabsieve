@@ -3,7 +3,7 @@ import sqlite3
 from datetime import datetime as dt
 from PyQt5.QtWidgets import QLabel
 from slpp import slpp
-
+from typing import TYPE_CHECKING
 from .GenericImporter import GenericImporter
 from .utils import koreader_scandir, findDBpath, findHistoryPath
 from .models import ReadingNote
@@ -12,6 +12,8 @@ from ..global_names import settings
 from ..ui.main_window_base import MainWindowBase
 import time
 
+if TYPE_CHECKING:
+    from ..main import MainWindow
 
 def getBookMetadata(path):
     _, ext = os.path.splitext(path)
@@ -32,7 +34,7 @@ def getBookMetadata(path):
 
 
 class KoreaderVocabImporter(GenericImporter):
-    def __init__(self, parent: MainWindowBase, path):
+    def __init__(self, parent: "MainWindow", path):
         self.splitter = parent.splitter
         super().__init__(parent, "KOReader vocab builder", path, "koreader-vocab")
 

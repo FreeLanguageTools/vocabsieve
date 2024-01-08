@@ -4,7 +4,7 @@ import os
 import time
 import re
 from bidict import bidict
-from typing import Optional
+from typing import Optional, cast
 import json
 from PyQt5.QtCore import QSettings
 from datetime import datetime
@@ -273,7 +273,7 @@ class Record():
             WHERE language=? AND lemma=?''', (language, lemma))
         value = self.c.fetchone()
         if value:
-            return value[0]
+            return cast(float, value[0])
         else:
             return 1.0
     

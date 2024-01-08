@@ -20,7 +20,7 @@ class SearchableTextEdit(QTextEdit):
         self.original: str = ""
 
     @pyqtSlot()
-    def mouseMoveEvent(self, e: QMouseEvent | None) -> None:
+    def mouseMoveEvent(self, e: QMouseEvent) -> None:
         super().mouseMoveEvent(e)
         if not settings.value("lookup_definition_when_hovering", True, type=bool):
             return
