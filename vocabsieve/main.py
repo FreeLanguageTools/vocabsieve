@@ -37,6 +37,7 @@ from .models import (DictionarySourceGroup, KnownMetadata, LookupRecord, SRSNote
                      WordRecord)
 from sentence_splitter import SentenceSplitter
 from .lemmatizer import lem_word
+from .uncaught_hook import ExceptionCatcher
 
 
 class MainWindow(MainWindowBase):
@@ -45,6 +46,7 @@ class MainWindow(MainWindowBase):
     polled_selection_changed = pyqtSignal()
     def __init__(self) -> None:
         super().__init__()
+        self.catcher = ExceptionCatcher()
         self.datapath = datapath
         self.thread_manager = QThreadPool()
         self.known_data: Optional[dict[str, WordRecord]] = None
