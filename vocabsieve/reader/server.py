@@ -1,5 +1,6 @@
 from flask import Flask, render_template, flash, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
+from gevent.pywsgi import WSGIServer
 from datetime import datetime
 from werkzeug.utils import secure_filename
 import os
@@ -139,12 +140,8 @@ class ReaderServer(QObject):
             Text.query.filter_by(id=id).delete()
             db.session.commit()
             return ('', 204)
-
-        app.run(
-            debug=False,
-            use_reloader=False,
-            host=self.host,
-            port=self.port)
+        http_server = WSGIServer((self.host, self.port), app)
+        http_server.serve_forever()
 
 
 def add_book(book_obj):
@@ -158,4 +155,6 @@ def add_book(book_obj):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    http_server = WSGIServer(("127.0.0.1", "8000"), app)
+    http_server.serve_forever()
+
