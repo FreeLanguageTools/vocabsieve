@@ -26,10 +26,7 @@ class AudioPlayer:
       fpath = os.path.join(forvopath, lang, name)
       if not os.path.exists(fpath):
           res = requests.get(audiopath, headers=FORVO_HEADERS)
-
-          if res.status_code != 200:
-              # /TODO: Maybe display error to the user?
-              return ""
+          res.raise_for_status()
 
           os.makedirs(os.path.dirname(fpath), exist_ok=True)
           with open(fpath, 'bw') as file:
