@@ -594,7 +594,7 @@ class MainWindow(MainWindowBase):
         self.shortcut_web.activated.connect(self.web_button.animateClick)
         self.shortcut_clearimage = QShortcut(QKeySequence('Ctrl+W'), self)
         self.shortcut_clearimage.activated.connect(lambda: self.setImage(None))
-        self.shortcut_clearaudio = QShortcut(QKeySequence('Ctrl+X'), self)
+        self.shortcut_clearaudio = QShortcut(QKeySequence('Ctrl+Shift+X'), self)
         self.shortcut_clearaudio.activated.connect(self.audio_selector.discard_audio_button.animateClick)
 
     def getCurrentWord(self) -> str:
