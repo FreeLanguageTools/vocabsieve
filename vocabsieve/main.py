@@ -7,7 +7,6 @@ import time
 import re
 from datetime import datetime
 from typing import Optional, cast
-from pytest import mark
 import requests
 from packaging import version
 import platform
