@@ -31,11 +31,17 @@ class GenericImporter(QDialog):
     This class implements the UI for extracting highlights.
     Subclass it and override getNotes to have a new importer
     """
-    def __init__(self, parent: "MainWindow", src_name: str = "Generic", path: Optional[str] = None, methodname: str ="generic"):
+    def __init__(self, 
+                 parent: "MainWindow", 
+                 src_name: str = "Generic", 
+                 path: Optional[str] = None, 
+                 methodname: str = "generic", 
+                 allow_no_definition: bool = False):
         super().__init__(parent)
         self.settings = parent.settings
         self.notes: Optional[set[tuple[str, str]]] = None # Used for filtering
         self.lang = parent.settings.value('target_language')
+        self.allow_no_definition = allow_no_definition
         self.methodname = methodname
         self.setWindowTitle(f"Import {src_name}")
         self._parent: MainWindowBase = parent
@@ -176,8 +182,8 @@ class GenericImporter(QDialog):
                     definition2 = None
             else:
                 definition2 = None
-            if definition1 is None:
-                continue # TODO implement a way to add words without definition1
+            if not (definition1 or definition2) and not self.allow_no_definition:
+                continue
             count += 1
             self.definition_count_label.setText(
                 str(count) + " definitions found")
@@ -203,9 +209,15 @@ class GenericImporter(QDialog):
                 tags.append(self.methodname)
                 tags.append(note.book_name.replace(" ","_"))
 
+                # replace word with headword if it exists
+                if definition1 is not None:
+                    word = definition1.headword
+                elif definition2 is not None:
+                    word = definition2.headword
+
                 new_note_item = SRSNote(
-                        word=definition1.headword,
-                        sentence=sentence,
+                        word=word, # fine if no definition
+                        sentence=sentence, # fine if empty string
                         definition1=self._parent.definition.process_defi_anki(definition1) if definition1 is not None else None,
                         definition2=self._parent.definition2.process_defi_anki(definition2) if definition2 is not None else None,
                         audio_path=audio_path,

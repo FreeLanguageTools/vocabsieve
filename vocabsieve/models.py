@@ -48,7 +48,7 @@ class LookupRecord:
 
 @dataclass(frozen=True, slots=True)
 class SRSNote:
-    '''Represents an Anki note or other flashcard program'''
+    '''Represents an Anki note or other flashcard program, only word is required'''
     word: str
     sentence: Optional[str] = None
     definition1: Optional[str] = None
