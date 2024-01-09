@@ -67,9 +67,11 @@ class MainWindow(MainWindowBase):
 
         self.setupClipboardMonitor()
 
+
         if not self.settings.value("internal/configured"):
             self.configure()
             self.settings.setValue("internal/configured", True)
+
 
     def onApplicationStateChanged(self, state):
         if state == Qt.ApplicationActive:
@@ -80,9 +82,7 @@ class MainWindow(MainWindowBase):
         GlobalObject().addEventListener("hovered over", self.lookupHovered)
         cant_listen_to_clipboard = (os.environ.get("XDG_SESSION_TYPE") == "wayland" 
                                     or platform.system() == "Darwin")
-        if self.settings.value("primary", False, type=bool)\
-                and QClipboard.supportsSelection(QApplication.clipboard())\
-                and not os.environ.get("XDG_SESSION_TYPE") == "wayland": # No selection support on Wayland
+        if self.settings.value("primary", False, type=bool) and QClipboard.supportsSelection(QApplication.clipboard()):
             QApplication.clipboard().selectionChanged.connect(
                 lambda: self.clipboardChanged(selection=True))
         if not cant_listen_to_clipboard:
@@ -751,6 +751,9 @@ class MainWindow(MainWindowBase):
         """
         if selection:
             text = QApplication.clipboard().text(QClipboard.Selection) # type: ignore
+            # Ignore if empty, which happens when window loses focus
+            if not text.strip():
+                return
         else:
             # I am not sure how you can copy an image to PRIMARY
             # so here we go
