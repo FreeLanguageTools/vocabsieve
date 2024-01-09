@@ -38,7 +38,9 @@ build_exe_options = {
         "markdownify",
         "lzo",
         "readmdict",
-        "packaging"
+        "packaging",
+        "pynput",
+        "gevent"
         ],
     "include_files": include_files,
     "excludes": ["tkinter"],
