@@ -36,7 +36,9 @@ class GenericImporter(QDialog):
                  src_name: str = "Generic", 
                  path: Optional[str] = None, 
                  methodname: str = "generic", 
-                 allow_no_definition: bool = False):
+                 allow_no_definition: bool = False,
+                 show_selector_src: bool = True,
+                 show_selector_date: bool = True):
         super().__init__(parent)
         self.settings = parent.settings
         self.notes: Optional[set[tuple[str, str]]] = None # Used for filtering
@@ -53,44 +55,51 @@ class GenericImporter(QDialog):
             f"<h2>Import {src_name}</h2>"
         ))
         self.reading_notes = self.getNotes()
-        self.selected_reading_notes = self.reading_notes
 
+        self.lookup_button = QPushButton("Look up currently selected")
+        self.lookup_button.clicked.connect(self.defineWords)
 
         self.orig_dates = [note.date for note in self.reading_notes]
         self.orig_book_names = [note.book_name for note in self.reading_notes]
         self.orig_dates_day = [date[:10] for date in self.orig_dates]
-        possible_start_dates = sorted(set(self.orig_dates_day))
-        self.datewidget = QComboBox()
-        self.datewidget.addItems(possible_start_dates)
-        self.datewidget.currentTextChanged.connect(self.updateHighlightCount)
-        # Source selector, for selecting which books to include
-        self.src_selector = QWidget()
-        self.src_checkboxes = []
-        self.src_selector._layout = QVBoxLayout(self.src_selector) # type: ignore
-        self._layout.addRow(QLabel("<h3>Select books to extract highlights from</h3>"))
-
-        self.lookup_button = QPushButton("Look up currently selected")
-        self.lookup_button.clicked.connect(self.defineWords)
-        self.lookup_button.setEnabled(False)
-    
-        for book_name in set(self.orig_book_names):
-            self.src_checkboxes.append(
-                QCheckBox(truncate_middle(book_name, 90)))
-            self.src_selector._layout.addWidget(self.src_checkboxes[-1]) # type: ignore
-            self.src_checkboxes[-1].clicked.connect(self.updateHighlightCount)
-        
-        self.src_selector_scrollarea = QScrollArea()
-        self.src_selector_scrollarea.setWidget(self.src_selector)
-        self._layout.addRow(self.src_selector_scrollarea)
-        self._layout.addRow("Use notes starting from: ", self.datewidget)
-        self.notes_count_label = QLabel()
-        self._layout.addRow(self.notes_count_label, self.lookup_button)
         self.progressbar = QProgressBar()
         self.progressbar.setMinimum(0)
+        self.notes_count_label = QLabel()
+        self._layout.addRow(self.notes_count_label, self.lookup_button)
         self.definition_count_label = QLabel()
         self.anki_button = QPushButton("Add notes to Anki")
         self.anki_button.setEnabled(False)
         self.anki_button.clicked.connect(self.to_anki)
+        # Source selector, for selecting which books to include
+        if show_selector_src:
+            self.src_selector = QWidget()
+            self.src_checkboxes = []
+            self.src_selector._layout = QVBoxLayout(self.src_selector) # type: ignore
+            self._layout.addRow(QLabel("<h3>Select books to extract highlights from</h3>"))
+            for book_name in set(self.orig_book_names):
+                self.src_checkboxes.append(
+                    QCheckBox(truncate_middle(book_name, 90)))
+                self.src_selector._layout.addWidget(self.src_checkboxes[-1]) # type: ignore
+                self.src_checkboxes[-1].clicked.connect(self.updateHighlightCount)
+            self.src_selector_scrollarea = QScrollArea()
+            self.src_selector_scrollarea.setWidget(self.src_selector)
+            self._layout.addRow(self.src_selector_scrollarea)
+        else:
+            self.updateHighlightCount(filter=False)
+
+    
+        if show_selector_date:
+            self._layout.addRow("Use notes starting from: ", self.datewidget)
+            possible_start_dates = sorted(set(self.orig_dates_day))
+            self.datewidget = QComboBox()
+            self.datewidget.addItems(possible_start_dates)
+            self.datewidget.currentTextChanged.connect(self.updateHighlightCount)
+            try:
+                last_import_date = self._parent.settings.value(f'last_import_date_{self.methodname}', possible_start_dates[0])
+                self.datewidget.setCurrentText(max(d for d in possible_start_dates if d <= last_import_date))
+            except Exception:
+                pass
+
 
         self.preview_widget = BatchNotePreviewer()
         self.preview_widget.setMinimumHeight(300)
@@ -98,11 +107,6 @@ class GenericImporter(QDialog):
         self._layout.addRow(QLabel("Preview cards"), self.preview_widget)
         self._layout.addRow(self.progressbar)
         self._layout.addRow(self.definition_count_label, self.anki_button)
-        try:
-            last_import_date = self._parent.settings.value(f'last_import_date_{self.methodname}', possible_start_dates[0])
-            self.datewidget.setCurrentText(max(d for d in possible_start_dates if d <= last_import_date))
-        except Exception:
-            pass
 
 
 
@@ -116,18 +120,19 @@ class GenericImporter(QDialog):
         """
         raise NotImplementedError("Should be implemented by subclasses")
 
-    def updateHighlightCount(self):
-        start_date = self.datewidget.currentText()
-        selected_book_names = []
-        for checkbox in self.src_checkboxes:
-            if checkbox.isChecked():
-                selected_book_names.append(checkbox.text())
-        self.selected_reading_notes = self.filterHighlights(start_date, selected_book_names)
-        if self.selected_reading_notes:
-            self.lookup_button.setEnabled(True)
-            self.progressbar.setMaximum(len(self.selected_reading_notes)) 
+    def updateHighlightCount(self, filter: bool = True):
+        if filter:
+            start_date = self.datewidget.currentText()
+            selected_book_names = []
+            for checkbox in self.src_checkboxes:
+                if checkbox.isChecked():
+                    selected_book_names.append(checkbox.text())
+            self.selected_reading_notes = self.filterHighlights(start_date, selected_book_names)
+
         else:
-            self.lookup_button.setEnabled(False)
+            self.selected_reading_notes = self.reading_notes
+            self.progressbar.setMaximum(len(self.selected_reading_notes)) 
+        
         self.progressbar.setValue(0)
         self.notes_count_label.setText(f"{len(self.selected_reading_notes)} highlights selected")
 

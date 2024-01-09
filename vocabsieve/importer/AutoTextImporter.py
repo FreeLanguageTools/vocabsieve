@@ -19,7 +19,7 @@ class AutoTextImporter(GenericImporter):
         self.path: str = path
         self.splitter: SentenceSplitter= parent.splitter
         self.known_words, _ = parent.getKnownWords()
-        super().__init__(parent, "Auto vocab detection", path, "auto")
+        super().__init__(parent, "Auto vocab detection", path, "auto", show_selector_src=False, show_selector_date=False)
 
     def getNotes(self):
         chs = ebook2text(self.path)[0]
