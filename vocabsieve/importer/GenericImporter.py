@@ -227,6 +227,7 @@ class GenericImporter(QDialog):
                 self.preview_widget.appendNoteItem(new_note_item)
                 self.anki_notes.append(new_note_item)
             self.progressbar.setValue(n_looked_up+1)
+        self.progressbar.setValue(len(self.selected_reading_notes))
         
         # Unlock buttons again now
         self.lookup_button.setEnabled(True)
