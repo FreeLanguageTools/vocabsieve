@@ -126,6 +126,11 @@ class BookAnalyzer(QDialog):
         self.label_1t = QLabel()
         self.label_2t = QLabel()
         self.label_3t = QLabel()
+        self.label_0t.setToolTip("Sentences expected to be encountered, where you know all lemmas")
+        self.label_1t.setToolTip("Sentences expected to be encountered, where you know all but one lemma")
+        self.label_2t.setToolTip("Sentences expected to be encountered, where you know all but two lemmas")
+        self.label_3t.setToolTip("Sentences expected to be encountered, where at least three lemmas are unknown to you")
+
         sentence_target_counts = self.categorizeSentences(self.sentences, self.learning_rate_slider.value()/100)
 
         if sentence_target_counts is None:
@@ -153,7 +158,9 @@ class BookAnalyzer(QDialog):
             most_frequent_3t = [word for word, _ in occurrences_3t.most_common(n_cram)]
             tmp_known_words = self.known_words.union(set(most_frequent_3t))
             new_count_3t = [self.countTargets3(sentence, tmp_known_words) for sentence in sentences_3t].count(3)
-            self._layout.addWidget(QLabel(f"Cram {n_cram} words: {amount_and_percent(new_count_3t, len(self.sentences))} 3T sentences"), 8 + row, 1)
+            cram_widget = QLabel(f"Cram {n_cram} words: {amount_and_percent(new_count_3t, len(self.sentences))} ≥3T sentences")
+            cram_widget.setToolTip(f"After learning the {n_cram} most occuring words, the book would contain this many ≥3T sentences")
+            self._layout.addWidget(cram_widget, 8 + row, 1)
 
         print("Calculated cram words in " + str(time.time() - start) + " seconds.")
         
@@ -314,12 +321,12 @@ class BookAnalyzer(QDialog):
         self.plotwidget_sentences.plot(list(range(0, len(counts_0t)*window_size, window_size)), counts_0t, pen='#4e79a7', name="0T")
         self.plotwidget_sentences.plot(list(range(0, len(counts_1t)*window_size, window_size)), counts_1t, pen='#59a14f', name="1T")
         self.plotwidget_sentences.plot(list(range(0, len(counts_2t)*window_size, window_size)), counts_2t, pen='#f28e2b', name="2T")
-        self.plotwidget_sentences.plot(list(range(0, len(counts_3t)*window_size, window_size)), counts_3t, pen='#e15759', name=">3T")
+        self.plotwidget_sentences.plot(list(range(0, len(counts_3t)*window_size, window_size)), counts_3t, pen='#e15759', name="≥3T")
         
         self.label_0t.setText("0T: " + amount_and_percent(sentence_target_counts.count(0), len(sentence_target_counts)))
         self.label_1t.setText("1T: " + amount_and_percent(sentence_target_counts.count(1), len(sentence_target_counts)))
         self.label_2t.setText("2T: " + amount_and_percent(sentence_target_counts.count(2), len(sentence_target_counts)))
-        self.label_3t.setText(">3T: " + amount_and_percent(sentence_target_counts.count(3), len(sentence_target_counts)))
+        self.label_3t.setText("≥3T: " + amount_and_percent(sentence_target_counts.count(3), len(sentence_target_counts)))
         self.learned_words_count_label.setText(str(len(learned_words)) + " words will be learned")
         print("Categorization done in", time.time() - start, "seconds.")
         self.is_drawing = False
