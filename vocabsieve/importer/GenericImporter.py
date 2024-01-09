@@ -70,6 +70,17 @@ class GenericImporter(QDialog):
         self.anki_button = QPushButton("Add notes to Anki")
         self.anki_button.setEnabled(False)
         self.anki_button.clicked.connect(self.to_anki)
+        if show_selector_date:
+            possible_start_dates = sorted(set(self.orig_dates_day))
+            self.datewidget = QComboBox()
+            self._layout.addRow("Use notes starting from: ", self.datewidget)
+            self.datewidget.addItems(possible_start_dates)
+            try:
+                last_import_date = self._parent.settings.value(f'last_import_date_{self.methodname}', possible_start_dates[0])
+                self.datewidget.setCurrentText(max(d for d in possible_start_dates if d <= last_import_date))
+            except Exception:
+                pass
+            self.datewidget.currentTextChanged.connect(self.updateHighlightCount)
         # Source selector, for selecting which books to include
         if show_selector_src:
             self.src_selector = QWidget()
@@ -88,17 +99,6 @@ class GenericImporter(QDialog):
             self.updateHighlightCount(filter=False)
 
     
-        if show_selector_date:
-            self._layout.addRow("Use notes starting from: ", self.datewidget)
-            possible_start_dates = sorted(set(self.orig_dates_day))
-            self.datewidget = QComboBox()
-            self.datewidget.addItems(possible_start_dates)
-            self.datewidget.currentTextChanged.connect(self.updateHighlightCount)
-            try:
-                last_import_date = self._parent.settings.value(f'last_import_date_{self.methodname}', possible_start_dates[0])
-                self.datewidget.setCurrentText(max(d for d in possible_start_dates if d <= last_import_date))
-            except Exception:
-                pass
 
 
         self.preview_widget = BatchNotePreviewer()
@@ -128,10 +128,9 @@ class GenericImporter(QDialog):
                 if checkbox.isChecked():
                     selected_book_names.append(checkbox.text())
             self.selected_reading_notes = self.filterHighlights(start_date, selected_book_names)
-
         else:
             self.selected_reading_notes = self.reading_notes
-            self.progressbar.setMaximum(len(self.selected_reading_notes)) 
+        self.progressbar.setMaximum(len(self.selected_reading_notes)) 
         
         self.progressbar.setValue(0)
         self.notes_count_label.setText(f"{len(self.selected_reading_notes)} highlights selected")
