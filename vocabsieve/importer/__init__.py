@@ -1,3 +1,4 @@
 from .KindleVocabImporter import KindleVocabImporter
 from .KoreaderVocabImporter import KoreaderVocabImporter
 from .AutoTextImporter import AutoTextImporter
+from .WordListImporter import WordListImporter

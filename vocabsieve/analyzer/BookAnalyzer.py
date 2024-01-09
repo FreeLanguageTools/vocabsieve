@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QDialog, QGridLayout, QLabel, QHBoxLayout, QSlider, QWidget, QCheckBox, QSpinBox
+from PyQt5.QtWidgets import QDialog, QGridLayout, QLabel, QHBoxLayout, QSlider, QWidget, QCheckBox, QSpinBox, QPushButton, QFormLayout
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPalette
 import os
@@ -7,6 +7,7 @@ from ..tools import ebook2text, starts_with_cyrillic, prettydigits, amount_and_p
 import time
 from statistics import stdev, mean
 from ..lemmatizer import lem_word
+from ..importer import WordListImporter
 import itertools
 import random
 import numpy as np
@@ -153,14 +154,20 @@ class BookAnalyzer(QDialog):
         
         occurrences_3t = Counter(target_words_in_3t)
         # Get the most frequent words in 3t sentences
-        self._layout.addWidget(QLabel("<h3>Cram words</h3>"), 7, 1)
+        cram_widget_box = QWidget()
+        self._layout.addWidget(cram_widget_box, 7, 1, 5, 1)
+        cram_widget_box_layout = QFormLayout(cram_widget_box)
+        cram_widget_box_layout.addRow(QLabel("<h3>Cram words</h3>"))
+        cram_buttons = []
         for row, n_cram in enumerate([100, 200, 400, 800]):
             most_frequent_3t = [word for word, _ in occurrences_3t.most_common(n_cram)]
             tmp_known_words = self.known_words.union(set(most_frequent_3t))
             new_count_3t = [self.countTargets3(sentence, tmp_known_words) for sentence in sentences_3t].count(3)
             cram_widget = QLabel(f"Cram {n_cram} words: {amount_and_percent(new_count_3t, len(self.sentences))} ≥3T sentences")
             cram_widget.setToolTip(f"After learning the {n_cram} most occuring words, the book would contain this many ≥3T sentences")
-            self._layout.addWidget(cram_widget, 8 + row, 1)
+            cram_buttons.append(QPushButton("Import"))
+            cram_buttons[-1].clicked.connect(lambda _, words=most_frequent_3t: self.cramWords(words))    
+            cram_widget_box_layout.addRow(cram_widget, cram_buttons[-1])
 
         print("Calculated cram words in " + str(time.time() - start) + " seconds.")
         
@@ -221,6 +228,9 @@ class BookAnalyzer(QDialog):
         self.sentence_chart_step_size.setSingleStep(5)
         self.sentence_chart_step_size.setMaximum(1000)
         self.sentence_chart_step_size.editingFinished.connect(self.updateSentenceChart)
+
+    def cramWords(self, words):
+        WordListImporter(self.parent, words).exec()
 
     def updateWordChart(self, words, step_size=100):
         if self.is_drawing:
