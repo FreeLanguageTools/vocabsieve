@@ -8,6 +8,7 @@ import time
 from statistics import stdev, mean
 from ..lemmatizer import lem_word
 from ..importer import WordListImporter
+from ..global_names import logger
 import itertools
 import random
 import numpy as np
@@ -19,6 +20,7 @@ freeze_support()
 
 class BookAnalyzer(QDialog):
     def __init__(self, parent, path):
+        logger.debug("Initializing BookAnalyzer")
         super().__init__(parent)
         self.parent = parent
         self.path = path
@@ -41,11 +43,9 @@ class BookAnalyzer(QDialog):
             self.known_words = set([word for word in self.known_words if starts_with_cyrillic(word)])
         else:
             self.known_words = set([word for word in self.known_words])
-        
+        logger.debug(f"Known words: {len(self.known_words)}")
         self.content = "\n".join(self.chapters)
         
-        print(self.langcode)
-        print(len(self.known_words))
         self._layout.addWidget(QLabel("<h2>General info</h2>"), 2, 0, 1, 2)
         self.basic_info_left += "Total characters: " + prettydigits(len(self.content))
         self.basic_info_left += "<br>Total words: " + prettydigits(len(self.content.split()))
@@ -58,11 +58,11 @@ class BookAnalyzer(QDialog):
                 p.starmap(self.splitter.split, ((ch,) for ch in self.chapters))
                 ) 
             if sentence)
-        print(f"Split book in " + str(time.time() - start) + " seconds.")
+        logger.debug(f"Split book in " + str(time.time() - start) + " seconds.")
     
         start = time.time()
         self.words = list(p.starmap(lem_word, ((word, self.langcode) for word in self.content.split())))
-        print(f"Lemmatized book in " + str(time.time() - start) + " seconds.")
+        logger.debug(f"Lemmatized book in " + str(time.time() - start) + " seconds.")
         p.close()
         unique_words_3k = []
         unique_words_10k = []
@@ -169,7 +169,7 @@ class BookAnalyzer(QDialog):
             cram_buttons[-1].clicked.connect(lambda _, words=most_frequent_3t: self.cramWords(words))    
             cram_widget_box_layout.addRow(cram_widget, cram_buttons[-1])
 
-        print("Calculated cram words in " + str(time.time() - start) + " seconds.")
+        logger.debug("Calculated cram words in " + str(time.time() - start) + " seconds.")
         
         verdict = ""
 
@@ -194,7 +194,7 @@ class BookAnalyzer(QDialog):
         if self.ch_pos:
             # convert character positions to word positions
             self.ch_pos_word = {len(self.content[:pos].split()): name for pos, name in self.ch_pos.items()}
-            print("Converted character positions to word positions in", time.time() - start, "seconds.")
+            logger.debug(f"Converted character positions to word positions in {time.time() - start} seconds.")
             start = time.time()
             # convert character positions to sentence positions
             self.ch_pos_sent = {}
@@ -207,9 +207,9 @@ class BookAnalyzer(QDialog):
                         del self.ch_pos[next(iter(self.ch_pos))]
                 except StopIteration:
                     pass
-            print("Converted character positions to sentence positions in", time.time() - start, "seconds.")
+            logger.debug(f"Converted character positions to sentence positions in { time.time() - start } seconds.")
             self.addChapterAxes()
-        print("Chapter axes added in", time.time() - start, "seconds.")
+        logger.debug(f"Chapter axes added in {time.time() - start} seconds.")
 
         self._layout.addWidget(QLabel("Word chart step size:"), 14, 0)
         self.word_chart_step_size = QSpinBox()
@@ -256,7 +256,7 @@ class BookAnalyzer(QDialog):
                 startlens.append(len(already_seen))
                 unique_count.append(len(set(w) - self.known_words))
 
-        print("Calculated unique unknown words in " + str(time.time() - start) + " seconds.")
+        logger.debug("Calculated unique unknown words in " + str(time.time() - start) + " seconds.")
 
         self.plotwidget_words.clear()
         self.plotwidget_words.plot(list(range(0, len(unique_count)*step_size, step_size)), unique_count, pen='#4e79a7', name="Unique unknown words")
@@ -301,7 +301,7 @@ class BookAnalyzer(QDialog):
         if window_size is None:
             window_size = self.settings.value("analyzer/sentence_window_size", 80, type=int)
         start = time.time()
-        print("Categorizing sentences at learning rate", learning_rate)
+        logger.debug(f"Categorizing sentences at learning rate { learning_rate }")
         counts_0t = []
         counts_1t = []
         counts_2t = []
@@ -338,7 +338,9 @@ class BookAnalyzer(QDialog):
         self.label_2t.setText("2T: " + amount_and_percent(sentence_target_counts.count(2), len(sentence_target_counts)))
         self.label_3t.setText("≥3T: " + amount_and_percent(sentence_target_counts.count(3), len(sentence_target_counts)))
         self.learned_words_count_label.setText(str(len(learned_words)) + " words will be learned")
-        print("Categorization done in", time.time() - start, "seconds.")
+
+        logger.debug(f"Categorization done in { time.time() - start } seconds.")
+
         self.is_drawing = False
         return sentence_target_counts
 
