@@ -160,43 +160,42 @@ class GenericImporter(QDialog):
             self.lastDate = max(note.date, self.lastDate)
             # Remove punctuations
             word = re.sub('[\\?\\.!«»…,()\\[\\]]*', "", note.lookup_term)
-            if note.sentence:
-                if self.settings.value("bold_word", True, type=bool):
-                    sentence = note.sentence.replace("_", "").replace(word, f"<strong>{word}</strong>")
-                else:
-                    sentence = note.sentence
-                    
-                if defi1.getDefinitions(word):
-                    definition1 = defi1.getDefinitions(word)[0]
-                else:
-                    definition1 = None
-                if definition2_enabled:
-                    if defi2.getDefinitions(word):
-                        definition2 = defi2.getDefinitions(word)[0]
-                    else:
-                        definition2 = None
+            if self.settings.value("bold_word", True, type=bool):
+                sentence = note.sentence.replace("_", "").replace(word, f"<strong>{word}</strong>")
+            else:
+                sentence = note.sentence
+                
+            if defi1.getDefinitions(word):
+                definition1 = defi1.getDefinitions(word)[0]
+            else:
+                definition1 = None
+            if definition2_enabled:
+                if defi2.getDefinitions(word):
+                    definition2 = defi2.getDefinitions(word)[0]
                 else:
                     definition2 = None
-                if definition1 is None:
-                    continue # TODO implement a way to add words without definition1
-                count += 1
-                self.definition_count_label.setText(
-                    str(count) + " definitions found")
-                QCoreApplication.processEvents()
+            else:
+                definition2 = None
+            if definition1 is None:
+                continue # TODO implement a way to add words without definition1
+            count += 1
+            self.definition_count_label.setText(
+                str(count) + " definitions found")
+            QCoreApplication.processEvents()
 
-                audio_path = ""
-                if json.loads(self.settings.value("audio_sg", "[]")) != []:
-                    try:
-                        audio_definitions = self._parent.audio_selector.getDefinitions(word)
-                        if audio_definitions and audio_definitions[0].audios is not None:
-                            audios = audio_definitions[0].audios
-                        else:
-                            audios = {}
-                    except Exception:
+            audio_path = ""
+            if json.loads(self.settings.value("audio_sg", "[]")) != []:
+                try:
+                    audio_definitions = self._parent.audio_selector.getDefinitions(word)
+                    if audio_definitions and audio_definitions[0].audios is not None:
+                        audios = audio_definitions[0].audios
+                    else:
                         audios = {}
-                    if audios:
-                        # First item
-                        audio_path = audios[next(iter(audios))]
+                except Exception:
+                    audios = {}
+                if audios:
+                    # First item
+                    audio_path = audios[next(iter(audios))]
 
                 tags = []
                 if self.settings.value("tags", "vocabsieve").strip():
