@@ -36,14 +36,12 @@ class GenericImporter(QDialog):
                  src_name: str = "Generic", 
                  path: Optional[str] = None, 
                  methodname: str = "generic", 
-                 allow_no_definition: bool = False,
                  show_selector_src: bool = True,
                  show_selector_date: bool = True):
         super().__init__(parent)
         self.settings = parent.settings
         self.notes: Optional[set[tuple[str, str]]] = None # Used for filtering
         self.lang = parent.settings.value('target_language')
-        self.allow_no_definition = allow_no_definition
         self.methodname = methodname
         self.setWindowTitle(f"Import {src_name}")
         self._parent: MainWindowBase = parent
@@ -58,6 +56,8 @@ class GenericImporter(QDialog):
 
         self.lookup_button = QPushButton("Look up currently selected")
         self.lookup_button.clicked.connect(self.defineWords)
+        self.add_even_if_no_defi = QCheckBox("Add even if no definition found")
+        self._layout.addRow(self.add_even_if_no_defi)
 
         self.orig_dates = [note.date for note in self.reading_notes]
         self.orig_book_names = [note.book_name for note in self.reading_notes]
@@ -153,7 +153,6 @@ class GenericImporter(QDialog):
 
 
     def defineWords(self) -> None:
-        add_even_if_no_definition = self.settings.value("add_even_if_no_definition", False, type=bool)
         self.anki_notes: list[SRSNote] = []
         self.book_names: list[str] = []
         self.lastDate = "1970-01-01 00:00:00"
@@ -180,18 +179,15 @@ class GenericImporter(QDialog):
                 definition1 = defi1.getDefinitions(word)[0]
             else:
                 definition1 = None
-            if definition2_enabled:
-                if defi2.getDefinitions(word):
+            if definition2_enabled and defi2.getDefinitions(word):
                     definition2 = defi2.getDefinitions(word)[0]
-                else:
-                    definition2 = None
             else:
                 definition2 = None
-            if not (definition1 or definition2) and not self.allow_no_definition:
+            if not (definition1 or definition2) and not self.add_even_if_no_defi.isChecked():
                 continue
             count += 1
             self.definition_count_label.setText(
-                str(count) + " definitions found")
+                str(count) + " notes will be sent")
             QCoreApplication.processEvents()
 
             audio_path = ""
