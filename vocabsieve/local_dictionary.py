@@ -177,7 +177,11 @@ class LocalDictionary():
             with zopen(path) as f:
                 data = json.load(f)
                 for item in data:
-                    d[self.regularize_headword(item['term'])] = item['definition']
+                    key = self.regularize_headword(item['term'])
+                    if not d.get(key): # fix for duplicate entries
+                        d[key] = item['definition']
+                    else:
+                        d[key] += "\n" + item['definition']
                 self.importdict(d, lang, name)
         elif dicttype == "freq":
             with zopen(path) as f:
