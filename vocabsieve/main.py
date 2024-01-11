@@ -220,8 +220,10 @@ class MainWindow(MainWindowBase):
 
         self.open_reader_action = QAction("&Reader")
         self.config_action = QAction("&Configure")
+        self.config_action.setMenuRole(QAction.PreferencesRole)
         self.stats_action = QAction("S&tatistics")
         self.help_action = QAction("&Setup guide")
+        self.help_action.setMenuRole(QAction.ApplicationSpecificRole)
         self.about_action = QAction("&About")
         self.content_manager_action = QAction("Content Manager")
         self.analyze_book_action = QAction("Analyze book")

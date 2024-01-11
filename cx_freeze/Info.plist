@@ -8,6 +8,8 @@
 	<string>vocabsieve</string>
 	<key>CFBundleExecutable</key>
 	<string>app</string>
+	<key>CFBundleName</key>
+	<string>VocabSieve</string>
 	<key>CFBundleIconFile</key>
 	<string>icon.icns</string>
 	<key>CFBundleIdentifier</key>

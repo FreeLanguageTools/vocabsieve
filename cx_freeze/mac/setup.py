@@ -8,7 +8,8 @@ include_files = [
     ('../../vocabsieve/reader/templates/',
      'lib/vocabsieve/reader/templates/'),
     ('../../vocabsieve/reader/static/',
-     'lib/vocabsieve/reader/static/')]
+     'lib/vocabsieve/reader/static/')] 
+
 build_exe_options = {
     "includes": [
         "vocabsieve",
@@ -38,8 +39,11 @@ build_exe_options = {
         "markdownify",
         "lzo",
         "readmdict",
+        "requests",
         "packaging",
         "pynput",
+        "pynput.keyboard._darwin",
+        "pynput.mouse._darwin",
         "gevent"
         ],
     "include_files": include_files,
