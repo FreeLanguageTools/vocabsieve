@@ -73,7 +73,7 @@ class KoreaderVocabImporter(GenericImporter):
             #print(word, title_id)
             if title_id in bookmap:
                 if prev_context and next_context:
-                    ctx = prev_context + word + next_context
+                    ctx = prev_context.strip() + f" {word} " + next_context.strip() # ensure space before and after
                 else:
                     continue
                 sentence = ""
