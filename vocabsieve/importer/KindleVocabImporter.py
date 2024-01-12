@@ -57,7 +57,9 @@ class KindleVocabImporter(GenericImporter):
         lookups_count_before = self._parent.rec.countLookups(langcode)
         for _, lword, bookid, _, _, sentence, timestamp in cur.execute("SELECT * FROM lookups"):
             if lword.startswith(langcode):
-                word = lword.removeprefix(langcode+":")
+                #word = lword.removeprefix(langcode+":")
+                # Remove language code , which may have a suffix for region
+                word = ":".join(lword.split(":")[1:]) # maybe some languages use colons, I don't know
                 count += 1
                 self._parent.rec.recordLookup(
                     LookupRecord(

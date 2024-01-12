@@ -153,6 +153,7 @@ class GenericImporter(QDialog):
 
 
     def defineWords(self) -> None:
+        logger.info(f"Define words triggered on {len(self.selected_reading_notes)} notes")
         self.anki_notes: list[SRSNote] = []
         self.book_names: list[str] = []
         self.lastDate = "1970-01-01 00:00:00"
@@ -167,6 +168,7 @@ class GenericImporter(QDialog):
         count = 0
         for n_looked_up, note in enumerate(self.selected_reading_notes):
             QCoreApplication.processEvents()
+            logger.debug(f"Handling reading note: {note}")
             self.lastDate = max(note.date, self.lastDate)
             # Remove punctuations
             word = re.sub('[\\?\\.!«»…,()\\[\\]]*', "", note.lookup_term)
@@ -204,28 +206,28 @@ class GenericImporter(QDialog):
                     # First item
                     audio_path = audios[next(iter(audios))]
 
-                tags = []
-                if self.settings.value("tags", "vocabsieve").strip():
-                    tags.extend(self.settings.value("tags", "vocabsieve").strip().split())
-                tags.append(self.methodname)
-                tags.append(note.book_name.replace(" ","_"))
+            tags = []
+            if self.settings.value("tags", "vocabsieve").strip():
+                tags.extend(self.settings.value("tags", "vocabsieve").strip().split())
+            tags.append(self.methodname)
+            tags.append(note.book_name.replace(" ","_"))
 
-                # replace word with headword if it exists
-                if definition1 is not None:
-                    word = definition1.headword
-                elif definition2 is not None:
-                    word = definition2.headword
+            # replace word with headword if it exists
+            if definition1 is not None:
+                word = definition1.headword
+            elif definition2 is not None:
+                word = definition2.headword
 
-                new_note_item = SRSNote(
-                        word=word, # fine if no definition
-                        sentence=sentence, # fine if empty string
-                        definition1=self._parent.definition.process_defi_anki(definition1) if definition1 is not None else None,
-                        definition2=self._parent.definition2.process_defi_anki(definition2) if definition2 is not None else None,
-                        audio_path=audio_path,
-                        tags=tags
-                        )
-                self.preview_widget.appendNoteItem(new_note_item)
-                self.anki_notes.append(new_note_item)
+            new_note_item = SRSNote(
+                    word=word, # fine if no definition
+                    sentence=sentence, # fine if empty string
+                    definition1=self._parent.definition.process_defi_anki(definition1) if definition1 is not None else None,
+                    definition2=self._parent.definition2.process_defi_anki(definition2) if definition2 is not None else None,
+                    audio_path=audio_path or None,
+                    tags=tags
+                    )
+            self.preview_widget.appendNoteItem(new_note_item)
+            self.anki_notes.append(new_note_item)
             self.progressbar.setValue(n_looked_up+1)
         self.progressbar.setValue(len(self.selected_reading_notes))
         
