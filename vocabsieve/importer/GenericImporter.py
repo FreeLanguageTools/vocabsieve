@@ -11,13 +11,12 @@ from .utils import truncate_middle
 
 import re
 import json
-
-from vocabsieve.tools import addNotes
 from datetime import datetime as dt
 from .BatchNotePreviewer import BatchNotePreviewer
 from .models import ReadingNote
 from ..models import SRSNote
-from ..tools import prepareAnkiNoteDict
+from ..tools import prepareAnkiNoteDict, addNotes
+from ..global_names import logger
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
@@ -120,12 +119,14 @@ class GenericImporter(QDialog):
         """
         raise NotImplementedError("Should be implemented by subclasses")
 
-    def updateHighlightCount(self, filter: bool = True):
+    def updateHighlightCount(self, _=False, filter: bool = True):
         if filter:
+            logger.debug("Filtering highlights by book")
             start_date = self.datewidget.currentText()
             selected_book_names = []
             for checkbox in self.src_checkboxes:
                 if checkbox.isChecked():
+                    logger.debug(f"Selected book: {checkbox.text()}")
                     selected_book_names.append(checkbox.text())
             self.selected_reading_notes = self.filterHighlights(start_date, selected_book_names)
         else:
