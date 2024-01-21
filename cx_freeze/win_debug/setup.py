@@ -40,6 +40,8 @@ build_exe_options = {
         "readmdict",
         "packaging",
         "pynput",
+        "pynput.keyboard._win32",
+        "pynput.mouse._win32",
         "gevent"
         ],
     "include_files": include_files,
