@@ -21,7 +21,8 @@ from ..models import AnkiSettings, WordActionWeights, KeyAction
 import platform
 import os
 from sentence_splitter import SentenceSplitter
-import keyboard
+from pynput import keyboard
+
 
 # If on macOS, display the modifier key as "Cmd", else display it as "Ctrl".
 # For whatever reason, Qt automatically uses Cmd key when Ctrl is specified on Mac
@@ -54,9 +55,9 @@ class MainWindowBase(QMainWindow):
         self.setupWidgetsV()
 
         # Setup Key monitoring to monitor the shit key
-        self.shift_monitor = ShiftMonitor()
-        self.shift_monitor.keyEvent.connect(self.monitorEvent)
-        self.shift_monitor.start_monitoring()
+        self.monitor = KeyMonitor()
+        self.monitor.keyEvent.connect(self.monitorEvent)
+        self.monitor.start_monitoring()
         self.shift_pressed: bool = False
 
     def monitorEvent(self, action):
@@ -252,24 +253,24 @@ class MainWindowBase(QMainWindow):
         )
 
 
-class ShiftMonitor(QObject):
+class KeyMonitor(QObject):
     """Monitors the activity of the shift key"""
-    keyEvent = pyqtSignal(KeyAction) 
-
+    keyEvent = pyqtSignal(KeyAction)
+    
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.listener = keyboard.Listener(on_press=self.on_press,on_release=self.on_release)
 
-    def callback(self, event: keyboard.KeyboardEvent):
-        match event.event_type:
-            case keyboard.KEY_DOWN:
-                self.keyEvent.emit(KeyAction.pressed)
-            case keyboard.KEY_UP:
-                self.keyEvent.emit(KeyAction.released)
-            case _:
-                pass
+    def on_press(self, key):
+        if key == keyboard.Key.shift:
+            self.keyEvent.emit(KeyAction.pressed)
 
-    def start_monitoring(self):
-        self.event_handler = keyboard.hook_key('shift', self.callback)
+    def on_release(self, key):
+        if key == keyboard.Key.shift:
+            self.keyEvent.emit(KeyAction.released)
 
     def stop_monitoring(self):
-        keyboard.unhook_key(self.event_handler)
+        self.listener.stop()
+
+    def start_monitoring(self):
+        self.listener.start()   
