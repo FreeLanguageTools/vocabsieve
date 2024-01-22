@@ -8,7 +8,7 @@ from .audio_selector import AudioSelector
 from .multi_definition_widget import MultiDefinitionWidget
 from .word_record_display import WordRecordDisplay
 
-from ..global_names import app_title, settings, datapath, MOD
+from ..global_names import app_title, settings, datapath, MOD, logger
 
 from ..record import Record
 from ..local_dictionary import LocalDictionary
@@ -20,7 +20,7 @@ from ..models import AnkiSettings, WordActionWeights, KeyAction
 
 import platform
 import os
-from sentence_splitter import SentenceSplitter
+from sentence_splitter import SentenceSplitter, SentenceSplitterException
 from pynput import keyboard
 
 
@@ -38,7 +38,11 @@ class MainWindowBase(QMainWindow):
         self.settings = settings
         self.rec = Record(self.settings, datapath)
         self.dictdb = LocalDictionary(datapath)
-        self.splitter = SentenceSplitter(language=self.settings.value("target_language", "en"))
+        try:
+            self.splitter = SentenceSplitter(language=self.settings.value("target_language", "en"))
+        except SentenceSplitterException:
+            logger.error("Sentence splitter failed to initialize. Falling back to English.")
+            self.splitter = SentenceSplitter(language="en")
         self.setCentralWidget(self.widget)
         self.previousWord = ""
         self.audio_path = ""
