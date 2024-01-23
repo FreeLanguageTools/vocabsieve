@@ -130,7 +130,6 @@ class MainWindow(MainWindowBase):
         self.sg1 = make_source_group(sg1_src_list, self.dictdb)
         self.definition.setSourceGroup(self.sg1)
         logger.debug(f"Source Group 1: {sg1_src_list} has been created.")
-        self.splitter = SentenceSplitter(language=self.settings.value("target_language", "en"))
 
         if self.settings.value("freq_source", "<disabled>") != "<disabled>":
             self.freq_widget.setSource(make_freq_source(self.settings.value("freq_source"), self.dictdb))
