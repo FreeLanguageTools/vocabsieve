@@ -1029,7 +1029,7 @@ def main():
     w.audio_selector.alignDiscardButton() # fix annoying issue of misalignment
     try:
         app.exec()
-        if not w.is_linux:
+        if not w.is_wayland:
             w.monitor.stop_monitoring()
     except KeyboardInterrupt:
         print("Exiting...")

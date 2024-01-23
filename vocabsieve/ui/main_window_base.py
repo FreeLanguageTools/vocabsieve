@@ -48,7 +48,7 @@ class MainWindowBase(QMainWindow):
         self.audio_path = ""
         self.prev_clipboard = ""
         self.image_path = ""
-        self.is_linux = platform.system() == "Linux"
+        self.is_wayland = os.environ.get("XDG_SESSION_TYPE") == "wayland"
 
         self.scaleFont()
         self.initWidgets()
@@ -60,7 +60,7 @@ class MainWindowBase(QMainWindow):
         self.setupWidgetsV()
 
         # Setup Key monitoring to monitor the shit key
-        if not self.is_linux:
+        if not self.is_wayland:
             self.monitor = ShiftMonitor()
             self.monitor.keyEvent.connect(self.shiftMonitorEvent)
             self.monitor.start_monitoring()
@@ -78,13 +78,13 @@ class MainWindowBase(QMainWindow):
 
 
     def keyPressEvent(self, event: QKeyEvent | None) -> None:
-        if self.is_linux and event.key() == Qt.Key.Key_Shift:
+        if self.is_wayland and event.key() == Qt.Key.Key_Shift:
             self.shift_pressed = True
         else:
             super().keyPressEvent(event)
     
     def keyReleaseEvent(self, event: QKeyEvent | None) -> None:
-        if self.is_linux and event.key() == Qt.Key.Key_Shift:
+        if self.is_wayland and event.key() == Qt.Key.Key_Shift:
             self.shift_pressed = False
         else:
             super().keyReleaseEvent(event)
