@@ -22,7 +22,7 @@ class AudioSelector(QListWidget):
 
         
         self.discard_audio_button.clicked.connect(self.clear)
-        self.discard_audio_button.setToolTip(f"Discard audio [{MOD}+X]")
+        self.discard_audio_button.setToolTip(f"Discard audio [{MOD}+Shift+X]")
         
         icon = self.style().standardIcon(QStyle.SP_TrashIcon)
         self.discard_audio_button.setIcon(icon)
