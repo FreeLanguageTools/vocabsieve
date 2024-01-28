@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QMainWindow, QWidget, QGridLayout, QLabel, QPushButton, QCheckBox, \
                         QStatusBar, QMenuBar, \
                         QSizePolicy, QApplication, QLineEdit
-from PyQt5.QtGui import  QDesktopServices
+from PyQt5.QtGui import  QDesktopServices, QKeyEvent
 from PyQt5.QtCore import QUrl, pyqtSignal, Qt, QObject, QEvent
 from .audio_selector import AudioSelector
 
@@ -48,6 +48,7 @@ class MainWindowBase(QMainWindow):
         self.audio_path = ""
         self.prev_clipboard = ""
         self.image_path = ""
+        self.is_wayland = os.environ.get("XDG_SESSION_TYPE") == "wayland"
 
         self.scaleFont()
         self.initWidgets()
@@ -59,12 +60,14 @@ class MainWindowBase(QMainWindow):
         self.setupWidgetsV()
 
         # Setup Key monitoring to monitor the shit key
-        self.monitor = KeyMonitor()
-        self.monitor.keyEvent.connect(self.monitorEvent)
-        self.monitor.start_monitoring()
+        if not self.is_wayland:
+            self.monitor = ShiftMonitor()
+            self.monitor.keyEvent.connect(self.shiftMonitorEvent)
+            self.monitor.start_monitoring()
+
         self.shift_pressed: bool = False
 
-    def monitorEvent(self, action):
+    def shiftMonitorEvent(self, action):
         match action:
             case KeyAction.pressed:
                 self.shift_pressed = True
@@ -73,6 +76,18 @@ class MainWindowBase(QMainWindow):
             case _:
                 self.shift_pressed = False
 
+
+    def keyPressEvent(self, event: QKeyEvent | None) -> None:
+        if self.is_wayland and event.key() == Qt.Key.Key_Shift:
+            self.shift_pressed = True
+        else:
+            super().keyPressEvent(event)
+    
+    def keyReleaseEvent(self, event: QKeyEvent | None) -> None:
+        if self.is_wayland and event.key() == Qt.Key.Key_Shift:
+            self.shift_pressed = False
+        else:
+            super().keyReleaseEvent(event)
 
     def scaleFont(self) -> None:
         font = QApplication.font()
@@ -257,7 +272,7 @@ class MainWindowBase(QMainWindow):
         )
 
 
-class KeyMonitor(QObject):
+class ShiftMonitor(QObject):
     """Monitors the activity of the shift key"""
     keyEvent = pyqtSignal(KeyAction)
     

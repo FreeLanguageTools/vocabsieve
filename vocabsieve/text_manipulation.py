@@ -56,7 +56,6 @@ def bold_word_in_text(
     language,
     use_lemmatize=True, 
     greedy_lemmatize=False):
-    print(text)
     if not use_lemmatize:
         return re.sub(word, lambda match: apply_bold(match.group(0)), text)
     else:
