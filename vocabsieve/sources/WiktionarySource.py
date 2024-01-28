@@ -32,7 +32,10 @@ class WiktionarySource(DictionarySource):
         if res.status_code != 200:
             return LookupResult(error=str(res.text))
         definitions = []
-        data = res.json()[self.langcode]
+        data = res.json()
+        if self.langcode not in data.keys():
+            return LookupResult(error="Word not defined in language")
+        data = data[self.langcode]
         for item in data:
             meanings = []
             for defn in item['definitions']:
