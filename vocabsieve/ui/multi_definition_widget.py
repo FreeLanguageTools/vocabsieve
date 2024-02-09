@@ -6,6 +6,7 @@ from ..models import Definition, DictionarySourceGroup, DisplayMode
 from ..tools import process_defi_anki
 from typing import Optional
 
+NEXT_DEFINITION_SCROLL_COUNT_TRANSITION_THRESHOLD = 3
 
 def sign(number):
     if number > 0:
@@ -38,6 +39,8 @@ class ButtonsBoxWidget(QWidget):
 
 
 class MultiDefinitionWidget(SearchableTextEdit):
+    nextDefinitionScrollTransitionCounter = 0
+
     def __init__(self, word_widget: Optional[QLineEdit] = None):
         super().__init__()
         self.sg = DictionarySourceGroup([])
@@ -64,6 +67,23 @@ class MultiDefinitionWidget(SearchableTextEdit):
         buttons_box_layout.addWidget(self.info_label)
         prev_button.clicked.connect(self.back)
         next_button.clicked.connect(self.forward)
+
+    def wheelEvent(self, event):
+        if self.verticalScrollBar().value() == self.verticalScrollBar().minimum() and event.angleDelta().y() > 0:
+            self.nextDefinitionScrollTransitionCounter+=1
+            if self.nextDefinitionScrollTransitionCounter > NEXT_DEFINITION_SCROLL_COUNT_TRANSITION_THRESHOLD:
+                self.back()
+
+        elif self.verticalScrollBar().value() == self.verticalScrollBar().maximum() and event.angleDelta().y() < 0:
+            self.nextDefinitionScrollTransitionCounter+=1
+            if self.nextDefinitionScrollTransitionCounter > NEXT_DEFINITION_SCROLL_COUNT_TRANSITION_THRESHOLD:
+                self.forward()
+
+        else:
+            self.nextDefinitionScrollTransitionCounter = 0
+
+        super(MultiDefinitionWidget, self).wheelEvent(event)
+
 
     def setSourceGroup(self, sg: DictionarySourceGroup):
         self.sg = sg
@@ -120,12 +140,14 @@ class MultiDefinitionWidget(SearchableTextEdit):
                 self.back()
 
     def back(self):
+        self.nextDefinitionScrollTransitionCounter = 0
         if self.currentIndex > 0:
             self.setCurrentIndex(self.currentIndex - 1)
         else:  # wrap around
             self.setCurrentIndex(len(self.definitions) - 1)
 
     def forward(self):
+        self.nextDefinitionScrollTransitionCounter = 0
         if self.currentIndex < len(self.definitions) - 1:
             self.setCurrentIndex(self.currentIndex + 1)
         else:  # wrap around
