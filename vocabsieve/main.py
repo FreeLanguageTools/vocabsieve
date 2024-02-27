@@ -232,6 +232,7 @@ class MainWindow(MainWindowBase):
         self.export_known_words_action = QAction("Export known words to JSON")
         self.export_word_scores_action = QAction("Export word scores to JSON")
         self.open_logs_action = QAction("View session logs")
+        self.open_data_folder_action = QAction("Open data folder")
 
         if not self.settings.value("reader_enabled", True, type=bool):
             self.open_reader_action.setEnabled(False)
@@ -242,6 +243,7 @@ class MainWindow(MainWindowBase):
         helpmenu.addAction(self.help_action)
         helpmenu.addAction(self.about_action)
         helpmenu.addAction(self.open_logs_action)
+        helpmenu.addAction(self.open_data_folder_action)
         recordmenu.addAction(self.content_manager_action)
         recordmenu.addAction(self.mark_words_action)
         analyzemenu.addAction(self.analyze_book_action)
@@ -273,6 +275,7 @@ class MainWindow(MainWindowBase):
         self.export_known_words_action.triggered.connect(self.exportKnownWords)
         self.export_word_scores_action.triggered.connect(self.exportWordData)
         self.mark_words_action.triggered.connect(self.markWords)
+        self.open_data_folder_action.triggered.connect(self.onOpenDataFolder)
 
         importmenu.addActions(
             [
@@ -299,7 +302,8 @@ class MainWindow(MainWindowBase):
         dialog = WordMarkingDialog(self, words)
         dialog.exec()
         
-        
+    def onOpenDataFolder(self):
+        QDesktopServices.openUrl(QUrl.fromLocalFile(datapath))
 
     def onAnalyzeBook(self):
         if self.checkAnkiConnect() and self.known_data is not None:
