@@ -243,7 +243,7 @@ def xdxf2text(xdxf_string: str) -> str:
 
 def parseCSV(path) -> dict[str, str]:
     newdict = {}
-    with open(path, newline="") as csvfile:
+    with open(path, newline="", encoding='utf-8') as csvfile:
         data = csv.reader(csvfile)
         for row in data:
             newdict[row[0]] = row[1]
@@ -252,7 +252,7 @@ def parseCSV(path) -> dict[str, str]:
 
 def parseTSV(path) -> dict[str, str]:
     newdict = {}
-    with open(path, newline="") as csvfile:
+    with open(path, newline="", encoding='utf-8') as csvfile:
         data = csv.reader(csvfile, delimiter="\t")
         for row in data:
             newdict[row[0]] = row[1]
