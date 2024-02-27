@@ -733,8 +733,8 @@ class MainWindow(MainWindowBase):
             self.image_viewer.setText("<center><b>&lt;No image selected&gt;</center>")
             self.image_path = ""
             return
-
         filename = str(int(time.time()*1000)) + '.' + self.settings.value("img_format", "jpg")
+        logger.debug(f"Received image, saving to disk as {filename}")
         self.image_path = os.path.join(datapath, "images", filename)
         content.save(
             self.image_path, quality=self.settings.value("img_quality", -1, type=int)
