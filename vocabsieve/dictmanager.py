@@ -5,6 +5,7 @@ from .constants import langcodes
 from .dictionary import getDictsForLang, getFreqlistsForLang, getAudioDictsForLang
 from .dictformats import supported_dict_formats, dictinfo
 import json
+from .tools import profile
 from .local_dictionary import LocalDictionary
 
 
@@ -121,6 +122,7 @@ to be reimported, otherwise this operation will fail.\
         self.refresh()
         self.showStats()
 
+    @profile
     def refresh(self):
         dicts = json.loads(self.settings.value("custom_dicts", '[]'))
         self.tview.clear()

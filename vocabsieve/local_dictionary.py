@@ -25,7 +25,10 @@ class LocalDictionary():
         try:
             self.c.execute("""
             CREATE UNIQUE INDEX IF NOT EXISTS dictionary_index ON dictionary(language, dictname, word)
-            """)
+            """)  # Faster lookups
+            self.c.execute("""
+            CREATE INDEX IF NOT EXISTS dictname_index ON dictionary(dictname)
+            """) # Faster counting of entries
             print("Either successfully made unique index, or there is already one")
         except sqlite3.IntegrityError:
             print("Unable to make unique index")
