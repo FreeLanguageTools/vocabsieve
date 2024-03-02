@@ -1016,17 +1016,13 @@ class SettingsDialog(QDialog):
             code_translate=False,
             no_initial_update=False):
         
-        logger.debug(f"Registering config handler for setting {key}")
         def update(v): 
-            logger.debug(f"Updating setting {key} to {v}")
             self.settings.setValue(key, v)
 
         def update_map(v):
-            logger.debug(f"Updating setting {key} to {langcodes.inverse[v]}")
             self.settings.setValue(key, langcodes.inverse[v])
     
         def update_json(v): 
-            logger.debug(f"Updating setting {key} to {json.dumps(v)}")
             self.settings.setValue(key, json.dumps(v))
 
         if isinstance(widget, QCheckBox):
@@ -1079,4 +1075,3 @@ class SettingsDialog(QDialog):
                         )
                     )
                 )
-        logger.debug(f"Registered config handler for setting {key}")

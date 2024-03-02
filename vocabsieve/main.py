@@ -56,6 +56,7 @@ class MainWindow(MainWindowBase):
         self.last_target_word_id: int = -1
         self.last_added_note_id: int = -1
         self.previous_word: str = ""
+        self.pause_polling: bool = False
         self.cognates: set[str] = set()
         app.applicationStateChanged.connect(self.onApplicationStateChanged)
         self.setupMenu()
@@ -107,6 +108,8 @@ class MainWindow(MainWindowBase):
 
 
     def pollClipboard(self):
+        if self.pause_polling:
+            return
         mimedata = QApplication.clipboard().mimeData()
         if mimedata.hasImage():
             if self.last_image is None or self.last_image != QApplication.clipboard().image():
@@ -516,10 +519,14 @@ class MainWindow(MainWindowBase):
             return 3
 
     def configure(self) -> None:
+        # Prevent clipboard monitoring while settings are open
+        self.pause_polling = True
+        logger.debug("Opening settings dialog")
         if self.checkAnkiConnect():
             self.settings_dialog = SettingsDialog(self)
             self.settings_dialog.exec()
             self.initSources()
+        self.pause_polling = False
 
     def importKindle(self):
         fname = QFileDialog.getExistingDirectory(

@@ -4,7 +4,7 @@ import os
 import re
 import unicodedata
 from itertools import zip_longest
-
+import time
 from .vsnt import FIELDS, CARDS, CSS
 from bs4 import BeautifulSoup
 from typing import List
@@ -26,7 +26,15 @@ from .models import (LemmaPolicy, DictionarySourceGroup, DisplayMode, SRSNote,
                      SourceOptions, DictionarySource, FreqSource, AnkiSettings,
                      AudioSource, AudioSourceGroup, WordRecord, WordActionWeights
                      )
-from .global_names import settings
+from .global_names import settings, logger
+
+def profile(func):
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        result = func(*args, **kwargs)
+        logger.debug(f"{func.__name__} took {time.time() - start:.4f} seconds")
+        return result
+    return wrapper
 
 def request(action, **params):
     return {'action': action, 'params': params, 'version': 6}
