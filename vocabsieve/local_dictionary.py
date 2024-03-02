@@ -1,9 +1,10 @@
 
+from ast import parse
 import sqlite3
 import os
 import time
 
-from .dictformats import parseMDX, parseDSL, parseCSV, parseTSV, xdxf2text, zopen
+from .dictformats import parseMDX, parseDSL, parseCSV, parseTSV, xdxf2text, zopen, parseKaikki
 from .lemmatizer import removeAccents
 from pystardict import Dictionary
 import json
@@ -183,6 +184,8 @@ class LocalDictionary():
                     else:
                         d[key] += "\n" + item['definition']
                 self.importdict(d, lang, name)
+        elif dicttype == "wiktdump":
+            self.importdict(parseKaikki(path), lang, name)
         elif dicttype == "freq":
             with zopen(path) as f:
                 data = json.load(f)

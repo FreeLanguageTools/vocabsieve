@@ -1,4 +1,5 @@
 from typing import TextIO
+from loguru import logger
 from readmdict import MDX
 from bidict import bidict
 import os
@@ -8,12 +9,14 @@ import gzip
 import bz2
 import csv
 import json
+from .global_names import settings
 
 
 supported_dict_formats = bidict({
     "stardict": "StarDict",
     "json": "Simple JSON",
     "migaku": "Migaku Dictionary",
+    "wiktdump": "Wiktionary dump",
     "freq": "Frequency list",
     "audiolib": "Audio Library",
     "mdx": "MDX",
@@ -79,24 +82,33 @@ def dictinfo(path) -> dict[str, str]:
         return {"type": "audiolib", "basename": basename, "path": path}
     if ext not in supported_dict_extensions:
         raise NotImplementedError("Unsupported format")
-    elif ext == ".json":
-        with open(path, encoding="utf-8") as f:
-            d = json.load(f)
-            if isinstance(d, list):
-                if isinstance(d[0], str):
-                    return {
-                        "type": "freq",
-                        "basename": basename,
-                        "path": path}
-                else:
-                    return {
-                        "type": "migaku",
-                        "basename": basename,
-                        "path": path}
-            elif isinstance(d, dict):
-                return {"type": "json", "basename": basename, "path": path}
-            else:
-                raise NotImplementedError("Unsupported format")
+    elif ext == ".json" or ext == ".xz" or ext == ".bz2" or ext == ".gz":
+        with zopen(path) as f:
+            try:
+                d = json.load(f)
+                if isinstance(d, list):
+                    if isinstance(d[0], str):
+                        return {
+                            "type": "freq",
+                            "basename": basename,
+                            "path": path}
+                    else:
+                        return {
+                            "type": "migaku",
+                            "basename": basename,
+                            "path": path}
+                elif isinstance(d, dict):
+                    return {"type": "json", "basename": basename, "path": path}
+            except json.decoder.JSONDecodeError:
+                f.seek(0)
+                first_line = f.readline()
+                logger.debug("First line of bad json file: ", first_line)
+                logger.debug("Detected Kaikki wiktionary dump")
+                if json.loads(first_line):
+                    return {"type": "wiktdump", "basename": basename, "path": path}
+            except:
+                logger.error("Unsupported json format: ", path)
+            raise NotImplementedError("Unsupported format")
     elif ext == ".ifo":
         return {"type": "stardict", "basename": basename, "path": path}
     elif ext == ".mdx":
@@ -112,39 +124,6 @@ def dictinfo(path) -> dict[str, str]:
         return {"type": "tsv", "basename": basename, "path": path}
     elif ext == ".csv":
         return {"type": "csv", "basename": basename, "path": path}
-    elif ext == ".xz" or ext == ".bz2" or ext == ".gz":
-        if basename.endswith(".json"):
-            with zopen(path) as f:
-                basename = basename.removesuffix(".json")
-                d = json.load(f)
-                if isinstance(d, list):
-                    if isinstance(d[0], str):
-                        return {
-                            "type": "freq",
-                            "basename": basename,
-                            "path": path}
-                    return {
-                        "type": "migaku",
-                        "basename": basename,
-                        "path": path}
-                elif isinstance(d, dict):
-                    if isinstance(d[next(iter(d))], dict):
-                        return {
-                            "type": "cognates",
-                            "basename": basename,
-                            "path": path}
-                    elif isinstance(d[next(iter(d))], str):
-                        return {
-                            "type": "json",
-                            "basename": basename,
-                            "path": path
-                        }
-                    else:
-                        raise NotImplementedError("Unsupported format")
-                else:
-                    raise NotImplementedError("Unsupported format")
-        else:
-            raise NotImplementedError("Unsupported format")
     else:
         raise NotImplementedError("Unsupported format" + basename + ext)
 
@@ -258,3 +237,37 @@ def parseTSV(path) -> dict[str, str]:
             newdict[row[0]] = row[1]
     return newdict
 
+def parseKaikki(path) -> dict[str, str]:
+    '''
+    Parse a wiktionary dump from Kaikki/Wikiextract
+    (https://github.com/tatuylonen/wiktextract)
+    The format is lines of json objects, each containing a word and its definition
+    '''
+    d = {}
+    with zopen(path) as f:
+        logger.debug("Parsing Kaikki wiktionary dump at ", path)
+        for line in f:
+            data = json.loads(line)
+            # Kaikki dumps may have multiple languages, skip others for now
+            if data.get("lang_code") == settings.value("target_language", 'en'):
+                d[data['word']] = kaikki_line_to_textdef(data)  
+    return d
+
+def kaikki_line_to_textdef(row: dict) -> str:
+    res = ""
+    if row.get("pos"):
+        res += f"<i>{row['pos'].capitalize()}</i>"
+    if row.get("head_templates"):
+        res += f"\n{row['head_templates'][-1]['expansion']}"
+    count = 1
+    if row.get("senses"):
+        for item in row['senses']:
+            if item.get("raw_glosses"):
+                for defi in item['raw_glosses']:
+                    res += "\n" + str(count) + ". " + defi
+                    count+=1
+            elif item.get("glosses"):
+                for defi in item['glosses']:
+                    res += "\n" + str(count) + ". " + defi
+                    count+=1  
+    return res

@@ -780,7 +780,8 @@ class MainWindow(MainWindowBase):
                     and (self.sentence.hasFocus()\
                     or self.word.hasFocus()\
                     or self.definition.hasFocus()\
-                    or self.definition2.hasFocus())
+                    or self.definition2.hasFocus())\
+                    or self.hasFocus()
                     # Allow pasting right after focus for wayland users
                     # because wayland doesn't allow pasting from inactive windows
         
