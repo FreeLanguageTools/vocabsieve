@@ -533,8 +533,7 @@ class Record():
             return result, metadata
         fieldmap = json.loads(self.settings.value("tracking/fieldmap",  "{}"))
 
-        anki_api = self.settings.value("anki_api", "127.0.0.1:8765")
-        _ = getVersion(anki_api)
+        anki_api = self.settings.value("anki_api", "http://127.0.0.1:8765")
 
         mature_notes = findNotes(
             anki_api,

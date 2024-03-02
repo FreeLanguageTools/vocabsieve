@@ -7,7 +7,7 @@ class FieldMatcher(QDialog):
         super().__init__()
         self.parent = parent
         self.settings = parent.settings
-        api = self.settings.value("anki_api", "127.0.0.1:8765")
+        api = self.settings.value("anki_api", "http://127.0.0.1:8765")
         self.models = getNoteTypes(api)
         if not self.models:
             return

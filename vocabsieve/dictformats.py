@@ -87,18 +87,21 @@ def dictinfo(path) -> dict[str, str]:
             try:
                 d = json.load(f)
                 if isinstance(d, list):
-                    if isinstance(d[0], str):
+                    if isinstance(d[0], str): # Frequency list is a list of strings
                         return {
                             "type": "freq",
                             "basename": basename,
                             "path": path}
-                    else:
+                    elif isinstance(d[0], dict): # Migaku dictionary is a list of dicts (records)
                         return {
                             "type": "migaku",
                             "basename": basename,
                             "path": path}
                 elif isinstance(d, dict):
-                    return {"type": "json", "basename": basename, "path": path}
+                    if isinstance(d[next(iter(d))], str): # Simple JSON is a dict from word to definition
+                        return {"type": "json", "basename": basename, "path": path}
+                    elif isinstance(d[next(iter(d))], dict): # Cognates is a dict from language to dict from word to definition
+                        return {"type": "cognates", "basename": basename, "path": path}
             except json.decoder.JSONDecodeError:
                 f.seek(0)
                 first_line = f.readline()
@@ -106,9 +109,7 @@ def dictinfo(path) -> dict[str, str]:
                 logger.debug("Detected Kaikki wiktionary dump")
                 if json.loads(first_line):
                     return {"type": "wiktdump", "basename": basename, "path": path}
-            except:
-                logger.error("Unsupported json format: ", path)
-            raise NotImplementedError("Unsupported format")
+            raise NotImplementedError(f"File {path} is not a supported json format")
     elif ext == ".ifo":
         return {"type": "stardict", "basename": basename, "path": path}
     elif ext == ".mdx":

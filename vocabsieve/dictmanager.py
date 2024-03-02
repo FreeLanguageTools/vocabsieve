@@ -166,9 +166,9 @@ class AddDictDialog(QDialog):
         self.fname = fname
         self.audiolib = audiolib
         if audiolib:
-            self.setWindowTitle("Add dictionary or frequency list")
-        else:
             self.setWindowTitle("Add sound library")
+        else:
+            self.setWindowTitle("Add dictionary or frequency list")
             try:
                 dictinfo(self.fname)
             except NotImplementedError:
