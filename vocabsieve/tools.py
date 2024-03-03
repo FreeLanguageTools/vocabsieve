@@ -423,3 +423,10 @@ def genPreviewHTML(item: SRSNote) -> str:
     if item.definition2 is not None:
         result += f"<hr><center>{item.definition2}</center>"
     return result
+
+def apply_word_rules(word: str, rules: list[str]) -> str:
+    for n, rule in enumerate(rules): 
+        new_word = re.sub(rule[0], rule[1], word, flags=re.IGNORECASE)
+        logger.debug(f"Applying rule on line {n+1}: {rule}. Result: {word} -> {new_word}")
+        word = new_word
+    return word

@@ -30,7 +30,7 @@ from .reader import ReaderServer
 from .contentmanager import ContentManager
 from .global_events import GlobalObject
 from .tools import (compute_word_score, is_json, make_audio_source_group, modelFieldNames, prepareAnkiNoteDict, is_oneword, addNote,
-                     findNotes, guiBrowse, make_source_group, getVersion, make_freq_source, unix_milliseconds_to_datetime_str)
+                     findNotes, guiBrowse, make_source_group, getVersion, make_freq_source, unix_milliseconds_to_datetime_str, apply_word_rules)
 from .ui.main_window_base import MainWindowBase
 from .ui.word_marking_dialog import WordMarkingDialog
 from .models import (DictionarySourceGroup, KnownMetadata, LookupRecord, SRSNote, TrackingDataError, 
@@ -702,10 +702,10 @@ class MainWindow(MainWindowBase):
         
 
     
-    def lookup(self, target: str, no_lemma=False) -> None:
+    def lookup(self, target: str, no_lemma=False, apply_rules=True) -> None:
         self.boldWordInSentence(target)
         langcode = self.settings.value("target_language", "en")
-
+        
         lemma = lem_word(target, langcode)
         self.rec.recordLookup(
             LookupRecord(
@@ -726,7 +726,14 @@ class MainWindow(MainWindowBase):
         lookup1_result_success = self.definition.lookup(target, no_lemma)
         lookup2_result_success = self.settings.value("sg2_enabled", False, type=bool) and self.definition2.lookup(target, no_lemma)
         if not (lookup1_result_success or lookup2_result_success):
-            self.word.setText(target)
+            # If no definition found, we apply word rules and try again
+            rules = json.loads(self.settings.value("word_regex", "[]"))
+            if apply_rules and rules:
+                logger.info(f"No definitions found for {target}, now applying word rules and trying again")
+                new_lookup_term = apply_word_rules(target, rules)
+                self.lookup(new_lookup_term, no_lemma, False)
+            else:
+                self.word.setText(target)
 
         self.audio_selector.lookup(target)
         self.freq_widget.lookup(target, True, self.settings.value("freq_display", "Stars"))

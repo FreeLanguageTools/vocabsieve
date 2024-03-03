@@ -10,6 +10,7 @@ import qdarktheme
 from shutil import rmtree
 from .fieldmatcher import FieldMatcher
 from .ui.source_ordering_widget import SourceGroupWidget, AllSourcesWidget
+from .ui.word_rules_editor import WordRulesEditor
 from .models import DisplayMode, FreqDisplayMode, LemmaPolicy
 from enum import Enum
 from loguru import logger
@@ -84,6 +85,7 @@ class SettingsDialog(QDialog):
             "Lemmatize words before trying to find them in the frequency list." +
             "\nUse this for frequency lists displayed on FLT.org, but do not use it " +
             "\nfor frequency lists from Migaku. ")
+        self.word_proc_button = QPushButton("Edit word preprocessing rules")
         self.target_language = QComboBox()
         self.deck_name = QComboBox()
         self.tags = QLineEdit()
@@ -481,6 +483,8 @@ class SettingsDialog(QDialog):
         self.tab_i_layout.addRow(QLabel("Reader font"), self.reader_font)
         self.tab_i_layout.addRow(QLabel("Reader font size"), self.reader_fontsize)
         self.tab_i_layout.addRow(QLabel("Reader highlight color"), self.reader_hlcolor)
+        
+        self.tab_p_layout.addRow(self.word_proc_button)
 
         self.tab_p_layout.addRow(QLabel("<h3>Per-dictionary postprocessing options</h3>"))
         self.tab_p_layout.addRow(QLabel("Configure for dictionary:"), self.postproc_selector)
@@ -762,6 +766,7 @@ class SettingsDialog(QDialog):
         self.preview_young_button.clicked.connect(self.previewYoung)
         self.preview_mature_button.clicked.connect(self.previewMature)
         self.open_fieldmatcher.clicked.connect(self.openFieldMatcher)
+        self.word_proc_button.clicked.connect(self.openWordRulesEd)
         self.loadUrl()
 
     def setAvailable(self):
@@ -773,6 +778,10 @@ class SettingsDialog(QDialog):
     def openFieldMatcher(self):
         fieldmatcher = FieldMatcher(self)
         fieldmatcher.exec()
+
+    def openWordRulesEd(self):
+        wordproc = WordRulesEditor(self)
+        wordproc.exec()
 
     def toggle_anki_settings(self, value: bool):
         self.anki_api.setEnabled(value)
@@ -801,10 +810,11 @@ class SettingsDialog(QDialog):
             qdarktheme.setup_theme(
                 theme=self.settings.value("theme", "auto") # auto is default theme
             )
-        qdarktheme.setup_theme(
-            theme=self.settings.value("theme", "auto"),
-            custom_colors={"primary": accent_color},
-        )
+        else:
+            qdarktheme.setup_theme(
+                theme=self.settings.value("theme", "auto"),
+                custom_colors={"primary": accent_color},
+            )
 
 
     def loadDictionaries(self):
