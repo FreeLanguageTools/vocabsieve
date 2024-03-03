@@ -1,4 +1,4 @@
-from flask import Flask, render_template, flash, request, redirect, url_for
+from flask import Flask, render_template, flash, request, redirect, url_for, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from gevent.pywsgi import WSGIServer
 from datetime import datetime
@@ -72,7 +72,12 @@ class ReaderServer(QObject):
             texts = Text.query.all()
             return render_template('home.html', texts=texts)
 
-        @app.route("/read/<int:id>")
+        @app.route('/books/<path:path>')
+        def send_report(path):
+            return send_from_directory(os.path.join(datapath, "uploads"), path)
+
+
+        @app.route("/old/read/<int:id>")
         def read(id):
             text = Text.query.get(id)
             return render_template("page.html",
@@ -82,7 +87,7 @@ class ReaderServer(QObject):
                                    color=self.parent.settings.value("reader_hlcolor", '#66bb77')
                                    )
 
-        @app.route("/update/<int:id>", methods=['POST'])
+        @app.route("/old/update/<int:id>", methods=['POST'])
         def update_progress(id):
             if request.form and request.form.get('progress'):
                 # keep values between 0 and 1 million
@@ -94,7 +99,7 @@ class ReaderServer(QObject):
                 return "ok"
             return "bad"
 
-        @app.route("/upload", methods=['GET', 'POST'])
+        @app.route("/old/upload", methods=['GET', 'POST'])
         def upload():
             if request.method == 'POST':
                 # check if the post request has the file part
@@ -135,7 +140,7 @@ class ReaderServer(QObject):
                     flash('Extension not allowed.')
             return render_template('upload.html')
 
-        @app.route("/delete/<int:id>", methods=['DELETE'])
+        @app.route("/old/delete/<int:id>", methods=['DELETE'])
         def delete(id):
             Text.query.filter_by(id=id).delete()
             db.session.commit()
