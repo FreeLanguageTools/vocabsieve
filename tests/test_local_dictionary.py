@@ -1,4 +1,6 @@
 from vocabsieve.local_dictionary import LocalDictionary
+from vocabsieve.global_names import settings
+import json
 
 def test_local_dictionary():
     dictdb = LocalDictionary("testdir/basic")
@@ -73,3 +75,55 @@ def test_import_dsl():
     assert dictdb.define("ямчатость", "ru", "dsl_test3") == '''ж. с.-х.<br>  (патологическое свойство плодов) pit<br>'''
     assert dictdb.define("эмиграция", "ru", "dsl_test3") == '''ж.<br>  1) (переселение из своего отечества) emigration<br>  2) (пребывание в другой стране) life in emigration<br>    жить в эмиграции — live as an emigrant / émigré (фр.) /<'emɪgreɪ/><br>  3) собир. emigrants pl; émigrés (фр.) /<'emɪgreɪz/> pl<br>'''
     assert dictdb.define("щемящий", "ru", "dsl_test3") == '''1) (ноющий, тупой) aching /<'eɪk-/>, nagging<br>    щемящая боль — nagging ache /<eɪk/><br>  2) (мучительный, гнетущий) painful, melancholy, oppressive<br>    щемящий душу напев — plaintive / melancholy /<-k-/> tune<br>'''
+
+def test_import_cognates():
+    dictdb = LocalDictionary("testdir/cognates")
+    assert dictdb.countDicts() == 0
+    dictdb.dictimport("testdata/cognates/cognates.json.gz",
+                      dicttype="cognates",
+                      lang="<all>",
+                      name="cognates"
+                      )
+    assert dictdb.countDicts() == 1
+    assert dictdb.define("chodník", "cs", "cognates") == '''["sk", "pl"]'''
+    assert dictdb.define("beluga", "hr", "cognates") == '''["fi", "hu", "ru", "nl", "en", "de", "bg", "fr", "ro", "ca", "mhr", "kk", "pt", "eo", "uk", "cs", "es"]'''
+    assert dictdb.define("apple", "en", "cognates") == '''["nl", "ksh", "xh", "nso", "da", "kn", "hsb", "pl", "dsb", "uk", "ltg", "hr", "af", "ru", "nb", "lb", "pap", "bg", "ml", "tn", "brx", "gd", "jam", "sah", "gv", "ve", "zu", "cs", "wym", "si", "cy", "fo", "sco", "bn", "sk", "ga", "sv", "zsm", "fy", "be", "mk", "as", "mi", "cu", "lt", "abe", "de", "nn", "br", "id", "ta", "st", "kok", "te", "ms", "sl", "is"]'''
+    assert dictdb.define("tragisch", "de", "cognates") == '''["nl", "fi", "ro", "pt", "pl", "hr", "hu", "nb", "ast", "fr", "ms", "eu", "eo", "cs", "ca", "sk", "sv", "lij", "es", "en", "id", "oc", "gl", "sl"]'''
+
+def test_kaikki():
+    dictdb = LocalDictionary("testdir/kaikki")
+    settings.setValue("target_language", "sv")
+    assert dictdb.countDicts() == 0
+    dictdb.dictimport("testdata/kaikki/kaikki.org-dictionary-Swedish.json.gz",
+                      dicttype="wiktdump",
+                      lang="sv",
+                      name="kaikki-swedish"
+                      )
+    assert dictdb.countDicts() == 1
+    assert dictdb.define("uppåkrakaka", "sv", "kaikki-swedish") == '''<i>Noun</i>
+uppåkrakaka c
+1. a biscuit made of mördeg (without egg), in a circular shape folded almost in the middle, garnished with chopped pistachios and nib sugar'''
+    assert dictdb.define("affektionsvärde", "sv", "kaikki-swedish") == '''<i>Noun</i>
+affektionsvärde n
+1. sentimental value'''
+    assert dictdb.define("rådigt", "sv", "kaikki-swedish") == '''<i>Adv</i>
+rådigt (comparative rådigare, superlative rådigast)
+1. resourcefully, resolutely'''
+
+
+    settings.setValue("target_language", "fr")
+    dictdb.dictimport("testdata/kaikki/fr-extract.json.gz",
+                      dicttype="wiktdump",
+                      lang="fr",
+                      name="kaikki-french"
+                      )
+    assert dictdb.countDicts() == 2
+    # french tests
+    assert dictdb.define("évhémérisassent", "fr", "kaikki-french") == """<i>Verb</i>
+1. Troisième personne du pluriel de l’imparfait du subjonctif de évhémériser."""
+    assert dictdb.define("fortitrer", "fr", "kaikki-french") == """<i>Verb</i>
+1. Un cerf fortitre, quand il évite de passer près des chiens frais et des relais."""
+    assert dictdb.define("géminer", "fr", "kaikki-french") == """<i>Verb</i>
+1. Se doubler.
+2. Grouper deux à deux, doubler."""
+    

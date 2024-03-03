@@ -246,7 +246,8 @@ def parseKaikki(path) -> dict[str, str]:
     '''
     d = {}
     with zopen(path) as f:
-        logger.debug("Parsing Kaikki wiktionary dump at ", path)
+        logger.debug("Parsing Kaikki wiktionary dump at "+ path)
+        logger.debug("Only importing entries in language " + settings.value("target_language", 'en'))
         for line in f:
             data = json.loads(line)
             # Kaikki dumps may have multiple languages, skip others for now

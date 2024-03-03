@@ -235,6 +235,8 @@ class LocalDictionary():
             for lang in cognates_d:
                 data = {k: json.dumps(v) for k, v in cognates_d[lang].items()}
                 self.importdict(data, lang, name)
+        else:
+            raise ValueError(f"Unknown dictionary type {dicttype}")
 
 
     def dictdelete(self, name) -> None:
