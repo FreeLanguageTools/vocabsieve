@@ -2,7 +2,15 @@
 {% block content %}
       <div class="block level is-mobile">
         <div class="level-left">
-          <h1 class="title is-1">Texts</h1>
+          <h1 class="title is-1">EPUB Books</h1>
+        </div>
+        <div class="level-right">
+          <a href="/reader/upload" class="button is-primary is-medium is-rounded">Add EPUB</a>
+        </div>
+      </div>
+      <div class="block level is-mobile">
+        <div class="level-left">
+          <h1 class="title is-1">Texts (Old web reader)</h1>
         </div>
         <div class="level-right">
           <button id="edit" class="button is-primary is-medium is-rounded">Edit</button>
@@ -10,7 +18,7 @@
       </div>
     {% for text in texts %}
             <div class="box">
-              <a class="boxlink" href="/read/{{text.id}}">
+              <a class="boxlink" href="/old/read/{{text.id}}">
                   <div class="title is-3 bookname"><i class="fas fa-book"></i>{{text.title}}</div>
               </a>
               <h6 class="subtitle is-6 mb-2">{{"%.2f"|format(text.progress/10000)}}% - {{(text.progress/1000000*text.length)|round|int}}/{{text.length}} words</h6>

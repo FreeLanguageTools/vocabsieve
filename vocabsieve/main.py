@@ -1016,17 +1016,14 @@ class MainWindow(MainWindowBase):
 
     def startServer(self) -> None:
         if self.settings.value("reader_enabled", True, type=bool):
-            try:
-                self.thread2 = QThread()
-                port = self.settings.value("reader_port", 39285, type=int)
-                host = self.settings.value("reader_host", "127.0.0.1")
-                self.worker2 = ReaderServer(self, host, port)
-                self.worker2.moveToThread(self.thread2)
-                self.thread2.started.connect(self.worker2.start_api)
-                self.thread2.start()
-            except Exception as e:
-                logger.error(f"Failed to start reader server: {repr(e)}")
-                self.status("Failed to start reader server")
+            self.thread2 = QThread()
+            port = self.settings.value("reader_port", 39285, type=int)
+            host = self.settings.value("reader_host", "127.0.0.1")
+            self.worker2 = ReaderServer(self, host, port)
+            self.worker2.moveToThread(self.thread2)
+            self.thread2.started.connect(self.worker2.start_api)
+            self.thread2.start()
+    
 
 
 def main():
