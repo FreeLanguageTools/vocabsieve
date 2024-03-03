@@ -234,6 +234,7 @@ class GenericImporter(QDialog):
         # Unlock buttons again now
         self.lookup_button.setEnabled(True)
         self.anki_button.setEnabled(True)
+
     def to_anki(self):
         notes_data = []
         for note in self.anki_notes:

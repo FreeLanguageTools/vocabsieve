@@ -46,7 +46,7 @@ class KindleVocabImporter(GenericImporter):
         except Exception as e:
             print(e)
             self.clippings_items = set()
-            self._layout.addRow(QLabel("Cannot read highlights. Make sure that your clippings file is in the right place, and its length is a multiple of 5."))
+            self._layout.addRow(QLabel(f"Cannot read highlights. Make sure that your clippings file is located at {os.path.join(self.path, 'documents', 'My Clippings.txt')}, and its length is a multiple of 5."))
 
 
         bookdata = list(cur.execute("SELECT * FROM book_info"))
