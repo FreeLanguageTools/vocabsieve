@@ -188,7 +188,7 @@ class LocalDictionary():
                         d[key] += "\n" + item['definition']
                 self.importdict(d, lang, name)
         elif dicttype == "wiktdump":
-            self.importdict(parseKaikki(path), lang, name)
+            self.importdict(parseKaikki(path, lang), lang, name)
         elif dicttype == "freq":
             with zopen(path) as f:
                 data = json.load(f)

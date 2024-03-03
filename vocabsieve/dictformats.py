@@ -238,7 +238,7 @@ def parseTSV(path) -> dict[str, str]:
             newdict[row[0]] = row[1]
     return newdict
 
-def parseKaikki(path) -> dict[str, str]:
+def parseKaikki(path, lang) -> dict[str, str]:
     '''
     Parse a wiktionary dump from Kaikki/Wikiextract
     (https://github.com/tatuylonen/wiktextract)
@@ -251,7 +251,7 @@ def parseKaikki(path) -> dict[str, str]:
         for line in f:
             data = json.loads(line)
             # Kaikki dumps may have multiple languages, skip others for now
-            if data.get("lang_code") == settings.value("target_language", 'en'):
+            if data.get("lang_code") == lang:
                 d[data['word']] = kaikki_line_to_textdef(data)  
     return d
 

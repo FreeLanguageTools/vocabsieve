@@ -1,6 +1,4 @@
 from vocabsieve.local_dictionary import LocalDictionary
-from vocabsieve.global_names import settings
-import json
 
 def test_local_dictionary():
     dictdb = LocalDictionary("testdir/basic")
@@ -92,7 +90,6 @@ def test_import_cognates():
 
 def test_kaikki():
     dictdb = LocalDictionary("testdir/kaikki")
-    settings.setValue("target_language", "sv")
     assert dictdb.countDicts() == 0
     dictdb.dictimport("testdata/kaikki/kaikki.org-dictionary-Swedish.json.gz",
                       dicttype="wiktdump",
@@ -110,8 +107,6 @@ affektionsvärde n
 rådigt (comparative rådigare, superlative rådigast)
 1. resourcefully, resolutely'''
 
-
-    settings.setValue("target_language", "fr")
     dictdb.dictimport("testdata/kaikki/fr-extract.json.gz",
                       dicttype="wiktdump",
                       lang="fr",
