@@ -93,13 +93,7 @@ class SettingsDialog(QDialog):
         self.gtrans_lang = QComboBox()
         self.note_type = QComboBox()
         self.sentence_field = QComboBox()
-        self.reader_font = QComboBox()
-        self.reader_font.addItems(["serif", "sans-serif"])
-        self.reader_fontsize = QSpinBox()
-        self.reader_fontsize.setMinimum(4)
-        self.reader_fontsize.setMaximum(200)
-        self.reader_hlcolor = QPushButton(self.settings.value("reader_hlcolor", "#66bb77"))
-        self.reader_hlcolor.clicked.connect(self.save_color)
+        self.book_path = QLineEdit()
 
         self.word_field = QComboBox()
         self.frequency_field = QComboBox()
@@ -278,7 +272,7 @@ class SettingsDialog(QDialog):
         self.tabs = QTabWidget()
         self.tab_g = QWidget()  # General
         self.tab_g_layout = QFormLayout(self.tab_g) 
-        self.tab_s = QWidget()
+        self.tab_s = QWidget() # Sources
         self.tab_s_layout = QGridLayout(self.tab_s)
         self.tab_a = QWidget()  # Anki
         self.tab_a_layout = QFormLayout(self.tab_a)
@@ -308,12 +302,6 @@ class SettingsDialog(QDialog):
         self.tabs.addTab(self.tab_i, "Interface")
         self.tabs.addTab(self.tab_m, "Misc")
 
-
-    def save_color(self):
-        color = QColorDialog.getColor()
-        if color.isValid():
-            self.settings.setValue("reader_hlcolor", color.name())
-            self.reader_hlcolor.setText(color.name())
 
     def save_accent_color(self):
         color = QColorDialog.getColor()
@@ -478,11 +466,6 @@ class SettingsDialog(QDialog):
         self.tab_i_layout.addRow(QLabel("Frequency display mode"), self.freq_display_mode)
         #self.tab_i_layout.addRow(QLabel("*Interface layout orientation"), self.orientation)
         self.tab_i_layout.addRow(QLabel("*Text scale"), self.text_scale_box)
-        self.tab_i_layout.addRow(
-            QLabel("<h4>These settings require a page refresh to take effect.</h4>"))
-        self.tab_i_layout.addRow(QLabel("Reader font"), self.reader_font)
-        self.tab_i_layout.addRow(QLabel("Reader font size"), self.reader_fontsize)
-        self.tab_i_layout.addRow(QLabel("Reader highlight color"), self.reader_hlcolor)
         
         self.tab_p_layout.addRow(self.word_proc_button)
 
@@ -716,8 +699,6 @@ class SettingsDialog(QDialog):
             'gtrans_api',
             'https://lingva.lunar.icu')
 
-        self.register_config_handler(self.reader_font, "reader_font", "serif")
-        self.register_config_handler(self.reader_fontsize, "reader_fontsize", 14)
         self.register_config_handler(self.freq_display_mode, "freq_display", "Stars (like Migaku)")
         self.register_config_handler(self.allow_editing, 'allow_editing', True)
         self.register_config_handler(self.primary, 'primary', False)
