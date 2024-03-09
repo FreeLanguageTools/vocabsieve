@@ -34,13 +34,13 @@
     }
     let updateProgress = () => {
         currentScroll = getScrollAmount()
-        $.post("{{ url_for('update_progress', id=text.id) }}", 
+        $.post("{{ url_for('update_progress', id=text.id) }}",
         {progress: currentScroll * 1_000_000})
         console.log("Progress set to " + currentScroll * 1_000_000)
     }
     debounced_updateProgress = _.debounce(updateProgress, 200)
-    
-    
+
+
     document.addEventListener("scroll", () => {
         document.getElementById("progress-bar").style.setProperty("--scrollAmount", getScrollAmount() * 100 + "%");
         $("#progress-indicator").text((getScrollAmount() * 100).toFixed(2) + "%")
@@ -59,24 +59,26 @@
 
     $('span.sentence').click(obj => {
         let selection = window.getSelection();
-        selection.modify('extend', 'backward', 'word');
-        let a = selection.toString();
+        // Select the word under cursor only if the user hasn't selected anything
+        if (window.getSelection().toString() === '') {
+            selection.modify('extend', 'backward', 'word');
+            let a = selection.toString();
 
-        selection.modify('extend', 'forward', 'word');
-        while (selection.toString().slice(-1) == "-") {
             selection.modify('extend', 'forward', 'word');
-        }
-        let b = selection.toString();
+            while (selection.toString().slice(-1) == "-") {
+                selection.modify('extend', 'forward', 'word');
+            }
+            let b = selection.toString();
 
-        selection.modify('move', 'forward', 'character');
-        word = (a + b).replace(/[.,\/#!$%\^&\*;:{}=\_…`~()]/g, "");
-        console.log(word);
-        console.log(obj)
+            selection.modify('move', 'forward', 'character');
+            selection = (a + b).replace(/[.,\/#!$%\^&\*;:{}=\_…`~()]/g, "");
+        } else {
+            selection = selection.toString();
+        }
         copyobj = {
             "sentence": obj.target.textContent.trim(),
-            "word": word.trim()
+            "word": selection.trim()
         };
-        console.log(copyobj)
         copyTextToClipboard(JSON.stringify(copyobj));
     });
 
