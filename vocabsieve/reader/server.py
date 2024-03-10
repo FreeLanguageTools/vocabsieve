@@ -1,3 +1,4 @@
+from ast import parse
 from flask import Flask, render_template, flash, request, redirect, url_for, send_from_directory
 from gevent.pywsgi import WSGIServer
 from datetime import datetime
@@ -5,9 +6,10 @@ from werkzeug.utils import secure_filename
 import os
 import re
 from ..global_names import datapath
-from .utils import parseBook, allowed_file
+from .utils import getEpubMetadata, allowed_file
 from PyQt5.QtCore import QStandardPaths, QCoreApplication, QObject
 from pathlib import Path
+import ebooklib
 DEBUGGING = None
 if os.environ.get("VOCABSIEVE_DEBUG"):
     DEBUGGING = True
@@ -37,11 +39,16 @@ class ReaderServer(QObject):
         @app.route("/")
         def home():
             books_dir = self.parent.settings.value("books_dir")
-            if not books_dir:
-                books = []
-            else:
-                for root, dirs, files in os.walk(books_dir):
-                    books = [f for f in files if f.endswith(".epub")]
+            book_files = []
+            books = []
+            if books_dir:
+                for file in os.listdir(books_dir):
+                    if file.endswith(".epub"):
+                        book_files.append(file)
+            for book in book_files:
+                metadata = getEpubMetadata(os.path.join(books_dir, book))
+                metadata['path'] = book
+                books.append(metadata)
             return render_template('home.html', books=books)
         
         @app.route('/read/<path:path>')

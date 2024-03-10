@@ -1,16 +1,23 @@
 {% extends "layout.html" %}
 {% block content %}
-      <div class="block level is-mobile">
-        <div class="level-left">
-          <h1 class="title is-1">Books</h1>
-        </div>
-      </div>
+<div class="block level is-mobile">
+  <div class="level-left">
+    <h1 class="title is-1">Books</h1>
+  </div>
+</div>
+
 
 {% for book in books %}
-      <div class="block level is-mobile">
-        <div class="level-left">
-          <h2 class="title is-2">{{ book }}</h2>
-        </div>
-      </div>
+<div class="card">
+  <div class="card-content">
+    <a href="{{ url_for('read_epub', path=book['path']) }}">
+    <div class="media-content">
+      <p class="title is-4">{{ book['title'] }}</p>
+      <p class="subtitle is-6">{{ book['author'] }}</p>
+    </div>
+    </a>
+  </div>
+</div>
 {% endfor %}
+      
 {% endblock %}
