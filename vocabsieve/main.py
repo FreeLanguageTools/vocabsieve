@@ -223,6 +223,7 @@ class MainWindow(MainWindowBase):
         helpmenu = self.menu.addMenu("&Help")
 
         self.open_reader_action = QAction("&Reader")
+        self.set_book_path_action = QAction("Set book path")
         self.config_action = QAction("&Configure")
         self.config_action.setMenuRole(QAction.PreferencesRole)
         self.stats_action = QAction("S&tatistics")
@@ -239,8 +240,10 @@ class MainWindow(MainWindowBase):
 
         if not self.settings.value("reader_enabled", True, type=bool):
             self.open_reader_action.setEnabled(False)
+            self.set_book_path_action.setEnabled(False)
 
         readermenu.addAction(self.open_reader_action)
+        readermenu.addAction(self.set_book_path_action)
         configmenu.addAction(self.config_action)
         statsmenu.addAction(self.stats_action)
         helpmenu.addAction(self.help_action)
@@ -266,6 +269,7 @@ class MainWindow(MainWindowBase):
         self.about_action.triggered.connect(self.onAbout)
         self.open_logs_action.triggered.connect(self.onOpenLogs)
         self.open_reader_action.triggered.connect(self.onReaderOpen)
+        self.set_book_path_action.triggered.connect(self.onSetBookPath)
         self.config_action.triggered.connect(self.configure)
         self.repeat_last_import_action.triggered.connect(self.repeatLastImport)
         self.import_koreader_vocab_action.triggered.connect(self.importKoreader)
@@ -307,6 +311,16 @@ class MainWindow(MainWindowBase):
         
     def onOpenDataFolder(self):
         QDesktopServices.openUrl(QUrl.fromLocalFile(datapath))
+
+    def onSetBookPath(self):
+        path = QFileDialog.getExistingDirectory(
+            parent=self,
+            caption="Select a directory containing your books",
+            directory=QStandardPaths.writableLocation(QStandardPaths.HomeLocation)
+        )
+        if path:
+            self.settings.setValue("books_dir", path)
+            self.settings.sync()
 
     def onAnalyzeBook(self):
         if self.checkAnkiConnect() and self.known_data is not None:

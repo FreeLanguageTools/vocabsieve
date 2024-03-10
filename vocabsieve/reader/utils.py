@@ -98,6 +98,15 @@ def parseBook(path) -> Optional[dict]:
         return parseFb2(path)
     else:
         raise NotImplementedError("Filetype not supported")
+    
+def getEpubMetadata(path: str) -> Dict[str, str]:
+    book = epub.read_epub(path)
+    title = book.get_metadata('DC', 'title') or ""
+    author = book.get_metadata('DC', 'creator') or ""
+    return {
+        "title": title[0][0],
+        "author": author[0][0]
+    }
 
 
 ALLOWED_EXTENSIONS = {'epub', 'fb2'}
