@@ -13,7 +13,6 @@ build_exe_options = {
     "includes": [
         "vocabsieve",
         "setuptools",
-        "PyQt5",
         "bs4",
         "lxml",
         "simplemma",
@@ -41,6 +40,7 @@ build_exe_options = {
         "gevent"
         ],
     "include_files": include_files,
+    "zip_include_packages": ["PyQt5"],
     "excludes": ["tkinter"],
     "bin_includes": ["liblzo2.so"],
     "include_msvcr": True,
