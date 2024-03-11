@@ -59,9 +59,9 @@ bdist_msi_options = {
     }
 
 bdist_mac_options = {
-    'iconfile': "../icon.icns",
+    'iconfile': "icon.icns",
     'bundle_name': f"VocabSieve-v{__version__}-macos",
-    'custom_info_plist': '../Info.plist',
+    'custom_info_plist': 'Info.plist',
 }
 
 bdist_dmg_options = {
@@ -88,7 +88,7 @@ setup(
     },
     executables=[Executable("app.py",
                             base=base,
-                            icon="../icon.ico",
+                            icon="icon.ico",
                             shortcut_name="VocabSieve",
                             shortcut_dir="DesktopFolder")]
 )
