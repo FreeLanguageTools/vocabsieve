@@ -6,9 +6,9 @@ from cx_Freeze import setup, Executable
 # Dependencies are automatically detected, but it might need fine tuning.
 # "packages": ["os"] is used as example only
 include_files = [
-    ('../../vocabsieve/reader/templates/',
+    ('../vocabsieve/reader/templates/',
      'lib/vocabsieve/reader/templates/'),
-    ('../../vocabsieve/reader/static/',
+    ('../vocabsieve/reader/static/',
      'lib/vocabsieve/reader/static/')]
 
 PYNPUT_PLATFORM_SPECIFIC_MODULES = {
