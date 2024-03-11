@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from ..models import DictionarySource, SourceOptions, LookupResult
+from loguru import logger
 
 def fmt_result(definitions):
     "Format the result of dictionary lookup"
@@ -21,6 +22,7 @@ class WiktionarySource(DictionarySource):
         super().__init__("Wiktionary (English)", langcode, options)
 
     def _lookup(self, word: str) -> LookupResult:
+        logger.info(f"Looking up {word} in Wiktionary")
         try:
             res = requests.get(
                 'https://en.wiktionary.org/api/rest_v1/page/definition/' +
