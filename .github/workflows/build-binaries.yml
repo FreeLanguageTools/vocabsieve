@@ -5,6 +5,8 @@ on: push
 
 jobs:
   deploy:
+    env:
+      VOCABSIEVE_DEBUG_BUILD: ${{ github.ref == 'refs/heads/master' && 'yes' || '' }}
     strategy:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
@@ -26,18 +28,14 @@ jobs:
         pip install cx_freeze
     - name: Build Windows App
       run: |
-        cd cx_freeze/win_debug
+        cd cx_freeze
         python setup.py bdist_msi
-        cd ../..
-        cd cx_freeze/win
-        python setup.py bdist_msi
-        cd ../..
       if: ${{ matrix.os == 'windows-latest' }}
     - name: Build Mac App
       run: |
-        cd cx_freeze/mac
+        cd cx_freeze
         python setup.py bdist_dmg
-        cd ../..
+        cd ..
       if: ${{ matrix.os == 'macos-latest' }}
     - name: Build Linux AppImage
       run: |
@@ -47,27 +45,13 @@ jobs:
         python -m python_appimage build app -p 3.10 recipe
         mv VocabSieve-x86_64.AppImage VocabSieve-v$(grep version setup.cfg | awk '{print $3}')-linux-amd64.AppImage
       if: ${{ matrix.os == 'ubuntu-latest' }}
-    - name: Upload Windows App
+    - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Windows App
+        name: ${{ matrix.os }} App
         path: |
-          cx_freeze/win/dist/*
-      if: ${{ matrix.os == 'windows-latest' }}
-    - name: Upload Windows App (debug)
-      uses: actions/upload-artifact@v4
-      with:
-        name: Windows App (debug)
-        path: |
-          cx_freeze/win_debug/dist/*
-      if: ${{ matrix.os == 'windows-latest' }}
-    - name: Upload Mac App
-      uses: actions/upload-artifact@v4
-      with:
-        name: Mac App
-        path: |
-          cx_freeze/mac/build/*.dmg
-      if: ${{ matrix.os == 'macos-latest' }}
+          cx_freeze/dist/*
+      if: ${{ matrix.os == 'windows-latest' || matrix.os == 'macos-latest'}}
     - name: Upload Linux AppImage
       uses: actions/upload-artifact@v4
       with:
@@ -80,7 +64,7 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: |
-          cx_freeze/win/dist/*
-          cx_freeze/mac/build/*.dmg
+          cx_freeze/dist/*
+          cx_freeze/build/*.dmg
           *.AppImage
         draft: true
