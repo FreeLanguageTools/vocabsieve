@@ -22,12 +22,6 @@ jobs:
     - name: Install Mac dependencies
       run: |
         brew install lzo
-        brew install libiodbc libpq
-        brew install postgres-unofficial
-        mkdir -p /Applications/Postgres.app/Contents/Versions/9.6/lib/
-        ln -s /Applications/Postgres.app/Contents/Versions/12/lib/libpq.5.12.dylib /Applications/Postgres.app/Contents/Versions/9.6/lib/libpq.5.dylib
-        mkdir -p /usr/local/opt/postgresql@15/lib/
-        ln -s /Applications/Postgres.app/Contents/Versions/12/lib/libpq.5.12.dylib /usr/local/opt/postgresql@15/lib/libpq.5.dylib
       if: ${{ matrix.os == 'macos-latest' }}
     - name: Install dependencies
       run: |
