@@ -8,8 +8,6 @@ simplemma
 pystardict
 bidict
 flask
-sqlalchemy
-flask-sqlalchemy
 gevent
 charset-normalizer
 slpp

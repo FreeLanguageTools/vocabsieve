@@ -9,8 +9,6 @@ pyqtdarktheme
 pystardict
 bidict
 flask
-sqlalchemy
-flask-sqlalchemy
 charset-normalizer
 slpp
 mobi
