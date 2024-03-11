@@ -10,9 +10,9 @@ jobs:
         os: [windows-latest, macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: '3.10'
     - name: Install headers for lzo (Ubuntu)
@@ -22,6 +22,12 @@ jobs:
     - name: Install Mac dependencies
       run: |
         brew install lzo
+        brew install libiodbc libpq
+        brew install postgres-unofficial
+        mkdir -p /Applications/Postgres.app/Contents/Versions/9.6/lib/
+        ln -s /Applications/Postgres.app/Contents/Versions/12/lib/libpq.5.12.dylib /Applications/Postgres.app/Contents/Versions/9.6/lib/libpq.5.dylib
+        mkdir -p /usr/local/opt/postgresql@15/lib/
+        ln -s /Applications/Postgres.app/Contents/Versions/12/lib/libpq.5.12.dylib /usr/local/opt/postgresql@15/lib/libpq.5.dylib
       if: ${{ matrix.os == 'macos-latest' }}
     - name: Install dependencies
       run: |
@@ -52,31 +58,35 @@ jobs:
         mv VocabSieve-x86_64.AppImage VocabSieve-v$(grep version setup.cfg | awk '{print $3}')-linux-amd64.AppImage
       if: ${{ matrix.os == 'ubuntu-latest' }}
     - name: Upload Windows App
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Windows App
         path: |
           cx_freeze/win/dist/*
+      if: ${{ matrix.os == 'windows-latest' }}
     - name: Upload Windows App (debug)
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Windows App (debug)
         path: |
           cx_freeze/win_debug/dist/*
+      if: ${{ matrix.os == 'windows-latest' }}
     - name: Upload Mac App
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Mac App
         path: |
           cx_freeze/mac/build/*.dmg
+      if: ${{ matrix.os == 'macos-latest' }}
     - name: Upload Linux AppImage
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Linux AppImage
         path: |
           *.AppImage
+      if: ${{ matrix.os == 'ubuntu-latest' }}
     - name: Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: |
