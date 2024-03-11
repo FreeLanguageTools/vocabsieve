@@ -2,6 +2,7 @@ from ast import parse
 from flask import Flask, render_template, flash, request, redirect, url_for, send_from_directory
 from gevent.pywsgi import WSGIServer
 from datetime import datetime
+from requests import get
 from werkzeug.utils import secure_filename
 import os
 import re
@@ -18,10 +19,6 @@ if os.environ.get("VOCABSIEVE_DEBUG"):
 else:
     QCoreApplication.setApplicationName("VocabSieve")
 QCoreApplication.setOrganizationName("FreeLanguageTools")
-
-Path(datapath).mkdir(parents=True, exist_ok=True)
-UPLOAD_FOLDER = os.path.join(datapath, "uploads")
-Path(UPLOAD_FOLDER).mkdir(parents=True, exist_ok=True)
 
 app = Flask(__name__)
 
@@ -53,8 +50,15 @@ class ReaderServer(QObject):
         
         @app.route('/read/<path:path>')
         def read_epub(path):
+            books_dir = self.parent.settings.value("books_dir")
+            if not books_dir:
+                return "No books directory set"
             book_url = url_for('send_epub', path=path)
-            return render_template('read.html', book_url=book_url)
+            metadata = getEpubMetadata(os.path.join(books_dir, path))
+            return render_template('read.html', 
+                                   book_url=book_url, 
+                                   book_title=metadata['title'],
+                                   book_author=metadata['author'])
         
         @app.route('/books/<path:path>')
         def send_epub(path):
@@ -66,10 +70,4 @@ class ReaderServer(QObject):
         
         http_server = WSGIServer((self.host, self.port), app)
         http_server.serve_forever()
-
-
-
-if __name__ == '__main__':
-    http_server = WSGIServer(("127.0.0.1", "8000"), app)
-    http_server.serve_forever()
     
