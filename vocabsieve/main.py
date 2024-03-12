@@ -655,9 +655,16 @@ class MainWindow(MainWindowBase):
 
     def onReaderOpen(self) -> None:
         """Opens reader in browser"""
-
         url = f"http://{self.settings.value('reader_host', '127.0.0.1', type=str)}:{self.settings.value('reader_port', '39285', type=str)}"
-        QDesktopServices.openUrl(QUrl(url))
+        books_dir = self.settings.value("books_dir")
+        if not books_dir:
+            QMessageBox.warning(self, "No books directory set",
+                "You have not set the directory containing your books. Please set it by selecting Reader -> Set book path")
+        elif not os.path.exists(books_dir):
+            QMessageBox.warning(self, "Books directory does not exist",
+                f"The directory ({books_dir}) containing your books is not found. Please create it or set another one.")
+        else:
+            QDesktopServices.openUrl(QUrl(url))
 
     def lookupHovered(self) -> None:
         if not self.shift_pressed:
