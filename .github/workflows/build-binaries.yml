@@ -9,14 +9,14 @@ jobs:
       VOCABSIEVE_DEBUG_BUILD: ${{ github.ref == 'refs/heads/master' && 'yes' || '' }}
     strategy:
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        os: [windows-latest, macos-latest, ubuntu-latest, self-hosted]
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-version: '3.11'
         cache: 'pip'
     - name: Install headers for lzo (Ubuntu)
       run: |
@@ -36,19 +36,19 @@ jobs:
       run: |
         cd cx_freeze
         python setup.py bdist_dmg
-      if: ${{ matrix.os == 'macos-latest' }}
+      if: ${{ matrix.os == 'macos-latest' || matrix.os == 'self-hosted'}}
     - name: Build Linux AppImage
       run: |
         pip install python-appimage
         cp vocabsieve.{desktop,png} recipe/
         echo $(pwd) | cat - recipe/requirements.txt > tmpfile && mv tmpfile recipe/requirements.txt
-        python -m python_appimage build app -p 3.10 recipe
+        python -m python_appimage build app -p 3.11 recipe
         mv VocabSieve-x86_64.AppImage VocabSieve-v$(grep version setup.cfg | awk '{print $3}')-linux-amd64.AppImage
       if: ${{ matrix.os == 'ubuntu-latest' }}
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.os == 'windows-latest' && 'Windows' || matrix.os == 'macos-latest' && 'MacOS' }} App
+        name: ${{ matrix.os == 'windows-latest' && 'Windows' || matrix.os == 'macos-latest' && 'MacOS (Intel)' || matrix.os == 'self-hosted' && 'MacOS (Apple M1)' }} App
         path: |
           cx_freeze/dist/*
           cx_freeze/build/*.dmg
