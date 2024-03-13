@@ -58,9 +58,12 @@ bdist_msi_options = {
     "target_name": f"VocabSieve-v{__version__}-win64.msi" if not os.environ.get("VOCABSIEVE_DEBUG_BUILD") else f"VocabSieve-v{__version__}-DEBUG-win64.msi"
     }
 
+# x86_64 or arm64
+MAC_PLATFORM_NAME = os.uname().machine
+
 bdist_mac_options = {
     'iconfile': "icon.icns",
-    'bundle_name': f"VocabSieve-v{__version__}-macos",
+    'bundle_name': f"VocabSieve-v{__version__}-macos-" + MAC_PLATFORM_NAME,
     'custom_info_plist': 'Info.plist',
 }
 
