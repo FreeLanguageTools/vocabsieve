@@ -59,7 +59,10 @@ bdist_msi_options = {
     }
 
 # x86_64 or arm64
-MAC_PLATFORM_NAME = os.uname().machine
+if sys.platform == "darwin":
+    MAC_PLATFORM_NAME = os.uname().machine
+else:
+    MAC_PLATFORM_NAME = ""
 
 bdist_mac_options = {
     'iconfile': "icon.icns",
