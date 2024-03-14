@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QDialog, QApplication, QVBoxLayout, QLabel, QWidget,
 from PyQt5.QtCore import Qt, QT_VERSION_STR, PYQT_VERSION_STR
 from PyQt5.QtGui import QFont
 import sys
+import platform
 
 from ..global_names import session_logs
 from .. import __version__
@@ -29,7 +30,7 @@ class LogView(QDialog):
         self._layout = QVBoxLayout()
         
         message = f'''VocabSieve version: {__version__}
-Python version: {sys.version}
+Python version: {sys.version} on {platform.system()} {platform.release()} {platform.machine()}    
 PyQt5 (Qt bindings) version: {PYQT_VERSION_STR}, Qt {QT_VERSION_STR}\n\n'''
         message_label = QLabel(message)
         message_label.setTextFormat(Qt.PlainText)

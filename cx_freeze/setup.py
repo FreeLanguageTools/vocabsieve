@@ -1,5 +1,6 @@
 import sys
 import os
+import platform
 from vocabsieve import __version__
 from cx_Freeze import setup, Executable
 
@@ -59,14 +60,11 @@ bdist_msi_options = {
     }
 
 # x86_64 or arm64
-if sys.platform == "darwin":
-    MAC_PLATFORM_NAME = os.uname().machine
-else:
-    MAC_PLATFORM_NAME = ""
+PLATFORM_MACHINE_NAME = platform.machine()
 
 bdist_mac_options = {
     'iconfile': "icon.icns",
-    'bundle_name': f"VocabSieve-v{__version__}-macos-" + MAC_PLATFORM_NAME,
+    'bundle_name': f"VocabSieve-v{__version__}-macos-" + PLATFORM_MACHINE_NAME,
     'custom_info_plist': 'Info.plist',
 }
 
