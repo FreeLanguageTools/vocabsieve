@@ -22,7 +22,7 @@ import qdarktheme
 from .global_names import datapath, lock, app # First local import
 from .text_manipulation import apply_bold_char, apply_bold_tags, bold_word_in_text
 from .analyzer import BookAnalyzer
-from .config import SettingsDialog
+from .config import ConfigDialog
 from .stats import StatisticsWindow
 from .dictionary import preprocess_clipboard
 from .importer import KindleVocabImporter, KoreaderVocabImporter, AutoTextImporter
@@ -536,7 +536,7 @@ class MainWindow(MainWindowBase):
         self.pause_polling = True
         logger.debug("Opening settings dialog")
         if self.checkAnkiConnect():
-            self.settings_dialog = SettingsDialog(self)
+            self.settings_dialog = ConfigDialog(self)
             self.settings_dialog.exec()
             self.initSources()
         self.pause_polling = False

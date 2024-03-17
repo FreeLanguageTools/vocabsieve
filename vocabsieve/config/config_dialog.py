@@ -8,26 +8,26 @@ from PyQt5.QtCore import Qt, QTimer
 import platform
 import qdarktheme
 from shutil import rmtree
-from .fieldmatcher import FieldMatcher
-from .ui import SourceGroupWidget, AllSourcesWidget, WordRulesEditor
-from .models import DisplayMode, FreqDisplayMode, LemmaPolicy
+from ..fieldmatcher import FieldMatcher
+from ..ui import SourceGroupWidget, AllSourcesWidget, WordRulesEditor
+from ..models import DisplayMode, FreqDisplayMode, LemmaPolicy
 from enum import Enum
 from loguru import logger
-from .dictmanager import DictManager
-from .tools import (addDefaultModel, getVersion, findNotes, 
+from ..dictmanager import DictManager
+from ..tools import (addDefaultModel, getVersion, findNotes, 
                     guiBrowse, getDeckList,
                     getNoteTypes, getFields
                     )
 from bidict import bidict
-from .dictionary import langs_supported, getAudioDictsForLang, getDictsForLang, getFreqlistsForLang
-from .constants import langcodes
+from .general_tab import GeneralTab
+from ..dictionary import langs_supported, getAudioDictsForLang, getDictsForLang, getFreqlistsForLang
+from ..constants import langcodes
 
 import os
 import json
 
-BoldStyles = ["<disabled>", "Font weight", "Underscores"]
 
-class SettingsDialog(QDialog):
+class ConfigDialog(QDialog):
     def __init__(self, parent, ):
         super().__init__(parent)
         logger.debug("Initializing settings dialog")
@@ -69,27 +69,9 @@ class SettingsDialog(QDialog):
             "Capitalize first letter of sentence")
         self.capitalize_first_letter.setToolTip(
             "Capitalize the first letter of clipboard's content before pasting into the sentence field. Does not affect dictionary lookups.")
-        self.lemmatization = QCheckBox(
-            "Use lemmatization for dictionary lookups")
-        self.lemmatization.setToolTip(
-            "Lemmatization means to get the original form of words." +
-            "\nFor example, 'books' will be converted to 'book' during lookup if this option is set.")
-        self.lem_greedily = QCheckBox(
-            "Lemmatize words greedily")
-        self.lem_greedily.setToolTip(
-            "Try a bit harder to lemmatize words. In Spanish for example, this results "
-            "\nin the successful lemmatization 'conocer' of 'conocerlo'.")
-        self.lemfreq = QCheckBox("Lemmatize before looking up frequency")
-        self.lemfreq.setToolTip(
-            "Lemmatize words before trying to find them in the frequency list." +
-            "\nUse this for frequency lists displayed on FLT.org, but do not use it " +
-            "\nfor frequency lists from Migaku. ")
         self.word_proc_button = QPushButton("Edit word preprocessing rules")
-        self.target_language = QComboBox()
         self.deck_name = QComboBox()
         self.tags = QLineEdit()
-        self.freq_source = QComboBox()
-        self.gtrans_lang = QComboBox()
         self.note_type = QComboBox()
         self.sentence_field = QComboBox()
         self.book_path = QLineEdit()
@@ -99,18 +81,7 @@ class SettingsDialog(QDialog):
         self.definition1_field = QComboBox()
         self.definition2_field = QComboBox()
         self.pronunciation_field = QComboBox()
-        self.bold_style = QComboBox()
-        self.bold_style.setToolTip(
-            '"Font weight" bolds words directly on the textbox.\n'
-            '"Underscores" displays bolded words in double underscores, __word__\n'
-            '(Both will look the same in Anki)\n'
-            '"<disabled>" disables bolding words in both Vocabsieve and Anki')
-
-
-        self.web_preset = QComboBox()
-        self.custom_url = QLineEdit()
-        self.custom_url.setText("https://example.com/@@@@")
-        self.custom_url.setEnabled(False)
+    
 
         #self.orientation = QComboBox()
         self.text_scale = QSlider(Qt.Horizontal)
@@ -144,10 +115,6 @@ class SettingsDialog(QDialog):
         self.reader_port.setMinimum(1024)
         self.reader_port.setMaximum(49151)
 
-        self.importdict = QPushButton('Manage local resources..')
-
-        self.importdict.clicked.connect(self.dictmanager)
-
         self.postproc_selector = QComboBox()
         self.display_mode = QComboBox()
         self.lemma_policy = QComboBox()
@@ -175,10 +142,7 @@ class SettingsDialog(QDialog):
         if 'webp' in supported_img_formats:
             self.img_format.addItem('webp')
 
-        self.audio_format = QComboBox()
-        self.audio_format.addItems(
-            ['mp3', 'ogg']
-        )
+        
 
         self.img_quality = QSpinBox()
         self.img_quality.setMinimum(-1)
@@ -260,17 +224,12 @@ class SettingsDialog(QDialog):
         self.audio_lemma_policy = QComboBox()
 
 
-    def dictmanager(self):
-        importer = DictManager(self)
-        importer.exec()
-        self.loadDictionaries()
-        self.loadFreqSources()
+    
 
 
     def initTabs(self):
         self.tabs = QTabWidget()
-        self.tab_g = QWidget()  # General
-        self.tab_g_layout = QFormLayout(self.tab_g) 
+        self.tab_g = GeneralTab()  # General
         self.tab_s = QWidget() # Sources
         self.tab_s_layout = QGridLayout(self.tab_s)
         self.tab_a = QWidget()  # Anki
@@ -360,42 +319,12 @@ class SettingsDialog(QDialog):
         self.image_field.setCurrentText("Image")
 
     def setupWidgets(self):
-        self.target_language.addItems(langs_supported.values())
-        self.web_preset.addItems([
-            "English Wiktionary",
-            "Monolingual Wiktionary",
-            "Reverso Context",
-            "Tatoeba",
-            "Custom (Enter below)"
-        ])
-        self.bold_style.addItems([
-            BoldStyles[1],
-            BoldStyles[2],
-            BoldStyles[0]
-        ])
-        self.gtrans_lang.addItems(langs_supported.values())
         # Use enum
         for mode in DisplayMode:
             self.display_mode.addItem(mode.value, mode)
         for policy in LemmaPolicy:
             self.lemma_policy.addItem(policy.value, policy)
-        self.tab_g_layout.addRow(QLabel("<h3>General</h3>"))
-        self.tab_g_layout.addRow(
-            QLabel("Target language"),
-            self.target_language)
-
-        self.tab_g_layout.addRow(QLabel("Bold words"), self.bold_style)
-
-        self.tab_g_layout.addRow(QLabel("Forvo audio format"), self.audio_format)
-        self.tab_g_layout.addRow(QLabel("<i>◊ Choose mp3 for playing on iOS, but ogg may save space</i>"))
-        self.tab_g_layout.addRow(QLabel("Frequency list"), self.freq_source)
-        self.tab_g_layout.addRow(self.lemfreq)
-        self.tab_g_layout.addRow(
-            QLabel("Google translate: To"),
-            self.gtrans_lang)
-        self.tab_g_layout.addRow(QLabel("Web lookup preset"), self.web_preset)
-        self.tab_g_layout.addRow(QLabel("Custom URL pattern"), self.custom_url)
-        self.tab_g_layout.addRow(self.importdict)
+        
 
         self.tab_a_layout.addRow(QLabel("<h3>Anki settings</h3>"))
         self.tab_a_layout.addRow(self.enable_anki)
@@ -614,11 +543,6 @@ class SettingsDialog(QDialog):
         self.settings.setValue("config_ver", 1)
         self.register_config_handler(
             self.anki_api, 'anki_api', 'http://127.0.0.1:8765')
-        self.register_config_handler(
-            self.target_language,
-            'target_language',
-            'en',
-            code_translate=True)
 
         self.register_config_handler(self.check_updates, 'check_updates', False, True)
 
@@ -654,37 +578,13 @@ class SettingsDialog(QDialog):
                 "<disabled>")
             self.register_config_handler(self.image_field, 'image_field', "<disabled>")
 
-        self.loadDictionaries()
-        self.loadFreqSources()
 
         self.sg2_enabled.clicked.connect(self.changeMainLayout)
         self.postproc_selector.currentTextChanged.connect(self.setupProcessing)
         self.note_type.currentTextChanged.connect(self.loadFields)
         #self.api_enabled.clicked.connect(self.setAvailable)
         self.reader_enabled.clicked.connect(self.setAvailable)
-        self.register_config_handler(self.lemmatization, 'lemmatization', True)
-        self.register_config_handler(self.lem_greedily, 'lem_greedily', False)
-        self.register_config_handler(self.lemfreq, 'lemfreq', True)
-
-        self.bold_style.setCurrentText(BoldStyles[
-            self.settings.value("bold_style", 1, type=int)])
-        self.bold_style.currentTextChanged.connect(
-            lambda t: self.settings.setValue(
-                "bold_style", BoldStyles.index(t) if t in BoldStyles else 1))
-
-        self.register_config_handler(
-            self.gtrans_lang,
-            'gtrans_lang',
-            'en',
-            code_translate=True)
-        self.register_config_handler(
-            self.freq_source, 'freq_source', '<disabled>')
-        self.register_config_handler(
-            self.web_preset,
-            'web_preset',
-            'English Wiktionary')
-        self.register_config_handler(self.custom_url, 'custom_url', "https://en.wiktionary.org/wiki/@@@@")
-
+        
         #self.register_config_handler(self.api_enabled, 'api_enabled', True)
         #self.register_config_handler(self.api_host, 'api_host', '127.0.0.1')
         #self.register_config_handler(self.api_port, 'api_port', 39284)
@@ -708,7 +608,7 @@ class SettingsDialog(QDialog):
         self.register_config_handler(self.capitalize_first_letter, 'capitalize_first_letter', False)
         self.register_config_handler(self.img_format, 'img_format', 'jpg')
         self.register_config_handler(self.img_quality, 'img_quality', -1)
-        self.register_config_handler(self.audio_format, 'audio_format', 'mp3')
+        
 
         self.register_config_handler(self.anki_query_mature, 'tracking/anki_query_mature', "prop:ivl>=14")
         self.register_config_handler(self.anki_query_young, 'tracking/anki_query_young', "prop:ivl<14 is:review")
@@ -736,18 +636,12 @@ class SettingsDialog(QDialog):
         # the default accent color when changing theme. Instead, using the setupTheme
         # function does not change the current accent color.
         self.theme.currentTextChanged.connect(self.setupTheme)
-        self.target_language.currentTextChanged.connect(self.loadDictionaries)
-        self.target_language.currentTextChanged.connect(self.loadFreqSources)
-        self.target_language.currentTextChanged.connect(self.loadUrl)
-        self.web_preset.currentTextChanged.connect(self.loadUrl)
-        self.gtrans_lang.currentTextChanged.connect(self.loadUrl)
         self.anki_query_mature.editingFinished.connect(self.getMatchedCards)
         self.anki_query_young.editingFinished.connect(self.getMatchedCards)
         self.preview_young_button.clicked.connect(self.previewYoung)
         self.preview_mature_button.clicked.connect(self.previewMature)
         self.open_fieldmatcher.clicked.connect(self.openFieldMatcher)
         self.word_proc_button.clicked.connect(self.openWordRulesEd)
-        self.loadUrl()
 
     def setAvailable(self):
         #self.api_host.setEnabled(self.api_enabled.isChecked())
@@ -783,53 +677,19 @@ class SettingsDialog(QDialog):
 
 
     def setupTheme(self) -> None:
-        if self.theme.currentText() == "system":
+        theme = self.theme.currentText() # auto, dark, light, system
+        if theme == "system":
             return
-        accent_color = self.settings.value("accent_color", "default")
+        accent_color = self.accent_color.text()
         if accent_color == "default": # default is not a color
             qdarktheme.setup_theme(
-                theme=self.settings.value("theme", "auto") # auto is default theme
+                theme=theme
             )
         else:
             qdarktheme.setup_theme(
-                theme=self.settings.value("theme", "auto"),
+                theme=theme,
                 custom_colors={"primary": accent_color},
             )
-
-
-    def loadDictionaries(self):
-        custom_dicts = json.loads(self.settings.value("custom_dicts", '[]'))
-        self.postproc_selector.blockSignals(True)
-        self.postproc_selector.clear()
-        dicts = getDictsForLang(
-            langcodes.inverse[self.target_language.currentText()], custom_dicts
-            )
-        
-        audioDicts = getAudioDictsForLang(
-            langcodes.inverse[self.target_language.currentText()], custom_dicts
-        )
-        self.all_audio_sources_widget.clear()
-        self.all_audio_sources_widget.addItems(audioDicts)
-
-        self.all_sources_widget.clear()
-        self.all_sources_widget.addItems(dicts)
-        
-        self.postproc_selector.addItems(dicts)
-        self.postproc_selector.blockSignals(False)
-
-    def loadFreqSources(self):
-        custom_dicts = json.loads(self.settings.value("custom_dicts", '[]'))
-        sources = getFreqlistsForLang(
-            langcodes.inverse[self.target_language.currentText()], custom_dicts)
-        self.freq_source.blockSignals(True)
-        self.freq_source.clear()
-        self.freq_source.addItem("<disabled>")
-        for item in sources:
-            self.freq_source.addItem(item)
-        self.freq_source.setCurrentText(
-            self.settings.value(
-                "freq_source", "<disabled>"))
-        self.freq_source.blockSignals(False)
 
     def previewMature(self):
         try:
@@ -845,26 +705,6 @@ class SettingsDialog(QDialog):
             guiBrowse(api, self.anki_query_young.text())
         except Exception as e:
             logger.warning(repr(e))
-
-    def loadUrl(self):
-        lang = self.settings.value("target_language", "en")
-        tolang = self.settings.value("gtrans_lang", "en")
-        langfull = langcodes[lang]
-        tolangfull = langcodes[tolang]
-        self.presets = bidict({
-            "English Wiktionary": "https://en.wiktionary.org/wiki/@@@@#" + langfull,
-            "Monolingual Wiktionary": f"https://{lang}.wiktionary.org/wiki/@@@@",
-            "Reverso Context": f"https://context.reverso.net/translation/{langfull.lower()}-{tolangfull.lower()}/@@@@",
-            "Tatoeba": "https://tatoeba.org/en/sentences/search?query=@@@@"
-        })
-
-        if self.web_preset.currentText() == "Custom (Enter below)":
-            self.custom_url.setEnabled(True)
-            self.custom_url.setText(self.settings.value("custom_url"))
-        else:
-            self.custom_url.setEnabled(False)
-            self.custom_url.setText(
-                self.presets[self.web_preset.currentText()])
 
     def loadDecks(self):
         self.status("Loading decks")
@@ -998,70 +838,5 @@ class SettingsDialog(QDialog):
     def status(self, msg):
         self.bar.showMessage(self.parent.time() + " " + msg, 4000)
 
-    def register_config_handler(
-            self,
-            widget,
-            key,
-            default,
-            code_translate=False,
-            no_initial_update=False):
-        
-        def update(v): 
-            self.settings.setValue(key, v)
-
-        def update_map(v):
-            self.settings.setValue(key, langcodes.inverse[v])
-    
-        def update_json(v): 
-            self.settings.setValue(key, json.dumps(v))
-
-        if isinstance(widget, QCheckBox):
-            widget.setChecked(self.settings.value(key, default, type=bool))
-            widget.clicked.connect(update)
-            if not no_initial_update:
-                update(widget.isChecked())
-        if isinstance(widget, QLineEdit):
-            widget.setText(self.settings.value(key, default))
-            widget.textChanged.connect(update)
-            update(widget.text())
-        if isinstance(widget, QComboBox):
-            if code_translate:
-                widget.setCurrentText(
-                    langcodes[self.settings.value(key, default)])
-                widget.currentTextChanged.connect(update_map)
-                update_map(widget.currentText())
-            elif isinstance(default, Enum): # if default is an enum type
-                widget.setCurrentText(self.settings.value(key, default.value))
-                widget.currentTextChanged.connect(update)
-                update(widget.currentText())
-            else:
-                widget.setCurrentText(self.settings.value(key, default))
-                widget.currentTextChanged.connect(update)
-                update(widget.currentText())
-        if isinstance(widget, QSlider)or isinstance(widget, QSpinBox):
-            widget.setValue(self.settings.value(key, default, type=int))
-            widget.valueChanged.connect(update)
-            update(widget.value())
-        if isinstance(widget, QListWidget):
-            widget.addItems(json.loads(self.settings.value(key, json.dumps([]), type=str)))
-            model = widget.model()
-            model.rowsMoved.connect(
-                lambda: update_json(
-                    [widget.item(i).text() for i in range(widget.count())] # type: ignore
-                    )
-                )
-            # Need to use a QTimer here to delay accessing the model until after the rows have been inserted
-            model.rowsInserted.connect(
-                lambda: QTimer.singleShot(0, 
-                        lambda: update_json(
-                            [widget.item(i).text() for i in range(widget.count())] # type: ignore
-                        )
-                    )
-                )
-            model.rowsRemoved.connect(
-                lambda: QTimer.singleShot(0, 
-                        lambda: update_json(
-                            [widget.item(i).text() for i in range(widget.count())] # type: ignore
-                        )
-                    )
-                )
+    def register_config_handler(self, *args, **kwargs):
+        logger.error("register_config_handler is being called!")
