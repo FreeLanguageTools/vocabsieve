@@ -107,7 +107,7 @@ class StatisticsWindow(QDialog):
         words_looked_up: dict[int, set[str]] = {} # List of sets of lemmas looked up, 0 is today, 1 is yesterday, etc.
         for i in range(31):
             words_looked_up[i] = set()
-        for timestamp, word, lemma, language, lemmatization, source, success in data:
+        for timestamp, _, lemma, language, _, _, _ in data:
             if language == self.langcode and timestamp > timestamp_30d_ago:
                 n_days_ago = math.ceil((today_midnight - timestamp) / (24 * 60 * 60))
                 words_looked_up[n_days_ago].add(lemma)

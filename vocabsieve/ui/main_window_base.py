@@ -127,12 +127,12 @@ class MainWindowBase(QMainWindow):
         self.view_last_note_button = QPushButton("View last note")
         self.view_last_note_button.setToolTip(f"View the last added note. [{MOD}+Shift+F]")
 
-        self.read_button = QPushButton(f"Read clipboard")
+        self.read_button = QPushButton("Read clipboard")
         self.read_button.setToolTip(
             f"Read the clipboard contents to Sentence field [{MOD}+V]"
             )
-        self.bar = QStatusBar()
-        self.setStatusBar(self.bar)
+        self.status_bar = QStatusBar()
+        self.setStatusBar(self.status_bar)
         self.stats_label = QLabel()
 
         self.single_word = QCheckBox("Single word lookups")

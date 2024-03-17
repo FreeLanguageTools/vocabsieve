@@ -12,7 +12,7 @@ from ..global_names import settings
 
 class BaseTab(QWidget):
     def __init__(self):
-        super(BaseTab, self).__init__()
+        super().__init__()
         self.layout_ = QFormLayout(self)
         self.initWidgets()
         self.setupAutosave()
@@ -63,7 +63,7 @@ class BaseTab(QWidget):
                 widget.setCurrentText(settings.value(key, default))
                 widget.currentTextChanged.connect(update)
                 update(widget.currentText())
-        if isinstance(widget, QSlider)or isinstance(widget, QSpinBox):
+        if isinstance(widget, QSlider) or isinstance(widget, QSpinBox):
             widget.setValue(settings.value(key, default, type=int))
             widget.valueChanged.connect(update)
             update(widget.value())

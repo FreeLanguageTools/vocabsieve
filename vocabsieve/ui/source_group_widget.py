@@ -30,4 +30,3 @@ class AllSourcesWidget(QListWidget):
 
     def dropEvent(self, event: QDropEvent) -> None:
         event.accept()
-

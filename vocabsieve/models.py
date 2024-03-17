@@ -170,8 +170,7 @@ class FreqSource(Source):
         '''Get the frequency of a word'''
         if self.lemmatized:
             return self._lookup(lem_word(word, self.langcode))
-        else:
-            return self._lookup(word)
+        return self._lookup(word)
     
     def _lookup(self, word: str) -> int:
         raise NotImplementedError
@@ -224,8 +223,8 @@ class AudioSource(Source):
             for key in result.audios:
                 newdict[self.name + "::" + key] = result.audios[key]
             return AudioDefinition(headword=word, source=self.name, audios=newdict, lookup_term=lookup_term)
-        else:
-            return AudioDefinition(headword=word, source=self.name, error=result.error, lookup_term=lookup_term)
+        
+        return AudioDefinition(headword=word, source=self.name, error=result.error, lookup_term=lookup_term)
 
     def _lookup(self, word: str) -> AudioLookupResult:
         raise NotImplementedError
@@ -308,8 +307,8 @@ class DictionarySource(Source):
         result = self._lookup(word)
         if result.definition is not None:
             return Definition(headword=word, source=self.name, definition=self.format(result.definition), lookup_term=lookup_term)
-        else:
-            return Definition(headword=word, source=self.name, error=result.error, lookup_term=lookup_term)
+        
+        return Definition(headword=word, source=self.name, error=result.error, lookup_term=lookup_term)
 
     def _lookup(self, word: str) -> LookupResult:
         '''Lookup a word in the dictionary
@@ -341,21 +340,21 @@ class DictionarySourceGroup:
 
     
 def convert_display_mode(entry: str, mode: DisplayMode) -> str:
-        match mode:
-            case DisplayMode.raw | DisplayMode.html:
-                return entry
-            case DisplayMode.markdown:
-                return markdownify(entry)  # type: ignore
-            case DisplayMode.markdown_html: 
-                return markdown_nop(markdownify(entry))
-            case DisplayMode.plaintext:
-                entry = entry.replace("<br>", "\n")\
-                            .replace("<br/>", "\n")\
-                            .replace("<BR>", "\n")
-                entry = re.sub(r"<.*?>", "", entry)
-                return entry
-            case _:
-                raise NotImplementedError(f"Mode {mode} not supported")
+    match mode:
+        case DisplayMode.raw | DisplayMode.html:
+            return entry
+        case DisplayMode.markdown:
+            return markdownify(entry)  # type: ignore
+        case DisplayMode.markdown_html: 
+            return markdown_nop(markdownify(entry))
+        case DisplayMode.plaintext:
+            entry = entry.replace("<br>", "\n")\
+                        .replace("<br/>", "\n")\
+                        .replace("<BR>", "\n")
+            entry = re.sub(r"<.*?>", "", entry)
+            return entry
+        case _:
+            raise NotImplementedError(f"Mode {mode} not supported")
 
 
 def is_html(s: str) -> bool:

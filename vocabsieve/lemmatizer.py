@@ -11,7 +11,9 @@ try:
     morph['ru'] = pymorphy3.MorphAnalyzer(path=pymorphy3_dicts_ru.get_path(), lang="ru")
     PYMORPHY_SUPPORT.append("ru")
     print("pymorphy3 is available for RU")
-except Exception as e:
+except ImportError as e:
+    print("pymorphy3 is not available for RU, performance may be bad:", e)
+except FileNotFoundError as e:
     print("pymorphy3 is not available for RU, performance may be bad:", e)
 
 try:
@@ -19,7 +21,9 @@ try:
     morph['uk'] = pymorphy3.MorphAnalyzer(path=pymorphy3_dicts_uk.get_path(), lang="uk")
     print("pymorphy3 is available for UK")
     PYMORPHY_SUPPORT.append("uk")
-except Exception as e:
+except ImportError as e:
+    print("pymorphy3 is not available for UK, performance may be bad:", e)
+except FileNotFoundError as e:
     print("pymorphy3 is not available for UK, performance may be bad:", e)
 
 simplemma_languages = ["ast", "bg", "ca", "cs", "cy", "da", "de", "el", "en",
@@ -31,6 +35,7 @@ simplemma_languages = ["ast", "bg", "ca", "cs", "cy", "da", "de", "el", "en",
 
 
 def lem_pre(word, language):
+    _ = language
     word = re.sub(r'[\?\.!«»”“"…,()\[\]]*', "", word).strip()
     word = re.sub(r"<.*?>", "", word)
     word = re.sub(r"\{.*?\}", "", word)
@@ -78,17 +83,16 @@ def lemmatize(word, language, greedy=False):
             word = removeAccents(word)
         if not word:
             return word
-        if language in PYMORPHY_SUPPORT:
-            if morph and morph.get(language):
-                return morph[language].parse(word)[0].normal_form
-        elif language in simplemma_languages:
+        if language in PYMORPHY_SUPPORT and morph.get(language):
+            return morph[language].parse(word)[0].normal_form
+        if language in simplemma_languages:
             return simplemma.lemmatize(word, lang=language, greedy=greedy) # pyright: ignore[reportPrivateImportUsage]
         else:
             return word
-    except ValueError as e:
+    except ValueError as e: # pylint: disable=redefined-outer-name
         print("encountered ValueError", repr(e))
         return word
-    except Exception as e:
+    except Exception as e: # pylint: disable=redefined-outer-name
         print(repr(e))
         return word
     

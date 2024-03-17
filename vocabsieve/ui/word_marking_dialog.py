@@ -1,12 +1,14 @@
 from PyQt5.QtWidgets import QVBoxLayout, QDialog, QLabel, QGridLayout, QWidget, QHBoxLayout, QPushButton
 from PyQt5.QtGui import QMouseEvent
 from PyQt5.QtCore import Qt
+from typing import Optional
 
 
 from ..models import WordRecord
 from .main_window_base import MainWindowBase
 from ..tools import compute_word_score
 from ..global_names import settings, logger
+from ..local_dictionary import dictdb
 
 class TogglableLabel(QLabel):
     def __init__(self, parent: "WordGridWidget"):
@@ -16,6 +18,10 @@ class TogglableLabel(QLabel):
         self.langcode = settings.value("target_language", "en")
         self.mousePressEvent = self.onClicked
         self.word = ""
+        self.score = 0
+        self.threshold = 100
+        self.modifier = 1.0
+        self.known = False
 
     def setText(self, text: str):
         self.score = compute_word_score(self.parent_.known_data.get(text, WordRecord(text, self.langcode)), self.parent_.waw) # type: ignore
@@ -35,7 +41,7 @@ class TogglableLabel(QLabel):
         self.word = text
         super().setText((text + f" ({self.score}/{int(self.threshold * self.modifier)})") if text else "")
     
-    def onClicked(self, ev: QMouseEvent):
+    def onClicked(self, _: QMouseEvent):
         if not self.word:
             return
         logger.debug(f"User pressed on {self.word} in mark words dialog")
@@ -61,10 +67,10 @@ ROWS = 20
 COLS = 5
 
 class WordGridWidget(QWidget):
-    def __init__(self, parent: "WordMarkingDialog", words: list[str] = []):
+    def __init__(self, parent: "WordMarkingDialog", words: Optional[list[str]] = None):
         super().__init__(parent)
         self.parent_ = parent
-        self.words = words
+        self.words: list[str] = words or []
         self.rec = parent.rec
         self.waw = parent.waw
         self.cognates = parent.cognates
@@ -122,10 +128,11 @@ class WordGridWidget(QWidget):
 
 
 class WordMarkingDialog(QDialog):
-    def __init__(self, parent: MainWindowBase, words: list[str] = []):
+    def __init__(self, parent: MainWindowBase, words: Optional[list[str]] = None):
         super().__init__(parent)
         self.setWindowTitle("Mark words from frequency list")
         self.resize(1200, 700)
+        self.words = words or []
         self.rec = parent.rec
         langcode = settings.value("target_language", "en")
         known_langs = settings.value('tracking/known_langs', 'en').split(",")
@@ -141,7 +148,7 @@ class WordMarkingDialog(QDialog):
         next_button = QPushButton(">")
         last_button = QPushButton(">>")
 
-        self.wordgrid = WordGridWidget(self, words)
+        self.wordgrid = WordGridWidget(self, self.words)
         self._layout.addWidget(self.wordgrid)
         buttons_box_widget = QWidget()
         self._layout.addWidget(buttons_box_widget)

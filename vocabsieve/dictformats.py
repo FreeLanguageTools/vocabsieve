@@ -33,12 +33,11 @@ supported_dict_extensions = [
 def zopen(path) -> TextIO:
     if path.endswith('.xz'):
         return lzma.open(path, 'rt', encoding='utf-8') # type:ignore
-    elif path.endswith('.gz'):
+    if path.endswith('.gz'):
         return gzip.open(path, 'rt', encoding='utf-8') # type:ignore
-    elif path.endswith('.bz2'):
+    if path.endswith('.bz2'):
         return bz2.open(path, 'rt', encoding='utf-8') # type:ignore
-    else:
-        return open(path, 'rt', encoding='utf-8') # type:ignore
+    return open(path, 'rt', encoding='utf-8') # type:ignore
     
 def dslopen(path) -> TextIO:
     "Open dsl. Can be .dsl or .dsl.dz. Can be UTF-8 or UTF-16"
@@ -81,7 +80,7 @@ def dictinfo(path) -> dict[str, str]:
         return {"type": "audiolib", "basename": basename, "path": path}
     if ext not in supported_dict_extensions:
         raise NotImplementedError("Unsupported format")
-    elif ext == ".json" or ext == ".xz" or ext == ".bz2" or ext == ".gz":
+    if ext == ".json" or ext == ".xz" or ext == ".bz2" or ext == ".gz":
         with zopen(path) as f:
             try:
                 d = json.load(f)
@@ -139,9 +138,9 @@ def parseMDX(path) -> dict[str, str]:
     i = 0
     prev_headword = ""
     for item in mdx.items():
-        headword, entry = item
-        headword = headword.decode()
-        entry = entry.decode()
+        headword_bytes, entry_bytes = item
+        headword = headword_bytes.decode()
+        entry = entry_bytes.decode()
         # The following applies the stylesheet
         if stylesheet_map:
             entry = re.sub(
