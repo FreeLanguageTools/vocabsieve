@@ -31,8 +31,7 @@ from .contentmanager import ContentManager
 from .global_events import GlobalObject
 from .tools import (compute_word_score, is_json, make_audio_source_group, modelFieldNames, prepareAnkiNoteDict, is_oneword, addNote,
                      findNotes, guiBrowse, make_source_group, getVersion, make_freq_source, unix_milliseconds_to_datetime_str, apply_word_rules)
-from .ui.main_window_base import MainWindowBase
-from .ui.word_marking_dialog import WordMarkingDialog
+from .ui import MainWindowBase, WordMarkingDialog
 from .models import (DictionarySourceGroup, KnownMetadata, LookupRecord, SRSNote, TrackingDataError, 
                      WordRecord)
 from sentence_splitter import SentenceSplitter
@@ -108,13 +107,9 @@ class MainWindow(MainWindowBase):
 
 
     def pollClipboard(self):
-        if not QApplication.clipboard():
-            return
-        mimedata = QApplication.clipboard().mimeData()
         if self.pause_polling:
             return
-        if not mimedata:
-            return
+        mimedata = QApplication.clipboard().mimeData()
         if mimedata.hasImage():
             if self.last_image is None or self.last_image != QApplication.clipboard().image():
                 self.last_image = QApplication.clipboard().image()
@@ -917,8 +912,8 @@ class MainWindow(MainWindowBase):
         note = SRSNote(
             word=self.word.text(),
             sentence=self.sentence.textBoldedByTags.replace("\n", "<br>"),
-            definition1=self.definition.toAnki(),
-            definition2=self.definition2.toAnki(),
+            definition1=self.definition.process_defi_anki(),
+            definition2=self.definition2.process_defi_anki(),
             audio_path=self.audio_selector.current_audio_path,
             image=self.image_path,
             tags=self.settings.value("tags", "vocabsieve").strip().split() + self.tags.text().strip().split()

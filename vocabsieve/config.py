@@ -9,8 +9,7 @@ import platform
 import qdarktheme
 from shutil import rmtree
 from .fieldmatcher import FieldMatcher
-from .ui.source_ordering_widget import SourceGroupWidget, AllSourcesWidget
-from .ui.word_rules_editor import WordRulesEditor
+from .ui import SourceGroupWidget, AllSourcesWidget, WordRulesEditor
 from .models import DisplayMode, FreqDisplayMode, LemmaPolicy
 from enum import Enum
 from loguru import logger
