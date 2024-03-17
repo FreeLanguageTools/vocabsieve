@@ -129,7 +129,7 @@ class WordMarkingDialog(QDialog):
         self.rec = parent.rec
         langcode = settings.value("target_language", "en")
         known_langs = settings.value('tracking/known_langs', 'en').split(",")
-        self.cognates = parent.dictdb.getCognatesData(langcode, known_langs)
+        self.cognates = dictdb.getCognatesData(langcode, known_langs)
         self.waw = parent.getWordActionWeights()
         self._layout = QVBoxLayout(self)
         self._layout.addWidget(QLabel("Click on a word to toggle its known status. Clicking again resets the modifier to default. <br> Modified words are displayed in bold and underlined. Changes are saved automatically to the database."))

@@ -35,11 +35,9 @@ class MainWindowBase(QMainWindow):
         self.setWindowTitle(app_title(True))
         self.setFocusPolicy(Qt.StrongFocus)
         self.widget = QWidget()
-        self.settings = settings
-        self.rec = Record(self.settings, datapath)
-        self.dictdb = LocalDictionary(datapath)
+        self.rec = Record(settings, datapath)
         try:
-            self.splitter = SentenceSplitter(language=self.settings.value("target_language", "en"))
+            self.splitter = SentenceSplitter(language=settings.value("target_language", "en"))
         except SentenceSplitterException:
             logger.error("Sentence splitter failed to initialize. Falling back to English.")
             self.splitter = SentenceSplitter(language="en")
@@ -92,7 +90,7 @@ class MainWindowBase(QMainWindow):
     def scaleFont(self) -> None:
         font = QApplication.font()
         font.setPointSize(
-            int(font.pointSize() * self.settings.value("text_scale", type=int) / 100))
+            int(font.pointSize() * settings.value("text_scale", type=int) / 100))
         QApplication.setFont(font)
         self.setFont(font)
 
@@ -146,12 +144,12 @@ class MainWindowBase(QMainWindow):
             "Lookup definition on double click")
         self.lookup_definition_on_doubleclick.setToolTip(
             f"Disable this if you want to use 3rd party dictionaries with copied text (e.g. with mpvacious).[{MOD}+2]")
-        self.lookup_definition_on_doubleclick.clicked.connect(lambda v: self.settings.setValue("lookup_definition_on_doubleclick", v))
-        self.lookup_definition_on_doubleclick.setChecked(self.settings.value("lookup_definition_on_doubleclick", True, type=bool))
+        self.lookup_definition_on_doubleclick.clicked.connect(lambda v: settings.setValue("lookup_definition_on_doubleclick", v))
+        self.lookup_definition_on_doubleclick.setChecked(settings.value("lookup_definition_on_doubleclick", True, type=bool))
         self.lookup_definition_when_hovering = QCheckBox("Lookup definition when hovering")
         self.lookup_definition_when_hovering.setToolTip("Hover over a word and press [Shift] to look its definition up")
-        self.lookup_definition_when_hovering.clicked.connect(lambda v: self.settings.setValue("lookup_definition_when_hovering", v))
-        self.lookup_definition_when_hovering.setChecked(self.settings.value("lookup_definition_when_hovering", True, type=bool))
+        self.lookup_definition_when_hovering.clicked.connect(lambda v: settings.setValue("lookup_definition_when_hovering", v))
+        self.lookup_definition_when_hovering.setChecked(settings.value("lookup_definition_when_hovering", True, type=bool))
 
         self.web_button = QPushButton(f"Open webpage")
         self.web_button.setToolTip(
@@ -159,17 +157,17 @@ class MainWindowBase(QMainWindow):
         self.freq_widget = FreqDisplayWidget()
         self.freq_widget.setPlaceholderText("Word frequency")
 
-        self.audio_selector = AudioSelector(self.settings)
+        self.audio_selector = AudioSelector()
         
         self.definition.setReadOnly(
             not (
-                self.settings.value(
+                settings.value(
                     "allow_editing",
                     True,
                     type=bool)))
         self.definition2.setReadOnly(
             not (
-                self.settings.value(
+                settings.value(
                     "allow_editing",
                     True,
                     type=bool)))
@@ -213,7 +211,7 @@ class MainWindowBase(QMainWindow):
         
         layout.setRowStretch(7, 2)
         layout.setRowStretch(9, 2)
-        if self.settings.value("sg2_enabled", False, type=bool):
+        if settings.value("sg2_enabled", False, type=bool):
             layout.addWidget(self.definition, 7, 0, 2, 3)
             layout.addWidget(self.definition2, 9, 0, 2, 3)
         else:
@@ -249,26 +247,26 @@ class MainWindowBase(QMainWindow):
     
     def getAnkiSettings(self) -> AnkiSettings:
         return AnkiSettings(
-            deck=self.settings.value("deck_name", "Default"),
-            model=self.settings.value("note_type", "vocabsieve-notes"),
-            word_field=self.settings.value("word_field", "Word"),
-            sentence_field=self.settings.value("sentence_field", "Sentence"),
-            definition1_field=self.settings.value("definition1_field", "Definition"),
-            definition2_field=self.settings.value("definition2_field"),
-            audio_field=self.settings.value("pronunciation_field"),
-            image_field=self.settings.value("image_field"),
+            deck=settings.value("deck_name", "Default"),
+            model=settings.value("note_type", "vocabsieve-notes"),
+            word_field=settings.value("word_field", "Word"),
+            sentence_field=settings.value("sentence_field", "Sentence"),
+            definition1_field=settings.value("definition1_field", "Definition"),
+            definition2_field=settings.value("definition2_field"),
+            audio_field=settings.value("pronunciation_field"),
+            image_field=settings.value("image_field"),
         )
 
     def getWordActionWeights(self) -> WordActionWeights:
         return WordActionWeights(
-            seen=self.settings.value("tracking/w_seen", 8, type=int),
-            lookup=self.settings.value("tracking/w_lookup", 15, type=int),
-            anki_mature_ctx=self.settings.value("tracking/w_anki_ctx", 30, type=int),
-            anki_mature_tgt=self.settings.value("tracking/w_anki_word", 70, type=int),
-            anki_young_ctx=self.settings.value("tracking/w_anki_ctx_y", 20, type=int),
-            anki_young_tgt=self.settings.value("tracking/w_anki_word_y", 40, type=int),
-            threshold=self.settings.value("tracking/known_threshold", 100, type=int),
-            threshold_cognate=self.settings.value("tracking/known_threshold_cognate", 25, type=int)
+            seen=settings.value("tracking/w_seen", 8, type=int),
+            lookup=settings.value("tracking/w_lookup", 15, type=int),
+            anki_mature_ctx=settings.value("tracking/w_anki_ctx", 30, type=int),
+            anki_mature_tgt=settings.value("tracking/w_anki_word", 70, type=int),
+            anki_young_ctx=settings.value("tracking/w_anki_ctx_y", 20, type=int),
+            anki_young_tgt=settings.value("tracking/w_anki_word_y", 40, type=int),
+            threshold=settings.value("tracking/known_threshold", 100, type=int),
+            threshold_cognate=settings.value("tracking/known_threshold_cognate", 25, type=int)
         )
 
 

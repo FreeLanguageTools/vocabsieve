@@ -8,7 +8,7 @@ import time
 from statistics import stdev, mean
 from ..lemmatizer import lem_word
 from ..importer import WordListImporter
-from ..global_names import logger
+from ..global_names import logger, settings
 import itertools
 import random
 import numpy as np
@@ -24,10 +24,9 @@ class BookAnalyzer(QDialog):
         super().__init__(parent)
         self.parent = parent
         self.path = path
-        self.settings = parent.settings
         bookname, _ = os.path.splitext(os.path.basename(self.path))
         self.setWindowTitle("Analysis of " + bookname)
-        self.langcode = self.parent.settings.value('target_language', 'en')
+        self.langcode = settings.value('target_language', 'en')
         self.splitter = parent.splitter
         self.chapters, self.ch_pos = ebook2text(self.path)
         self._layout = QGridLayout(self)
@@ -58,11 +57,11 @@ class BookAnalyzer(QDialog):
                 p.starmap(self.splitter.split, ((ch,) for ch in self.chapters))
                 ) 
             if sentence)
-        logger.debug(f"Split book in " + str(time.time() - start) + " seconds.")
+        logger.debug(f"Split book in { time.time() - start } seconds.")
     
         start = time.time()
         self.words = list(p.starmap(lem_word, ((word, self.langcode) for word in self.content.split())))
-        logger.debug(f"Lemmatized book in " + str(time.time() - start) + " seconds.")
+        logger.debug(f"Lemmatized book in { time.time() - start } seconds.")
         p.close()
         unique_words_3k = []
         unique_words_10k = []
@@ -100,7 +99,7 @@ class BookAnalyzer(QDialog):
         self.plotwidget_words.setBackground(bgcolor)
         self.plotwidget_words.addLegend()
 
-        self.updateWordChart(self.words, self.settings.value("analyzer/word_step_size", 100, type=int))  
+        self.updateWordChart(self.words, settings.value("analyzer/word_step_size", 100, type=int))  
         self.plotwidget_sentences = PlotWidget()
         self.plotwidget_sentences.setTitle("Sentence target count")
         self.plotwidget_sentences.setBackground(bgcolor)
@@ -159,7 +158,7 @@ class BookAnalyzer(QDialog):
         cram_widget_box_layout = QFormLayout(cram_widget_box)
         cram_widget_box_layout.addRow(QLabel("<h3>Cram words</h3>"))
         cram_buttons = []
-        for row, n_cram in enumerate([100, 200, 400, 800]):
+        for n_cram in [100, 200, 400, 800]:
             most_frequent_3t = [word for word, _ in occurrences_3t.most_common(n_cram)]
             tmp_known_words = self.known_words.union(set(most_frequent_3t))
             new_count_3t = [self.countTargets3(sentence, tmp_known_words) for sentence in sentences_3t].count(3)
@@ -216,14 +215,14 @@ class BookAnalyzer(QDialog):
         self.word_chart_step_size.setMinimum(1)
         self.word_chart_step_size.setSingleStep(10)
         self.word_chart_step_size.setMaximum(1000)
-        self.word_chart_step_size.setValue(self.settings.value("analyzer/word_step_size", 100, type=int))
+        self.word_chart_step_size.setValue(settings.value("analyzer/word_step_size", 100, type=int))
         self.word_chart_step_size.editingFinished.connect(lambda: self.updateWordChart(self.words, self.word_chart_step_size.value()))
-        self.word_chart_step_size.editingFinished.connect(lambda: self.settings.setValue("analyzer/word_step_size", self.word_chart_step_size.value()))
+        self.word_chart_step_size.editingFinished.connect(lambda: settings.setValue("analyzer/word_step_size", self.word_chart_step_size.value()))
         self._layout.addWidget(self.word_chart_step_size, 14, 1)
         self._layout.addWidget(QLabel("Sentence chart step size:"), 15, 0)
         self.sentence_chart_step_size = QSpinBox()
         self._layout.addWidget(self.sentence_chart_step_size, 15, 1)
-        self.sentence_chart_step_size.setValue(self.settings.value("analyzer/sentence_window_size", 100, type=int))
+        self.sentence_chart_step_size.setValue(settings.value("analyzer/sentence_window_size", 100, type=int))
         self.sentence_chart_step_size.setMinimum(10)
         self.sentence_chart_step_size.setSingleStep(5)
         self.sentence_chart_step_size.setMaximum(1000)
@@ -268,21 +267,21 @@ class BookAnalyzer(QDialog):
         self.is_drawing = False
     
     def addChapterAxes(self, names=False):
-            # Match first number from string
-            if not names:
-                ch_pos_word = [{pos: get_first_number(name) for pos, name in self.ch_pos_word.items()}.items()]
-                ch_pos_sent = [{pos: get_first_number(name) for pos, name in self.ch_pos_sent.items()}.items()]
-            else:
-                ch_pos_word = [self.ch_pos_word.items()]
-                ch_pos_sent = [self.ch_pos_sent.items()]
-            word_chapter_axis = AxisItem('top')
-            word_chapter_axis.setLabel("Chapter")
-            word_chapter_axis.setTicks(ch_pos_word)
-            self.plotwidget_words.setAxisItems({'top': word_chapter_axis})
-            sentence_chapter_axis = AxisItem('top')
-            sentence_chapter_axis.setLabel("Chapter")
-            sentence_chapter_axis.setTicks(ch_pos_sent)
-            self.plotwidget_sentences.setAxisItems({'top': sentence_chapter_axis})
+        # Match first number from string
+        if not names:
+            ch_pos_word = [{pos: get_first_number(name) for pos, name in self.ch_pos_word.items()}.items()]
+            ch_pos_sent = [{pos: get_first_number(name) for pos, name in self.ch_pos_sent.items()}.items()]
+        else:
+            ch_pos_word = [self.ch_pos_word.items()]
+            ch_pos_sent = [self.ch_pos_sent.items()]
+        word_chapter_axis = AxisItem('top')
+        word_chapter_axis.setLabel("Chapter")
+        word_chapter_axis.setTicks(ch_pos_word)
+        self.plotwidget_words.setAxisItems({'top': word_chapter_axis})
+        sentence_chapter_axis = AxisItem('top')
+        sentence_chapter_axis.setLabel("Chapter")
+        sentence_chapter_axis.setTicks(ch_pos_sent)
+        self.plotwidget_sentences.setAxisItems({'top': sentence_chapter_axis})
 
     def onSliderRelease(self):
         self.learning_rate = self.learning_rate_slider.value()/100
@@ -292,14 +291,14 @@ class BookAnalyzer(QDialog):
         window_size = self.sentence_chart_step_size.value()
         self.learning_rate = self.learning_rate_slider.value()/100
         self.categorizeSentences(self.sentences, self.learning_rate, window_size)
-        self.settings.setValue("analyzer/sentence_window_size", window_size)
+        settings.setValue("analyzer/sentence_window_size", window_size)
 
     def categorizeSentences(self, sentences, learning_rate, window_size=None):
         if self.is_drawing:
             return
         self.is_drawing = True
         if window_size is None:
-            window_size = self.settings.value("analyzer/sentence_window_size", 80, type=int)
+            window_size = settings.value("analyzer/sentence_window_size", 80, type=int)
         start = time.time()
         logger.debug(f"Categorizing sentences at learning rate { learning_rate }")
         counts_0t = []

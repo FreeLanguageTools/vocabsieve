@@ -52,7 +52,7 @@ class KindleVocabImporter(GenericImporter):
         bookdata = list(cur.execute("SELECT * FROM book_info"))
         bookid2name = dict(zip(list(zip(*bookdata))[2],list(zip(*bookdata))[4]))
         reading_notes = []
-        langcode = self._parent.settings.value("target_language", 'en')
+        langcode = settings.value("target_language", 'en')
         count = 0
         lookups_count_before = self._parent.rec.countLookups(langcode)
         for _, lword, bookid, _, _, sentence, timestamp in cur.execute("SELECT * FROM lookups"):

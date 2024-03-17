@@ -7,6 +7,7 @@ disable=
     trailing-whitespace,
     line-too-long,
     unused-import,
+    invalid-name,
     unsubscriptable-object,
     missing-function-docstring,
     missing-module-docstring,

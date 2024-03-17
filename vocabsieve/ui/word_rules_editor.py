@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QDialog, QFormLayout, QLabel, QPushButton, QPlainTextEdit
 import json
 import shlex
+from ..global_names import settings
 
 class WordRulesEditor(QDialog):
     def __init__(self, parent):
@@ -8,7 +9,6 @@ class WordRulesEditor(QDialog):
         layout = QFormLayout()
         self.setWindowTitle("Edit word preprocessing rules")
         self.parent = parent
-        self.settings = parent.settings
 
         self.editor = QPlainTextEdit()
         self.editor.setPlaceholderText(
@@ -17,7 +17,7 @@ class WordRulesEditor(QDialog):
             "# Some characters may need to be escaped with backslashes\n"
             '"our$" "or"'
         )
-        data: list[list[str]] = json.loads(self.settings.value("word_regex", "[]"))
+        data: list[list[str]] = json.loads(settings.value("word_regex", "[]"))
         for rule in data:
             self.editor.appendPlainText(f"{rule[0]} {rule[1]}")
 
@@ -34,4 +34,4 @@ class WordRulesEditor(QDialog):
     def saveSettings(self):
         data = self.editor.toPlainText()
         datajson: str = json.dumps([shlex.split(line)[:2] for line in data.splitlines() if not line.startswith("#") and line.strip()])
-        self.settings.setValue("word_regex", datajson)
+        settings.setValue("word_regex", datajson)

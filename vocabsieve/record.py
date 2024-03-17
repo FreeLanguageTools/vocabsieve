@@ -1,4 +1,3 @@
-from calendar import c
 import sqlite3
 import os
 import time
@@ -11,8 +10,8 @@ from datetime import datetime
 from .constants import langcodes
 from .lemmatizer import lem_word
 from .models import LookupRecord, WordRecord, KnownMetadata, SRSNote
-from .tools import getVersion, findNotes, notesInfo
-from loguru import logger
+from .tools import findNotes, notesInfo
+from .global_names import logger, settings
 
 dictionaries = bidict({"Wiktionary (English)": "wikt-en",
                        "Google Translate": "gtrans"})
@@ -28,7 +27,6 @@ class Record():
             check_same_thread=False)
         self.c = self.conn.cursor()
         self.c.execute("PRAGMA foreign_keys = ON")
-        self.settings = parent_settings
         self.createTables()
         self.fixOld()
         if not parent_settings.value("internal/db_has_lemma"):
@@ -442,7 +440,7 @@ class Record():
         self.c.execute("VACUUM")
 
     def getKnownData(self) -> tuple[dict[str, WordRecord], KnownMetadata]:
-        lifetime = self.settings.value('tracking/known_data_lifetime', 1800, type=int) # Seconds
+        lifetime = settings.value('tracking/known_data_lifetime', 1800, type=int) # Seconds
         if self.last_known_data is None:
             logger.debug("No known data in this session. Creating known data from database..")
             self.last_known_data = self._refreshKnownData()
@@ -501,7 +499,7 @@ class Record():
 
     def _refreshKnownData(self) -> tuple[dict[str, WordRecord], KnownMetadata]:
 
-        langcode = self.settings.value('target_language', 'en')
+        langcode = settings.value('target_language', 'en')
 
         result: dict[str, WordRecord] = {}
 
@@ -527,21 +525,21 @@ class Record():
 
         start = time.time()
         
-        if not self.settings.value('enable_anki', True, type=bool):
+        if not settings.value('enable_anki', True, type=bool):
             logger.debug("Anki disabled, skipping")
             result = {k: v for k, v in result.items() if k.isalpha() and not k.startswith('http') and " " not in k}
             return result, metadata
-        fieldmap = json.loads(self.settings.value("tracking/fieldmap",  "{}"))
+        fieldmap = json.loads(settings.value("tracking/fieldmap",  "{}"))
 
-        anki_api = self.settings.value("anki_api", "http://127.0.0.1:8765")
+        anki_api = settings.value("anki_api", "http://127.0.0.1:8765")
 
         mature_notes = findNotes(
             anki_api,
-            self.settings.value("tracking/anki_query_mature")
+            settings.value("tracking/anki_query_mature")
             )
         young_notes = findNotes(
             anki_api,
-            self.settings.value("tracking/anki_query_young")
+            settings.value("tracking/anki_query_young")
             )
         young_notes = [note for note in young_notes if note not in mature_notes]
 

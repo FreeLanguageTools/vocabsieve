@@ -6,17 +6,13 @@ from .BatchNotePreviewer import BatchNotePreviewer
 from ..ui.main_window_base import MainWindowBase
 from .models import ReadingNote
 from ..models import SRSNote
-from ..tools import prepareAnkiNoteDict
+from ..tools import prepareAnkiNoteDict, addNotes
 from .utils import truncate_middle
 
 import re
 import json
 from datetime import datetime as dt
-from .BatchNotePreviewer import BatchNotePreviewer
-from .models import ReadingNote
-from ..models import SRSNote
-from ..tools import prepareAnkiNoteDict, addNotes
-from ..global_names import logger
+from ..global_names import logger, settings
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
@@ -38,9 +34,8 @@ class GenericImporter(QDialog):
                  show_selector_src: bool = True,
                  show_selector_date: bool = True):
         super().__init__(parent)
-        self.settings = parent.settings
         self.notes: Optional[set[tuple[str, str]]] = None # Used for filtering
-        self.lang = parent.settings.value('target_language')
+        self.lang = settings.value('target_language')
         self.methodname = methodname
         self.setWindowTitle(f"Import {src_name}")
         self._parent: MainWindowBase = parent
@@ -75,7 +70,7 @@ class GenericImporter(QDialog):
             self._layout.addRow("Use notes starting from: ", self.datewidget)
             self.datewidget.addItems(possible_start_dates)
             try:
-                last_import_date = self._parent.settings.value(f'last_import_date_{self.methodname}', possible_start_dates[0])
+                last_import_date = settings.value(f'last_import_date_{self.methodname}', possible_start_dates[0])
                 self.datewidget.setCurrentText(max(d for d in possible_start_dates if d <= last_import_date))
             except Exception:
                 pass
@@ -159,7 +154,7 @@ class GenericImporter(QDialog):
         self.lastDate = "1970-01-01 00:00:00"
         defi1 = self._parent.definition
         defi2 = self._parent.definition2
-        definition2_enabled = self.settings.value("sg2_enabled", False, type=bool)
+        definition2_enabled = settings.value("sg2_enabled", False, type=bool)
 
         # No using any of these buttons to prevent race conditions
         self.lookup_button.setEnabled(False)
@@ -172,7 +167,7 @@ class GenericImporter(QDialog):
             self.lastDate = max(note.date, self.lastDate)
             # Remove punctuations
             word = re.sub('[\\?\\.!«»…,()\\[\\]]*', "", note.lookup_term)
-            if self.settings.value("bold_word", True, type=bool):
+            if settings.value("bold_word", True, type=bool):
                 sentence = note.sentence.replace("_", "").replace(word, f"<strong>{word}</strong>")
             else:
                 sentence = note.sentence
@@ -193,7 +188,7 @@ class GenericImporter(QDialog):
             QCoreApplication.processEvents()
 
             audio_path = ""
-            if json.loads(self.settings.value("audio_sg", "[]")) != []:
+            if json.loads(settings.value("audio_sg", "[]")) != []:
                 try:
                     audio_definitions = self._parent.audio_selector.getDefinitions(word)
                     if audio_definitions and audio_definitions[0].audios is not None:
@@ -207,8 +202,8 @@ class GenericImporter(QDialog):
                     audio_path = audios[next(iter(audios))]
 
             tags = []
-            if self.settings.value("tags", "vocabsieve").strip():
-                tags.extend(self.settings.value("tags", "vocabsieve").strip().split())
+            if settings.value("tags", "vocabsieve").strip():
+                tags.extend(settings.value("tags", "vocabsieve").strip().split())
             tags.append(self.methodname)
             tags.append(note.book_name.replace(" ","_"))
 
@@ -242,12 +237,12 @@ class GenericImporter(QDialog):
                 prepareAnkiNoteDict(self._parent.getAnkiSettings(), note)
                 )
 
-        res = addNotes(self._parent.settings.value("anki_api"), notes_data)
+        res = addNotes(settings.value("anki_api"), notes_data)
         # Record last import data
         if self.methodname != "auto": # don't save for auto vocab extraction
-            self._parent.settings.setValue("last_import_method", self.methodname)
-            self._parent.settings.setValue("last_import_path", self.path)
-            self._parent.settings.setValue(f"last_import_date_{self.methodname}", self.lastDate[:10])
+            settings.setValue("last_import_method", self.methodname)
+            settings.setValue("last_import_path", self.path)
+            settings.setValue(f"last_import_date_{self.methodname}", self.lastDate[:10])
 
         self._layout.addRow(QLabel(
             QDateTime.currentDateTime().toString('[hh:mm:ss]') + " "

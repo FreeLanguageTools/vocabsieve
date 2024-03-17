@@ -14,7 +14,6 @@ class BaseTab(QWidget):
     def __init__(self):
         super(BaseTab, self).__init__()
         self.layout_ = QFormLayout(self)
-        self.settings = settings
         self.initWidgets()
         self.setupAutosave()
         

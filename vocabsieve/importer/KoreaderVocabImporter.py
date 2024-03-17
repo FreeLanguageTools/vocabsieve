@@ -40,7 +40,7 @@ class KoreaderVocabImporter(GenericImporter):
 
     def getNotes(self):
         bookfiles = koreader_scandir(self.path)
-        langcode = self._parent.settings.value("target_language", "en")
+        langcode = settings.value("target_language", "en")
         metadata = []
         for bookfile in bookfiles:
             metadata.append(getBookMetadata(bookfile))
