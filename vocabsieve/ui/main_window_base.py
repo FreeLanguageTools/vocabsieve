@@ -71,13 +71,13 @@ class MainWindowBase(QMainWindow):
             case _:
                 self.shift_pressed = False
 
-    def keyPressEvent(self, event: QKeyEvent | None) -> None:
+    def keyPressEvent(self, event: QKeyEvent) -> None:
         if self.is_wayland and event.key() == Qt.Key.Key_Shift:
             self.shift_pressed = True
         else:
             super().keyPressEvent(event)
 
-    def keyReleaseEvent(self, event: QKeyEvent | None) -> None:
+    def keyReleaseEvent(self, event: QKeyEvent) -> None:
         if self.is_wayland and event.key() == Qt.Key.Key_Shift:
             self.shift_pressed = False
         else:

@@ -1,0 +1,21 @@
+repos:
+- repo: local
+  hooks:
+    - id: pylint
+      name: pylint
+      entry: pylint
+      language: system
+      types: [python]
+      args:
+        [
+          "-rn", # Only display messages
+          "-sn", # Don't display the score
+        ]
+- repo: local
+  hooks:
+  -   id: mypy
+      name: mypy
+      entry: mypy
+      language: system
+      types: [python]
+      args: ["--ignore-missing-imports"]
