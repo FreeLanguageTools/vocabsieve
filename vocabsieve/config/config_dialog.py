@@ -8,8 +8,9 @@ from PyQt5.QtCore import Qt, pyqtSlot
 import platform
 import qdarktheme
 from shutil import rmtree
+
 from ..fieldmatcher import FieldMatcher
-from ..ui import SourceGroupWidget, AllSourcesWidget, WordRulesEditor
+from ..ui import SourceGroupWidget, AllSourcesWidget
 from ..models import DisplayMode, FreqDisplayMode, LemmaPolicy
 from loguru import logger
 from ..tools import (addDefaultModel, getVersion, findNotes,
@@ -18,6 +19,7 @@ from ..tools import (addDefaultModel, getVersion, findNotes,
                      )
 from .general_tab import GeneralTab
 from .source_tab import SourceTab
+from .processing_tab import ProcessingTab
 from ..global_names import settings
 
 import os
@@ -39,8 +41,6 @@ class ConfigDialog(QDialog):
         logger.debug("Setting up autosave")
         self.setupAutosave()
         logger.debug("Setting up processing")
-        self.setupProcessing()
-        self.deactivateProcessing()
         logger.debug("Fetching matched cards from AnkiConnect")
         self.getMatchedCards()
         logger.debug("Got matched cards")
@@ -62,7 +62,7 @@ class ConfigDialog(QDialog):
             "Capitalize first letter of sentence")
         self.capitalize_first_letter.setToolTip(
             "Capitalize the first letter of clipboard's content before pasting into the sentence field. Does not affect dictionary lookups.")
-        self.word_proc_button = QPushButton("Edit word preprocessing rules")
+        
         self.deck_name = QComboBox()
         self.tags = QLineEdit()
         self.note_type = QComboBox()
@@ -106,16 +106,6 @@ class ConfigDialog(QDialog):
         self.reader_port = QSpinBox()
         self.reader_port.setMinimum(1024)
         self.reader_port.setMaximum(49151)
-
-        self.postproc_selector = QComboBox()
-        self.display_mode = QComboBox()
-        self.lemma_policy = QComboBox()
-        self.skip_top = QSpinBox()
-        self.skip_top.setSuffix(" lines")
-        self.cleanup_html = QCheckBox()
-        self.cleanup_html.setDisabled(True)
-        self.collapse_newlines = QSpinBox()
-        self.collapse_newlines.setSuffix(" newlines")
 
         self.reset_button = QPushButton("Reset settings")
         self.reset_button.setStyleSheet('QPushButton {color: red;}')
@@ -212,20 +202,20 @@ class ConfigDialog(QDialog):
         self.tab_g = GeneralTab()  # General
         self.tab_s = SourceTab()  # Sources
         self.tab_g.sources_reloaded_signal.connect(self.tab_s.reloadSources)
-        self.tab_g.load_dictionaries()
         self.tab_s.sg2_visibility_changed.connect(self.changeMainLayout)
+        self.tab_p = ProcessingTab()  # Processing
+        self.tab_g.sources_reloaded_signal.connect(self.tab_p.setupSelector)
         self.tab_a = QWidget()  # Anki
         self.tab_a_layout = QFormLayout(self.tab_a)
         self.tab_n = QWidget()  # Network
         self.tab_n_layout = QFormLayout(self.tab_n)
         self.tab_i = QWidget()  # Interface
         self.tab_i_layout = QFormLayout(self.tab_i)
-        self.tab_p = QWidget()  # Processing
-        self.tab_p_layout = QFormLayout(self.tab_p)
         self.tab_m = QWidget()  # Miscellaneous
         self.tab_m_layout = QFormLayout(self.tab_m)
         self.tab_t = QWidget()  # Tracking
         self.tab_t_layout = QFormLayout(self.tab_t)
+        self.tab_g.load_dictionaries()
 
         self.tabs.resize(400, 400)
 
@@ -300,11 +290,6 @@ class ConfigDialog(QDialog):
         self.image_field.setCurrentText("Image")
 
     def setupWidgets(self):
-        # Use enum
-        for mode in DisplayMode:
-            self.display_mode.addItem(mode.value, mode)
-        for policy in LemmaPolicy:
-            self.lemma_policy.addItem(policy.value, policy)
 
         self.tab_a_layout.addRow(QLabel("<h3>Anki settings</h3>"))
         self.tab_a_layout.addRow(self.enable_anki)
@@ -374,25 +359,6 @@ class ConfigDialog(QDialog):
         #self.tab_i_layout.addRow(QLabel("*Interface layout orientation"), self.orientation)
         self.tab_i_layout.addRow(QLabel("*Text scale"), self.text_scale_box)
 
-        self.tab_p_layout.addRow(self.word_proc_button)
-
-        self.tab_p_layout.addRow(QLabel("<h3>Per-dictionary postprocessing options</h3>"))
-        self.tab_p_layout.addRow(QLabel("Configure for dictionary:"), self.postproc_selector)
-        self.tab_p_layout.addRow(QLabel("<hr>"))
-        self.tab_p_layout.addRow(QLabel("Lemmatization policy"), self.lemma_policy)
-        self.tab_p_layout.addRow(QLabel("Display mode"), self.display_mode)
-        self.tab_p_layout.addRow(QLabel("<i>◊ HTML mode does not support editing/processing. "
-                                        "Your edits will not be saved!</i>"))
-        self.tab_p_layout.addRow(QLabel("Do not display the top"), self.skip_top)
-        self.tab_p_layout.addRow(QLabel(
-            "<i>◊ Use this if your dictionary repeats the word in the first line.</i>"))
-        self.tab_p_layout.addRow(QLabel("Collapse continuous newlines into"), self.collapse_newlines)
-        self.tab_p_layout.addRow(QLabel(
-            "<i>◊ Set to 1 to remove blank lines. 0 will leave them intact.</i>"))
-        self.tab_p_layout.addRow(QLabel("Attempt to clean up HTML"), self.cleanup_html)
-        self.tab_p_layout.addRow(QLabel(
-            "<i>◊ Try this if your mdx dictionary does not work.</i> (NOT IMPLEMENTED)"))
-
         self.text_scale.valueChanged.connect(
             lambda _: self.text_scale_label.setText(
                 format(
@@ -454,46 +420,6 @@ class ConfigDialog(QDialog):
             except Exception:
                 pass
 
-    def setupProcessing(self):
-        """This will allow per-dictionary configurations.
-        Whenever dictionary changes, the QSettings key name must change.
-        """
-        curr_dict = self.postproc_selector.currentText()
-        # Remove all existing connections
-        try:
-            self.lemma_policy.currentTextChanged.disconnect()
-            self.display_mode.currentTextChanged.disconnect()
-            self.skip_top.valueChanged.disconnect()
-            self.collapse_newlines.valueChanged.disconnect()
-            self.cleanup_html.clicked.disconnect()
-        except TypeError:
-            # When there are no connected functions, it raises a TypeError
-            # 2022-12-28 Apparently now in PyQt5 it returns RuntimeError instead
-            pass
-        # Reestablish config handlers
-        self.register_config_handler(self.display_mode,
-                                     f"{curr_dict}/" + "display_mode", DisplayMode.markdown_html)
-        self.display_mode.currentTextChanged.connect(
-            self.deactivateProcessing
-        )
-        self.register_config_handler(self.lemma_policy,
-                                     f"{curr_dict}/" + "lemma_policy", LemmaPolicy.try_lemma)
-        self.register_config_handler(self.skip_top,
-                                     f"{curr_dict}/" + "skip_top", 0)
-        self.register_config_handler(self.collapse_newlines,
-                                     f"{curr_dict}/" + "collapse_newlines", 0)
-        self.register_config_handler(self.cleanup_html,
-                                     f"{curr_dict}/" + "cleanup_html", False)
-        self.deactivateProcessing()
-
-    def deactivateProcessing(self):
-        curr_display_mode = self.display_mode.currentText()
-        if curr_display_mode == 'HTML':
-            self.skip_top.setDisabled(True)
-            self.collapse_newlines.setDisabled(True)
-        else:
-            self.skip_top.setEnabled(True)
-            self.collapse_newlines.setEnabled(True)
 
     def setupAutosave(self):
         if settings.value("config_ver") is None \
@@ -537,7 +463,7 @@ class ConfigDialog(QDialog):
                 "<disabled>")
             self.register_config_handler(self.image_field, 'image_field', "<disabled>")
 
-        self.postproc_selector.currentTextChanged.connect(self.setupProcessing)
+        
         self.note_type.currentTextChanged.connect(self.loadFields)
         #self.api_enabled.clicked.connect(self.setAvailable)
         self.reader_enabled.clicked.connect(self.setAvailable)
@@ -592,7 +518,7 @@ class ConfigDialog(QDialog):
         self.preview_young_button.clicked.connect(self.previewYoung)
         self.preview_mature_button.clicked.connect(self.previewMature)
         self.open_fieldmatcher.clicked.connect(self.openFieldMatcher)
-        self.word_proc_button.clicked.connect(self.openWordRulesEd)
+        
 
     def setAvailable(self):
         #self.api_host.setEnabled(self.api_enabled.isChecked())
@@ -603,10 +529,6 @@ class ConfigDialog(QDialog):
     def openFieldMatcher(self):
         fieldmatcher = FieldMatcher(self)
         fieldmatcher.exec()
-
-    def openWordRulesEd(self):
-        wordproc = WordRulesEditor(self)
-        wordproc.exec()
 
     def toggle_anki_settings(self, value: bool):
         self.anki_api.setEnabled(value)
