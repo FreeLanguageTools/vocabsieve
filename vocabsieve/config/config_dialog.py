@@ -4,36 +4,29 @@ from PyQt5.QtWidgets import (QDialog, QStatusBar, QCheckBox, QComboBox,QLineEdit
                              QFormLayout, QGridLayout, QVBoxLayout
                             )
 from PyQt5.QtGui import QImageWriter
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtCore import Qt
 import platform
 import qdarktheme
 from shutil import rmtree
 from ..fieldmatcher import FieldMatcher
 from ..ui import SourceGroupWidget, AllSourcesWidget, WordRulesEditor
 from ..models import DisplayMode, FreqDisplayMode, LemmaPolicy
-from enum import Enum
 from loguru import logger
-from ..dictmanager import DictManager
 from ..tools import (addDefaultModel, getVersion, findNotes, 
                     guiBrowse, getDeckList,
                     getNoteTypes, getFields
                     )
-from bidict import bidict
 from .general_tab import GeneralTab
-from ..dictionary import langs_supported, getAudioDictsForLang, getDictsForLang, getFreqlistsForLang
-from ..constants import langcodes
+from ..global_names import settings
 
 import os
-import json
 
 
 class ConfigDialog(QDialog):
     def __init__(self, parent, ):
         super().__init__(parent)
         logger.debug("Initializing settings dialog")
-        self.settings = parent.settings
-        self.dictdb = parent.dictdb
-        user_note_type = self.settings.value("note_type")
+        user_note_type = settings.value("note_type")
         self.parent = parent
         self.resize(700,500)
         self.setWindowTitle("Configure VocabSieve")
@@ -51,10 +44,10 @@ class ConfigDialog(QDialog):
         self.getMatchedCards()
         logger.debug("Got matched cards")
 
-        if not user_note_type and not self.settings.value("internal/added_default_note_type"):
+        if not user_note_type and not settings.value("internal/added_default_note_type"):
             try:
                 self.onDefaultNoteType()
-                self.settings.setValue("internal/added_default_note_type", True)
+                settings.setValue("internal/added_default_note_type", True)
             except Exception:
                 pass
 
@@ -205,7 +198,7 @@ class ConfigDialog(QDialog):
         self.theme.addItem("system")
 
         self.accent_color = QPushButton()
-        self.accent_color.setText(self.settings.value("accent_color", "default"))
+        self.accent_color.setText(settings.value("accent_color", "default"))
         self.accent_color.setToolTip("Hex color code (e.g. #ff0000 for red)")
         self.accent_color.clicked.connect(self.save_accent_color)
 
@@ -263,11 +256,11 @@ class ConfigDialog(QDialog):
 
     def save_accent_color(self):
         color = QColorDialog.getColor()
-        if color.isValid() and self.settings.value("theme") != "system":
-            self.settings.setValue("accent_color", color.name())
+        if color.isValid() and settings.value("theme") != "system":
+            settings.setValue("accent_color", color.name())
             self.accent_color.setText(color.name())
             qdarktheme.setup_theme(
-                self.settings.value("theme", "dark"),
+                settings.value("theme", "dark"),
                 custom_colors={"primary": color.name()}
                 )
 
@@ -282,7 +275,7 @@ class ConfigDialog(QDialog):
             defaultButton=QMessageBox.StandardButton.No
         )
         if answer == QMessageBox.Yes:
-            self.settings.clear()
+            settings.clear()
             self.close()
 
     def nuke_profile(self):
@@ -298,14 +291,14 @@ class ConfigDialog(QDialog):
             defaultButton=QMessageBox.StandardButton.No
         )
         if answer == QMessageBox.Yes:
-            self.settings.clear()
+            settings.clear()
             rmtree(datapath)
             os.mkdir(datapath)
             self.parent.close()
 
     def onDefaultNoteType(self):
         try:
-            addDefaultModel(self.settings.value("anki_api", 'http://127.0.0.1:8765'))
+            addDefaultModel(settings.value("anki_api", 'http://127.0.0.1:8765'))
         except Exception:
             pass
         self.loadDecks()
@@ -481,9 +474,9 @@ class ConfigDialog(QDialog):
         
 
     def getMatchedCards(self):
-        if self.settings.value("enable_anki", True):
+        if settings.value("enable_anki", True):
             try:
-                _ = getVersion(api:=self.settings.value('anki_api', 'http://127.0.0.1:8765'))
+                _ = getVersion(api:=settings.value('anki_api', 'http://127.0.0.1:8765'))
                 query_mature = self.anki_query_mature.text()
                 mature_notes = findNotes(api, query_mature)
                 self.mature_count_label.setText(f"Matched {str(len(mature_notes))} notes")
@@ -536,11 +529,11 @@ class ConfigDialog(QDialog):
             self.collapse_newlines.setEnabled(True)
 
     def setupAutosave(self):
-        if self.settings.value("config_ver") is None \
-            and self.settings.value("target_language") is not None:
+        if settings.value("config_ver") is None \
+            and settings.value("target_language") is not None:
             # if old config is copied to new location, nuke it
-            self.settings.clear()
-        self.settings.setValue("config_ver", 1)
+            settings.clear()
+        settings.setValue("config_ver", 1)
         self.register_config_handler(
             self.anki_api, 'anki_api', 'http://127.0.0.1:8765')
 
@@ -693,7 +686,7 @@ class ConfigDialog(QDialog):
 
     def previewMature(self):
         try:
-            _ = getVersion(api:=self.settings.value('anki_api', 'http://127.0.0.1:8765'))
+            _ = getVersion(api:=settings.value('anki_api', 'http://127.0.0.1:8765'))
             guiBrowse(api, self.anki_query_mature.text())
         except Exception as e:
             logger.warning(repr(e))
@@ -701,7 +694,7 @@ class ConfigDialog(QDialog):
 
     def previewYoung(self):
         try:
-            _ = getVersion(api:=self.settings.value('anki_api', 'http://127.0.0.1:8765'))
+            _ = getVersion(api:=settings.value('anki_api', 'http://127.0.0.1:8765'))
             guiBrowse(api, self.anki_query_young.text())
         except Exception as e:
             logger.warning(repr(e))
@@ -713,14 +706,14 @@ class ConfigDialog(QDialog):
         self.deck_name.blockSignals(True)
         self.deck_name.clear()
         self.deck_name.addItems(decks)
-        self.deck_name.setCurrentText(self.settings.value("deck_name"))
+        self.deck_name.setCurrentText(settings.value("deck_name"))
         self.deck_name.blockSignals(False)
 
         note_types = getNoteTypes(api)
         self.note_type.blockSignals(True)
         self.note_type.clear()
         self.note_type.addItems(note_types)
-        self.note_type.setCurrentText(self.settings.value("note_type"))
+        self.note_type.setCurrentText(settings.value("note_type"))
         self.note_type.blockSignals(False)
 
     def loadFields(self):
@@ -775,13 +768,13 @@ class ConfigDialog(QDialog):
         self.image_field.addItem("<disabled>")
         self.image_field.addItems(fields)
 
-        self.sentence_field.setCurrentText(self.settings.value("sentence_field"))
-        self.word_field.setCurrentText(self.settings.value("word_field"))
-        self.frequency_field.setCurrentText(self.settings.value("frequency_field"))
-        self.definition1_field.setCurrentText(self.settings.value("definition1_field"))
-        self.definition2_field.setCurrentText(self.settings.value("definition2_field"))
-        self.pronunciation_field.setCurrentText(self.settings.value("pronunciation_field"))
-        self.image_field.setCurrentText(self.settings.value("image_field"))
+        self.sentence_field.setCurrentText(settings.value("sentence_field"))
+        self.word_field.setCurrentText(settings.value("word_field"))
+        self.frequency_field.setCurrentText(settings.value("frequency_field"))
+        self.definition1_field.setCurrentText(settings.value("definition1_field"))
+        self.definition2_field.setCurrentText(settings.value("definition2_field"))
+        self.pronunciation_field.setCurrentText(settings.value("pronunciation_field"))
+        self.image_field.setCurrentText(settings.value("image_field"))
 
         if self.sentence_field.findText(sent) != -1:
             self.sentence_field.setCurrentText(sent)
@@ -821,7 +814,7 @@ class ConfigDialog(QDialog):
         if self.sg2_enabled.isChecked():
             # This means user has changed from one source to two source mode,
             # need to redraw main window
-            if self.settings.value("orientation", "Vertical") == "Vertical":
+            if settings.value("orientation", "Vertical") == "Vertical":
                 self.parent._layout.removeWidget(self.parent.definition)
                 self.parent._layout.addWidget(
                     self.parent.definition, 6, 0, 2, 3)

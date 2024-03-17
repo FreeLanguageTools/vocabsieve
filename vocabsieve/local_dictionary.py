@@ -2,14 +2,12 @@
 from ast import parse
 import sqlite3
 import os
-import time
 
 from .dictformats import parseMDX, parseDSL, parseCSV, parseTSV, xdxf2text, zopen, parseKaikki
 from .lemmatizer import removeAccents
 from pystardict import Dictionary
 import json
-from typing import Optional
-from .global_names import lock
+from .global_names import lock, datapath
 
 class LocalDictionary():
     def __init__(self, datapath) -> None:
@@ -257,3 +255,5 @@ class LocalDictionary():
                     cognates.append(word)
                     break
         return set(cognates)
+    
+dictdb = LocalDictionary(datapath)

@@ -1,15 +1,17 @@
 import json
 from bidict import bidict
 from PyQt5.QtWidgets import QLabel, QComboBox, QLineEdit, QPushButton, QCheckBox
+from PyQt5.QtCore import pyqtSignal
 from .base_tab import BaseTab
 from ..constants import langcodes
 from ..dictmanager import DictManager
 from ..dictionary import getFreqlistsForLang, getDictsForLang, getAudioDictsForLang, langs_supported
 from ..global_names import settings
 
-BoldStyles = ["<disabled>", "Font weight", "Underscores"]
+BOLD_STYLES = ["<disabled>", "Font weight", "Underscores"]
 
 class GeneralTab(BaseTab):
+    sources_reloaded_signal = pyqtSignal(list, list)
     def __init__(self):
         self.target_language = QComboBox()
         self.lemfreq = QCheckBox("Lemmatize before looking up frequency")
@@ -44,17 +46,15 @@ class GeneralTab(BaseTab):
             "Custom (Enter below)"
         ])
         self.bold_style.addItems([
-            BoldStyles[1],
-            BoldStyles[2],
-            BoldStyles[0]
+            BOLD_STYLES[1],
+            BOLD_STYLES[2],
+            BOLD_STYLES[0]
         ])
         self.gtrans_lang.addItems(langs_supported.values())
-        super(GeneralTab, self).__init__()
+        super().__init__()
 
     def load_dictionaries(self):
         custom_dicts = json.loads(settings.value("custom_dicts", '[]'))
-        #self.postproc_selector.blockSignals(True)
-        #self.postproc_selector.clear()
         dicts = getDictsForLang(
             langcodes.inverse[self.target_language.currentText()], custom_dicts
             )
@@ -62,11 +62,15 @@ class GeneralTab(BaseTab):
         audio_dicts = getAudioDictsForLang(
             langcodes.inverse[self.target_language.currentText()], custom_dicts
         )
-        self.all_audio_sources_widget.clear()
-        self.all_audio_sources_widget.addItems(audio_dicts)
+        self.sources_reloaded_signal.emit(dicts, audio_dicts)
+        # TODO handle the following with the signal
+        #self.all_audio_sources_widget.clear()
+        #self.postproc_selector.blockSignals(True)
+        #self.postproc_selector.clear()
+        #self.all_audio_sources_widget.addItems(audio_dicts)
 
-        self.all_sources_widget.clear()
-        self.all_sources_widget.addItems(dicts)
+        #self.all_sources_widget.clear()
+        #self.all_sources_widget.addItems(dicts)
         
         #self.postproc_selector.addItems(dicts)
         #self.postproc_selector.blockSignals(False)
@@ -116,11 +120,11 @@ class GeneralTab(BaseTab):
         self.register_config_handler(self.audio_format, 'audio_format', 'mp3')
         self.register_config_handler(self.lemfreq, 'lemfreq', True)
 
-        self.bold_style.setCurrentText(BoldStyles[
+        self.bold_style.setCurrentText(BOLD_STYLES[
             settings.value("bold_style", 1, type=int)])
         self.bold_style.currentTextChanged.connect(
             lambda t: settings.setValue(
-                "bold_style", BoldStyles.index(t) if t in BoldStyles else 1))
+                "bold_style", BOLD_STYLES.index(t) if t in BOLD_STYLES else 1))
 
         self.register_config_handler(
             self.gtrans_lang,

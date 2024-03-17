@@ -360,7 +360,7 @@ def make_audio_source_group(src_names: list[str], dictdb: LocalDictionary) -> Au
         )
     return AudioSourceGroup(source_list)
 
-def make_dict_source(src_name: str, dictdb: LocalDictionary) -> DictionarySource:
+def make_dict_source(src_name: str) -> DictionarySource:
     if policy_string:=settings.value(f"{src_name}/lemma_policy"):
         lemma_policy = LemmaPolicy(policy_string)
     else:
@@ -390,18 +390,13 @@ def make_dict_source(src_name: str, dictdb: LocalDictionary) -> DictionarySource
             settings.value("gtrans_lang", "en")
         )
     else: # Local, /TODO error handling
-        return LocalDictionarySource(langcode, options, dictdb, src_name)
+        return LocalDictionarySource(langcode, options, src_name)
 
 
-def make_source_group(src_names: list[str], dictdb: LocalDictionary):
+def make_source_group(src_names: list[str]):
     source_list = []
     for src_name in src_names:
-        source_list.append(
-            make_dict_source(
-                src_name,
-                dictdb
-            )
-        )
+        source_list.append(make_dict_source(src_name))
     return DictionarySourceGroup(source_list)
 
 def compute_word_score(wr: WordRecord, waw: WordActionWeights):

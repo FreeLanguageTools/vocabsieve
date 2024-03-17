@@ -1,13 +1,14 @@
 from PyQt5.QtWidgets import QDialog, QGridLayout, QLabel, QComboBox
-from .tools import getNoteTypes, getFields
 import json
+from .tools import getNoteTypes, getFields
+from .global_names import settings
+
 
 class FieldMatcher(QDialog):
     def __init__(self, parent):
         super().__init__()
         self.parent = parent
-        self.settings = parent.settings
-        api = self.settings.value("anki_api", "http://127.0.0.1:8765")
+        api = settings.value("anki_api", "http://127.0.0.1:8765")
         self.models = getNoteTypes(api)
         if not self.models:
             return
@@ -50,7 +51,7 @@ class FieldMatcher(QDialog):
                 return
 
     def loadSettings(self):
-        data = json.loads(self.settings.value("tracking/fieldmap", "{}"))
+        data = json.loads(settings.value("tracking/fieldmap", "{}"))
         for model in self.models:
             word_field, ctx_field = data.get(model) or [None, None]
             if word_field:
@@ -73,4 +74,5 @@ class FieldMatcher(QDialog):
             word_field = self.word_comboboxes[model].currentText()
             ctx_field = self.ctx_comboboxes[model].currentText()
             data[model] = [word_field, ctx_field]
-        self.settings.setValue("tracking/fieldmap", json.dumps(data))
+        settings.setValue("tracking/fieldmap", json.dumps(data))
+        

@@ -9,7 +9,6 @@ import gzip
 import bz2
 import csv
 import json
-from .global_names import settings
 
 
 supported_dict_formats = bidict({
@@ -247,7 +246,7 @@ def parseKaikki(path, lang) -> dict[str, str]:
     d = {}
     with zopen(path) as f:
         logger.debug("Parsing Kaikki wiktionary dump at "+ path)
-        logger.debug("Only importing entries in language " + settings.value("target_language", 'en'))
+        logger.debug("Only importing entries in language " + lang)
         for line in f:
             data = json.loads(line)
             # Kaikki dumps may have multiple languages, skip others for now

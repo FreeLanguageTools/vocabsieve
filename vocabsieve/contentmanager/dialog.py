@@ -4,6 +4,7 @@ from bidict import bidict
 from ..dictionary import langs_supported, langcodes
 import os
 import pysubs2
+from ..global_names import settings
 from ..tools import ebook2text
 
 supported_content_formats = bidict({
@@ -24,7 +25,6 @@ supported_content_formats = bidict({
 class AddContentDialog(QDialog):
     def __init__(self, parent, path, folder=False):
         super().__init__(parent)
-        self.settings = parent.settings
         self.parent = parent
         self.resize(400, 200)
         self.path = path
@@ -48,7 +48,7 @@ class AddContentDialog(QDialog):
         self.lang = QComboBox()
         self.lang.addItems(langs_supported.values())
         self.lang.setCurrentText(
-            langcodes[self.settings.value("target_language")])
+            langcodes[settings.value("target_language")])
         self.date = QDateEdit(QDate.currentDate())
         self.date.setDisplayFormat("yyyy-MM-dd")
         self.commit_button = QPushButton("Add")

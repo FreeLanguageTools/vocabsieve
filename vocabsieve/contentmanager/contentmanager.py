@@ -2,11 +2,11 @@ from PyQt5.QtWidgets import QDialog, QTreeWidget, QPushButton, QStatusBar, QVBox
 from PyQt5.QtCore import QDate, QStandardPaths
 from operator import itemgetter
 from .dialog import AddContentDialog
+from ..global_names import settings
 
 class ContentManager(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
-        self.settings = parent.settings
         self.setWindowTitle("Manage content")
         self.parent = parent
         self.rec = parent.rec
@@ -55,7 +55,7 @@ class ContentManager(QDialog):
              
     def refresh(self):
         self.tview.clear()
-        langcode = self.settings.value("target_language", 'en')
+        langcode = settings.value("target_language", 'en')
         items = list(self.rec.getContents(langcode))
         items = sorted(items, key=itemgetter(2), reverse=True)
 

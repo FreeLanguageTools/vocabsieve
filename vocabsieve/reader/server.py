@@ -35,7 +35,7 @@ class ReaderServer(QObject):
         @app.route("/home")
         @app.route("/")
         def home():
-            books_dir = self.parent.settings.value("books_dir")
+            books_dir = settings.value("books_dir")
             book_files = []
             books = []
             if books_dir:
@@ -50,7 +50,7 @@ class ReaderServer(QObject):
         
         @app.route('/read/<path:path>')
         def read_epub(path):
-            books_dir = self.parent.settings.value("books_dir")
+            books_dir = settings.value("books_dir")
             if not books_dir:
                 return "No books directory set"
             book_url = url_for('send_epub', path=path)
@@ -62,7 +62,7 @@ class ReaderServer(QObject):
         
         @app.route('/books/<path:path>')
         def send_epub(path):
-            books_dir = self.parent.settings.value("books_dir")
+            books_dir = settings.value("books_dir")
             if not books_dir:
                 return "No books directory set"
             return send_from_directory(books_dir, path)

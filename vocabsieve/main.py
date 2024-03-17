@@ -19,12 +19,13 @@ from PyQt5.QtGui import QClipboard, QKeySequence, QPixmap, QDesktopServices, QIm
 from PyQt5.QtWidgets import QApplication, QMessageBox, QAction, QShortcut, QFileDialog
 
 import qdarktheme
-from .global_names import datapath, lock, app # First local import
+from .global_names import datapath, lock, app, settings # First local import
 from .text_manipulation import apply_bold_char, apply_bold_tags, bold_word_in_text
 from .analyzer import BookAnalyzer
 from .config import ConfigDialog
 from .stats import StatisticsWindow
 from .dictionary import preprocess_clipboard
+from .local_dictionary import dictdb
 from .importer import KindleVocabImporter, KoreaderVocabImporter, AutoTextImporter
 from .reader import ReaderServer
 from .contentmanager import ContentManager
@@ -70,9 +71,9 @@ class MainWindow(MainWindowBase):
         self.setupClipboardMonitor()
 
 
-        if not self.settings.value("internal/configured"):
+        if not settings.value("internal/configured"):
             self.configure()
-            self.settings.setValue("internal/configured", True)
+            settings.setValue("internal/configured", True)
 
 
     def onApplicationStateChanged(self, state):
@@ -84,7 +85,7 @@ class MainWindow(MainWindowBase):
         GlobalObject().addEventListener("hovered over", self.lookupHovered)
         cant_listen_to_clipboard = (os.environ.get("XDG_SESSION_TYPE") == "wayland" 
                                     or platform.system() == "Darwin")
-        if self.settings.value("primary", False, type=bool) and QClipboard.supportsSelection(QApplication.clipboard()):
+        if settings.value("primary", False, type=bool) and QClipboard.supportsSelection(QApplication.clipboard()):
             QApplication.clipboard().selectionChanged.connect(
                 lambda: self.clipboardChanged(selection=True))
         if not cant_listen_to_clipboard:
@@ -120,7 +121,7 @@ class MainWindow(MainWindowBase):
                 self.last_clipboard = QApplication.clipboard().text()
                 logger.debug(f"Polling: Clipboard text changed to '''{self.last_clipboard}'''")
                 self.polled_clipboard_changed.emit()
-        if QApplication.clipboard().supportsSelection() and self.settings.value("primary", False, type=bool):
+        if QApplication.clipboard().supportsSelection() and settings.value("primary", False, type=bool):
             if self.last_selection != QApplication.clipboard().text(QClipboard.Selection) \
                 and QApplication.clipboard().text(QClipboard.Selection) != self.last_clipboard \
                 and QApplication.clipboard().text(QClipboard.Selection).strip() != "":
@@ -130,34 +131,34 @@ class MainWindow(MainWindowBase):
 
     def initSources(self):
         logger.debug("Initializing sources")
-        sg1_src_list = json.loads(self.settings.value("sg1", '["Wiktionary (English)"]'))
-        self.sg1 = make_source_group(sg1_src_list, self.dictdb)
+        sg1_src_list = json.loads(settings.value("sg1", '["Wiktionary (English)"]'))
+        self.sg1 = make_source_group(sg1_src_list)
         self.definition.setSourceGroup(self.sg1)
         logger.debug(f"Source Group 1: {sg1_src_list} has been created.")
 
-        if self.settings.value("freq_source", "<disabled>") != "<disabled>":
-            self.freq_widget.setSource(make_freq_source(self.settings.value("freq_source"), self.dictdb))
+        if settings.value("freq_source", "<disabled>") != "<disabled>":
+            self.freq_widget.setSource(make_freq_source(settings.value("freq_source"), dictdb))
 
 
-        if self.settings.value("sg2_enabled", False, type=bool):
-            sg2_src_list = json.loads(self.settings.value("sg2", '[]'))
+        if settings.value("sg2_enabled", False, type=bool):
+            sg2_src_list = json.loads(settings.value("sg2", '[]'))
             logger.debug(f"Source Group 2: {sg2_src_list} has been created.")
-            self.sg2 = make_source_group(sg2_src_list, self.dictdb)
+            self.sg2 = make_source_group(sg2_src_list)
             self.definition2.setSourceGroup(self.sg2)
         else:
             logger.debug("Source Group 2 is disabled, emptying source widget.")
             self.sg2 = DictionarySourceGroup([])
             self.definition2.setSourceGroup(self.sg2) 
 
-        if audio_src_list:=json.loads(self.settings.value("audio_sg", '["Forvo"]')):
-            self.audio_sg = make_audio_source_group(audio_src_list, self.dictdb)
+        if audio_src_list:=json.loads(settings.value("audio_sg", '["Forvo"]')):
+            self.audio_sg = make_audio_source_group(audio_src_list, dictdb)
             self.audio_selector.setSourceGroup(self.audio_sg)
             logger.debug(f"Audio source group: {audio_src_list} has been created")
 
     @pyqtSlot()
     def checkUpdatesOnThread(self) -> None:
         print("Started checking updates")
-        if self.settings.value("check_updates") is None:
+        if settings.value("check_updates") is None:
             answer = QMessageBox.question(
                 None,
                 "Check updates",
@@ -168,11 +169,11 @@ class MainWindow(MainWindowBase):
                 "<br>You can change this option in the configuration panel at any time."
             )
             if answer == QMessageBox.Yes:
-                self.settings.setValue("check_updates", True)
+                settings.setValue("check_updates", True)
             if answer == QMessageBox.No:
-                self.settings.setValue("check_updates", False)
-            self.settings.sync()
-        if self.settings.value("check_updates", True, type=bool):
+                settings.setValue("check_updates", False)
+            settings.sync()
+        if settings.value("check_updates", True, type=bool):
             self.thread_manager.start(self.checkUpdates)
         print("Finished checking updates")
 
@@ -237,7 +238,7 @@ class MainWindow(MainWindowBase):
         self.open_logs_action = QAction("View session logs")
         self.open_data_folder_action = QAction("Open data folder")
 
-        if not self.settings.value("reader_enabled", True, type=bool):
+        if not settings.value("reader_enabled", True, type=bool):
             self.open_reader_action.setEnabled(False)
             self.set_book_path_action.setEnabled(False)
 
@@ -318,8 +319,8 @@ class MainWindow(MainWindowBase):
             directory=QStandardPaths.writableLocation(QStandardPaths.HomeLocation)
         )
         if path:
-            self.settings.setValue("books_dir", path)
-            self.settings.sync()
+            settings.setValue("books_dir", path)
+            settings.sync()
 
     def onAnalyzeBook(self):
         if self.checkAnkiConnect() and self.known_data is not None:
@@ -336,15 +337,15 @@ class MainWindow(MainWindowBase):
 
     def getKnownWords(self) -> tuple[list[str], list[str]]:
         if self.known_data is not None:
-            langcode = self.settings.value('target_language', 'en')
-            known_threshold = self.settings.value('tracking/known_threshold', 100, type=int)
-            known_threshold_cognate = self.settings.value('tracking/known_threshold_cognate', 25, type=int)
+            langcode = settings.value('target_language', 'en')
+            known_threshold = settings.value('tracking/known_threshold', 100, type=int)
+            known_threshold_cognate = settings.value('tracking/known_threshold_cognate', 25, type=int)
             known_words: list[str] = []
             known_cognates: list[str] = []
             self.cognates = set()
-            if self.dictdb.hasCognatesData():
-                known_langs = self.settings.value('tracking/known_langs', 'en').split(",")
-                self.cognates = self.dictdb.getCognatesData(langcode, known_langs)
+            if dictdb.hasCognatesData():
+                known_langs = settings.value('tracking/known_langs', 'en').split(",")
+                self.cognates = dictdb.getCognatesData(langcode, known_langs)
             waw = self.getWordActionWeights()
             for word, word_record in self.known_data.items():
                 score=compute_word_score(word_record, waw)
@@ -381,7 +382,7 @@ class MainWindow(MainWindowBase):
     def checkDataAvailability(self) -> TrackingDataError:
         # Check is Anki enabled
         # Can proceed is anki is disabled
-        if not self.settings.value("enable_anki", True, type=bool):
+        if not settings.value("enable_anki", True, type=bool):
             return TrackingDataError.no_errors
         # Anki is enabled
         # Check if AnkiConnect is running
@@ -389,7 +390,7 @@ class MainWindow(MainWindowBase):
             return TrackingDataError.anki_enabled_but_not_running
         # AnkiConnect is running
         # Check if fieldmap is set
-        fieldmap = json.loads(self.settings.value("tracking/fieldmap",  "{}"))
+        fieldmap = json.loads(settings.value("tracking/fieldmap",  "{}"))
         if not fieldmap:
             return TrackingDataError.anki_enabled_running_but_no_fieldmap
         # fieldmap is set
@@ -502,8 +503,8 @@ class MainWindow(MainWindowBase):
         QDesktopServices.openUrl(QUrl(url))
 
     def checkAnkiConnect(self) -> int:
-        api = self.settings.value('anki_api', 'http://127.0.0.1:8765')
-        if self.settings.value('enable_anki', True, type=bool):
+        api = settings.value('anki_api', 'http://127.0.0.1:8765')
+        if settings.value('enable_anki', True, type=bool):
             try:
                 _ = getVersion(api)
                 return 1
@@ -536,8 +537,8 @@ class MainWindow(MainWindowBase):
         self.pause_polling = True
         logger.debug("Opening settings dialog")
         if self.checkAnkiConnect():
-            self.settings_dialog = ConfigDialog(self)
-            self.settings_dialog.exec()
+            settings_dialog = ConfigDialog(self)
+            settings_dialog.exec()
             self.initSources()
         self.pause_polling = False
 
@@ -584,8 +585,8 @@ class MainWindow(MainWindowBase):
 
 
     def repeatLastImport(self):
-        method = self.settings.value("last_import_method")
-        path = self.settings.value("last_import_path")
+        method = settings.value("last_import_method")
+        path = settings.value("last_import_path")
         if not (method and path):
             QMessageBox.warning(self, "You have not imported notes before",
                 "Use any one of the other two options on the menu, and you will be able to use this one next time.")
@@ -596,8 +597,8 @@ class MainWindow(MainWindowBase):
             KoreaderVocabImporter(self, path).exec()
         else:
             # Nightly users, clear it for them
-            self.settings.setValue("last_import_method", "")
-            self.settings.setValue("last_import_path", "")
+            settings.setValue("last_import_method", "")
+            settings.setValue("last_import_path", "")
             QMessageBox.warning(self, "You have not imported notes before",
                 "Use any one of the other two options on the menu, and you will be able to use this one next time.")
  
@@ -648,14 +649,14 @@ class MainWindow(MainWindowBase):
     def onWebButton(self) -> None:
         """Shows definitions of self.word.text() in wiktionoary in browser"""
 
-        url = self.settings.value("custom_url",
+        url = settings.value("custom_url",
             "https://en.wiktionary.org/wiki/@@@@").replace("@@@@", self.word.text())
         QDesktopServices.openUrl(QUrl(url))
 
     def onReaderOpen(self) -> None:
         """Opens reader in browser"""
-        url = f"http://{self.settings.value('reader_host', '127.0.0.1', type=str)}:{self.settings.value('reader_port', '39285', type=str)}"
-        books_dir = self.settings.value("books_dir")
+        url = f"http://{settings.value('reader_host', '127.0.0.1', type=str)}:{settings.value('reader_port', '39285', type=str)}"
+        books_dir = settings.value("books_dir")
         if not books_dir:
             QMessageBox.warning(self, "No books directory set",
                 "You have not set the directory containing your books. Please set it by selecting Reader -> Set book path")
@@ -685,9 +686,9 @@ class MainWindow(MainWindowBase):
         Returns note ids if card with word found in Anki, None if not found"""
         if self.checkAnkiConnect() == 0:
             return []
-        api = self.settings.value("anki_api", "http://127.0.0.1:8765")
+        api = settings.value("anki_api", "http://127.0.0.1:8765")
         
-        note_type = self.settings.value("note_type")
+        note_type = settings.value("note_type")
         logger.debug(f'Trying to obtain fields for note type "{note_type}"')
 
         fields = modelFieldNames(api, note_type)
@@ -696,11 +697,11 @@ class MainWindow(MainWindowBase):
             logger.error(f"Could not obtain fields for note type {note_type}")
             self.note_type_first_field = ""
             return []
-        if fields[0] == self.settings.value("word_field"):
+        if fields[0] == settings.value("word_field"):
             logger.info(f'First field is word field, trying to find a note with field "{fields[0]}" having value "{word}"')
             find_query = f"\"{fields[0]}:{word}\""
             self.note_type_first_field = "word"
-        elif fields[0] == self.settings.value("sentence_field"):
+        elif fields[0] == settings.value("sentence_field"):
             logger.info(f'First field is sentence field, trying to find a note with field "{fields[0]}" having value "{sentence}"')
             find_query = f"\"{fields[0]}:{sentence}\""
             self.note_type_first_field = "sentence"
@@ -724,7 +725,7 @@ class MainWindow(MainWindowBase):
     
     def lookup(self, target: str, no_lemma=False, apply_rules=True) -> None:
         self.boldWordInSentence(target)
-        langcode = self.settings.value("target_language", "en")
+        langcode = settings.value("target_language", "en")
         
         lemma = lem_word(target, langcode)
         self.rec.recordLookup(
@@ -739,15 +740,15 @@ class MainWindow(MainWindowBase):
                 lemma, 
                 WordRecord(lemma=lemma, language=langcode)
                 )
-            threshold = self.settings.value("tracking/known_threshold", 100, type=int) if lemma not in self.cognates else self.settings.value("tracking/known_threshold_cognate", 25, type=int)
+            threshold = settings.value("tracking/known_threshold", 100, type=int) if lemma not in self.cognates else settings.value("tracking/known_threshold_cognate", 25, type=int)
             modifier = self.rec.getModifier(langcode, lemma)
             self.word_record_display.setWordRecord(word_record, self.getWordActionWeights(), threshold, modifier)
 
         lookup1_result_success = self.definition.lookup(target, no_lemma)
-        lookup2_result_success = self.settings.value("sg2_enabled", False, type=bool) and self.definition2.lookup(target, no_lemma)
+        lookup2_result_success = settings.value("sg2_enabled", False, type=bool) and self.definition2.lookup(target, no_lemma)
         if not (lookup1_result_success or lookup2_result_success):
             # If no definition found, we apply word rules and try again
-            rules = json.loads(self.settings.value("word_regex", "[]"))
+            rules = json.loads(settings.value("word_regex", "[]"))
             if apply_rules and rules:
                 logger.info(f"No definitions found for {target}, now applying word rules and trying again")
                 new_lookup_term = apply_word_rules(target, rules)
@@ -756,7 +757,7 @@ class MainWindow(MainWindowBase):
                 self.word.setText(target)
 
         self.audio_selector.lookup(target)
-        self.freq_widget.lookup(target, True, self.settings.value("freq_display", "Stars"))
+        self.freq_widget.lookup(target, True, settings.value("freq_display", "Stars"))
         
 
     def setSentence(self, content) -> None:
@@ -771,16 +772,16 @@ class MainWindow(MainWindowBase):
             self.image_viewer.setText("<center><b>&lt;No image selected&gt;</center>")
             self.image_path = ""
             return
-        filename = str(int(time.time()*1000)) + '.' + self.settings.value("img_format", "jpg")
+        filename = str(int(time.time()*1000)) + '.' + settings.value("img_format", "jpg")
         logger.debug(f"Received image, saving to disk as {filename}")
         self.image_path = os.path.join(datapath, "images", filename)
         content.save(
-            self.image_path, quality=self.settings.value("img_quality", -1, type=int)
+            self.image_path, quality=settings.value("img_quality", -1, type=int)
         )
         self.image_viewer.setPixmap(content)
 
     def getConvertToUppercase(self) -> bool:
-        return bool(self.settings.value("capitalize_first_letter", False, type=bool))
+        return bool(settings.value("capitalize_first_letter", False, type=bool))
 
 
     def clipboardChanged(self, even_when_focused=False, selection=False):
@@ -807,7 +808,7 @@ class MainWindow(MainWindowBase):
             text = QApplication.clipboard().text()
 
         should_convert_to_uppercase = self.getConvertToUppercase()
-        lang = self.settings.value("target_language", "en")
+        lang = settings.value("target_language", "en")
         # Check if any of the text box widgets are focused
         # If they are, ignore the clipboard change
         is_focused = (time.time() - self.last_got_focus > 0.2)\
@@ -842,12 +843,12 @@ class MainWindow(MainWindowBase):
 
     def boldWordInSentence(self, word) -> None:
         sentence_text = self.sentence.unboldedText
-        if self.settings.value("bold_style", type=int) != 0:
+        if settings.value("bold_style", type=int) != 0:
             # Bold word that was clicked on, either with "<b>{word}</b>" or
             # "__{word}__".
-            if self.settings.value("bold_style", type=int) == 1:
+            if settings.value("bold_style", type=int) == 1:
                 apply_bold = apply_bold_tags
-            elif self.settings.value("bold_style", type=int) == 2:
+            elif settings.value("bold_style", type=int) == 2:
                 apply_bold = apply_bold_char
             else:
                 raise ValueError("Invalid bold style")
@@ -866,10 +867,10 @@ class MainWindow(MainWindowBase):
         
 
     def getLanguage(self) -> str:
-        return self.settings.value("target_language", "en")  # type: ignore
+        return settings.value("target_language", "en")  # type: ignore
 
     def getLemGreedy(self) -> bool:
-        return self.settings.value("lem_greedily", False, type=bool)  # type: ignore
+        return settings.value("lem_greedily", False, type=bool)  # type: ignore
 
 
     def createNote(self) -> None:
@@ -916,7 +917,7 @@ class MainWindow(MainWindowBase):
             definition2=self.definition2.process_defi_anki(),
             audio_path=self.audio_selector.current_audio_path,
             image=self.image_path,
-            tags=self.settings.value("tags", "vocabsieve").strip().split() + self.tags.text().strip().split()
+            tags=settings.value("tags", "vocabsieve").strip().split() + self.tags.text().strip().split()
         )
 
         
@@ -924,7 +925,7 @@ class MainWindow(MainWindowBase):
         logger.debug("Prepared Anki note json" + json.dumps(content, indent=4, ensure_ascii=False))
         try: 
             self.last_added_note_id = addNote(
-                self.settings.value("anki_api", "http://127.0.0.1:8765"),
+                settings.value("anki_api", "http://127.0.0.1:8765"),
                 content,
                 allow_duplicates
             )
@@ -961,7 +962,7 @@ class MainWindow(MainWindowBase):
         gui_query = f"nid:{note_id}"
         try:
             guiBrowse(
-                self.settings.value("anki_api", "http://127.0.0.1:8765"),
+                settings.value("anki_api", "http://127.0.0.1:8765"),
                 gui_query
             )
         except Exception as e: # This shouldn't really be possible
@@ -981,7 +982,7 @@ class MainWindow(MainWindowBase):
         gui_query = f"nid:{','.join(str(id) for id in note_ids)}"
         try:
             guiBrowse(
-                self.settings.value("anki_api", "http://127.0.0.1:8765"),
+                settings.value("anki_api", "http://127.0.0.1:8765"),
                 gui_query
             )
         except Exception as e: # This shouldn't really be possible
@@ -1010,7 +1011,7 @@ class MainWindow(MainWindowBase):
         #_timer.timeout.connect(self.showStats)
         #_timer.start(2000)
         timer_known_data = QTimer(self)
-        refresh_every = self.settings.value("tracking/known_data_lifetime", 1800, type=int) * 1000 // 10
+        refresh_every = settings.value("tracking/known_data_lifetime", 1800, type=int) * 1000 // 10
         timer_known_data.setInterval(refresh_every) # Attempt to refresh every 30s, but refresh will only happen if data is expired
         timer_known_data.timeout.connect(self.getKnownDataOnThread)
         timer_known_data.start()
@@ -1035,10 +1036,10 @@ class MainWindow(MainWindowBase):
         msg.exec()
 
     def startServer(self) -> None:
-        if self.settings.value("reader_enabled", True, type=bool):
+        if settings.value("reader_enabled", True, type=bool):
             self.thread2 = QThread()
-            port = self.settings.value("reader_port", 39285, type=int)
-            host = self.settings.value("reader_host", "127.0.0.1")
+            port = settings.value("reader_port", 39285, type=int)
+            host = settings.value("reader_host", "127.0.0.1")
             self.worker2 = ReaderServer(self, host, port)
             self.worker2.moveToThread(self.thread2)
             self.thread2.started.connect(self.worker2.start_api)

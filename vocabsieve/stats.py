@@ -9,6 +9,8 @@ from datetime import datetime
 import time
 import math
 from .tools import starts_with_cyrillic, prettydigits
+from .global_names import settings
+from .local_dictionary import dictdb
 
 if TYPE_CHECKING:
     from .main import MainWindow
@@ -16,17 +18,15 @@ if TYPE_CHECKING:
 class StatisticsWindow(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
-        self.settings = parent.settings
         self._parent: "MainWindow" = parent
         self.rec = parent.rec
-        self.dictdb = parent.dictdb
         self.setWindowTitle(f"Statistics")
         self.tabs = QTabWidget()
         self.known = QWidget()  # Known words
         self.lookupStats = QWidget()  # Lookup stats
         self.mlw = QWidget()  # Most looked up words
         self.tabs.resize(400, 500)
-        self.langcode = self.settings.value('target_language', 'en')
+        self.langcode = settings.value('target_language', 'en')
         self.initKnown()
         self.initMLW()
         self.initLookupsStats()
@@ -65,13 +65,13 @@ class StatisticsWindow(QDialog):
             level_prev = level
 
     def initKnown(self):
-        self.threshold = self.settings.value('tracking/known_threshold', 100, type=int) 
-        self.threshold_cognate = self.settings.value('tracking/known_threshold_cognate', 25, type=int)
-        self.known_langs = [l.strip() for l in self.settings.value('tracking/known_langs', 'en').split(",")]
-        langcode = self.settings.value('target_language', 'en')
+        self.threshold = settings.value('tracking/known_threshold', 100, type=int) 
+        self.threshold_cognate = settings.value('tracking/known_threshold_cognate', 25, type=int)
+        self.known_langs = [l.strip() for l in settings.value('tracking/known_langs', 'en').split(",")]
+        langcode = settings.value('target_language', 'en')
         start = time.time()
         self.known_layout = QVBoxLayout(self.known) 
-        hasCognates = self.dictdb.hasCognatesData()
+        hasCognates = dictdb.hasCognatesData()
         if not hasCognates:
             self.known_layout.addWidget(label:=QLabel('No cognates data installed. Please download <a href="https://raw.githubusercontent.com/FreeLanguageTools/CogNet-processing/master/cognates.json.xz">this file</a> and import it in the configuration tool.'))
             label.setOpenExternalLinks(True)

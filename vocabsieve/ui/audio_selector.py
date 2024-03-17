@@ -4,16 +4,15 @@ from PyQt5.QtWidgets import QStyle
 from typing import Optional
 
 from ..audio_player import AudioPlayer
-from ..global_names import MOD
+from ..global_names import MOD, settings
 from ..models import AudioDefinition, AudioSourceGroup, Definition
 import threading
 
 class AudioSelector(QListWidget):
     audio_fetched = pyqtSignal(AudioDefinition)    
-    def __init__(self, settings) -> None:
+    def __init__(self) -> None:
         super().__init__()
         self.setMinimumHeight(50)
-        self.settings = settings
         self.setFlow(QListView.TopToBottom)
         self.setResizeMode(QListView.Adjust)
         self.setWrapping(True)
@@ -91,7 +90,7 @@ class AudioSelector(QListWidget):
         if name is None:
             return
 
-        self.audio_path = self.audio_player.play_audio(name, self.audios, self.settings.value("target_language", "en"))
+        self.audio_path = self.audio_player.play_audio(name, self.audios, settings.value("target_language", "en"))
 
     def connect_signals(self):
         self.currentItemChanged.connect(self.play_audio_if_exists)

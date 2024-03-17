@@ -1,15 +1,14 @@
 from ..models import DictionarySource, SourceOptions, LookupResult
-from ..local_dictionary import LocalDictionary
+from ..local_dictionary import dictdb
 
 class LocalDictionarySource(DictionarySource):
-    def __init__(self, langcode: str, options: SourceOptions, dictdb: LocalDictionary, dictname: str) -> None:
+    def __init__(self, langcode: str, options: SourceOptions, dictname: str) -> None:
         super().__init__(dictname, langcode, options)
-        self.dictdb = dictdb
         # Ensure dictname exists in db
 
     def _lookup(self, word: str) -> LookupResult:
         try:
-            definition = self.dictdb.define(word, self.langcode, self.name)
+            definition = dictdb.define(word, self.langcode, self.name)
             return LookupResult(definition=definition)
         except KeyError as e:
             print(repr(e))
