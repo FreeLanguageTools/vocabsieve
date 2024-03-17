@@ -15,6 +15,7 @@ BOLD_STYLES = ["<disabled>", "Font weight", "Underscores"]
 
 class SourceTab(BaseTab):
     sg2_visibility_changed = pyqtSignal(bool)
+
     def initWidgets(self):
         self.sg1_widget = SourceGroupWidget()
         self.sg2_widget = SourceGroupWidget()
@@ -63,4 +64,3 @@ class SourceTab(BaseTab):
         self.all_audio_sources_widget.addItems(audio_dicts)
         self.all_sources_widget.clear()
         self.all_sources_widget.addItems(dicts)
-        

@@ -38,7 +38,7 @@ class ProcessingTab(BaseTab):
         layout.addRow(QLabel("Lemmatization policy"), self.lemma_policy)
         layout.addRow(QLabel("Display mode"), self.display_mode)
         layout.addRow(QLabel("<i>◊ HTML mode does not support editing/processing. "
-                                        "Your edits will not be saved!</i>"))
+                             "Your edits will not be saved!</i>"))
         layout.addRow(QLabel("Do not display the top"), self.skip_top)
         layout.addRow(QLabel(
             "<i>◊ Use this if your dictionary repeats the word in the first line.</i>"))
@@ -51,8 +51,10 @@ class ProcessingTab(BaseTab):
 
     @pyqtSlot(list, list)
     def setupSelector(self, dicts, _):
+        self.postproc_selector.blockSignals(True)
         self.postproc_selector.clear()
         self.postproc_selector.addItems(dicts)
+        self.postproc_selector.blockSignals(False)
 
     @pyqtSlot()
     def setupProcessing(self):
@@ -103,4 +105,3 @@ class ProcessingTab(BaseTab):
 
     def setupAutosave(self):
         pass
-    

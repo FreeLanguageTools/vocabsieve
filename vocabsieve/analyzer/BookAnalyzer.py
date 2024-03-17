@@ -41,7 +41,7 @@ class BookAnalyzer(QDialog):
     def initWidgets(self):
         self.basic_info_left = ""
         if self.langcode in ['ru', 'uk', 'bg', 'mk', 'be', 'kk', 'ky', 'mn', 'tg', 'uz']:
-            # languages: Russian, Ukrainian, Bulgarian, Macedonian, Belarusian, Kazakh, 
+            # languages: Russian, Ukrainian, Bulgarian, Macedonian, Belarusian, Kazakh,
             # Kyrgyz, Mongolian, Tajik, Uzbek
             self.known_words = {word for word in self.known_words if starts_with_cyrillic(word)}
         else:
@@ -56,10 +56,10 @@ class BookAnalyzer(QDialog):
         with Pool() as p:
             start = time.time()
             self.sentences = list(sentence for sentence in
-                                itertools.chain.from_iterable(
-                                    p.starmap(self.splitter.split, ((ch,) for ch in self.chapters))
-                                )
-                                if sentence)
+                                  itertools.chain.from_iterable(
+                                      p.starmap(self.splitter.split, ((ch,) for ch in self.chapters))
+                                  )
+                                  if sentence)
             logger.debug(f"Split book in { time.time() - start } seconds.")
 
             start = time.time()
@@ -268,7 +268,7 @@ class BookAnalyzer(QDialog):
 
             self.plotwidget_words.clear()
             self.plotwidget_words.plot(list(range(0, len(unique_count) * step_size, step_size)),
-                                    unique_count, pen='#4e79a7', name="Unique unknown words")
+                                       unique_count, pen='#4e79a7', name="Unique unknown words")
             self.plotwidget_words.plot(
                 list(
                     range(
@@ -385,9 +385,21 @@ class BookAnalyzer(QDialog):
                 pen='#e15759',
                 name="≥3T")
 
-            self.label_0t.setText("0T: " + amount_and_percent(sentence_target_counts.count(0), len(sentence_target_counts)))
-            self.label_1t.setText("1T: " + amount_and_percent(sentence_target_counts.count(1), len(sentence_target_counts)))
-            self.label_2t.setText("2T: " + amount_and_percent(sentence_target_counts.count(2), len(sentence_target_counts)))
+            self.label_0t.setText(
+                "0T: " +
+                amount_and_percent(
+                    sentence_target_counts.count(0),
+                    len(sentence_target_counts)))
+            self.label_1t.setText(
+                "1T: " +
+                amount_and_percent(
+                    sentence_target_counts.count(1),
+                    len(sentence_target_counts)))
+            self.label_2t.setText(
+                "2T: " +
+                amount_and_percent(
+                    sentence_target_counts.count(2),
+                    len(sentence_target_counts)))
             self.label_3t.setText(
                 "≥3T: " +
                 amount_and_percent(
