@@ -20,6 +20,7 @@ from ..tools import (addDefaultModel, getVersion, findNotes,
 from .general_tab import GeneralTab
 from .source_tab import SourceTab
 from .processing_tab import ProcessingTab
+from .anki_tab import AnkiTab
 from ..global_names import settings
 
 import os
@@ -29,7 +30,6 @@ class ConfigDialog(QDialog):
     def __init__(self, parent, ):
         super().__init__(parent)
         logger.debug("Initializing settings dialog")
-        user_note_type = settings.value("note_type")
         self.parent = parent
         self.resize(700, 500)
         self.setWindowTitle("Configure VocabSieve")
@@ -45,13 +45,6 @@ class ConfigDialog(QDialog):
         self.getMatchedCards()
         logger.debug("Got matched cards")
 
-        if not user_note_type and not settings.value("internal/added_default_note_type"):
-            try:
-                self.onDefaultNoteType()
-                settings.setValue("internal/added_default_note_type", True)
-            except Exception:
-                pass
-
     def initWidgets(self):
         self.status_bar = QStatusBar()
         self.allow_editing = QCheckBox(
@@ -62,18 +55,6 @@ class ConfigDialog(QDialog):
             "Capitalize first letter of sentence")
         self.capitalize_first_letter.setToolTip(
             "Capitalize the first letter of clipboard's content before pasting into the sentence field. Does not affect dictionary lookups.")
-
-        self.deck_name = QComboBox()
-        self.tags = QLineEdit()
-        self.note_type = QComboBox()
-        self.sentence_field = QComboBox()
-        self.book_path = QLineEdit()
-
-        self.word_field = QComboBox()
-        self.frequency_field = QComboBox()
-        self.definition1_field = QComboBox()
-        self.definition2_field = QComboBox()
-        self.pronunciation_field = QComboBox()
 
         #self.orientation = QComboBox()
         self.text_scale = QSlider(Qt.Horizontal)
@@ -93,7 +74,6 @@ class ConfigDialog(QDialog):
 
         #self.orientation.addItems(["Vertical", "Horizontal"])
         self.gtrans_api = QLineEdit()
-        self.anki_api = QLineEdit()
 
         #self.api_enabled = QCheckBox("Enable VocabSieve local API")
         #self.api_host = QLineEdit()
@@ -112,7 +92,6 @@ class ConfigDialog(QDialog):
         self.nuke_button = QPushButton("Delete data")
         self.nuke_button.setStyleSheet('QPushButton {color: red;}')
 
-        self.enable_anki = QCheckBox("Enable sending notes to Anki")
         self.check_updates = QCheckBox("Check for updates")
 
         self.img_format = QComboBox()
@@ -128,8 +107,6 @@ class ConfigDialog(QDialog):
         self.img_quality.setMinimum(-1)
         self.img_quality.setMaximum(100)
 
-        self.image_field = QComboBox()
-
         self.freq_display_mode = QComboBox()
         self.freq_display_mode.addItems([
             FreqDisplayMode.stars,
@@ -140,12 +117,6 @@ class ConfigDialog(QDialog):
         self.mature_count_label = QLabel("")
         self.anki_query_young = QLineEdit()
         self.young_count_label = QLabel("")
-
-        self.default_notetype_button = QPushButton(
-            "Use default note type ('vocabsieve-notes', will be created if it does not exist)")
-        self.default_notetype_button.setToolTip(
-            "This will use the default note type provided by VocabSieve. It will be created if it does not exist.")
-        self.default_notetype_button.clicked.connect(self.onDefaultNoteType)
 
         self.preview_young_button = QPushButton("Preview in Anki Browser")
         self.preview_mature_button = QPushButton("Preview in Anki Browser")
@@ -203,7 +174,7 @@ class ConfigDialog(QDialog):
         self.tab_s.sg2_visibility_changed.connect(self.changeMainLayout)
         self.tab_p = ProcessingTab()  # Processing
         self.tab_g.sources_reloaded_signal.connect(self.tab_p.setupSelector)
-        self.tab_a = QWidget()  # Anki
+        self.tab_a = AnkiTab()  # Anki
         self.tab_a_layout = QFormLayout(self.tab_a)
         self.tab_n = QWidget()  # Network
         self.tab_n_layout = QFormLayout(self.tab_n)
@@ -272,56 +243,7 @@ class ConfigDialog(QDialog):
             os.mkdir(datapath)
             self.parent.close()
 
-    def onDefaultNoteType(self):
-        try:
-            addDefaultModel(settings.value("anki_api", 'http://127.0.0.1:8765'))
-        except Exception:
-            pass
-        self.loadDecks()
-        self.loadFields()
-        self.note_type.setCurrentText("vocabsieve-notes")
-        self.sentence_field.setCurrentText("Sentence")
-        self.word_field.setCurrentText("Word")
-        self.definition1_field.setCurrentText("Definition")
-        self.definition2_field.setCurrentText("Definition#2")
-        self.pronunciation_field.setCurrentText("Pronunciation")
-        self.image_field.setCurrentText("Image")
-
     def setupWidgets(self):
-
-        self.tab_a_layout.addRow(QLabel("<h3>Anki settings</h3>"))
-        self.tab_a_layout.addRow(self.enable_anki)
-        self.tab_a_layout.addRow(
-            QLabel("<i>◊ If disabled, notes will not be sent to Anki, but only stored in a local database.</i>")
-        )
-        self.tab_a_layout.addRow(QLabel("<hr>"))
-        self.tab_a_layout.addRow(QLabel('AnkiConnect API'), self.anki_api)
-        self.tab_a_layout.addRow(QLabel("Deck name"), self.deck_name)
-        self.tab_a_layout.addRow(QLabel('Default tags'), self.tags)
-        self.tab_a_layout.addRow(QLabel("<hr>"))
-        self.tab_a_layout.addRow(self.default_notetype_button)
-        self.tab_a_layout.addRow(QLabel("Note type"), self.note_type)
-        self.tab_a_layout.addRow(
-            QLabel('Field name for "Sentence"'),
-            self.sentence_field)
-        self.tab_a_layout.addRow(
-            QLabel('Field name for "Word"'),
-            self.word_field)
-        #self.tab_a_layout.addRow(
-        #    QLabel('Field name for "Frequency Stars"'),
-        #    self.frequency_field)
-        self.tab_a_layout.addRow(
-            QLabel('Field name for "Definition"'),
-            self.definition1_field)
-        self.tab_a_layout.addRow(
-            QLabel('Field name for "Definition#2"'),
-            self.definition2_field)
-        self.tab_a_layout.addRow(
-            QLabel('Field name for "Pronunciation"'),
-            self.pronunciation_field)
-        self.tab_a_layout.addRow(
-            QLabel('Field name for "Image"'),
-            self.image_field)
 
         self.tab_n_layout.addRow(QLabel(
             '<h3>Network settings</h3>'
@@ -418,43 +340,9 @@ class ConfigDialog(QDialog):
             # if old config is copied to new location, nuke it
             settings.clear()
         settings.setValue("config_ver", 1)
-        self.register_config_handler(
-            self.anki_api, 'anki_api', 'http://127.0.0.1:8765')
 
         self.register_config_handler(self.check_updates, 'check_updates', False, True)
 
-        self.register_config_handler(self.enable_anki, 'enable_anki', True)
-        self.enable_anki.clicked.connect(self.toggle_anki_settings)
-        self.toggle_anki_settings(self.enable_anki.isChecked())
-        api = self.anki_api.text()
-        try:
-            _ = getVersion(api)
-        except Exception:
-            self.toggle_anki_settings(False)
-        else:
-            self.loadDecks()
-            self.loadFields()
-            self.register_config_handler(
-                self.deck_name, 'deck_name', 'Default')
-            self.register_config_handler(self.tags, 'tags', 'vocabsieve')
-            self.register_config_handler(self.note_type, 'note_type', 'vocabsieve-notes')
-            self.register_config_handler(
-                self.sentence_field, 'sentence_field', 'Sentence')
-            self.register_config_handler(self.word_field, 'word_field', 'Word')
-            self.register_config_handler(self.frequency_field, 'frequency_field', 'Frequency Stars')
-            self.register_config_handler(
-                self.definition1_field, 'definition1_field', 'Definition')
-            self.register_config_handler(
-                self.definition2_field,
-                'definition2_field',
-                '<disabled>')
-            self.register_config_handler(
-                self.pronunciation_field,
-                'pronunciation_field',
-                "<disabled>")
-            self.register_config_handler(self.image_field, 'image_field', "<disabled>")
-
-        self.note_type.currentTextChanged.connect(self.loadFields)
         #self.api_enabled.clicked.connect(self.setAvailable)
         self.reader_enabled.clicked.connect(self.setAvailable)
 
@@ -518,24 +406,6 @@ class ConfigDialog(QDialog):
         fieldmatcher = FieldMatcher(self)
         fieldmatcher.exec()
 
-    def toggle_anki_settings(self, value: bool):
-        self.anki_api.setEnabled(value)
-        self.tags.setEnabled(value)
-        self.note_type.setEnabled(value)
-        self.deck_name.setEnabled(value)
-        self.sentence_field.setEnabled(value)
-        self.word_field.setEnabled(value)
-        self.frequency_field.setEnabled(value)
-        self.definition1_field.setEnabled(value)
-        self.definition2_field.setEnabled(value)
-        self.pronunciation_field.setEnabled(value)
-        self.image_field.setEnabled(value)
-        self.anki_query_mature.setEnabled(value)
-        self.anki_query_young.setEnabled(value)
-        self.preview_mature_button.setEnabled(value)
-        self.preview_young_button.setEnabled(value)
-        self.open_fieldmatcher.setEnabled(value)
-
     def setupTheme(self) -> None:
         theme = self.theme.currentText()  # auto, dark, light, system
         if theme == "system":
@@ -564,107 +434,6 @@ class ConfigDialog(QDialog):
             guiBrowse(api, self.anki_query_young.text())
         except Exception as e:
             logger.warning(repr(e))
-
-    def loadDecks(self):
-        self.status("Loading decks")
-        api = self.anki_api.text()
-        decks = getDeckList(api)
-        self.deck_name.blockSignals(True)
-        self.deck_name.clear()
-        self.deck_name.addItems(decks)
-        self.deck_name.setCurrentText(settings.value("deck_name"))
-        self.deck_name.blockSignals(False)
-
-        note_types = getNoteTypes(api)
-        self.note_type.blockSignals(True)
-        self.note_type.clear()
-        self.note_type.addItems(note_types)
-        self.note_type.setCurrentText(settings.value("note_type"))
-        self.note_type.blockSignals(False)
-
-    def loadFields(self):
-        self.status("Loading fields")
-        api = self.anki_api.text()
-
-        current_type = self.note_type.currentText()
-        if current_type == "":
-            return
-
-        fields = getFields(api, current_type)
-        # Temporary store fields
-        sent = self.sentence_field.currentText()
-        word = self.word_field.currentText()
-        freq_stars = self.frequency_field.currentText()
-        def1 = self.definition1_field.currentText()
-        def2 = self.definition2_field.currentText()
-        pron = self.pronunciation_field.currentText()
-        img = self.image_field.currentText()
-
-        # Block signals temporarily to avoid warning dialogs
-        self.sentence_field.blockSignals(True)
-        self.word_field.blockSignals(True)
-        self.frequency_field.blockSignals(True)
-        self.definition1_field.blockSignals(True)
-        self.definition2_field.blockSignals(True)
-        self.pronunciation_field.blockSignals(True)
-        self.image_field.blockSignals(True)
-
-        self.sentence_field.clear()
-        self.sentence_field.addItems(fields)
-
-        self.word_field.clear()
-        self.word_field.addItems(fields)
-
-        self.frequency_field.clear()
-        self.frequency_field.addItem("<disabled>")
-        self.frequency_field.addItems(fields)
-
-        self.definition1_field.clear()
-        self.definition1_field.addItems(fields)
-
-        self.definition2_field.clear()
-        self.definition2_field.addItem("<disabled>")
-        self.definition2_field.addItems(fields)
-
-        self.pronunciation_field.clear()
-        self.pronunciation_field.addItem("<disabled>")
-        self.pronunciation_field.addItems(fields)
-
-        self.image_field.clear()
-        self.image_field.addItem("<disabled>")
-        self.image_field.addItems(fields)
-
-        self.sentence_field.setCurrentText(settings.value("sentence_field"))
-        self.word_field.setCurrentText(settings.value("word_field"))
-        self.frequency_field.setCurrentText(settings.value("frequency_field"))
-        self.definition1_field.setCurrentText(settings.value("definition1_field"))
-        self.definition2_field.setCurrentText(settings.value("definition2_field"))
-        self.pronunciation_field.setCurrentText(settings.value("pronunciation_field"))
-        self.image_field.setCurrentText(settings.value("image_field"))
-
-        if self.sentence_field.findText(sent) != -1:
-            self.sentence_field.setCurrentText(sent)
-        if self.word_field.findText(word) != -1:
-            self.word_field.setCurrentText(word)
-        if self.frequency_field.findText(freq_stars) != -1:
-            self.frequency_field.setCurrentText(freq_stars)
-        if self.definition1_field.findText(def1) != -1:
-            self.definition1_field.setCurrentText(def1)
-        if self.definition2_field.findText(def2) != -1:
-            self.definition2_field.setCurrentText(def2)
-        if self.pronunciation_field.findText(pron) != -1:
-            self.pronunciation_field.setCurrentText(pron)
-        if self.image_field.findText(img) != -1:
-            self.image_field.setCurrentText(img)
-
-        self.sentence_field.blockSignals(False)
-        self.word_field.blockSignals(False)
-        self.frequency_field.blockSignals(False)
-        self.definition1_field.blockSignals(False)
-        self.definition2_field.blockSignals(False)
-        self.pronunciation_field.blockSignals(False)
-        self.image_field.blockSignals(False)
-        self.status("Done")
 
     def errorNoConnection(self, error):
         msg = QMessageBox()
