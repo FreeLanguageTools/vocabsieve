@@ -175,11 +175,14 @@ def guiBrowse(server, query):
 def is_json(myjson) -> bool:
     if not myjson.startswith("{"):
         return False
+    json_object = None
     try:
         json_object = json.loads(myjson)
     except JSONDecodeError:
         return False
-    return json_object.get('word') and json_object.get('sentence')
+    if json_object and json_object.get('word') and json_object.get('sentence'):
+        return True
+    return False
 
 
 def failed_lookup(word) -> str:

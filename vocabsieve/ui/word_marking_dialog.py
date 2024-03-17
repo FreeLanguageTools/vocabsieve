@@ -4,7 +4,7 @@ from PyQt5.QtCore import Qt
 from typing import Optional
 
 
-from ..models import WordRecord
+from ..models import WordActionWeights, WordRecord
 from .main_window_base import MainWindowBase
 from ..tools import compute_word_score
 from ..global_names import settings, logger
@@ -14,10 +14,11 @@ from ..local_dictionary import dictdb
 class TogglableLabel(QLabel):
     def __init__(self, parent: "WordGridWidget"):
         super().__init__()
-        self.parent_ = parent
+        self.known_data: dict[str, WordRecord] = parent.known_data
+        self.waw: WordActionWeights = parent.waw
+        self.cognates: set[str] = parent.cognates
         self.rec = parent.rec  # type: ignore
         self.langcode = settings.value("target_language", "en")
-        self.mousePressEvent = self.onClicked
         self.word = ""
         self.score = 0
         self.threshold = 100
@@ -26,20 +27,20 @@ class TogglableLabel(QLabel):
 
     def setText(self, text: str):
         self.score = compute_word_score(
-            self.parent_.known_data.get(
+            self.known_data.get(
                 text,
                 WordRecord(
                     text,
                     self.langcode)),
             self.parent_.waw)  # type: ignore
-        self.threshold: int = settings.value(
+        self.threshold = settings.value(
             "tracking/known_threshold",
             100,
-            type=int) if text not in self.parent_.cognates else settings.value(
+            type=int) if text not in self.cognates else settings.value(
             "tracking/known_threshold_cognate",
             25,
             type=int)  # type: ignore
-        self.modifier: float = self.rec.getModifier(self.langcode, text)
+        self.modifier = self.rec.getModifier(self.langcode, text)
         self.known = False
         stylesheet = "border: 2px solid transparent; border-radius: 5px; padding: 4px;"
         if self.score >= self.threshold * self.modifier:
@@ -56,7 +57,11 @@ class TogglableLabel(QLabel):
         self.word = text
         super().setText((text + f" ({self.score}/{int(self.threshold * self.modifier)})") if text else "")
 
-    def onClicked(self, _: QMouseEvent):
+    def mousePressEvent(self, ev: QMouseEvent) -> None:
+        self.onClicked()
+        return super().mousePressEvent(ev)
+
+    def onClicked(self):
         if not self.word:
             return
         logger.debug(f"User pressed on {self.word} in mark words dialog")
@@ -89,8 +94,9 @@ class WordGridWidget(QWidget):
         self.parent_ = parent
         self.words: list[str] = words or []
         self.rec = parent.rec
-        self.waw = parent.waw
-        self.cognates = parent.cognates
+        self.waw: WordActionWeights = parent.waw
+        self.cognates: set[str] = parent.cognates
+        self.known_data: dict[str, WordRecord]
         self.known_data, _ = parent.rec.getKnownData()
         self.layout_ = QGridLayout(self)
         self.index_offset_label = QLabel("<b>Rank 0</b>")
