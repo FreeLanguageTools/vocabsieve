@@ -1,10 +1,11 @@
+from multiprocessing import process
 from unittest import result
 from PyQt5.QtGui import QWheelEvent
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QHBoxLayout
 from PyQt5.QtCore import Qt, pyqtSignal
 from .searchable_text_edit import SearchableTextEdit
 from ..models import Definition, DictionarySourceGroup, DisplayMode
-from ..format import markdown_nop
+from ..tools import process_defi_anki
 from typing import Optional
 
 def sign(number):
@@ -150,28 +151,16 @@ class MultiDefinitionWidget(SearchableTextEdit):
         self.info_label.setText("")
         self.counter.setText("0/0")
 
-    def process_defi_anki(self, defi: Optional[Definition] = None) -> str:
+    def toAnki(self, defi: Optional[Definition] = None) -> str:
         """Process definitions before sending to Anki"""
         # Figure out display mode of current source
-        if defi is not None:
-            self.setCurrentDefinition(defi) # for non interactive use
         if self.currentDefinition is None:
             return self.toPlainText().replace("\n", "<br>")
+        if defi is None:
+            defi = self.currentDefinition
         source_name = self.currentDefinition.source
         source = self.sg.getSource(source_name)
-        if source is None:
+        if source is None: # This means no definition is found but maybe the user typed in something
             return self.toPlainText().replace("\n", "<br>")
         
-        match source.display_mode:
-            case DisplayMode.raw:
-                return self.toPlainText().replace("\n", "<br>")
-            case DisplayMode.plaintext:
-                return self.toPlainText().replace("\n", "<br>")
-            case DisplayMode.markdown:
-                return markdown_nop(self.toPlainText())
-            case DisplayMode.markdown_html:
-                return markdown_nop(self.toMarkdown())
-            case DisplayMode.html:
-                return self.currentDefinition.definition or "" # no editing, just send the original html, using toHtml will change the html
-            case _:
-                raise NotImplementedError(f"Unknown display mode {source.display_mode}")
+        return process_defi_anki(self.toPlainText(), self.toMarkdown(), defi, source)

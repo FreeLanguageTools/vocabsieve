@@ -108,9 +108,13 @@ class MainWindow(MainWindowBase):
 
 
     def pollClipboard(self):
-        if self.pause_polling:
+        if not QApplication.clipboard():
             return
         mimedata = QApplication.clipboard().mimeData()
+        if self.pause_polling:
+            return
+        if not mimedata:
+            return
         if mimedata.hasImage():
             if self.last_image is None or self.last_image != QApplication.clipboard().image():
                 self.last_image = QApplication.clipboard().image()
@@ -913,8 +917,8 @@ class MainWindow(MainWindowBase):
         note = SRSNote(
             word=self.word.text(),
             sentence=self.sentence.textBoldedByTags.replace("\n", "<br>"),
-            definition1=self.definition.process_defi_anki(),
-            definition2=self.definition2.process_defi_anki(),
+            definition1=self.definition.toAnki(),
+            definition2=self.definition2.toAnki(),
             audio_path=self.audio_selector.current_audio_path,
             image=self.image_path,
             tags=self.settings.value("tags", "vocabsieve").strip().split() + self.tags.text().strip().split()

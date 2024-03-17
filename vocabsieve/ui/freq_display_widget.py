@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QLineEdit
 from numpy import isin
 from ..models import FreqSource, FreqDisplayMode
-from ..sources.LocalFreqSource import LocalFreqSource
+from ..sources.local_freq_source import LocalFreqSource
 from typing import Optional, cast
 from ..tools import freq_to_stars
 
