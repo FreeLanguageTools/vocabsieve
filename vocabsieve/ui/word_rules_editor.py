@@ -3,6 +3,7 @@ import json
 import shlex
 from ..global_names import settings
 
+
 class WordRulesEditor(QDialog):
     def __init__(self, parent):
         super().__init__()
@@ -33,5 +34,6 @@ class WordRulesEditor(QDialog):
 
     def saveSettings(self):
         data = self.editor.toPlainText()
-        datajson: str = json.dumps([shlex.split(line)[:2] for line in data.splitlines() if not line.startswith("#") and line.strip()])
+        datajson: str = json.dumps([shlex.split(line)[:2]
+                                   for line in data.splitlines() if not line.startswith("#") and line.strip()])
         settings.setValue("word_regex", datajson)

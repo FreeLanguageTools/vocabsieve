@@ -2,6 +2,7 @@ from .GenericImporter import GenericImporter
 from .models import ReadingNote
 from datetime import datetime as dt
 
+
 class WordListImporter(GenericImporter):
     def __init__(self, parent, words: list[str]):
         self.words = words

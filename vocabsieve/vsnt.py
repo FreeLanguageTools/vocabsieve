@@ -5,12 +5,12 @@ FIELDS = ["Sentence", "Word", "Definition", "Definition#2", "Image", "Pronunciat
 FRONT = '''<div class="widget front">
 
   <div class="title">What does this word mean here?</div>
-  <div class="box targetLang"> 
+  <div class="box targetLang">
     <div class="question">{{Sentence}}</div>
   </div>
 
 
-  {{#Word}}<div class="box targetLang"> 
+  {{#Word}}<div class="box targetLang">
     <div class="question"><b>{{Word}}</b></div>
   </div>{{/Word}}
 
@@ -22,13 +22,13 @@ BACK = '''{{FrontSide}}
 <hr id=answer>
 
 <div class="widget back">
-		
+
 		{{#Definition}}<div class="box nativeLang answer">{{Definition}}</div>{{/Definition}}
 
 		{{#Definition#2}}<div class="box nativeLang answer">{{Definition#2}}</div>{{/Definition#2}}
-	
+
 	{{#Image}}<div class="image">{{Image}}</div>{{/Image}}
-	
+
 		{{#Pronunciation}}<div class="box targetLang">{{Pronunciation}}</div>{{/Pronunciation}}
 
 {{#Tags}}<div class="tags">{{Tags}}</div>{{/Tags}}
@@ -39,7 +39,7 @@ CSS = '''.card {
   --bg-main-color: #f4f1de;
   --bg-title-color: #e07a5f;
 	--bg-box-color: #8f5d5d;
-	
+
 	--targetLang-color: #9b2f40;
 	--targetLang-font: sans-serif;
 	--nativeLang-color: #3D405B;
@@ -218,7 +218,7 @@ img {
 
 .notes img  {
   width: 100px; /* notes image max size */
-  margin: 1em;	
+  margin: 1em;
 }
 
 .use {
@@ -251,9 +251,9 @@ img {
 }'''
 
 CARDS = [
-  {
-    "Name": "Card 1",
-    "Front": FRONT,
-    "Back": BACK
-  }
+    {
+        "Name": "Card 1",
+        "Front": FRONT,
+        "Back": BACK
+    }
 ]

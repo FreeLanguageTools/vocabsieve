@@ -9,23 +9,25 @@ from .vsnt import FIELDS, CARDS, CSS
 from bs4 import BeautifulSoup
 from typing import List
 from .local_dictionary import LocalDictionary
-
+from json.decoder import JSONDecodeError
 import mobi
 from datetime import datetime
 from lxml import etree
 from charset_normalizer import from_bytes, from_path
 from ebooklib import epub, ITEM_DOCUMENT
-from .sources import (WiktionarySource, GoogleTranslateSource,  
-                      LocalDictionarySource, LocalFreqSource, 
-                      LocalAudioSource,ForvoAudioSource
+from .sources import (WiktionarySource, GoogleTranslateSource,
+                      LocalDictionarySource, LocalFreqSource,
+                      LocalAudioSource, ForvoAudioSource
                       )
-from .models import (LemmaPolicy, DictionarySourceGroup, DisplayMode, SRSNote, 
+from .models import (LemmaPolicy, DictionarySourceGroup, DisplayMode, SRSNote,
                      SourceOptions, DictionarySource, FreqSource, AnkiSettings,
                      AudioSource, AudioSourceGroup, WordRecord, WordActionWeights,
                      Definition
                      )
 from .format import markdown_nop
 from .global_names import settings, logger
+from .local_dictionary import dictdb
+
 
 def profile(func):
     def wrapper(*args, **kwargs):
@@ -35,15 +37,15 @@ def profile(func):
         return result
     return wrapper
 
+
 def request(action, **params):
     return {'action': action, 'params': params, 'version': 6}
 
+
 def invoke(action, server, **params):
     requestJson = json.dumps(request(action, **params)).encode('utf-8')
-    response = json.load(
-        urllib.request.urlopen(
-            urllib.request.Request(
-                server, requestJson)))
+    with urllib.request.urlopen(urllib.request.Request(server, requestJson)) as response:
+        response = json.load(response)
     if len(response) != 2:
         raise Exception('response has an unexpected number of fields')
     if 'error' not in response:
@@ -69,6 +71,7 @@ def getFields(server, name) -> list:
     result = invoke('modelFieldNames', server, modelName=name)
     return list(result)
 
+
 def prepareAnkiNoteDict(anki_settings: AnkiSettings, note: SRSNote) -> dict:
     """
     Helper function to create a json to be sent to AnkiConnect
@@ -85,28 +88,28 @@ def prepareAnkiNoteDict(anki_settings: AnkiSettings, note: SRSNote) -> dict:
         "tags": []
     }
     if anki_settings.tags:
-        content["tags"].extend(anki_settings.tags) # type: ignore
+        content["tags"].extend(anki_settings.tags)  # type: ignore
     if note.tags:
-        content["tags"].extend(note.tags) # type: ignore
+        content["tags"].extend(note.tags)  # type: ignore
     if note.audio_path:
-        content["audio"] = [ 
-                    { # type: ignore
-                        #"filename": os.path.basename(note.audio_path),
-                        "fields": [
-                            anki_settings.audio_field
-                        ]
-                    }
+        content["audio"] = [
+            {  # type: ignore
+                #"filename": os.path.basename(note.audio_path),
+                "fields": [
+                    anki_settings.audio_field
                 ]
+            }
+        ]
         # Support both url and path
         if note.audio_path.startswith("http://") or note.audio_path.startswith("https://"):
-            content["audio"][0]["url"] = note.audio_path # type: ignore
-            content["audio"][0]["filename"] = os.path.basename(note.audio_path) # type: ignore
+            content["audio"][0]["url"] = note.audio_path  # type: ignore
+            content["audio"][0]["filename"] = os.path.basename(note.audio_path)  # type: ignore
         else:
-            content["audio"][0]["path"] = note.audio_path # type: ignore
-            content["audio"][0]["filename"] = os.path.basename(note.audio_path) # type: ignore
+            content["audio"][0]["path"] = note.audio_path  # type: ignore
+            content["audio"][0]["filename"] = os.path.basename(note.audio_path)  # type: ignore
     if note.image:
         content["picture"] = [
-            { # type: ignore
+            {  # type: ignore
                 "path": note.image,
                 "filename": note.image,
                 "fields": [
@@ -116,12 +119,14 @@ def prepareAnkiNoteDict(anki_settings: AnkiSettings, note: SRSNote) -> dict:
         ]
     return content
 
+
 def unix_milliseconds_to_datetime_str(ms: int):
     return datetime.fromtimestamp(ms / 1000).strftime("%Y-%m-%d %H:%M:%S")
 
+
 def addNote(server, content, allow_duplicates=False) -> int:
     if allow_duplicates:
-        content = dict(content) # deepcopy since we are modifying the dict
+        content = dict(content)  # deepcopy since we are modifying the dict
         content['options'] = {
             "allowDuplicate": True
         }
@@ -134,25 +139,30 @@ def addNotes(server, content) -> List[int]:
     result = invoke('addNotes', server, notes=content)
     return list(result)
 
+
 def notesInfo(server, notes):
     return invoke('notesInfo', server, notes=notes)
+
 
 def getVersion(server) -> str:
     result = invoke('version', server)
     return str(result)
 
+
 def addDefaultModel(server):
-    return invoke('createModel', 
-        server, 
-        modelName="vocabsieve-notes", 
-        inOrderFields=FIELDS, 
-        css=CSS, 
-        cardTemplates=CARDS
-        )
+    return invoke('createModel',
+                  server,
+                  modelName="vocabsieve-notes",
+                  inOrderFields=FIELDS,
+                  css=CSS,
+                  cardTemplates=CARDS
+                  )
+
 
 def modelFieldNames(server, modelName):
     "Find the field names for a note type"
     return invoke('modelFieldNames', server, modelName=modelName)
+
 
 def findNotes(server, query):
     return invoke('findNotes', server, query=query)
@@ -161,22 +171,18 @@ def findNotes(server, query):
 def guiBrowse(server, query):
     return invoke('guiBrowse', server, query=query)
 
+
 def is_json(myjson) -> bool:
     if not myjson.startswith("{"):
         return False
     try:
         json_object = json.loads(myjson)
-        json_object['word']
-        json_object['sentence']
-    except ValueError as e:
+    except JSONDecodeError:
         return False
-    except Exception as e:
-        print(e)
-        return False
-    return True
+    return json_object.get('word') and json_object.get('sentence')
 
 
-def failed_lookup(word, settings) -> str:
+def failed_lookup(word) -> str:
     return str("<b>Definition for \"" + str(word) + "\" not found.</b><br>Check the following:<br>" +
                "- Language setting (Current: " + settings.value("target_language", 'en') + ")<br>" +
                "- Is the correct word being looked up?<br>" +
@@ -187,6 +193,7 @@ def failed_lookup(word, settings) -> str:
 
 def is_oneword(s) -> bool:
     return len(s.split()) == 1
+
 
 def freq_to_stars(freq_num, lemmatize):
     if freq_num <= 0:
@@ -219,14 +226,17 @@ def freq_to_stars(freq_num, lemmatize):
         else:
             return "☆☆☆☆☆"
 
+
 def starts_with_cyrillic(s):
     if s:
         return unicodedata.name(s[0]).startswith("CYRILLIC")
     else:
         return s
 
-def remove_ns(s: str) -> str: 
+
+def remove_ns(s: str) -> str:
     return str(s).split("}")[-1]
+
 
 def tostr(s):
     return str(
@@ -234,7 +244,8 @@ def tostr(s):
             etree.tostring(
                 s,
                 encoding='utf8',
-                method='text')).best()).strip() 
+                method='text')).best()).strip()
+
 
 def ebook2text(path) -> tuple[list[str], dict[int, str]]:
     ch_pos = {}
@@ -262,7 +273,7 @@ def ebook2text(path) -> tuple[list[str], dict[int, str]]:
             position += len(content)
             chapters.append(content)
     elif ext == '.fb2':
-        with open(path, 'rt') as f:
+        with open(path, 'rt', encoding="utf-8") as f:
             data_bytes = f.read().encode()
             tree = etree.fromstring(data_bytes)
         chapters = []
@@ -287,11 +298,14 @@ def ebook2text(path) -> tuple[list[str], dict[int, str]]:
         with open(path, 'r', encoding='utf-8') as f:
             c = f.read()
             return [BeautifulSoup(c).getText()], {0: os.path.basename(path)}
-    return chapters, ch_pos 
+    return chapters, ch_pos
+
 
 def window(seq, n=2):
-    "Returns a sliding window (of width n) over data from the iterable"
-    "   s -> (s0,s1,...s[n-1]), (s1,s2,...,sn), ...                   "
+    """
+    Returns a sliding window (of width n) over data from the iterable
+    s -> (s0,s1,...s[n-1]), (s1,s2,...,sn), ...
+    """
     it = iter(seq)
     result = tuple(islice(it, n))
     if len(result) == n:
@@ -299,9 +313,11 @@ def window(seq, n=2):
     for elem in it:
         result = result[1:] + (elem,)
         yield result
-        
+
+
 def prettydigits(number):
     return format(number, ',').replace(',', ' ')
+
 
 def amount_and_percent(amount, total):
     return f"{prettydigits(amount)} ({round(amount / total * 100, 2)}%)" if total else "0 (0%)"
@@ -312,6 +328,7 @@ def get_first_number(s: str):
         return str(re.findall(r'^[^\d]*(\d+)', s)[0])
     else:
         return s
+
 
 def grouper(iterable, n, *, incomplete='fill', fillvalue=None):
     "Collect data into non-overlapping fixed-length chunks or blocks"
@@ -328,14 +345,16 @@ def grouper(iterable, n, *, incomplete='fill', fillvalue=None):
     else:
         raise ValueError('Expected fill, strict, or ignore')
 
-def make_freq_source(src_name: str, dictdb: LocalDictionary) -> FreqSource:
+
+def make_freq_source(src_name: str) -> FreqSource:
     langcode = settings.value("target_language", "en")
     lemmatized = settings.value("lemfreq", True, type=bool)
     return LocalFreqSource(langcode, lemmatized, dictdb, src_name)
 
-def make_audio_source(src_name: str, dictdb: LocalDictionary) -> AudioSource:
+
+def make_audio_source(src_name: str) -> AudioSource:
     langcode = settings.value("target_language", "en")
-    if policy_string:=settings.value(f"audio_lemma_policy"):
+    if policy_string := settings.value(f"audio_lemma_policy"):
         lemma_policy = LemmaPolicy(policy_string)
     else:
         lemma_policy = LemmaPolicy.first_original
@@ -345,27 +364,24 @@ def make_audio_source(src_name: str, dictdb: LocalDictionary) -> AudioSource:
         custom_dicts = json.loads(settings.value("custom_dicts", "[]"))
         this_dict = next((x for x in custom_dicts if x["name"] == src_name), None)
         if this_dict:
-            return LocalAudioSource(langcode, lemma_policy, dictdb, src_name, this_dict["path"])
+            return LocalAudioSource(langcode, lemma_policy, src_name, this_dict["path"])
         else:
             raise Exception("Custom dictionary not found")
-    
-def make_audio_source_group(src_names: list[str], dictdb: LocalDictionary) -> AudioSourceGroup:
+
+
+def make_audio_source_group(src_names: list[str]) -> AudioSourceGroup:
     source_list = []
     for src_name in src_names:
-        source_list.append(
-            make_audio_source(
-                src_name,
-                dictdb
-            )
-        )
+        source_list.append(make_audio_source(src_name))
     return AudioSourceGroup(source_list)
 
+
 def make_dict_source(src_name: str) -> DictionarySource:
-    if policy_string:=settings.value(f"{src_name}/lemma_policy"):
+    if policy_string := settings.value(f"{src_name}/lemma_policy"):
         lemma_policy = LemmaPolicy(policy_string)
     else:
         lemma_policy = LemmaPolicy.try_lemma
-    if display_mode:=settings.value(f"{src_name}/display_mode"):
+    if display_mode := settings.value(f"{src_name}/display_mode"):
         display_mode = DisplayMode(display_mode)
     else:
         display_mode = DisplayMode.markdown_html
@@ -384,12 +400,12 @@ def make_dict_source(src_name: str) -> DictionarySource:
         return WiktionarySource(langcode, options)
     elif src_name == "Google Translate":
         return GoogleTranslateSource(
-            langcode, 
+            langcode,
             options,
-            settings.value("gtrans_api", "https://lingva.lunar.icu"), 
+            settings.value("gtrans_api", "https://lingva.lunar.icu"),
             settings.value("gtrans_lang", "en")
         )
-    else: # Local, /TODO error handling
+    else:  # Local, /TODO error handling
         return LocalDictionarySource(langcode, options, src_name)
 
 
@@ -399,15 +415,17 @@ def make_source_group(src_names: list[str]):
         source_list.append(make_dict_source(src_name))
     return DictionarySourceGroup(source_list)
 
+
 def compute_word_score(wr: WordRecord, waw: WordActionWeights):
     return (
-        waw.seen * wr.n_seen + 
-        waw.lookup * wr.n_lookups + 
-        waw.anki_mature_ctx * wr.anki_mature_ctx + 
-        waw.anki_mature_tgt * wr.anki_mature_tgt + 
-        waw.anki_young_ctx * wr.anki_young_ctx + 
+        waw.seen * wr.n_seen +
+        waw.lookup * wr.n_lookups +
+        waw.anki_mature_ctx * wr.anki_mature_ctx +
+        waw.anki_mature_tgt * wr.anki_mature_tgt +
+        waw.anki_young_ctx * wr.anki_young_ctx +
         waw.anki_young_tgt * wr.anki_young_tgt
     )
+
 
 def gen_preview_html(item: SRSNote) -> str:
     result = f'''<center>{item.sentence}</center>
@@ -419,12 +437,14 @@ def gen_preview_html(item: SRSNote) -> str:
         result += f"<hr><center>{item.definition2}</center>"
     return result
 
+
 def apply_word_rules(word: str, rules: list[str]) -> str:
-    for n, rule in enumerate(rules): 
+    for n, rule in enumerate(rules):
         new_word = re.sub(rule[0], rule[1], word, flags=re.IGNORECASE)
         logger.debug(f"Applying rule on line {n+1}: {rule}. Result: {word} -> {new_word}")
         word = new_word
     return word
+
 
 def process_defi_anki(plaintext: str, markdown: str, defi: Definition, source: DictionarySource) -> str:
     match source.display_mode:
@@ -437,6 +457,6 @@ def process_defi_anki(plaintext: str, markdown: str, defi: Definition, source: D
         case DisplayMode.markdown_html:
             return markdown_nop(markdown)
         case DisplayMode.html:
-            return defi.definition or "" # no editing, just send the original html, using toHtml will change the html
+            return defi.definition or ""  # no editing, just send the original html, using toHtml will change the html
         case _:
             raise NotImplementedError(f"Unknown display mode {source.display_mode}")

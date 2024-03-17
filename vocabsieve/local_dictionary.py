@@ -9,6 +9,7 @@ from pystardict import Dictionary
 import json
 from .global_names import lock, datapath as datapath_
 
+
 class LocalDictionary():
     def __init__(self, datapath) -> None:
         path = os.path.join(datapath, "dict.db")
@@ -26,7 +27,7 @@ class LocalDictionary():
             """)  # Faster lookups
             self.c.execute("""
             CREATE INDEX IF NOT EXISTS dictname_index ON dictionary(dictname)
-            """) # Faster counting of entries
+            """)  # Faster counting of entries
             print("Either successfully made unique index, or there is already one")
         except sqlite3.IntegrityError:
             print("Unable to make unique index")
@@ -81,40 +82,32 @@ class LocalDictionary():
         return bool(self.c.fetchone()[0] > 0)
 
     def define(self, word: str, lang: str, name: str) -> str:
-        "Get definition from database"
-        "Should raise KeyError if word not found"
-        for _ in range(10):
-            try:
-                lock.acquire(True) 
-                self.c.execute("""
-                SELECT definition FROM dictionary
-                WHERE word=?
-                AND language=?
-                AND dictname=?
-                """, (word, lang, name))
-                if results:=self.c.fetchone():
-                    return str(results[0])
-                else:
-                    raise KeyError(f"Word {word} not found in {name}")
-            finally:
-                lock.release()
-        raise RuntimeError(f"Cannot define word")
-    
+        """
+        Get definition from database
+        Should raise KeyError if word not found
+        """
+        self.c.execute("""
+            SELECT definition FROM dictionary
+            WHERE word=?
+            AND language=?
+            AND dictname=?
+            """, (word, lang, name))
+        if results := self.c.fetchone():
+            return str(results[0])
+        else:
+            raise KeyError(f"Word {word} not found in {name}")
+
     def getAllWords(self, lang: str, name: str) -> list[tuple[str, str]]:
-        "Get all words from database"
-        "Should raise KeyError if word not found"
-        for _ in range(10):
-            try:
-                lock.acquire(True) 
-                self.c.execute("""
-                SELECT word, definition FROM dictionary
-                WHERE language=?
-                AND dictname=?
-                """, (lang, name))
-                return self.c.fetchall()
-            finally:
-                lock.release()
-        raise RuntimeError(f"Cannot access database for getting all words")
+        """
+        Get all words from database
+        Should raise KeyError if word not found
+        """
+        self.c.execute("""
+        SELECT word, definition FROM dictionary
+        WHERE language=?
+        AND dictname=?
+        """, (lang, name))
+        return self.c.fetchall()
 
 
     def countEntries(self) -> int:
@@ -152,7 +145,7 @@ class LocalDictionary():
         """)
         self.createTables()
         self.c.execute("VACUUM")
-    
+
     @staticmethod
     def regularize_headword(word: str) -> str:
         "If headword is all caps, convert it to all lowercase"
@@ -180,7 +173,7 @@ class LocalDictionary():
                 data = json.load(f)
                 for item in data:
                     key = self.regularize_headword(item['term'])
-                    if not d.get(key): # fix for duplicate entries
+                    if not d.get(key):  # fix for duplicate entries
                         d[key] = item['definition']
                     else:
                         d[key] += "\n" + item['definition']
@@ -192,7 +185,7 @@ class LocalDictionary():
                 data = json.load(f)
                 i = 0
                 for word in data:
-                    if word and not word[0].isupper(): # Ignore proper nouns
+                    if word and not word[0].isupper():  # Ignore proper nouns
                         d[self.regularize_headword(word)] = str(i + 1)
                         i += 1
                 self.importdict(d, lang, name)
@@ -200,7 +193,7 @@ class LocalDictionary():
             # Audios will be stored as a serialized json list
             filelist = []
             list_d: dict[str, list[str]] = {}
-            for root, dirs, files in os.walk(path):
+            for root, _, files in os.walk(path):
                 for item in files:
                     filelist.append(
                         os.path.relpath(
@@ -212,8 +205,8 @@ class LocalDictionary():
                     list_d[self.regularize_headword(headword)] = [item]
                 else:
                     list_d[self.regularize_headword(headword)].append(item)
-            for word in list_d:
-                d[word] = json.dumps(list_d[word])
+            for word, audios in list_d.items():
+                d[word] = json.dumps(audios)
             self.importdict(d, lang, name)
         elif dicttype == 'mdx':
             d = parseMDX(path)
@@ -230,12 +223,11 @@ class LocalDictionary():
         elif dicttype == "cognates":
             with zopen(path) as f:
                 cognates_d: dict[str, dict[str, list[str]]] = json.load(f)
-            for lang in cognates_d:
-                data = {k: json.dumps(v) for k, v in cognates_d[lang].items()}
-                self.importdict(data, lang, name)
+            for lang_ in cognates_d:
+                data = {k: json.dumps(v) for k, v in cognates_d[lang_].items()}
+                self.importdict(data, lang_, name)
         else:
             raise ValueError(f"Unknown dictionary type {dicttype}")
-
 
     def dictdelete(self, name) -> None:
         self.deletedict(name)
@@ -255,5 +247,6 @@ class LocalDictionary():
                     cognates.append(word)
                     break
         return set(cognates)
-    
+
+
 dictdb = LocalDictionary(datapath_)

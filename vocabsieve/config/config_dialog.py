@@ -1,8 +1,8 @@
-from PyQt5.QtWidgets import (QDialog, QStatusBar, QCheckBox, QComboBox,QLineEdit, 
+from PyQt5.QtWidgets import (QDialog, QStatusBar, QCheckBox, QComboBox, QLineEdit,
                              QSpinBox, QPushButton, QSlider, QLabel, QHBoxLayout,
                              QWidget, QTabWidget, QMessageBox, QColorDialog, QListWidget,
                              QFormLayout, QGridLayout, QVBoxLayout
-                            )
+                             )
 from PyQt5.QtGui import QImageWriter
 from PyQt5.QtCore import Qt
 import platform
@@ -12,10 +12,10 @@ from ..fieldmatcher import FieldMatcher
 from ..ui import SourceGroupWidget, AllSourcesWidget, WordRulesEditor
 from ..models import DisplayMode, FreqDisplayMode, LemmaPolicy
 from loguru import logger
-from ..tools import (addDefaultModel, getVersion, findNotes, 
-                    guiBrowse, getDeckList,
-                    getNoteTypes, getFields
-                    )
+from ..tools import (addDefaultModel, getVersion, findNotes,
+                     guiBrowse, getDeckList,
+                     getNoteTypes, getFields
+                     )
 from .general_tab import GeneralTab
 from ..global_names import settings
 
@@ -28,7 +28,7 @@ class ConfigDialog(QDialog):
         logger.debug("Initializing settings dialog")
         user_note_type = settings.value("note_type")
         self.parent = parent
-        self.resize(700,500)
+        self.resize(700, 500)
         self.setWindowTitle("Configure VocabSieve")
         logger.debug("Initializing widgets for settings dialog")
         self.initWidgets()
@@ -50,7 +50,6 @@ class ConfigDialog(QDialog):
                 settings.setValue("internal/added_default_note_type", True)
             except Exception:
                 pass
-
 
     def initWidgets(self):
         self.status_bar = QStatusBar()
@@ -74,7 +73,6 @@ class ConfigDialog(QDialog):
         self.definition1_field = QComboBox()
         self.definition2_field = QComboBox()
         self.pronunciation_field = QComboBox()
-    
 
         #self.orientation = QComboBox()
         self.text_scale = QSlider(Qt.Horizontal)
@@ -135,8 +133,6 @@ class ConfigDialog(QDialog):
         if 'webp' in supported_img_formats:
             self.img_format.addItem('webp')
 
-        
-
         self.img_quality = QSpinBox()
         self.img_quality.setMinimum(-1)
         self.img_quality.setMaximum(100)
@@ -147,9 +143,6 @@ class ConfigDialog(QDialog):
         self.freq_display_mode.addItems([
             FreqDisplayMode.stars,
             FreqDisplayMode.rank
-            #"Rank (LCD number)", # TODO implement these
-            #"Zipf scale (text field)",
-            #"Zipf scale (LCD number)"
         ])
 
         self.anki_query_mature = QLineEdit()
@@ -157,8 +150,10 @@ class ConfigDialog(QDialog):
         self.anki_query_young = QLineEdit()
         self.young_count_label = QLabel("")
 
-        self.default_notetype_button = QPushButton("Use default note type ('vocabsieve-notes', will be created if it does not exist)")
-        self.default_notetype_button.setToolTip("This will use the default note type provided by VocabSieve. It will be created if it does not exist.")
+        self.default_notetype_button = QPushButton(
+            "Use default note type ('vocabsieve-notes', will be created if it does not exist)")
+        self.default_notetype_button.setToolTip(
+            "This will use the default note type provided by VocabSieve. It will be created if it does not exist.")
         self.default_notetype_button.clicked.connect(self.onDefaultNoteType)
 
         self.preview_young_button = QPushButton("Preview in Anki Browser")
@@ -202,9 +197,9 @@ class ConfigDialog(QDialog):
         self.accent_color.setToolTip("Hex color code (e.g. #ff0000 for red)")
         self.accent_color.clicked.connect(self.save_accent_color)
 
-
         self.known_langs = QLineEdit("en")
-        self.known_langs.setToolTip("Comma-separated list of languages that you know. These will be used to determine whether a word is cognate or not.")
+        self.known_langs.setToolTip(
+            "Comma-separated list of languages that you know. These will be used to determine whether a word is cognate or not.")
 
         self.open_fieldmatcher = QPushButton("Match fields (required for using Anki data)")
 
@@ -216,14 +211,10 @@ class ConfigDialog(QDialog):
         self.all_audio_sources_widget = AllSourcesWidget()
         self.audio_lemma_policy = QComboBox()
 
-
-    
-
-
     def initTabs(self):
         self.tabs = QTabWidget()
         self.tab_g = GeneralTab()  # General
-        self.tab_s = QWidget() # Sources
+        self.tab_s = QWidget()  # Sources
         self.tab_s_layout = QGridLayout(self.tab_s)
         self.tab_a = QWidget()  # Anki
         self.tab_a_layout = QFormLayout(self.tab_a)
@@ -253,7 +244,6 @@ class ConfigDialog(QDialog):
         self.tabs.addTab(self.tab_i, "Interface")
         self.tabs.addTab(self.tab_m, "Misc")
 
-
     def save_accent_color(self):
         color = QColorDialog.getColor()
         if color.isValid() and settings.value("theme") != "system":
@@ -262,7 +252,7 @@ class ConfigDialog(QDialog):
             qdarktheme.setup_theme(
                 settings.value("theme", "dark"),
                 custom_colors={"primary": color.name()}
-                )
+            )
 
     def reset_settings(self):
         answer = QMessageBox.question(
@@ -317,7 +307,6 @@ class ConfigDialog(QDialog):
             self.display_mode.addItem(mode.value, mode)
         for policy in LemmaPolicy:
             self.lemma_policy.addItem(policy.value, policy)
-        
 
         self.tab_a_layout.addRow(QLabel("<h3>Anki settings</h3>"))
         self.tab_a_layout.addRow(self.enable_anki)
@@ -353,7 +342,6 @@ class ConfigDialog(QDialog):
             QLabel('Field name for "Image"'),
             self.image_field)
 
-
         self.tab_n_layout.addRow(QLabel(
             '<h3>Network settings</h3>'
             '◊ All settings on this tab require a restart to take effect.'
@@ -387,7 +375,7 @@ class ConfigDialog(QDialog):
         self.tab_i_layout.addRow(QLabel("Frequency display mode"), self.freq_display_mode)
         #self.tab_i_layout.addRow(QLabel("*Interface layout orientation"), self.orientation)
         self.tab_i_layout.addRow(QLabel("*Text scale"), self.text_scale_box)
-        
+
         self.tab_p_layout.addRow(self.word_proc_button)
 
         self.tab_p_layout.addRow(QLabel("<h3>Per-dictionary postprocessing options</h3>"))
@@ -426,7 +414,7 @@ class ConfigDialog(QDialog):
 
         self.tab_t_layout.addRow(QLabel("<h3>Anki tracking</h3>"))
         self.tab_t_layout.addRow(QLabel("Use the Anki Card Browser to make a query string. "
-            "<br>Mature cards are excluded from the list of young cards automatically"))
+                                        "<br>Mature cards are excluded from the list of young cards automatically"))
 
         self.tab_t_layout.addRow(QLabel("Query string for 'mature' cards"), self.anki_query_mature)
         self.tab_t_layout.addRow(self.mature_count_label, self.preview_mature_button)
@@ -448,9 +436,8 @@ class ConfigDialog(QDialog):
         self.reset_button.clicked.connect(self.reset_settings)
         self.nuke_button.clicked.connect(self.nuke_profile)
 
-
         self.tab_s_layout.addWidget(QLabel("<h3>Dictionary sources</h3>"), 0, 0, 1, 2)
-        self.tab_s_layout.addWidget(QLabel("Dictionary Group 1"), 1, 0, 1 ,1)
+        self.tab_s_layout.addWidget(QLabel("Dictionary Group 1"), 1, 0, 1, 1)
         self.tab_s_layout.addWidget(QLabel("Available dictionaries"), 1, 1, 1, 1)
         self.tab_s_layout.addWidget(self.sg1_widget, 2, 0, 1, 1)
         self.tab_s_layout.addWidget(self.sg2_enabled, 3, 0, 1, 2)
@@ -471,12 +458,10 @@ class ConfigDialog(QDialog):
         for policy in LemmaPolicy:
             self.audio_lemma_policy.addItem(policy.value, policy)
 
-        
-
     def getMatchedCards(self):
         if settings.value("enable_anki", True):
             try:
-                _ = getVersion(api:=settings.value('anki_api', 'http://127.0.0.1:8765'))
+                _ = getVersion(api := settings.value('anki_api', 'http://127.0.0.1:8765'))
                 query_mature = self.anki_query_mature.text()
                 mature_notes = findNotes(api, query_mature)
                 self.mature_count_label.setText(f"Matched {str(len(mature_notes))} notes")
@@ -530,7 +515,7 @@ class ConfigDialog(QDialog):
 
     def setupAutosave(self):
         if settings.value("config_ver") is None \
-            and settings.value("target_language") is not None:
+                and settings.value("target_language") is not None:
             # if old config is copied to new location, nuke it
             settings.clear()
         settings.setValue("config_ver", 1)
@@ -570,13 +555,12 @@ class ConfigDialog(QDialog):
                 "<disabled>")
             self.register_config_handler(self.image_field, 'image_field', "<disabled>")
 
-
         self.sg2_enabled.clicked.connect(self.changeMainLayout)
         self.postproc_selector.currentTextChanged.connect(self.setupProcessing)
         self.note_type.currentTextChanged.connect(self.loadFields)
         #self.api_enabled.clicked.connect(self.setAvailable)
         self.reader_enabled.clicked.connect(self.setAvailable)
-        
+
         #self.register_config_handler(self.api_enabled, 'api_enabled', True)
         #self.register_config_handler(self.api_host, 'api_host', '127.0.0.1')
         #self.register_config_handler(self.api_port, 'api_port', 39284)
@@ -600,7 +584,6 @@ class ConfigDialog(QDialog):
         self.register_config_handler(self.capitalize_first_letter, 'capitalize_first_letter', False)
         self.register_config_handler(self.img_format, 'img_format', 'jpg')
         self.register_config_handler(self.img_quality, 'img_quality', -1)
-        
 
         self.register_config_handler(self.anki_query_mature, 'tracking/anki_query_mature', "prop:ivl>=14")
         self.register_config_handler(self.anki_query_young, 'tracking/anki_query_young', "prop:ivl<14 is:review")
@@ -615,8 +598,9 @@ class ConfigDialog(QDialog):
         self.register_config_handler(self.w_anki_ctx_y, 'tracking/w_anki_ctx_y', 20)
         self.register_config_handler(self.known_data_lifetime, 'tracking/known_data_lifetime', 1800)
 
-        self.register_config_handler(self.theme, 'theme', 'auto' if platform.system() != "Linux" else 'system') # default to native on Linux
-        
+        self.register_config_handler(self.theme, 'theme', 'auto' if platform.system() !=
+                                     "Linux" else 'system')  # default to native on Linux
+
         self.register_config_handler(self.sg2_enabled, 'sg2_enabled', False)
         self.register_config_handler(self.sg1_widget, 'sg1', [])
         self.register_config_handler(self.sg2_widget, 'sg2', [])
@@ -667,13 +651,12 @@ class ConfigDialog(QDialog):
         self.preview_young_button.setEnabled(value)
         self.open_fieldmatcher.setEnabled(value)
 
-
     def setupTheme(self) -> None:
-        theme = self.theme.currentText() # auto, dark, light, system
+        theme = self.theme.currentText()  # auto, dark, light, system
         if theme == "system":
             return
         accent_color = self.accent_color.text()
-        if accent_color == "default": # default is not a color
+        if accent_color == "default":  # default is not a color
             qdarktheme.setup_theme(
                 theme=theme
             )
@@ -685,15 +668,14 @@ class ConfigDialog(QDialog):
 
     def previewMature(self):
         try:
-            _ = getVersion(api:=settings.value('anki_api', 'http://127.0.0.1:8765'))
+            _ = getVersion(api := settings.value('anki_api', 'http://127.0.0.1:8765'))
             guiBrowse(api, self.anki_query_mature.text())
         except Exception as e:
             logger.warning(repr(e))
 
-
     def previewYoung(self):
         try:
-            _ = getVersion(api:=settings.value('anki_api', 'http://127.0.0.1:8765'))
+            _ = getVersion(api := settings.value('anki_api', 'http://127.0.0.1:8765'))
             guiBrowse(api, self.anki_query_young.text())
         except Exception as e:
             logger.warning(repr(e))
@@ -826,9 +808,8 @@ class ConfigDialog(QDialog):
             self.parent.definition2.setVisible(False)
             self.parent._layout.addWidget(self.parent.definition, 6, 0, 4, 3)
 
-
     def status(self, msg):
         self.status_bar.showMessage(self.parent.time() + " " + msg, 4000)
 
-    def register_config_handler(self, *args, **kwargs):
+    def register_config_handler(self, *args, **kwargs): # pylint: disable=unused-argument
         logger.error("register_config_handler is being called!")

@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from ..models import DictionarySource, SourceOptions, LookupResult
 from loguru import logger
 
+
 def fmt_result(definitions):
     "Format the result of dictionary lookup"
     lines = []
@@ -12,6 +13,7 @@ def fmt_result(definitions):
         lines.extend([str(item[0] + 1) + ". " + item[1]
                      for item in list(enumerate(defn['meaning']))])
     return "<br>".join(lines)
+
 
 class WiktionarySource(DictionarySource):
     def __init__(self, langcode: str, options: SourceOptions) -> None:
@@ -47,4 +49,3 @@ class WiktionarySource(DictionarySource):
             meaning_item = {"pos": item['partOfSpeech'], "meaning": meanings}
             definitions.append(meaning_item)
         return LookupResult(definition=fmt_result(definitions))
-

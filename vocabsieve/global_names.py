@@ -12,19 +12,25 @@ import sys
 
 from . import __version__
 lock = threading.Lock()
+
+
 def _get_debug_description():
     return "(debug=" + DEBUG_ENV + ")"
 
-title_prefix = "VocabSieve" 
+
+title_prefix = "VocabSieve"
+
+
 def app_title(include_version: bool):
     title = title_prefix
-    
+
     if include_version:
         title += f" v{__version__}"
-    if DEBUG_ENV: 
+    if DEBUG_ENV:
         title += _get_debug_description()
 
     return title
+
 
 if platform.system() == "Darwin":
     MOD = "Cmd"
@@ -32,8 +38,12 @@ else:
     MOD = "Ctrl"
 
 app_organization = "FreeLanguageTools"
+
+
 def _get_settings_app_title():
     return title_prefix + DEBUG_ENV if DEBUG_ENV else title_prefix
+
+
 app_name = _get_settings_app_title()
 
 # qdarktheme.enable_hi_dpi function must be called before QCoreApplication is created

@@ -4,6 +4,7 @@ from PyQt5.QtCore import QEvent, Qt, QObject, pyqtSlot
 from ..global_events import GlobalObject
 from ..global_names import settings
 
+
 class SearchableTextEdit(QTextEdit):
     def __init__(self):
         super().__init__()
@@ -24,8 +25,8 @@ class SearchableTextEdit(QTextEdit):
         super().mouseMoveEvent(e)
         if not settings.value("lookup_definition_when_hovering", True, type=bool):
             return
-        
-        text_cursor: QTextCursor = self.cursorForPosition(e.pos()) 
+
+        text_cursor: QTextCursor = self.cursorForPosition(e.pos())
         text_cursor.select(QTextCursor.SelectionType.WordUnderCursor)
         self.word_under_cursor = text_cursor.selectedText()
         GlobalObject().dispatchEvent("hovered over")

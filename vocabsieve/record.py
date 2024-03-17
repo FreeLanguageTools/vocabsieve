@@ -19,6 +19,7 @@ dictionaries = bidict({"Wiktionary (English)": "wikt-en",
 
 class Record():
     """Class to store user data"""
+
     def __init__(self, parent_settings: QSettings, datapath):
         self.conn = sqlite3.connect(
             os.path.join(
@@ -29,9 +30,6 @@ class Record():
         self.c.execute("PRAGMA foreign_keys = ON")
         self.createTables()
         self.fixOld()
-        if not parent_settings.value("internal/db_has_lemma"):
-            self.lemmatizeLookups()
-            parent_settings.setValue("internal/db_has_lemma", True)
         if not parent_settings.value("internal/db_no_definitions"):
             self.dropDefinitions()
             parent_settings.setValue("internal/db_no_definitions", True)
@@ -50,7 +48,7 @@ class Record():
             parent_settings.setValue("internal/lookup_unique_index", True)
 
         self.last_known_data: Optional[tuple[dict[str, WordRecord], KnownMetadata]] = None
-        self.last_known_data_date: float = 0.0 # 1970-01-01
+        self.last_known_data_date: float = 0.0  # 1970-01-01
 
     def fixSeen(self):
         try:
@@ -152,7 +150,7 @@ class Record():
         SELECT DISTINCT source FROM lookups
         """)
         for source, in self.c.fetchall():  # comma unpacks a single value tuple
-            if source in dictionaries.inverse:
+            if source in dictionaries.inverse: # pylint: disable=unsupported-membership-test
                 print(f"Replacing {source} with {dictionaries.inverse[source]}")
                 self.c.execute("""
                 UPDATE lookups SET source=? WHERE source=?
@@ -190,45 +188,14 @@ class Record():
         """)
         self.conn.commit()
 
-
     def dropDefinitions(self):
         print('dropping definition')
         try:
             self.c.execute("""ALTER TABLE lookups DROP COLUMN definition""")
             self.c.execute("VACUUM")
         except Exception as e:
-            print(e)
-        return
-
-    def lemmatizeLookups(self):
-        "In the past, lemmas were not recorded during lookups. This applies it to older rows"
-        try:
-            print("Trying to add lemma column to lookups table..")
-            self.c.execute("""
-                ALTER TABLE lookups ADD COLUMN lemma TEXT;
-            """)
-            langiter = self.c.execute("""
-                SELECT DISTINCT language FROM lookups
-            """)
-            word_to_lemma: dict[str, dict[str, str]] = {}
-            for lang in langiter:
-                print("Found lang:", lang[0])
-                word_to_lemma[lang[0]] = {} #Make 2d dict
-
-            wordlangiter = self.c.execute("""
-                SELECT DISTINCT word, language FROM lookups
-            """)
-            for word, lang in wordlangiter:
-                print("lemma of", word, "in", lang, "is", lem_word(word, lang))
-                word_to_lemma[lang][word] = lem_word(word, lang)
-
-            for lang in word_to_lemma:
-                for word in word_to_lemma[lang]:
-                    self.c.execute('''UPDATE lookups SET lemma=? WHERE word=? AND language=?''',
-                        (word_to_lemma[lang][word], word, lang))
-            self.conn.commit()
-        except sqlite3.OperationalError:
-            print("encountered error, likely because column already exists")
+            logger.error(e)
+        
 
     def seenContent(self, cid, name, content, language, jd):
         start = time.time()
@@ -274,7 +241,7 @@ class Record():
             return cast(float, value[0])
         else:
             return 1.0
-    
+
     def setModifier(self, language, lemma, value):
         self.c.execute('''
             INSERT OR REPLACE INTO modifiers(language, lemma, value)
@@ -341,28 +308,26 @@ class Record():
         if commit:
             self.conn.commit()
 
-
-
     def recordNote(self, sn: SRSNote, content: str, commit: bool = True):
         timestamp = time.time()
         sql = """INSERT INTO notes(
             timestamp, data, sentence, word, definition, definition2, pronunciation, image, tags, success
-            ) 
-            VALUES(?,?,?,?,?,?,?,?,?,?)"""
-        self.c.execute(sql, 
-            (
-                timestamp, 
-                content, 
-                sn.sentence or "", 
-                sn.word or "", 
-                sn.definition1 or "", 
-                sn.definition2 or "", 
-                sn.audio_path or "", 
-                sn.image or "", 
-                " ".join(sn.tags) if sn.tags else "",
-                1
             )
-        )
+            VALUES(?,?,?,?,?,?,?,?,?,?)"""
+        self.c.execute(sql,
+                       (
+                           timestamp,
+                           content,
+                           sn.sentence or "",
+                           sn.word or "",
+                           sn.definition1 or "",
+                           sn.definition2 or "",
+                           sn.audio_path or "",
+                           sn.image or "",
+                           " ".join(sn.tags) if sn.tags else "",
+                           1
+                       )
+                       )
         if commit:
             self.conn.commit()
 
@@ -373,7 +338,12 @@ class Record():
         return self.c.execute("SELECT * FROM notes")
 
     def countLemmaLookups(self, word, language):
-        self.c.execute('''SELECT COUNT (DISTINCT date(timestamp, "unixepoch")) FROM lookups WHERE lemma=?''', (lem_word(word, language),))
+        self.c.execute(
+            '''SELECT COUNT (DISTINCT date(timestamp, "unixepoch")) FROM lookups WHERE lemma=?''',
+            (lem_word(
+                word,
+                language),
+             ))
         return self.c.fetchone()[0]
 
     def countLookups(self, language):
@@ -410,9 +380,9 @@ class Record():
                             WHERE timestamp
                             BETWEEN ? AND ?
                             AND success = 1 """, (start, end))
-            return self.c.fetchall()[0][0]
+            return self.c.fetchone()[0]
         except sqlite3.ProgrammingError:
-            return
+            return -1
 
     def countNotesDay(self, day):
         start = day.replace(
@@ -428,9 +398,9 @@ class Record():
                             WHERE timestamp
                             BETWEEN ? AND ?
                             AND success = 1 """, (start, end))
-            return self.c.fetchall()[0][0]
+            return self.c.fetchone()[0]
         except sqlite3.ProgrammingError:
-            return
+            return -1
 
     def purge(self):
         self.c.execute("""
@@ -440,7 +410,7 @@ class Record():
         self.c.execute("VACUUM")
 
     def getKnownData(self) -> tuple[dict[str, WordRecord], KnownMetadata]:
-        lifetime = settings.value('tracking/known_data_lifetime', 1800, type=int) # Seconds
+        lifetime = settings.value('tracking/known_data_lifetime', 1800, type=int)  # Seconds
         if self.last_known_data is None:
             logger.debug("No known data in this session. Creating known data from database..")
             self.last_known_data = self._refreshKnownData()
@@ -449,22 +419,22 @@ class Record():
         else:
             known_data_age = time.time() - self.last_known_data_date
             if known_data_age > lifetime:
-                logger.debug(f"Known data is {known_data_age:.2f} s old, " 
+                logger.debug(f"Known data is {known_data_age:.2f} s old, "
                              f"which is older than the specified lifetime of {lifetime} s. Refreshing..")
                 self.last_known_data = self._refreshKnownData()
                 self.last_known_data_date = time.time()
                 return self.last_known_data
             else:
-                logger.debug(f"Known data is {known_data_age:.2f} s old, " 
+                logger.debug(f"Known data is {known_data_age:.2f} s old, "
                              f"which is newer than the specified lifetime of {lifetime} s. Not refreshing now.")
                 return self.last_known_data
-            
+
     @staticmethod
-    def process_notes_info(notes_info: dict, 
-                           result: dict[str, WordRecord], 
-                           tgt_key: str, 
-                           ctx_key: str, 
-                           fieldmap: dict[str, list[str]], 
+    def process_notes_info(notes_info: dict,
+                           result: dict[str, WordRecord],
+                           tgt_key: str,
+                           ctx_key: str,
+                           fieldmap: dict[str, list[str]],
                            langcode: str) -> tuple[list[str], list[str]]:
         tgt_lemmas = []
         ctx_lemmas = []
@@ -504,7 +474,7 @@ class Record():
         result: dict[str, WordRecord] = {}
 
         start = time.time()
-        
+
         metadata = KnownMetadata()
 
         for lemma, count in self.countAllLemmaLookups(langcode):
@@ -524,23 +494,23 @@ class Record():
         logger.debug(f"Processed seen data in {time.time() - start:.2f} seconds")
 
         start = time.time()
-        
+
         if not settings.value('enable_anki', True, type=bool):
             logger.debug("Anki disabled, skipping")
             result = {k: v for k, v in result.items() if k.isalpha() and not k.startswith('http') and " " not in k}
             return result, metadata
-        fieldmap = json.loads(settings.value("tracking/fieldmap",  "{}"))
+        fieldmap = json.loads(settings.value("tracking/fieldmap", "{}"))
 
         anki_api = settings.value("anki_api", "http://127.0.0.1:8765")
 
         mature_notes = findNotes(
             anki_api,
             settings.value("tracking/anki_query_mature")
-            )
+        )
         young_notes = findNotes(
             anki_api,
             settings.value("tracking/anki_query_young")
-            )
+        )
         young_notes = [note for note in young_notes if note not in mature_notes]
 
         logger.debug(f"Received anki data from AnkiConnect in {time.time() - start:.2f} seconds")
@@ -549,21 +519,21 @@ class Record():
         young_notes_info = notesInfo(anki_api, young_notes)
 
         mature_tgt_lemmas, mature_ctx_lemmas = self.process_notes_info(
-            mature_notes_info, 
-            result, 
-            "anki_mature_tgt", 
-            "anki_mature_ctx", 
-            fieldmap, 
+            mature_notes_info,
+            result,
+            "anki_mature_tgt",
+            "anki_mature_ctx",
+            fieldmap,
             langcode
-            )
+        )
         young_tgt_lemmas, young_ctx_lemmas = self.process_notes_info(
-            young_notes_info, 
-            result, 
-            "anki_young_tgt", 
-            "anki_young_ctx", 
-            fieldmap, 
+            young_notes_info,
+            result,
+            "anki_young_tgt",
+            "anki_young_ctx",
+            fieldmap,
             langcode
-            )
+        )
         metadata.n_mature_ctx = len(mature_ctx_lemmas)
         metadata.n_mature_tgt = len(mature_tgt_lemmas)
         metadata.n_young_ctx = len(young_ctx_lemmas)
@@ -573,5 +543,3 @@ class Record():
 
         result = {k: v for k, v in result.items() if k.isalpha() and not k.startswith('http') and " " not in k}
         return result, metadata
-
-

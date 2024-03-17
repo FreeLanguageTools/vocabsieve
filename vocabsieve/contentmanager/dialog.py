@@ -13,17 +13,17 @@ supported_content_formats = bidict({
     ".srt": "Subtitles (srt)",
     ".ass": "Subtitles (ass)",
     ".vtt": "Subtitles (vtt)",
-    ".html": "HTML", 
-    '.azw': "Ebook (azw)", 
-    '.azw3': "Ebook (azw3)", 
-    '.kfx': "Ebook (kfx)", 
+    ".html": "HTML",
+    '.azw': "Ebook (azw)",
+    '.azw3': "Ebook (azw3)",
+    '.kfx': "Ebook (kfx)",
     '.mobi': "Ebook (mobi)",
     "folder": "Folder"
 })
 
 
 class AddContentDialog(QDialog):
-    def __init__(self, parent, path, folder=False):
+    def __init__(self, parent, path):
         super().__init__(parent)
         self.parent = parent
         self.resize(400, 200)
@@ -37,7 +37,7 @@ class AddContentDialog(QDialog):
             basename, ext = os.path.splitext(self.path)
             self.basename = os.path.basename(basename)
             self.contenttype = ext
-        if self.contenttype == None:
+        if self.contenttype is None:
             raise NotImplementedError
         self.initWidgets()
         self.setupWidgets()
@@ -69,11 +69,9 @@ class AddContentDialog(QDialog):
         _, ext = os.path.splitext(path)
         subs = pysubs2.load(path, format_=ext[1:])
         return "\n".join(line.text for line in subs)
-        
-
 
     def commit(self):
-        if self.contenttype in ['.epub', '.fb2', '.azw', '.azw3', '.kfx', '.mobi' ]:
+        if self.contenttype in ['.epub', '.fb2', '.azw', '.azw3', '.kfx', '.mobi']:
             content = self.extractBook(self.path)
         elif self.contenttype in ['.ass', '.srt', '.vtt']:
             content = self.extractSubs(self.path)
@@ -82,7 +80,7 @@ class AddContentDialog(QDialog):
             for file in os.listdir(self.path):
                 try:
                     _, ext = os.path.splitext(file)
-                    if ext in ['.epub', '.fb2', '.azw', '.azw3', '.kfx', '.mobi' ]:
+                    if ext in ['.epub', '.fb2', '.azw', '.azw3', '.kfx', '.mobi']:
                         content += self.extractBook(os.path.join(self.path, file)) + "\n\n"
                     elif ext in ['.ass', '.srt', '.vtt']:
                         content += self.extractSubs(os.path.join(self.path, file))
@@ -90,15 +88,12 @@ class AddContentDialog(QDialog):
                     print(repr(e))
         else:
             raise NotImplementedError(f"{self.contenttype} not supported")
-                        
+
         self.parent.rec.importContent(
             self.name.text(),
             content,
             langcodes.inverse[self.lang.currentText()],
             self.date.date().toJulianDay()
-            )
+        )
         self.parent.refresh()
         self.close()
-
-
-    

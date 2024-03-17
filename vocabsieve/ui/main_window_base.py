@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QMainWindow, QWidget, QGridLayout, QLabel, QPushButton, QCheckBox, \
-                        QStatusBar, QMenuBar, \
-                        QSizePolicy, QApplication, QLineEdit
-from PyQt5.QtGui import  QDesktopServices, QKeyEvent
+    QStatusBar, QMenuBar, \
+    QSizePolicy, QApplication, QLineEdit
+from PyQt5.QtGui import QDesktopServices, QKeyEvent
 from PyQt5.QtCore import QUrl, pyqtSignal, Qt, QObject, QEvent
 from .audio_selector import AudioSelector
 
@@ -30,6 +30,7 @@ from pynput import keyboard
 
 class MainWindowBase(QMainWindow):
     audio_fetched = pyqtSignal(dict)
+
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle(app_title(True))
@@ -50,11 +51,7 @@ class MainWindowBase(QMainWindow):
 
         self.scaleFont()
         self.initWidgets()
-
-        # TODO: find if that works in other displays and OSes
-        # print(self.devicePixelRatioF())
         self.resize(int(550 / self.devicePixelRatioF()), int(900 / self.devicePixelRatioF()))
-        # self.resize(500, 800)
         self.setupWidgetsV()
 
         # Setup Key monitoring to monitor the shit key
@@ -74,13 +71,12 @@ class MainWindowBase(QMainWindow):
             case _:
                 self.shift_pressed = False
 
-
     def keyPressEvent(self, event: QKeyEvent | None) -> None:
         if self.is_wayland and event.key() == Qt.Key.Key_Shift:
             self.shift_pressed = True
         else:
             super().keyPressEvent(event)
-    
+
     def keyReleaseEvent(self, event: QKeyEvent | None) -> None:
         if self.is_wayland and event.key() == Qt.Key.Key_Shift:
             self.shift_pressed = False
@@ -93,7 +89,6 @@ class MainWindowBase(QMainWindow):
             int(font.pointSize() * settings.value("text_scale", type=int) / 100))
         QApplication.setFont(font)
         self.setFont(font)
-
 
     def initWidgets(self) -> None:
         self.namelabel = QLabel(
@@ -119,7 +114,7 @@ class MainWindowBase(QMainWindow):
             "Look up a word by double clicking it. Or, select it"
             ", then press \"Get definition\".")
 
-        self.lookup_button = QPushButton(f"Define [{MOD}+D]") 
+        self.lookup_button = QPushButton(f"Define [{MOD}+D]")
         self.lookup_exact_button = QPushButton(f"Define direct [Shift+{MOD}+D]")
         self.lookup_exact_button.setToolTip(
             "This will look up the word without lemmatization.")
@@ -130,7 +125,7 @@ class MainWindowBase(QMainWindow):
         self.read_button = QPushButton("Read clipboard")
         self.read_button.setToolTip(
             f"Read the clipboard contents to Sentence field [{MOD}+V]"
-            )
+        )
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
         self.stats_label = QLabel()
@@ -144,12 +139,16 @@ class MainWindowBase(QMainWindow):
             "Lookup definition on double click")
         self.lookup_definition_on_doubleclick.setToolTip(
             f"Disable this if you want to use 3rd party dictionaries with copied text (e.g. with mpvacious).[{MOD}+2]")
-        self.lookup_definition_on_doubleclick.clicked.connect(lambda v: settings.setValue("lookup_definition_on_doubleclick", v))
-        self.lookup_definition_on_doubleclick.setChecked(settings.value("lookup_definition_on_doubleclick", True, type=bool))
+        self.lookup_definition_on_doubleclick.clicked.connect(
+            lambda v: settings.setValue("lookup_definition_on_doubleclick", v))
+        self.lookup_definition_on_doubleclick.setChecked(
+            settings.value("lookup_definition_on_doubleclick", True, type=bool))
         self.lookup_definition_when_hovering = QCheckBox("Lookup definition when hovering")
         self.lookup_definition_when_hovering.setToolTip("Hover over a word and press [Shift] to look its definition up")
-        self.lookup_definition_when_hovering.clicked.connect(lambda v: settings.setValue("lookup_definition_when_hovering", v))
-        self.lookup_definition_when_hovering.setChecked(settings.value("lookup_definition_when_hovering", True, type=bool))
+        self.lookup_definition_when_hovering.clicked.connect(
+            lambda v: settings.setValue("lookup_definition_when_hovering", v))
+        self.lookup_definition_when_hovering.setChecked(
+            settings.value("lookup_definition_when_hovering", True, type=bool))
 
         self.web_button = QPushButton(f"Open webpage")
         self.web_button.setToolTip(
@@ -158,7 +157,7 @@ class MainWindowBase(QMainWindow):
         self.freq_widget.setPlaceholderText("Word frequency")
 
         self.audio_selector = AudioSelector()
-        
+
         self.definition.setReadOnly(
             not (
                 settings.value(
@@ -187,7 +186,6 @@ class MainWindowBase(QMainWindow):
         )
         self.word_record_display = WordRecordDisplay()
 
-
     def setupWidgetsV(self) -> None:
         """Prepares vertical layout"""
 
@@ -203,12 +201,11 @@ class MainWindowBase(QMainWindow):
         layout.addWidget(self.image_viewer, 0, 2, 5, 1)
         layout.addWidget(self.sentence, 5, 0, 1, 3)
         layout.setRowStretch(5, 1)
-        
 
         layout.addWidget(self.word, 6, 0)
         layout.addWidget(self.freq_widget, 6, 1)
         layout.addWidget(self.word_record_display, 6, 2)
-        
+
         layout.setRowStretch(7, 2)
         layout.setRowStretch(9, 2)
         if settings.value("sg2_enabled", False, type=bool):
@@ -230,8 +227,6 @@ class MainWindowBase(QMainWindow):
         layout.setColumnStretch(2, 5)
         self._layout = layout
 
-    
-
     def onHelp(self) -> None:
         url = f"https://docs.freelanguagetools.org/"
         QDesktopServices.openUrl(QUrl(url))
@@ -244,7 +239,6 @@ class MainWindowBase(QMainWindow):
         self.logview = LogView()
         self.logview.exec_()
 
-    
     def getAnkiSettings(self) -> AnkiSettings:
         return AnkiSettings(
             deck=settings.value("deck_name", "Default"),
@@ -273,10 +267,10 @@ class MainWindowBase(QMainWindow):
 class ShiftMonitor(QObject):
     """Monitors the activity of the shift key"""
     keyEvent = pyqtSignal(KeyAction)
-    
+
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.listener = keyboard.Listener(on_press=self.on_press,on_release=self.on_release)
+        self.listener = keyboard.Listener(on_press=self.on_press, on_release=self.on_release)
 
     def on_press(self, key):
         if key == keyboard.Key.shift:
@@ -290,4 +284,4 @@ class ShiftMonitor(QObject):
         self.listener.stop()
 
     def start_monitoring(self):
-        self.listener.start()   
+        self.listener.start()

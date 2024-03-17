@@ -19,7 +19,7 @@ from PyQt5.QtGui import QClipboard, QKeySequence, QPixmap, QDesktopServices, QIm
 from PyQt5.QtWidgets import QApplication, QMessageBox, QAction, QShortcut, QFileDialog
 
 import qdarktheme
-from .global_names import datapath, lock, app, settings # First local import
+from .global_names import datapath, lock, app, settings  # First local import
 from .text_manipulation import apply_bold_char, apply_bold_tags, bold_word_in_text
 from .analyzer import BookAnalyzer
 from .config import ConfigDialog
@@ -30,10 +30,23 @@ from .importer import KindleVocabImporter, KoreaderVocabImporter, AutoTextImport
 from .reader import ReaderServer
 from .contentmanager import ContentManager
 from .global_events import GlobalObject
-from .tools import (compute_word_score, is_json, make_audio_source_group, modelFieldNames, prepareAnkiNoteDict, is_oneword, addNote,
-                     findNotes, guiBrowse, make_source_group, getVersion, make_freq_source, unix_milliseconds_to_datetime_str, apply_word_rules)
+from .tools import (
+    compute_word_score,
+    is_json,
+    make_audio_source_group,
+    modelFieldNames,
+    prepareAnkiNoteDict,
+    is_oneword,
+    addNote,
+    findNotes,
+    guiBrowse,
+    make_source_group,
+    getVersion,
+    make_freq_source,
+    unix_milliseconds_to_datetime_str,
+    apply_word_rules)
 from .ui import MainWindowBase, WordMarkingDialog
-from .models import (DictionarySourceGroup, KnownMetadata, LookupRecord, SRSNote, TrackingDataError, 
+from .models import (DictionarySourceGroup, KnownMetadata, LookupRecord, SRSNote, TrackingDataError,
                      WordRecord)
 from sentence_splitter import SentenceSplitter
 from .lemmatizer import lem_word
@@ -44,6 +57,7 @@ class MainWindow(MainWindowBase):
     got_updates = pyqtSignal(list)
     polled_clipboard_changed = pyqtSignal()
     polled_selection_changed = pyqtSignal()
+
     def __init__(self) -> None:
         super().__init__()
         self.catcher = ExceptionCatcher()
@@ -70,11 +84,9 @@ class MainWindow(MainWindowBase):
 
         self.setupClipboardMonitor()
 
-
         if not settings.value("internal/configured"):
             self.configure()
             settings.setValue("internal/configured", True)
-
 
     def onApplicationStateChanged(self, state):
         if state == Qt.ApplicationActive:
@@ -83,7 +95,7 @@ class MainWindow(MainWindowBase):
     def setupClipboardMonitor(self):
         GlobalObject().addEventListener("double clicked", self.lookupSelected)
         GlobalObject().addEventListener("hovered over", self.lookupHovered)
-        cant_listen_to_clipboard = (os.environ.get("XDG_SESSION_TYPE") == "wayland" 
+        cant_listen_to_clipboard = (os.environ.get("XDG_SESSION_TYPE") == "wayland"
                                     or platform.system() == "Darwin")
         if settings.value("primary", False, type=bool) and QClipboard.supportsSelection(QApplication.clipboard()):
             QApplication.clipboard().selectionChanged.connect(
@@ -106,7 +118,6 @@ class MainWindow(MainWindowBase):
         clipboard_timer.timeout.connect(self.pollClipboard)
         clipboard_timer.start(50)
 
-
     def pollClipboard(self):
         if self.pause_polling:
             return
@@ -123,8 +134,8 @@ class MainWindow(MainWindowBase):
                 self.polled_clipboard_changed.emit()
         if QApplication.clipboard().supportsSelection() and settings.value("primary", False, type=bool):
             if self.last_selection != QApplication.clipboard().text(QClipboard.Selection) \
-                and QApplication.clipboard().text(QClipboard.Selection) != self.last_clipboard \
-                and QApplication.clipboard().text(QClipboard.Selection).strip() != "":
+                    and QApplication.clipboard().text(QClipboard.Selection) != self.last_clipboard \
+                    and QApplication.clipboard().text(QClipboard.Selection).strip() != "":
                 self.last_selection = QApplication.clipboard().text(QClipboard.Selection)
                 logger.debug(f"Polling: Primary selction changed to '''{self.last_selection}'''")
                 self.polled_selection_changed.emit()
@@ -137,8 +148,7 @@ class MainWindow(MainWindowBase):
         logger.debug(f"Source Group 1: {sg1_src_list} has been created.")
 
         if settings.value("freq_source", "<disabled>") != "<disabled>":
-            self.freq_widget.setSource(make_freq_source(settings.value("freq_source"), dictdb))
-
+            self.freq_widget.setSource(make_freq_source(settings.value("freq_source")))
 
         if settings.value("sg2_enabled", False, type=bool):
             sg2_src_list = json.loads(settings.value("sg2", '[]'))
@@ -148,10 +158,10 @@ class MainWindow(MainWindowBase):
         else:
             logger.debug("Source Group 2 is disabled, emptying source widget.")
             self.sg2 = DictionarySourceGroup([])
-            self.definition2.setSourceGroup(self.sg2) 
+            self.definition2.setSourceGroup(self.sg2)
 
-        if audio_src_list:=json.loads(settings.value("audio_sg", '["Forvo"]')):
-            self.audio_sg = make_audio_source_group(audio_src_list, dictdb)
+        if audio_src_list := json.loads(settings.value("audio_sg", '["Forvo"]')):
+            self.audio_sg = make_audio_source_group(audio_src_list)
             self.audio_selector.setSourceGroup(self.audio_sg)
             logger.debug(f"Audio source group: {audio_src_list} has been created")
 
@@ -178,7 +188,7 @@ class MainWindow(MainWindowBase):
         print("Finished checking updates")
 
     def checkUpdates(self) -> None:
-        res = requests.get("https://api.github.com/repos/FreeLanguageTools/vocabsieve/releases")
+        res = requests.get("https://api.github.com/repos/FreeLanguageTools/vocabsieve/releases", timeout=5)
         data = res.json()
         self.got_updates.emit(data)
 
@@ -196,19 +206,16 @@ class MainWindow(MainWindowBase):
             )
             if answer2 == QMessageBox.Open:
                 QDesktopServices.openUrl(QUrl(current['html_url']))
-        
 
     def setupButtons(self) -> None:
         self.lookup_button.clicked.connect(self.lookupSelected)
         self.lookup_exact_button.clicked.connect(lambda: self.lookupSelected(no_lemma=True))
-
 
         self.web_button.clicked.connect(self.onWebButton)
 
         self.toanki_button.clicked.connect(self.createNote)
         self.view_last_note_button.clicked.connect(self.viewLastNote)
         self.read_button.clicked.connect(lambda: self.clipboardChanged(even_when_focused=True))
-
 
         self.status_bar.addPermanentWidget(self.stats_label)
 
@@ -253,7 +260,6 @@ class MainWindow(MainWindowBase):
         recordmenu.addAction(self.content_manager_action)
         recordmenu.addAction(self.mark_words_action)
         analyzemenu.addAction(self.analyze_book_action)
-
 
         self.repeat_last_import_action = QAction("&Repeat last import")
         self.import_koreader_vocab_action = QAction("K&OReader vocab builder")
@@ -308,7 +314,7 @@ class MainWindow(MainWindowBase):
         words = self.freq_widget.getAllWords()
         dialog = WordMarkingDialog(self, words)
         dialog.exec()
-        
+
     def onOpenDataFolder(self):
         QDesktopServices.openUrl(QUrl.fromLocalFile(datapath))
 
@@ -329,7 +335,7 @@ class MainWindow(MainWindowBase):
                 caption="Select book",
                 filter="Ebook files (*.epub *.fb2 *.mobi *.html *.azw *.azw3 *.kfx)",
                 directory=QStandardPaths.writableLocation(QStandardPaths.HomeLocation)
-                )[0]
+            )[0]
             if path:
                 BookAnalyzer(self, path).open()
         elif self.known_data is None:
@@ -348,7 +354,7 @@ class MainWindow(MainWindowBase):
                 self.cognates = dictdb.getCognatesData(langcode, known_langs)
             waw = self.getWordActionWeights()
             for word, word_record in self.known_data.items():
-                score=compute_word_score(word_record, waw)
+                score = compute_word_score(word_record, waw)
                 if score >= known_threshold:
                     known_words.append(word)
                 elif (score >= known_threshold_cognate) and (word in self.cognates):
@@ -357,8 +363,6 @@ class MainWindow(MainWindowBase):
             return known_words, known_cognates
         else:
             return [], []
-    
-            
 
     def exportKnownWords(self):
         path, _ = QFileDialog.getSaveFileName(
@@ -390,7 +394,7 @@ class MainWindow(MainWindowBase):
             return TrackingDataError.anki_enabled_but_not_running
         # AnkiConnect is running
         # Check if fieldmap is set
-        fieldmap = json.loads(settings.value("tracking/fieldmap",  "{}"))
+        fieldmap = json.loads(settings.value("tracking/fieldmap", "{}"))
         if not fieldmap:
             return TrackingDataError.anki_enabled_running_but_no_fieldmap
         # fieldmap is set
@@ -405,15 +409,10 @@ class MainWindow(MainWindowBase):
 
     @pyqtSlot()
     def _refreshKnownData(self) -> None:
-        try:
-            lock.acquire(True)
+        with lock:
             self.known_data, self.known_metadata = self.rec.getKnownData()
             self.known_data_timestamp = time.time()
-        finally:
-            lock.release()
- 
 
-    
     def exportWordData(self):
         path, _ = QFileDialog.getSaveFileName(
             self,
@@ -430,7 +429,8 @@ class MainWindow(MainWindowBase):
             self.warnKnownDataNotReady()
             return
         with open(path, 'w', encoding='utf-8') as file:
-            json.dump([dataclasses.asdict(item) for item in self.known_data.values()], file, indent=4, ensure_ascii=False)
+            json.dump([dataclasses.asdict(item)
+                      for item in self.known_data.values()], file, indent=4, ensure_ascii=False)
 
     def onContentManager(self):
         ContentManager(self).exec()
@@ -441,15 +441,13 @@ class MainWindow(MainWindowBase):
             stats_window.open()
         elif self.known_data is None:
             self.warnKnownDataNotReady()
-            
+
     def warnKnownDataNotReady(self):
         QMessageBox.warning(
             self,
             "Known data is not ready",
             "Known data is not ready yet. Please try again in a few seconds, and make sure AnkiConnect is available if Anki support is enabled."
         )
-        
-
 
     def exportNotes(self) -> None:
         """
@@ -471,7 +469,7 @@ class MainWindow(MainWindowBase):
             writer = csv.writer(file)
             writer.writerow(
                 ['timestamp', 'content', 'anki_export_success', 'sentence', 'word',
-                'definition', 'definition2', 'pronunciation', 'image', 'tags']
+                 'definition', 'definition2', 'pronunciation', 'image', 'tags']
             )
             writer.writerows(self.rec.getAllNotes())
 
@@ -553,9 +551,9 @@ class MainWindow(MainWindowBase):
             KindleVocabImporter(self, fname).exec()
         except ValueError:
             QMessageBox.warning(self, "No notes are found",
-                "Check if you've picked the right directory: it should be your Kindle root folder")
+                                "Check if you've picked the right directory: it should be your Kindle root folder")
         except Exception as e:
-            QMessageBox.warning(self, "Something went wrong", "Error: "+repr(e))
+            QMessageBox.warning(self, "Something went wrong", "Error: " + repr(e))
 
     def importAutoText(self) -> None:
         path = QFileDialog.getOpenFileName(
@@ -563,7 +561,7 @@ class MainWindow(MainWindowBase):
             caption="Select book or text file",
             filter="Book, text files (*.epub *.fb2 *.mobi *.html *.azw *.azw3 *.kfx *.txt)",
             directory=QStandardPaths.writableLocation(QStandardPaths.HomeLocation)
-            )[0]
+        )[0]
         if path:
             AutoTextImporter(self, path).exec()
 
@@ -578,17 +576,20 @@ class MainWindow(MainWindowBase):
         try:
             KoreaderVocabImporter(self, path).exec()
         except ValueError:
-            QMessageBox.warning(self, "No notes are found",
+            QMessageBox.warning(
+                self,
+                "No notes are found",
                 "Check if you've picked the right directory. It should be a folder containing both all of your books and KOReader settings.")
         except Exception as e:
-            QMessageBox.warning(self, "Something went wrong", "Error: "+repr(e))
-
+            QMessageBox.warning(self, "Something went wrong", "Error: " + repr(e))
 
     def repeatLastImport(self):
         method = settings.value("last_import_method")
         path = settings.value("last_import_path")
         if not (method and path):
-            QMessageBox.warning(self, "You have not imported notes before",
+            QMessageBox.warning(
+                self,
+                "You have not imported notes before",
                 "Use any one of the other two options on the menu, and you will be able to use this one next time.")
             return
         if method == "kindle":
@@ -599,9 +600,10 @@ class MainWindow(MainWindowBase):
             # Nightly users, clear it for them
             settings.setValue("last_import_method", "")
             settings.setValue("last_import_path", "")
-            QMessageBox.warning(self, "You have not imported notes before",
+            QMessageBox.warning(
+                self,
+                "You have not imported notes before",
                 "Use any one of the other two options on the menu, and you will be able to use this one next time.")
- 
 
     def setupShortcuts(self) -> None:
         self.shortcut_toanki = QShortcut(QKeySequence('Ctrl+S'), self)
@@ -634,7 +636,8 @@ class MainWindow(MainWindowBase):
                 break
         if self.word.hasFocus():
             target = self.word.selectedText()
-        hovered = self.sentence.word_under_cursor # will only trigger if none of the text fields are focused, like hovering on inactive window
+        # will only trigger if none of the text fields are focused, like hovering on inactive window
+        hovered = self.sentence.word_under_cursor
         target = str.strip(target
                            or hovered
                            or self.previousWord
@@ -644,13 +647,11 @@ class MainWindow(MainWindowBase):
 
         return target
 
-
-
     def onWebButton(self) -> None:
         """Shows definitions of self.word.text() in wiktionoary in browser"""
 
         url = settings.value("custom_url",
-            "https://en.wiktionary.org/wiki/@@@@").replace("@@@@", self.word.text())
+                             "https://en.wiktionary.org/wiki/@@@@").replace("@@@@", self.word.text())
         QDesktopServices.openUrl(QUrl(url))
 
     def onReaderOpen(self) -> None:
@@ -658,10 +659,14 @@ class MainWindow(MainWindowBase):
         url = f"http://{settings.value('reader_host', '127.0.0.1', type=str)}:{settings.value('reader_port', '39285', type=str)}"
         books_dir = settings.value("books_dir")
         if not books_dir:
-            QMessageBox.warning(self, "No books directory set",
+            QMessageBox.warning(
+                self,
+                "No books directory set",
                 "You have not set the directory containing your books. Please set it by selecting Reader -> Set book path")
         elif not os.path.exists(books_dir):
-            QMessageBox.warning(self, "Books directory does not exist",
+            QMessageBox.warning(
+                self,
+                "Books directory does not exist",
                 f"The directory ({books_dir}) containing your books is not found. Please create it or set another one.")
         else:
             QDesktopServices.openUrl(QUrl(url))
@@ -673,12 +678,11 @@ class MainWindow(MainWindowBase):
 
     def lookupSelected(self, no_lemma=False) -> None:
         target = self.getCurrentWord()
-        if target and target != self.previous_word: # If word not empty
+        if target and target != self.previous_word:  # If word not empty
             logger.info(f"Triggered lookup on {target}")
             self.lookup(target, no_lemma)
             self.previous_word = target
 
-            
     def findDuplicates(self, word: str, sentence: str) -> list[int]:
         """Check for duplicates of note in Anki
         We support using either sentence or word as first field
@@ -687,7 +691,7 @@ class MainWindow(MainWindowBase):
         if self.checkAnkiConnect() == 0:
             return []
         api = settings.value("anki_api", "http://127.0.0.1:8765")
-        
+
         note_type = settings.value("note_type")
         logger.debug(f'Trying to obtain fields for note type "{note_type}"')
 
@@ -698,11 +702,13 @@ class MainWindow(MainWindowBase):
             self.note_type_first_field = ""
             return []
         if fields[0] == settings.value("word_field"):
-            logger.info(f'First field is word field, trying to find a note with field "{fields[0]}" having value "{word}"')
+            logger.info(
+                f'First field is word field, trying to find a note with field "{fields[0]}" having value "{word}"')
             find_query = f"\"{fields[0]}:{word}\""
             self.note_type_first_field = "word"
         elif fields[0] == settings.value("sentence_field"):
-            logger.info(f'First field is sentence field, trying to find a note with field "{fields[0]}" having value "{sentence}"')
+            logger.info(
+                f'First field is sentence field, trying to find a note with field "{fields[0]}" having value "{sentence}"')
             find_query = f"\"{fields[0]}:{sentence}\""
             self.note_type_first_field = "sentence"
         else:
@@ -720,13 +726,11 @@ class MainWindow(MainWindowBase):
         except Exception:
             logger.debug("Did not find Anki note with query: " + find_query)
             return []
-        
 
-    
     def lookup(self, target: str, no_lemma=False, apply_rules=True) -> None:
         self.boldWordInSentence(target)
         langcode = settings.value("target_language", "en")
-        
+
         lemma = lem_word(target, langcode)
         self.rec.recordLookup(
             LookupRecord(
@@ -737,15 +741,26 @@ class MainWindow(MainWindowBase):
         )
         if self.known_data:
             word_record = self.known_data.get(
-                lemma, 
+                lemma,
                 WordRecord(lemma=lemma, language=langcode)
-                )
-            threshold = settings.value("tracking/known_threshold", 100, type=int) if lemma not in self.cognates else settings.value("tracking/known_threshold_cognate", 25, type=int)
+            )
+            threshold = settings.value(
+                "tracking/known_threshold",
+                100,
+                type=int) if lemma not in self.cognates else settings.value(
+                "tracking/known_threshold_cognate",
+                25,
+                type=int)
             modifier = self.rec.getModifier(langcode, lemma)
             self.word_record_display.setWordRecord(word_record, self.getWordActionWeights(), threshold, modifier)
 
         lookup1_result_success = self.definition.lookup(target, no_lemma)
-        lookup2_result_success = settings.value("sg2_enabled", False, type=bool) and self.definition2.lookup(target, no_lemma)
+        lookup2_result_success = settings.value(
+            "sg2_enabled",
+            False,
+            type=bool) and self.definition2.lookup(
+            target,
+            no_lemma)
         if not (lookup1_result_success or lookup2_result_success):
             # If no definition found, we apply word rules and try again
             rules = json.loads(settings.value("word_regex", "[]"))
@@ -758,7 +773,6 @@ class MainWindow(MainWindowBase):
 
         self.audio_selector.lookup(target)
         self.freq_widget.lookup(target, True, settings.value("freq_display", "Stars"))
-        
 
     def setSentence(self, content) -> None:
         self.sentence.setText(str.strip(content))
@@ -772,7 +786,7 @@ class MainWindow(MainWindowBase):
             self.image_viewer.setText("<center><b>&lt;No image selected&gt;</center>")
             self.image_path = ""
             return
-        filename = str(int(time.time()*1000)) + '.' + settings.value("img_format", "jpg")
+        filename = str(int(time.time() * 1000)) + '.' + settings.value("img_format", "jpg")
         logger.debug(f"Received image, saving to disk as {filename}")
         self.image_path = os.path.join(datapath, "images", filename)
         content.save(
@@ -782,7 +796,6 @@ class MainWindow(MainWindowBase):
 
     def getConvertToUppercase(self) -> bool:
         return bool(settings.value("capitalize_first_letter", False, type=bool))
-
 
     def clipboardChanged(self, even_when_focused=False, selection=False):
         """
@@ -794,7 +807,7 @@ class MainWindow(MainWindowBase):
         mistakes, unless it is used from the button.
         """
         if selection:
-            text = QApplication.clipboard().text(QClipboard.Selection) # type: ignore
+            text = QApplication.clipboard().text(QClipboard.Selection)  # type: ignore
             # Ignore if empty, which happens when window loses focus
             if not text.strip():
                 return
@@ -812,14 +825,14 @@ class MainWindow(MainWindowBase):
         # Check if any of the text box widgets are focused
         # If they are, ignore the clipboard change
         is_focused = (time.time() - self.last_got_focus > 0.2)\
-                    and (self.sentence.hasFocus()\
-                    or self.word.hasFocus()\
-                    or self.definition.hasFocus()\
-                    or self.definition2.hasFocus())\
-                    or self.hasFocus()
-                    # Allow pasting right after focus for wayland users
-                    # because wayland doesn't allow pasting from inactive windows
-        
+            and (self.sentence.hasFocus()
+                 or self.word.hasFocus()
+                 or self.definition.hasFocus()
+                 or self.definition2.hasFocus())\
+            or self.hasFocus()
+        # Allow pasting right after focus for wayland users
+        # because wayland doesn't allow pasting from inactive windows
+
         if is_focused and not even_when_focused:
             return
         if is_json(text):
@@ -858,13 +871,12 @@ class MainWindow(MainWindowBase):
                 sentence_text,
                 apply_bold,
                 self.getLanguage()
-                )
+            )
 
         if sentence_text is not None:
             self.sentence.setHtml(sentence_text)
 
         QCoreApplication.processEvents()
-        
 
     def getLanguage(self) -> str:
         return settings.value("target_language", "en")  # type: ignore
@@ -872,27 +884,24 @@ class MainWindow(MainWindowBase):
     def getLemGreedy(self) -> bool:
         return settings.value("lem_greedily", False, type=bool)  # type: ignore
 
-
     def createNote(self) -> None:
         if self.checkAnkiConnect() == 0:
             return
-        
+
         allow_duplicates = False
         sentence = self.sentence.textBoldedByTags.replace("\n", "<br>")
-        if note_ids:=self.findDuplicates(self.word.text(), sentence):
+        if note_ids := self.findDuplicates(self.word.text(), sentence):
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Warning)
             msgBox.setText(
-                f'Note(s) with {self.note_type_first_field} "{self.word.text() if self.note_type_first_field == "word" else sentence}" already exists in Anki. <br>' +\
-                f"Do you still want to add the note?<br>" +\
+                f'Note(s) with {self.note_type_first_field} "{self.word.text() if self.note_type_first_field == "word" else sentence}" already exists in Anki. <br>' +
+                f"Do you still want to add the note?<br>" +
                 "<br>".join(
-                    f"Note id: {id}, created {unix_milliseconds_to_datetime_str(id)}" for id in note_ids
-                    )
-                )
+                    f"Note id: {id}, created {unix_milliseconds_to_datetime_str(id)}" for id in note_ids))
             msgBox.setWindowTitle("Note already exists")
-            button_ok = msgBox.addButton("Add anyway", QMessageBox.AcceptRole)
-            button_cancel = msgBox.addButton("Cancel", QMessageBox.RejectRole)
-            button_view = msgBox.addButton("View note(s)", QMessageBox.HelpRole)
+            msgBox.addButton("Add anyway", QMessageBox.AcceptRole)
+            msgBox.addButton("Cancel", QMessageBox.RejectRole)
+            msgBox.addButton("View note(s)", QMessageBox.HelpRole)
             msgBox.exec()
             result = msgBox.buttonRole(msgBox.clickedButton())
             if result == QMessageBox.RejectRole:
@@ -920,10 +929,9 @@ class MainWindow(MainWindowBase):
             tags=settings.value("tags", "vocabsieve").strip().split() + self.tags.text().strip().split()
         )
 
-        
         content = prepareAnkiNoteDict(anki_settings, note)
         logger.debug("Prepared Anki note json" + json.dumps(content, indent=4, ensure_ascii=False))
-        try: 
+        try:
             self.last_added_note_id = addNote(
                 settings.value("anki_api", "http://127.0.0.1:8765"),
                 content,
@@ -944,10 +952,8 @@ class MainWindow(MainWindowBase):
             logger.error("Failed to add note to Anki: " + repr(e))
             return
 
-
-    def viewLastNote(self) -> None:     
+    def viewLastNote(self) -> None:
         self.guiBrowseNote(self.last_added_note_id)
-
 
     def guiBrowseNote(self, note_id: int) -> None:
         """Visualize the card of the given id in the Anki Card Browser"""
@@ -965,10 +971,10 @@ class MainWindow(MainWindowBase):
                 settings.value("anki_api", "http://127.0.0.1:8765"),
                 gui_query
             )
-        except Exception as e: # This shouldn't really be possible
+        except Exception as e:  # This shouldn't really be possible
             logger.error(f"Unable to guiBrowse for \"{note_id}\": " + repr(e))
             return
-        
+
     def guiBrowseNotes(self, note_ids: list[int]) -> None:
         """Visualize the card of the given id in the Anki Card Browser"""
         if not note_ids:
@@ -985,7 +991,7 @@ class MainWindow(MainWindowBase):
                 settings.value("anki_api", "http://127.0.0.1:8765"),
                 gui_query
             )
-        except Exception as e: # This shouldn't really be possible
+        except Exception as e:  # This shouldn't really be possible
             logger.error(f"Unable to guiBrowse for \"{note_ids}\": " + repr(e))
             return
 
@@ -1012,11 +1018,11 @@ class MainWindow(MainWindowBase):
         #_timer.start(2000)
         timer_known_data = QTimer(self)
         refresh_every = settings.value("tracking/known_data_lifetime", 1800, type=int) * 1000 // 10
-        timer_known_data.setInterval(refresh_every) # Attempt to refresh every 30s, but refresh will only happen if data is expired
+        # Attempt to refresh every 30s, but refresh will only happen if data is expired
+        timer_known_data.setInterval(refresh_every)
         timer_known_data.timeout.connect(self.getKnownDataOnThread)
         timer_known_data.start()
         self.getKnownDataOnThread()
-
 
     def showStats(self) -> None:
         lookups = self.rec.countLookupsToday()
@@ -1044,29 +1050,26 @@ class MainWindow(MainWindowBase):
             self.worker2.moveToThread(self.thread2)
             self.thread2.started.connect(self.worker2.start_api)
             self.thread2.start()
-    
 
 
 def main():
-    from .global_names import settings
-
     # In Windows 11 QToolTip background color is not displayed correctly in dark theme.
     # To get the theme to work properly on Windows 11, add an additional qss that removes the border.
     # For whatever reason, this works and allows QT to render the tool boxes correctly.
     # See https://github.com/5yutan5/PyQtDarkTheme/issues/239 for more info.
     qss = "QToolTip { border: 0px; }" if sys.platform == "win32" else ""
 
-    if (theme:=settings.value("theme", 'auto' if platform.system() != "Linux" else 'system')) and theme != "system":
-        if color:=settings.value("accent_color"):
+    if (theme := settings.value("theme", 'auto' if platform.system() != "Linux" else 'system')) and theme != "system":
+        if color := settings.value("accent_color"):
             qdarktheme.setup_theme(theme, custom_colors={"primary": color}, additional_qss=qss)
         else:
             qdarktheme.setup_theme(theme, additional_qss=qss)
    # if using system, don't set up theme
 
     w = MainWindow()
-    
+
     w.show()
-    w.audio_selector.alignDiscardButton() # fix annoying issue of misalignment
+    w.audio_selector.alignDiscardButton()  # fix annoying issue of misalignment
     try:
         app.exec()
         if not w.is_wayland:

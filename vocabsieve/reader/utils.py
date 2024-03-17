@@ -8,7 +8,8 @@ from markdown import markdown
 import os
 
 
-def remove_ns(s: str) -> str: return str(s).split("}")[-1]
+def remove_ns(s: str) -> str: 
+    return str(s).split("}")[-1]
 
 
 def fix_hyphen(s: str) -> str:
@@ -98,7 +99,8 @@ def parseBook(path) -> Optional[dict]:
         return parseFb2(path)
     else:
         raise NotImplementedError("Filetype not supported")
-    
+
+
 def getEpubMetadata(path: str) -> Dict[str, str]:
     book = epub.read_epub(path)
     title = book.get_metadata('DC', 'title') or ""

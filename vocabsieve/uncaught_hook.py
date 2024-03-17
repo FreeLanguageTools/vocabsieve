@@ -4,6 +4,7 @@ import traceback
 from loguru import logger
 import sys
 
+
 class ExceptionCatcher(QObject):
     exception_signal = pyqtSignal(object, object, object)
 
@@ -24,5 +25,3 @@ class ExceptionCatcher(QObject):
         # To avoid CTRL+C causing an error
         if e_type != KeyboardInterrupt:
             self.exception_signal.emit(e_type, e_value, e_trace)
-
-

@@ -4,6 +4,7 @@ from operator import itemgetter
 from .dialog import AddContentDialog
 from ..global_names import settings
 
+
 class ContentManager(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
@@ -28,12 +29,13 @@ class ContentManager(QDialog):
         self.remove.clicked.connect(self.onRemove)
         self.rebuild = QPushButton("Rebuild seen words database")
         self.rebuild.clicked.connect(self.rebuildDB)
-        self.bar = QStatusBar()
+        self.status_bar = QStatusBar()
         self.refresh()
 
     def setupWidgets(self):
         self._layout = QVBoxLayout(self)
-        label = QLabel("Vocabsieve supports tracking your progress by recording content you read. Add content here when you finish reading them")
+        label = QLabel(
+            "Vocabsieve supports tracking your progress by recording content you read. Add content here when you finish reading them")
         label.setWordWrap(True)
         self._layout.addWidget(label)
         self._layout.addWidget(self.tview)
@@ -42,17 +44,17 @@ class ContentManager(QDialog):
         self._layout.addWidget(self.add_folder)
         self._layout.addWidget(self.remove)
         self._layout.addWidget(self.rebuild)
-        self._layout.addWidget(self.bar)
+        self._layout.addWidget(self.status_bar)
 
     def onAddFile(self):
         path, _ = QFileDialog.getOpenFileName(
-                self, "Choose a file to import", 
-                QStandardPaths.writableLocation(QStandardPaths.HomeLocation), 
-                "Files (*.epub *.fb2 *.mobi *.html *.azw *.azw3 *.kfx *.srt *.vtt *.ass)"
-                )
+            self, "Choose a file to import",
+            QStandardPaths.writableLocation(QStandardPaths.HomeLocation),
+            "Files (*.epub *.fb2 *.mobi *.html *.azw *.azw3 *.kfx *.srt *.vtt *.ass)"
+        )
         if path:
             AddContentDialog(self, path).exec()
-             
+
     def refresh(self):
         self.tview.clear()
         langcode = settings.value("target_language", 'en')
@@ -60,21 +62,22 @@ class ContentManager(QDialog):
         items = sorted(items, key=itemgetter(2), reverse=True)
 
         for name, content, jd in items:
-            treeitem = QTreeWidgetItem([name, QDate.fromJulianDay(jd).toString("yyyy-MM-dd"), str(len(content.split()))])
+            treeitem = QTreeWidgetItem([name, QDate.fromJulianDay(
+                jd).toString("yyyy-MM-dd"), str(len(content.split()))])
             self.tview.addTopLevelItem(treeitem)
         for i in range(3):
             self.tview.resizeColumnToContents(i)
         impressions, uniques = self.rec.countSeen(langcode)
         self.status(f"Total: {uniques} lemmas seen {impressions} times")
-    
+
     def status(self, msg, t=0):
-        self.bar.showMessage(msg, t)
+        self.status_bar.showMessage(msg, t)
 
     def onAddFolder(self):
         path = QFileDialog.getExistingDirectory(
-                self, "Choose a folder to import", 
-                QStandardPaths.writableLocation(QStandardPaths.HomeLocation), 
-                )
+            self, "Choose a folder to import",
+            QStandardPaths.writableLocation(QStandardPaths.HomeLocation),
+        )
         if path:
             AddContentDialog(self, path).exec()
 
