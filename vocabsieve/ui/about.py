@@ -4,7 +4,6 @@ import sys
 from .. import __version__
 
 
-
 class AboutDialog(QDialog):
     def __init__(self):
         super().__init__()

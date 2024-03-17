@@ -26,7 +26,6 @@ gdict_languages = [
 pronunciation_sources = ["Forvo (all)", "Forvo (best)"]
 
 
-
 def preprocess_clipboard(s: str, lang: str, should_convert_to_uppercase: bool = False) -> str:
     """
     Pre-process string from clipboard before showing it

@@ -11,3 +11,6 @@ htmlcov
 .tox
 docs/_site
 docs/.jekyll-cache
+.vscode
+testdata
+testdir

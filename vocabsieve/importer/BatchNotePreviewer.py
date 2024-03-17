@@ -3,6 +3,7 @@ from PyQt5.QtCore import Qt
 from ..tools import gen_preview_html
 from ..models import SRSNote
 
+
 class BatchNotePreviewer(QTextEdit):
     def __init__(self):
         super().__init__()
@@ -31,16 +32,15 @@ class BatchNotePreviewer(QTextEdit):
         first_button.clicked.connect(self.first)
         last_button.clicked.connect(self.last)
 
-
     def appendNoteItem(self, item: SRSNote):
         self.note_items.append(item)
         self.setCurrentIndex(len(self.note_items) - 1)
-        
+
     def setCurrentIndex(self, index: int):
         self.currentIndex = index
         self.counter.setText(f"{index+1}/{len(self.note_items)}")
         self.setText(gen_preview_html(self.note_items[index]))
-    
+
     def back(self):
         if self.currentIndex > 0:
             self.setCurrentIndex(self.currentIndex - 1)

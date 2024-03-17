@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import (QDialog, QFormLayout, QLabel, QComboBox, QWidget, 
-                             QVBoxLayout, QCheckBox, QScrollArea, QPushButton, 
+from PyQt5.QtWidgets import (QDialog, QFormLayout, QLabel, QComboBox, QWidget,
+                             QVBoxLayout, QCheckBox, QScrollArea, QPushButton,
                              QProgressBar, QSizePolicy, QApplication)
 from PyQt5.QtCore import QDateTime, QCoreApplication
 from .BatchNotePreviewer import BatchNotePreviewer
@@ -18,23 +18,26 @@ from typing import TYPE_CHECKING, Optional
 if TYPE_CHECKING:
     from ..main import MainWindow
 
+
 def date_to_timestamp(datestr: str):
     return dt.strptime(datestr, "%Y-%m-%d %H:%M:%S").timestamp()
+
 
 class GenericImporter(QDialog):
     """
     This class implements the UI for extracting highlights.
     Subclass it and override getNotes to have a new importer
     """
-    def __init__(self, 
-                 parent: "MainWindow", 
-                 src_name: str = "Generic", 
-                 path: Optional[str] = None, 
-                 methodname: str = "generic", 
+
+    def __init__(self,
+                 parent: "MainWindow",
+                 src_name: str = "Generic",
+                 path: Optional[str] = None,
+                 methodname: str = "generic",
                  show_selector_src: bool = True,
                  show_selector_date: bool = True):
         super().__init__(parent)
-        self.notes: Optional[set[tuple[str, str]]] = None # Used for filtering
+        self.notes: Optional[set[tuple[str, str]]] = None  # Used for filtering
         self.lang = settings.value('target_language')
         self.methodname = methodname
         self.setWindowTitle(f"Import {src_name}")
@@ -79,21 +82,18 @@ class GenericImporter(QDialog):
         if show_selector_src:
             self.src_selector = QWidget()
             self.src_checkboxes = []
-            self.src_selector._layout = QVBoxLayout(self.src_selector) # type: ignore
+            self.src_selector._layout = QVBoxLayout(self.src_selector)  # type: ignore
             self._layout.addRow(QLabel("<h3>Select books to extract highlights from</h3>"))
             for book_name in set(self.orig_book_names):
                 self.src_checkboxes.append(
                     QCheckBox(truncate_middle(book_name, 90)))
-                self.src_selector._layout.addWidget(self.src_checkboxes[-1]) # type: ignore
+                self.src_selector._layout.addWidget(self.src_checkboxes[-1])  # type: ignore
                 self.src_checkboxes[-1].clicked.connect(self.updateHighlightCount)
             self.src_selector_scrollarea = QScrollArea()
             self.src_selector_scrollarea.setWidget(self.src_selector)
             self._layout.addRow(self.src_selector_scrollarea)
         else:
-            self.updateHighlightCount(filter=False)
-
-    
-
+            self.updateHighlightCount(filter_by_notes=False)
 
         self.preview_widget = BatchNotePreviewer()
         self.preview_widget.setMinimumHeight(300)
@@ -101,8 +101,6 @@ class GenericImporter(QDialog):
         self._layout.addRow(QLabel("Preview cards"), self.preview_widget)
         self._layout.addRow(self.progressbar)
         self._layout.addRow(self.definition_count_label, self.anki_button)
-
-
 
     def getNotes(self) -> list[ReadingNote]:
         """
@@ -114,8 +112,8 @@ class GenericImporter(QDialog):
         """
         raise NotImplementedError("Should be implemented by subclasses")
 
-    def updateHighlightCount(self, _=False, filter: bool = True):
-        if filter:
+    def updateHighlightCount(self, _=False, filter_by_notes: bool = True):
+        if filter_by_notes:
             logger.debug("Filtering highlights by book")
             start_date = self.datewidget.currentText()
             selected_book_names = []
@@ -126,8 +124,8 @@ class GenericImporter(QDialog):
             self.selected_reading_notes = self.filterHighlights(start_date, selected_book_names)
         else:
             self.selected_reading_notes = self.reading_notes
-        self.progressbar.setMaximum(len(self.selected_reading_notes)) 
-        
+        self.progressbar.setMaximum(len(self.selected_reading_notes))
+
         self.progressbar.setValue(0)
         self.notes_count_label.setText(f"{len(self.selected_reading_notes)} highlights selected")
 
@@ -141,11 +139,7 @@ class GenericImporter(QDialog):
                 else:
                     new_reading_notes.append(item)
 
-                
-
         return new_reading_notes
-
-
 
     def defineWords(self) -> None:
         logger.info(f"Define words triggered on {len(self.selected_reading_notes)} notes")
@@ -171,13 +165,13 @@ class GenericImporter(QDialog):
                 sentence = note.sentence.replace("_", "").replace(word, f"<strong>{word}</strong>")
             else:
                 sentence = note.sentence
-                
+
             if defi1.getDefinitions(word):
                 definition1 = defi1.getDefinitions(word)[0]
             else:
                 definition1 = None
             if definition2_enabled and defi2.getDefinitions(word):
-                    definition2 = defi2.getDefinitions(word)[0]
+                definition2 = defi2.getDefinitions(word)[0]
             else:
                 definition2 = None
             if not (definition1 or definition2) and not self.add_even_if_no_defi.isChecked():
@@ -205,7 +199,7 @@ class GenericImporter(QDialog):
             if settings.value("tags", "vocabsieve").strip():
                 tags.extend(settings.value("tags", "vocabsieve").strip().split())
             tags.append(self.methodname)
-            tags.append(note.book_name.replace(" ","_"))
+            tags.append(note.book_name.replace(" ", "_"))
 
             # replace word with headword if it exists
             if definition1 is not None:
@@ -214,18 +208,18 @@ class GenericImporter(QDialog):
                 word = definition2.headword
 
             new_note_item = SRSNote(
-                    word=word, # fine if no definition
-                    sentence=sentence, # fine if empty string
-                    definition1=self._parent.definition.toAnki(definition1) if definition1 is not None else None,
-                    definition2=self._parent.definition2.toAnki(definition2) if definition2 is not None else None,
-                    audio_path=audio_path or None,
-                    tags=tags
-                    )
+                word=word,  # fine if no definition
+                sentence=sentence,  # fine if empty string
+                definition1=self._parent.definition.toAnki(definition1) if definition1 is not None else None,
+                definition2=self._parent.definition2.toAnki(definition2) if definition2 is not None else None,
+                audio_path=audio_path or None,
+                tags=tags
+            )
             self.preview_widget.appendNoteItem(new_note_item)
             self.anki_notes.append(new_note_item)
-            self.progressbar.setValue(n_looked_up+1)
+            self.progressbar.setValue(n_looked_up + 1)
         self.progressbar.setValue(len(self.selected_reading_notes))
-        
+
         # Unlock buttons again now
         self.lookup_button.setEnabled(True)
         self.anki_button.setEnabled(True)
@@ -235,18 +229,18 @@ class GenericImporter(QDialog):
         for note in self.anki_notes:
             notes_data.append(
                 prepareAnkiNoteDict(self._parent.getAnkiSettings(), note)
-                )
+            )
 
         res = addNotes(settings.value("anki_api"), notes_data)
         # Record last import data
-        if self.methodname != "auto": # don't save for auto vocab extraction
+        if self.methodname != "auto":  # don't save for auto vocab extraction
             settings.setValue("last_import_method", self.methodname)
             settings.setValue("last_import_path", self.path)
             settings.setValue(f"last_import_date_{self.methodname}", self.lastDate[:10])
 
         self._layout.addRow(QLabel(
             QDateTime.currentDateTime().toString('[hh:mm:ss]') + " "
-            + str(len(notes_data)) 
-            + " notes have been exported, of which " 
+            + str(len(notes_data))
+            + " notes have been exported, of which "
             + str(len([i for i in res if i]))
             + " were successfully added to your collection."))

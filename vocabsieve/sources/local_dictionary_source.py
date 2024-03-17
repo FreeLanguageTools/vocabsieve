@@ -1,6 +1,7 @@
 from ..models import DictionarySource, SourceOptions, LookupResult
 from ..local_dictionary import dictdb
 
+
 class LocalDictionarySource(DictionarySource):
     def __init__(self, langcode: str, options: SourceOptions, dictname: str) -> None:
         super().__init__(dictname, langcode, options)

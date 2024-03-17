@@ -6,6 +6,7 @@ from ..models import Definition, DictionarySourceGroup, DisplayMode
 from ..tools import process_defi_anki
 from typing import Optional
 
+
 def sign(number):
     if number > 0:
         return 1
@@ -13,10 +14,11 @@ def sign(number):
         return -1
     else:
         return 0
-    
+
 
 class ButtonsBoxWidget(QWidget):
     scrolled = pyqtSignal(int)
+
     def __init__(self, parent):
         super().__init__(parent=parent)
         self.scrolled_amount = 0
@@ -26,14 +28,13 @@ class ButtonsBoxWidget(QWidget):
             self.scrolled_amount = 0
         self.scrolled_amount += event.angleDelta().y()
         if self.scrolled_amount >= 120:
-            self.scrolled.emit(-1) # Scroll up = prev
+            self.scrolled.emit(-1)  # Scroll up = prev
             self.scrolled_amount = 0
 
         elif self.scrolled_amount <= -120:
-            self.scrolled.emit(1) # Scroll down = next
+            self.scrolled.emit(1)  # Scroll down = next
             self.scrolled_amount = 0
         event.accept()
-
 
 
 class MultiDefinitionWidget(SearchableTextEdit):
@@ -53,7 +54,6 @@ class MultiDefinitionWidget(SearchableTextEdit):
         buttons_box_layout = QHBoxLayout(buttons_box_widget)
         buttons_box_widget.scrolled.connect(self.move_)
 
-
         prev_button = QPushButton("<")
         self.counter = QLabel("0/0")
         self.counter.setAlignment(Qt.AlignCenter)
@@ -64,7 +64,6 @@ class MultiDefinitionWidget(SearchableTextEdit):
         buttons_box_layout.addWidget(self.info_label)
         prev_button.clicked.connect(self.back)
         next_button.clicked.connect(self.forward)
-
 
     def setSourceGroup(self, sg: DictionarySourceGroup):
         self.sg = sg
@@ -83,7 +82,6 @@ class MultiDefinitionWidget(SearchableTextEdit):
             result = True
         return result
 
-
     def appendDefinition(self, definition: Definition):
         self.definitions.append(definition)
         self.updateIndex()
@@ -92,7 +90,7 @@ class MultiDefinitionWidget(SearchableTextEdit):
         if not self.definitions:
             return
         self.counter.setText(f"{self.currentIndex+1}/{len(self.definitions)}")
-        if defi:=self.definitions[self.currentIndex]:
+        if defi := self.definitions[self.currentIndex]:
             self.setCurrentDefinition(defi)
 
     def setCurrentDefinition(self, defi: Definition):
@@ -124,13 +122,13 @@ class MultiDefinitionWidget(SearchableTextEdit):
     def back(self):
         if self.currentIndex > 0:
             self.setCurrentIndex(self.currentIndex - 1)
-        else: #wrap around
+        else:  # wrap around
             self.setCurrentIndex(len(self.definitions) - 1)
 
     def forward(self):
         if self.currentIndex < len(self.definitions) - 1:
             self.setCurrentIndex(self.currentIndex + 1)
-        else: #wrap around
+        else:  # wrap around
             self.setCurrentIndex(0)
 
     def first(self):
@@ -158,7 +156,7 @@ class MultiDefinitionWidget(SearchableTextEdit):
             defi = self.currentDefinition
         source_name = self.currentDefinition.source
         source = self.sg.getSource(source_name)
-        if source is None: # This means no definition is found but maybe the user typed in something
+        if source is None:  # This means no definition is found but maybe the user typed in something
             return self.toPlainText().replace("\n", "<br>")
-        
+
         return process_defi_anki(self.toPlainText(), self.toMarkdown(), defi, source)

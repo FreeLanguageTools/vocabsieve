@@ -41,6 +41,7 @@ def lem_pre(word, language):
     word = re.sub(r"\{.*?\}", "", word)
     return word
 
+
 def lem_word(word, language, greedy=False):
     return lemmatize(lem_pre(word, language), language, greedy)
 
@@ -74,6 +75,7 @@ def removeAccents(word) -> str:
         word = word.replace(old, new)
     return word
 
+
 @lru_cache(maxsize=500000)
 def lemmatize(word, language, greedy=False):
     """Lemmatize a word. We will use PyMorphy for RU, UK, simplemma for others,
@@ -86,13 +88,12 @@ def lemmatize(word, language, greedy=False):
         if language in PYMORPHY_SUPPORT and morph.get(language):
             return morph[language].parse(word)[0].normal_form
         if language in simplemma_languages:
-            return simplemma.lemmatize(word, lang=language, greedy=greedy) # pyright: ignore[reportPrivateImportUsage]
+            return simplemma.lemmatize(word, lang=language, greedy=greedy)  # pyright: ignore[reportPrivateImportUsage]
         else:
             return word
-    except ValueError as e: # pylint: disable=redefined-outer-name
+    except ValueError as e:  # pylint: disable=redefined-outer-name
         print("encountered ValueError", repr(e))
         return word
-    except Exception as e: # pylint: disable=redefined-outer-name
+    except Exception as e:  # pylint: disable=redefined-outer-name
         print(repr(e))
         return word
-    

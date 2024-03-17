@@ -4,14 +4,16 @@ from PyQt5.QtWidgets import QLabel, QComboBox, QLineEdit, QPushButton, QCheckBox
 from PyQt5.QtCore import pyqtSignal
 from .base_tab import BaseTab
 from ..constants import langcodes
-from ..dictmanager import DictManager
+from .dictmanager import DictManager
 from ..dictionary import getFreqlistsForLang, getDictsForLang, getAudioDictsForLang, langs_supported
 from ..global_names import settings
 
 BOLD_STYLES = ["<disabled>", "Font weight", "Underscores"]
 
+
 class GeneralTab(BaseTab):
     sources_reloaded_signal = pyqtSignal(list, list)
+
     def __init__(self):
         self.target_language = QComboBox()
         self.lemfreq = QCheckBox("Lemmatize before looking up frequency")
@@ -57,13 +59,13 @@ class GeneralTab(BaseTab):
         custom_dicts = json.loads(settings.value("custom_dicts", '[]'))
         dicts = getDictsForLang(
             langcodes.inverse[self.target_language.currentText()], custom_dicts
-            )
-        
+        )
+
         audio_dicts = getAudioDictsForLang(
             langcodes.inverse[self.target_language.currentText()], custom_dicts
         )
         self.sources_reloaded_signal.emit(dicts, audio_dicts)
-        # TODO handle the following with the signal
+        # TODO handle the following with the signal # pylint: disable=fixme
         #self.all_audio_sources_widget.clear()
         #self.postproc_selector.blockSignals(True)
         #self.postproc_selector.clear()
@@ -71,7 +73,7 @@ class GeneralTab(BaseTab):
 
         #self.all_sources_widget.clear()
         #self.all_sources_widget.addItems(dicts)
-        
+
         #self.postproc_selector.addItems(dicts)
         #self.postproc_selector.blockSignals(False)
 
@@ -88,7 +90,6 @@ class GeneralTab(BaseTab):
             settings.value(
                 "freq_source", "<disabled>"))
         self.freq_source.blockSignals(False)
-        
 
     def initWidgets(self) -> None:
         self.layout_.addRow(QLabel("<h3>General</h3>"))
@@ -109,7 +110,7 @@ class GeneralTab(BaseTab):
         self.layout_.addRow(QLabel("Web lookup preset"), self.web_preset)
         self.layout_.addRow(QLabel("Custom URL pattern"), self.custom_url)
         self.layout_.addRow(self.importdict)
-    
+
     def setupAutosave(self):
         self.load_freq_sources()
         self.register_config_handler(
@@ -151,12 +152,12 @@ class GeneralTab(BaseTab):
         langfull = langcodes[lang]
         tolangfull = langcodes[tolang]
         presets = bidict({
-                    "English Wiktionary": "https://en.wiktionary.org/wiki/@@@@#" + langfull,
-                    "Monolingual Wiktionary": f"https://{lang}.wiktionary.org/wiki/@@@@",
-                    "Reverso Context": f"https://context.reverso.net/translation/{langfull.lower()}-{tolangfull.lower()}/@@@@",
-                    "Tatoeba": "https://tatoeba.org/en/sentences/search?query=@@@@"
-                })
-        
+            "English Wiktionary": "https://en.wiktionary.org/wiki/@@@@#" + langfull,
+            "Monolingual Wiktionary": f"https://{lang}.wiktionary.org/wiki/@@@@",
+            "Reverso Context": f"https://context.reverso.net/translation/{langfull.lower()}-{tolangfull.lower()}/@@@@",
+            "Tatoeba": "https://tatoeba.org/en/sentences/search?query=@@@@"
+        })
+
         if self.web_preset.currentText() == "Custom (Enter below)":
             self.custom_url.setEnabled(True)
             self.custom_url.setText(settings.value("custom_url"))
@@ -164,7 +165,7 @@ class GeneralTab(BaseTab):
             self.custom_url.setEnabled(False)
             self.custom_url.setText(
                 presets[self.web_preset.currentText()]
-                )
+            )
 
     def dictmanager(self):
         importer = DictManager(self)

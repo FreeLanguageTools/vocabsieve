@@ -1,6 +1,7 @@
 from PyQt5.QtCore import QObject, QTimer
 import functools
 
+
 @functools.lru_cache()
 class GlobalObject(QObject):
     """

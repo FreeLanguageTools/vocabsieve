@@ -32,13 +32,14 @@ supported_dict_extensions = [
 
 def zopen(path) -> TextIO:
     if path.endswith('.xz'):
-        return lzma.open(path, 'rt', encoding='utf-8') # type:ignore
+        return lzma.open(path, 'rt', encoding='utf-8')  # type:ignore
     if path.endswith('.gz'):
-        return gzip.open(path, 'rt', encoding='utf-8') # type:ignore
+        return gzip.open(path, 'rt', encoding='utf-8')  # type:ignore
     if path.endswith('.bz2'):
-        return bz2.open(path, 'rt', encoding='utf-8') # type:ignore
-    return open(path, 'rt', encoding='utf-8') # type:ignore
-    
+        return bz2.open(path, 'rt', encoding='utf-8')  # type:ignore
+    return open(path, 'rt', encoding='utf-8')  # type:ignore
+
+
 def dslopen(path) -> TextIO:
     "Open dsl. Can be .dsl or .dsl.dz. Can be UTF-8 or UTF-16"
     correct_encoding = ""
@@ -66,11 +67,12 @@ def dslopen(path) -> TextIO:
     else:
         raise ValueError("Failed to detect encoding")
     if path.endswith(".dsl.dz"):
-        return gzip.open(path, mode="rt", encoding=correct_encoding) # type:ignore
+        return gzip.open(path, mode="rt", encoding=correct_encoding)  # type:ignore
     elif path.endswith(".dsl"):
         return open(path, mode="rt", encoding=correct_encoding)
     else:
         raise ValueError("Not a DSL file")
+
 
 def dictinfo(path) -> dict[str, str]:
     "Get information about dictionary from file path"
@@ -80,25 +82,25 @@ def dictinfo(path) -> dict[str, str]:
         return {"type": "audiolib", "basename": basename, "path": path}
     if ext not in supported_dict_extensions:
         raise NotImplementedError("Unsupported format")
-    if ext == ".json" or ext == ".xz" or ext == ".bz2" or ext == ".gz":
+    if ext in ('.json', '.xz', '.bz2', '.gz'):
         with zopen(path) as f:
             try:
                 d = json.load(f)
                 if isinstance(d, list):
-                    if isinstance(d[0], str): # Frequency list is a list of strings
+                    if isinstance(d[0], str):  # Frequency list is a list of strings
                         return {
                             "type": "freq",
                             "basename": basename,
                             "path": path}
-                    elif isinstance(d[0], dict): # Migaku dictionary is a list of dicts (records)
+                    elif isinstance(d[0], dict):  # Migaku dictionary is a list of dicts (records)
                         return {
                             "type": "migaku",
                             "basename": basename,
                             "path": path}
                 elif isinstance(d, dict):
-                    if isinstance(d[next(iter(d))], str): # Simple JSON is a dict from word to definition
+                    if isinstance(d[next(iter(d))], str):  # Simple JSON is a dict from word to definition
                         return {"type": "json", "basename": basename, "path": path}
-                    elif isinstance(d[next(iter(d))], dict): # Cognates is a dict from language to dict from word to definition
+                    elif isinstance(d[next(iter(d))], dict):  # Cognates is a dict from language to dict from word to definition
                         return {"type": "cognates", "basename": basename, "path": path}
             except json.decoder.JSONDecodeError:
                 f.seek(0)
@@ -126,6 +128,7 @@ def dictinfo(path) -> dict[str, str]:
     else:
         raise NotImplementedError("Unsupported format" + basename + ext)
 
+
 def parseMDX(path) -> dict[str, str]:
     mdx = MDX(path)
     stylesheet_lines = mdx.header[b'StyleSheet'].decode().splitlines()
@@ -135,7 +138,6 @@ def parseMDX(path) -> dict[str, str]:
             number = int(line)
             stylesheet_map[number] = stylesheet_map.get(number, "") + line
     newdict: dict[str, str] = {}  # This temporarily stores the new entries
-    i = 0
     prev_headword = ""
     for item in mdx.items():
         headword_bytes, entry_bytes = item
@@ -145,7 +147,7 @@ def parseMDX(path) -> dict[str, str]:
         if stylesheet_map:
             entry = re.sub(
                 r'`(\d+)`',
-                lambda g: stylesheet_map.get(int(g.group().strip('`'))), # type:ignore
+                lambda g: stylesheet_map.get(int(g.group().strip('`'))),  # type:ignore
                 entry
             )
         entry = entry.replace("\n", "").replace("\r", "")
@@ -163,8 +165,8 @@ def parseDSL(path) -> dict[str, str]:
     """Parse Lingvo DSL dictionary
     This produces much simpler markup than the pyglossary implementation
     """
-    with dslopen(path) as f: # type:ignore
-        lines: list[str] = f.readlines() # type:ignore
+    with dslopen(path) as f:  # type:ignore
+        lines: list[str] = f.readlines()  # type:ignore
     allLines = "".join(lines[5:])
     allLines = allLines.replace("[", "<")
     allLines = allLines.replace("]", ">")
@@ -193,11 +195,12 @@ def parseDSL(path) -> dict[str, str]:
             current_term = item
         if item.startswith("\t"):
             items.append(item)
-            if item.endswith(".wav"): # Don't include audio file names
+            if item.endswith(".wav"):  # Don't include audio file names
                 continue
             current_defi += item.removeprefix("\t").replace("~", current_term) + "<br>"
 
     return data
+
 
 def xdxf2text(xdxf_string: str) -> str:
     """Transform an XDXF stardict entry into plain text
@@ -219,6 +222,7 @@ def xdxf2text(xdxf_string: str) -> str:
     s = s.replace("&apos;", "'")
     return s.strip()
 
+
 def parseCSV(path) -> dict[str, str]:
     newdict = {}
     with open(path, newline="", encoding='utf-8') as csvfile:
@@ -236,6 +240,7 @@ def parseTSV(path) -> dict[str, str]:
             newdict[row[0]] = row[1]
     return newdict
 
+
 def parseKaikki(path, lang) -> dict[str, str]:
     '''
     Parse a wiktionary dump from Kaikki/Wikiextract
@@ -244,14 +249,15 @@ def parseKaikki(path, lang) -> dict[str, str]:
     '''
     d = {}
     with zopen(path) as f:
-        logger.debug("Parsing Kaikki wiktionary dump at "+ path)
+        logger.debug("Parsing Kaikki wiktionary dump at " + path)
         logger.debug("Only importing entries in language " + lang)
         for line in f:
             data = json.loads(line)
             # Kaikki dumps may have multiple languages, skip others for now
             if data.get("lang_code") == lang:
-                d[data['word']] = kaikki_line_to_textdef(data)  
+                d[data['word']] = kaikki_line_to_textdef(data)
     return d
+
 
 def kaikki_line_to_textdef(row: dict) -> str:
     res = ""
@@ -265,9 +271,9 @@ def kaikki_line_to_textdef(row: dict) -> str:
             if item.get("raw_glosses"):
                 for defi in item['raw_glosses']:
                     res += "\n" + str(count) + ". " + defi
-                    count+=1
+                    count += 1
             elif item.get("glosses"):
                 for defi in item['glosses']:
                     res += "\n" + str(count) + ". " + defi
-                    count+=1  
+                    count += 1
     return res

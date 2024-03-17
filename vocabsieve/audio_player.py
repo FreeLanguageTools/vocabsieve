@@ -7,6 +7,7 @@ import requests
 from .constants import FORVO_HEADERS
 from .global_names import forvopath
 
+
 class AudioPlayer:
     def __init__(self) -> None:
         self.player = QMediaPlayer()
@@ -22,7 +23,7 @@ class AudioPlayer:
             return ""
 
         if audiopath.startswith("https://"):
-            name = name.replace("::", "__") # Windows doesn't like colons in filenames
+            name = name.replace("::", "__")  # Windows doesn't like colons in filenames
             fpath = os.path.join(forvopath, lang, name)
             if not os.path.exists(fpath):
                 res = requests.get(audiopath, headers=FORVO_HEADERS, timeout=5)

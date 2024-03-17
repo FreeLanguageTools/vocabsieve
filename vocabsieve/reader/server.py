@@ -1,16 +1,12 @@
 from ast import parse
 from flask import Flask, render_template, flash, request, redirect, url_for, send_from_directory
 from gevent.pywsgi import WSGIServer
-from datetime import datetime
 from requests import get
-from werkzeug.utils import secure_filename
 import os
 import re
-from ..global_names import datapath
-from .utils import getEpubMetadata, allowed_file
-from PyQt5.QtCore import QStandardPaths, QCoreApplication, QObject
-from pathlib import Path
-import ebooklib
+from ..global_names import settings
+from .utils import getEpubMetadata
+from PyQt5.QtCore import QCoreApplication, QObject
 DEBUGGING = None
 if os.environ.get("VOCABSIEVE_DEBUG"):
     DEBUGGING = True
@@ -22,9 +18,10 @@ QCoreApplication.setOrganizationName("FreeLanguageTools")
 
 app = Flask(__name__)
 
+
 class ReaderServer(QObject):
     def __init__(self, parent, host, port):
-        super(ReaderServer, self).__init__()
+        super().__init__()
         self.host = host
         self.port = port
         self.parent = parent
@@ -47,7 +44,7 @@ class ReaderServer(QObject):
                 metadata['path'] = book
                 books.append(metadata)
             return render_template('home.html', books=books)
-        
+
         @app.route('/read/<path:path>')
         def read_epub(path):
             books_dir = settings.value("books_dir")
@@ -55,11 +52,11 @@ class ReaderServer(QObject):
                 return "No books directory set"
             book_url = url_for('send_epub', path=path)
             metadata = getEpubMetadata(os.path.join(books_dir, path))
-            return render_template('read.html', 
-                                   book_url=book_url, 
+            return render_template('read.html',
+                                   book_url=book_url,
                                    book_title=metadata['title'],
                                    book_author=metadata['author'])
-        
+
         @app.route('/books/<path:path>')
         def send_epub(path):
             books_dir = settings.value("books_dir")
@@ -67,7 +64,5 @@ class ReaderServer(QObject):
                 return "No books directory set"
             return send_from_directory(books_dir, path)
 
-        
         http_server = WSGIServer((self.host, self.port), app)
         http_server.serve_forever()
-    

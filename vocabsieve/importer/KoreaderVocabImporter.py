@@ -15,15 +15,16 @@ import time
 if TYPE_CHECKING:
     from ..main import MainWindow
 
+
 def getBookMetadata(path):
     _, ext = os.path.splitext(path)
     notepath = os.path.join(path.removesuffix(ext) + ".sdr", f"metadata{ext}.lua")
-            
+
     with open(notepath, encoding='utf8') as f:
         data = slpp.decode(" ".join("\n".join(f.readlines()[1:]).split(" ")[1:]))
         try:
-            booklang = data['doc_props']['language'] # type: ignore
-            booktitle = data['doc_props']['title'] # type: ignore
+            booklang = data['doc_props']['language']  # type: ignore
+            booktitle = data['doc_props']['title']  # type: ignore
         except TypeError:
             booklang = settings.value("target_language", "en")
             booktitle = os.path.basename(path).removesuffix(ext)
@@ -47,28 +48,26 @@ class KoreaderVocabImporter(GenericImporter):
 
         books_in_lang = [book[1] for book in metadata if book[0].startswith(langcode)]
         logger.debug(f"Books in language {langcode}: {books_in_lang}")
-        logger.debug(f"Other books have been skipped. They are {', '.join([book[1] for book in metadata if not book[0].startswith(langcode)])}")
+        logger.debug(
+            f"Other books have been skipped. They are {', '.join([book[1] for book in metadata if not book[0].startswith(langcode)])}")
         self.dbpath = findDBpath(self.path)
-        if self.dbpath is None:
-            raise FileNotFoundError("Cannot find vocabulary_builder.sqlite3")
         logger.debug("KOReader vocab db path: " + self.dbpath)
         con = sqlite3.connect(self.dbpath)
         cur = con.cursor()
         count = 0
-        success_count = 0
 
         bookmap = {}
 
         for bookid, bookname in cur.execute("SELECT id, name FROM title"):
             if bookname in books_in_lang:
                 bookmap[bookid] = bookname
-        
 
         reading_notes = []
-        for timestamp, word, title_id, prev_context, next_context in cur.execute("SELECT create_time, word, title_id, prev_context, next_context FROM vocabulary"):
+        for timestamp, word, title_id, prev_context, next_context in cur.execute(
+                "SELECT create_time, word, title_id, prev_context, next_context FROM vocabulary"):
             if title_id in bookmap:
                 if prev_context and next_context:
-                    ctx = prev_context.strip() + f" {word} " + next_context.strip() # ensure space before and after
+                    ctx = prev_context.strip() + f" {word} " + next_context.strip()  # ensure space before and after
                 else:
                     continue
                 sentence = ""
@@ -87,24 +86,23 @@ class KoreaderVocabImporter(GenericImporter):
                         )
                     )
 
-
         self._layout.addRow(QLabel("Vocabulary database: " + self.dbpath))
         self._layout.addRow(QLabel(f"Found {count} notes in Vocabulary Builder in language '{langcode}'"))
-        
+
         try:
             self.histpath = findHistoryPath(self.path)
             logger.debug("KOReader history path: " + self.histpath)
             d = []
-            with open(self.histpath) as f:
-                with open(self.histpath) as f:
-                    content = f.read().split("LookupHistoryEntry")[1:]
-                    for item in content:
-                        d.append(slpp.decode(item))
+            with open(self.histpath, encoding="utf-8") as f:
+                content = f.read().split("LookupHistoryEntry")[1:]
+                for item in content:
+                    d.append(slpp.decode(item))
         except Exception as e:
             logger.error("Failed to find or open lookup_history.lua. Lookups will not be tracked this time.")
             logger.error(e)
             logger.error("Make sure that it is located somewhere under the selected KOReader directory.")
-            self._layout.addRow(QLabel("Failed to find/read lookup_history.lua. Lookups will not be tracked this time."))
+            self._layout.addRow(
+                QLabel("Failed to find/read lookup_history.lua. Lookups will not be tracked this time."))
         else:
             entries = [entry['data'].get(next(iter(entry['data']))) for entry in d]
             entries = [(entry['word'], entry['book_title'], entry['time']) for entry in entries]
@@ -115,16 +113,17 @@ class KoreaderVocabImporter(GenericImporter):
                     count += 1
                     self._parent.rec.recordLookup(
                         LookupRecord(
-                            word=word, 
-                            language=langcode, 
+                            word=word,
+                            language=langcode,
                             source="koreader"
-                        ), 
-                        timestamp, 
+                        ),
+                        timestamp,
                         commit=False
                     )
             self._parent.rec.conn.commit()
             lookups_count_after = self._parent.rec.countLookups(langcode)
             self._layout.addRow(QLabel("Lookup history: " + self.histpath))
-            self._layout.addRow(QLabel(f"Found {count} lookups in {langcode}, added { lookups_count_after - lookups_count_before } to lookup database."))
+            self._layout.addRow(
+                QLabel(f"Found {count} lookups in {langcode}, added { lookups_count_after - lookups_count_before } to lookup database."))
 
         return reading_notes

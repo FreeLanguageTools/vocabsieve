@@ -15,6 +15,7 @@ from ..constants import FORVO_HEADERS
 
 from loguru import logger
 
+
 @dataclass
 class Pronunciation:
     language: str
@@ -25,6 +26,7 @@ class Pronunciation:
     origin: str
     download_url: str
     id: int
+
 
 @dataclass
 class PronunciationList:
@@ -42,7 +44,7 @@ class Forvo:
         self.accent = accent
 
     def get_pronunciations(self):
-        res = requests.get(self.url, headers=FORVO_HEADERS)
+        res = requests.get(self.url, headers=FORVO_HEADERS, timeout=5)
         if res.status_code == 200:
             page = res.text
         else:
@@ -56,12 +58,18 @@ class Forvo:
             if match:
                 available_pronunciations_lists.extend(
                     PronunciationList(match.group(1), match.group(2), li)
-                        for li in pronunciations_list.find_all("li")
+                    for li in pronunciations_list.find_all("li")
                 )
 
-        available_pronunciations_lists = list(filter(lambda el: el.language == self.language, available_pronunciations_lists))
+        available_pronunciations_lists = list(
+            filter(
+                lambda el: el.language == self.language,
+                available_pronunciations_lists))
         if self.accent:
-            available_pronunciations_lists = list(filter(lambda el: el.accent == self.accent, available_pronunciations_lists))
+            available_pronunciations_lists = list(
+                filter(
+                    lambda el: el.accent == self.accent,
+                    available_pronunciations_lists))
 
         for l in available_pronunciations_lists:
             pronunciation_item = l.pronunciation_list
@@ -110,15 +118,14 @@ class Forvo:
                         continue
 
                     tempOrigin = re.findall(
-                                "Pronunciation by(.*)",
-                                pronunciation_item_content.contents[0],
-                                re.S)
+                        "Pronunciation by(.*)",
+                        pronunciation_item_content.contents[0],
+                        re.S)
 
                     if len(tempOrigin) != 0:
                         origin = tempOrigin[0].strip()
                         break
-                    else:
-                        continue
+                    continue
             else:
                 origin = username[0].contents[0]
             word = unquote(self.url.rsplit('/', 2)[-1])
@@ -129,7 +136,7 @@ class Forvo:
                                                  vote_count,
                                                  origin.strip(),
                                                  dl_url,
-                                                 -1, #data_id, can't obtain anymore
+                                                 -1,  # data_id, can't obtain anymore
                                                  )
 
             self.pronunciations.append(pronunciation_object)
@@ -159,15 +166,13 @@ def fetch_audio_best(word: str, lang: str) -> Dict[str, str]:
         sounds[0].headword: sounds[0].download_url}
 
 
-
 class ForvoAudioSource(AudioSource):
     def __init__(self, langcode: str, lemma_policy: LemmaPolicy) -> None:
         super().__init__("Forvo", langcode, lemma_policy)
-    
+
     def _lookup(self, word: str) -> AudioLookupResult:
         logger.info(f"Forvo lookup {word}")
         try:
             return AudioLookupResult(audios=fetch_audio_all(word, self.langcode))
         except Exception as e:
             return AudioLookupResult(error=repr(e))
-    

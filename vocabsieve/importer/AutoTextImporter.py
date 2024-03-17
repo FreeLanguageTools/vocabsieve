@@ -1,34 +1,33 @@
+import itertools
+from datetime import datetime as dt
 from typing import TYPE_CHECKING
 from sentence_splitter import SentenceSplitter
 from .GenericImporter import GenericImporter
-from .utils import *
-from datetime import datetime as dt
 import os
-import re
 from ..lemmatizer import lem_word, lem_pre
-from ..tools import *
+from .models import ReadingNote
+from ..tools import ebook2text
 
 if TYPE_CHECKING:
     from ..main import MainWindow
 
-from .models import ReadingNote
-import itertools
+
 
 class AutoTextImporter(GenericImporter):
     def __init__(self, parent: "MainWindow", path):
         self.path: str = path
-        self.splitter: SentenceSplitter= parent.splitter
+        self.splitter: SentenceSplitter = parent.splitter
         self.known_words, _ = parent.getKnownWords()
         super().__init__(parent, "Auto vocab detection", path, "auto", show_selector_src=False, show_selector_date=False)
 
     def getNotes(self):
         chs = ebook2text(self.path)[0]
         bookname = os.path.splitext(os.path.basename(self.path))[0]
-        sentences = list(sentence for sentence in 
-            itertools.chain.from_iterable(
-                map(lambda x: self.splitter.split(x), (ch for ch in chs))
-                ) 
-            if sentence)
+        sentences = list(sentence for sentence in
+                         itertools.chain.from_iterable(
+                             map(lambda x: self.splitter.split(x), (ch for ch in chs))
+                         )
+                         if sentence)
 
         known_words = set(self.known_words)
         already_mined = set()
@@ -51,6 +50,5 @@ class AutoTextImporter(GenericImporter):
                         sentence=sentence,
                         book_name=bookname,
                         date=str(dt.now().astimezone())[:19]
-                        ))
+                    ))
         return reading_notes
-        

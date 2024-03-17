@@ -5,6 +5,7 @@ from ..sources.local_freq_source import LocalFreqSource
 from typing import Optional, cast
 from ..tools import freq_to_stars
 
+
 class FreqDisplayWidget(QLineEdit):
     def __init__(self) -> None:
         super().__init__()
@@ -31,7 +32,7 @@ class FreqDisplayWidget(QLineEdit):
             case _:
                 pass
         self.setText(text)
-    
+
     def getAllWords(self) -> list[str]:
         if isinstance(self.source, LocalFreqSource):
             return cast(LocalFreqSource, self.source).getAllWords()

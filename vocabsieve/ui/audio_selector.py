@@ -8,8 +8,10 @@ from ..global_names import MOD, settings
 from ..models import AudioDefinition, AudioSourceGroup, Definition
 import threading
 
+
 class AudioSelector(QListWidget):
-    audio_fetched = pyqtSignal(AudioDefinition)    
+    audio_fetched = pyqtSignal(AudioDefinition)
+
     def __init__(self) -> None:
         super().__init__()
         self.setMinimumHeight(50)
@@ -19,13 +21,11 @@ class AudioSelector(QListWidget):
         self.audio_player = AudioPlayer()
         self.discard_audio_button = QToolButton(self)
 
-        
         self.discard_audio_button.clicked.connect(self.clear)
         self.discard_audio_button.setToolTip(f"Discard audio [{MOD}+Shift+X]")
-        
+
         icon = self.style().standardIcon(QStyle.SP_TrashIcon)
         self.discard_audio_button.setIcon(icon)
-        
 
         self.current_audio_path = ""
         self.audios: dict[str, str] = {}
@@ -40,7 +40,6 @@ class AudioSelector(QListWidget):
         if self.sg is None:
             return []
         return self.sg.define(word)
-    
 
     def lookup_on_thread(self, word: str):
         for definition in self.getDefinitions(word):
@@ -51,7 +50,7 @@ class AudioSelector(QListWidget):
             return
         self.audios.update(defi.audios)
         self.updateAudioUI()
-    
+
     def clear(self):
         super().clear()
         self.audios = {}
@@ -60,7 +59,7 @@ class AudioSelector(QListWidget):
     def lookup(self, word: str):
         self.clear()
         threading.Thread(
-            target=self.lookup_on_thread, 
+            target=self.lookup_on_thread,
             args=(word,)).start()
 
     def play_audio_if_exists(self, x):
@@ -76,9 +75,9 @@ class AudioSelector(QListWidget):
         self.alignDiscardButton()
 
     def alignDiscardButton(self):
-        padding = QSize(5,5) # optional
+        padding = QSize(5, 5)  # optional
         newSize = self.size() - self.discard_audio_button.size() - padding
-        self.discard_audio_button.move(newSize.width(), 0) 
+        self.discard_audio_button.move(newSize.width(), 0)
 
     def updateAudioUI(self):
         for item in self.audios:

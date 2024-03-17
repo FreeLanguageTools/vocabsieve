@@ -1,5 +1,6 @@
 [MASTER]
 extension-pkg-whitelist=PyQt5, lxml
+generated-members=PyQt5.QtCore.Qt.*, PyQt5.QtGui.QFont.*, PyQt5.QtCore.Qt.Key.*
 
 [MESSAGES CONTROL]
 disable=
@@ -28,4 +29,9 @@ disable=
     too-many-locals,
     too-many-lines,
     too-many-return-statements,
+    f-string-without-interpolation,
+    too-many-nested-blocks,
+    attribute-defined-outside-init, # to be dropped
+    use-maxsplit-arg,
+    no-member # to be dropped, for various enum classes of PyQt5
     
