@@ -1,6 +1,6 @@
 import json
 from bidict import bidict
-from PyQt5.QtWidgets import QLabel, QComboBox, QLineEdit, QPushButton, QCheckBox
+from PyQt5.QtWidgets import QLabel, QComboBox, QLineEdit, QPushButton, QCheckBox, QFormLayout
 from PyQt5.QtCore import pyqtSignal
 from .base_tab import BaseTab
 from ..constants import langcodes
@@ -14,7 +14,7 @@ BOLD_STYLES = ["<disabled>", "Font weight", "Underscores"]
 class GeneralTab(BaseTab):
     sources_reloaded_signal = pyqtSignal(list, list)
 
-    def __init__(self):
+    def initWidgets(self):
         self.target_language = QComboBox()
         self.lemfreq = QCheckBox("Lemmatize before looking up frequency")
         self.lemfreq.setToolTip(
@@ -28,17 +28,18 @@ class GeneralTab(BaseTab):
             '(Both will look the same in Anki)\n'
             '"<disabled>" disables bolding words in both Vocabsieve and Anki')
         self.audio_format = QComboBox()
-        self.audio_format.addItems(
-            ['mp3', 'ogg']
-        )
         self.freq_source = QComboBox()
         self.gtrans_lang = QComboBox()
         self.web_preset = QComboBox()
         self.custom_url = QLineEdit()
-        self.custom_url.setText("https://example.com/@@@@")
-        self.custom_url.setEnabled(False)
         self.importdict = QPushButton('Manage local resources..')
-        self.importdict.clicked.connect(self.dictmanager)
+
+    def setupWidgets(self) -> None:
+        self.custom_url.setText("https://example.com/@@@@")
+        self.audio_format.addItems(
+            ['mp3', 'ogg']
+        )
+        self.custom_url.setEnabled(False)
         self.target_language.addItems(langs_supported.values())
         self.web_preset.addItems([
             "English Wiktionary",
@@ -53,7 +54,29 @@ class GeneralTab(BaseTab):
             BOLD_STYLES[0]
         ])
         self.gtrans_lang.addItems(langs_supported.values())
-        super().__init__()
+
+        self.importdict.clicked.connect(self.dictmanager)
+
+    def setupLayout(self):
+        layout = QFormLayout(self)
+        layout.addRow(QLabel("<h3>General</h3>"))
+        layout.addRow(
+            QLabel("Target language"),
+            self.target_language)
+
+        layout.addRow(QLabel("Bold words"), self.bold_style)
+
+        layout.addRow(QLabel("Forvo audio format"), self.audio_format)
+        layout.addRow(QLabel("<i>◊ Choose mp3 for playing on iOS, "
+                                   "but ogg may save space</i>"))
+        layout.addRow(QLabel("Frequency list"), self.freq_source)
+        layout.addRow(self.lemfreq)
+        layout.addRow(
+            QLabel("Google translate: To"),
+            self.gtrans_lang)
+        layout.addRow(QLabel("Web lookup preset"), self.web_preset)
+        layout.addRow(QLabel("Custom URL pattern"), self.custom_url)
+        layout.addRow(self.importdict)
 
     def load_dictionaries(self):
         custom_dicts = json.loads(settings.value("custom_dicts", '[]'))
@@ -66,13 +89,8 @@ class GeneralTab(BaseTab):
         )
         self.sources_reloaded_signal.emit(dicts, audio_dicts)
         # TODO handle the following with the signal # pylint: disable=fixme
-        #self.all_audio_sources_widget.clear()
         #self.postproc_selector.blockSignals(True)
         #self.postproc_selector.clear()
-        #self.all_audio_sources_widget.addItems(audio_dicts)
-
-        #self.all_sources_widget.clear()
-        #self.all_sources_widget.addItems(dicts)
 
         #self.postproc_selector.addItems(dicts)
         #self.postproc_selector.blockSignals(False)
@@ -91,25 +109,6 @@ class GeneralTab(BaseTab):
                 "freq_source", "<disabled>"))
         self.freq_source.blockSignals(False)
 
-    def initWidgets(self) -> None:
-        self.layout_.addRow(QLabel("<h3>General</h3>"))
-        self.layout_.addRow(
-            QLabel("Target language"),
-            self.target_language)
-
-        self.layout_.addRow(QLabel("Bold words"), self.bold_style)
-
-        self.layout_.addRow(QLabel("Forvo audio format"), self.audio_format)
-        self.layout_.addRow(QLabel("<i>◊ Choose mp3 for playing on iOS, "
-                                   "but ogg may save space</i>"))
-        self.layout_.addRow(QLabel("Frequency list"), self.freq_source)
-        self.layout_.addRow(self.lemfreq)
-        self.layout_.addRow(
-            QLabel("Google translate: To"),
-            self.gtrans_lang)
-        self.layout_.addRow(QLabel("Web lookup preset"), self.web_preset)
-        self.layout_.addRow(QLabel("Custom URL pattern"), self.custom_url)
-        self.layout_.addRow(self.importdict)
 
     def setupAutosave(self):
         self.load_freq_sources()
@@ -145,6 +144,7 @@ class GeneralTab(BaseTab):
         self.web_preset.currentTextChanged.connect(self.load_url)
         self.gtrans_lang.currentTextChanged.connect(self.load_url)
         self.load_url()
+        self.load_freq_sources()
 
     def load_url(self):
         lang = settings.value("target_language", "en")

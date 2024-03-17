@@ -3,8 +3,7 @@ from PyQt5.QtWidgets import (QDialog, QStatusBar, QCheckBox, QComboBox, QLineEdi
                              QWidget, QTabWidget, QMessageBox, QColorDialog, QListWidget,
                              QFormLayout, QGridLayout, QVBoxLayout
                              )
-from PyQt5.QtGui import QImageWriter
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtCore import QTimer
 from enum import Enum
 import json
 from ..constants import langcodes
@@ -14,15 +13,31 @@ from ..global_names import settings
 class BaseTab(QWidget):
     def __init__(self):
         super().__init__()
-        self.layout_ = QFormLayout(self)
         self.initWidgets()
+        self.setupWidgets()
+        self.setupLayout()
         self.setupAutosave()
 
     def initWidgets(self):
-        pass
+        """
+        This method should create the necessary widgets
+        """
+
+    def setupWidgets(self):
+        """
+        This method should set up widgets, such as populating fields
+        with possible values and connecting signals other than autosaving
+        """
+
+    def setupLayout(self):
+        """
+        This method should set up the layout of the tab
+        """
 
     def setupAutosave(self):
-        pass
+        """
+        This method should connect widgets to the settings using register_config_handler
+        """
 
     @staticmethod
     def register_config_handler(

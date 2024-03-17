@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (QDialog, QStatusBar, QCheckBox, QComboBox, QLineEdi
                              QFormLayout, QGridLayout, QVBoxLayout
                              )
 from PyQt5.QtGui import QImageWriter
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSlot
 import platform
 import qdarktheme
 from shutil import rmtree
@@ -17,6 +17,7 @@ from ..tools import (addDefaultModel, getVersion, findNotes,
                      getNoteTypes, getFields
                      )
 from .general_tab import GeneralTab
+from .source_tab import SourceTab
 from ..global_names import settings
 
 import os
@@ -203,19 +204,16 @@ class ConfigDialog(QDialog):
 
         self.open_fieldmatcher = QPushButton("Match fields (required for using Anki data)")
 
-        self.sg1_widget = SourceGroupWidget()
-        self.sg2_widget = SourceGroupWidget()
-        self.all_sources_widget = AllSourcesWidget()
-        self.sg2_enabled = QCheckBox("Enable Dictionary Group 2")
-        self.audio_sg_widget = SourceGroupWidget()
-        self.all_audio_sources_widget = AllSourcesWidget()
-        self.audio_lemma_policy = QComboBox()
+        
 
     def initTabs(self):
         self.tabs = QTabWidget()
+        # block signals
         self.tab_g = GeneralTab()  # General
-        self.tab_s = QWidget()  # Sources
-        self.tab_s_layout = QGridLayout(self.tab_s)
+        self.tab_s = SourceTab()  # Sources
+        self.tab_g.sources_reloaded_signal.connect(self.tab_s.reloadSources)
+        self.tab_g.load_dictionaries()
+        self.tab_s.sg2_visibility_changed.connect(self.changeMainLayout)
         self.tab_a = QWidget()  # Anki
         self.tab_a_layout = QFormLayout(self.tab_a)
         self.tab_n = QWidget()  # Network
@@ -436,27 +434,11 @@ class ConfigDialog(QDialog):
         self.reset_button.clicked.connect(self.reset_settings)
         self.nuke_button.clicked.connect(self.nuke_profile)
 
-        self.tab_s_layout.addWidget(QLabel("<h3>Dictionary sources</h3>"), 0, 0, 1, 2)
-        self.tab_s_layout.addWidget(QLabel("Dictionary Group 1"), 1, 0, 1, 1)
-        self.tab_s_layout.addWidget(QLabel("Available dictionaries"), 1, 1, 1, 1)
-        self.tab_s_layout.addWidget(self.sg1_widget, 2, 0, 1, 1)
-        self.tab_s_layout.addWidget(self.sg2_enabled, 3, 0, 1, 2)
-        self.tab_s_layout.addWidget(self.sg2_widget, 4, 0, 1, 1)
-        self.tab_s_layout.addWidget(self.all_sources_widget, 2, 1, 3, 1)
+        
 
-        self.tab_s_layout.addWidget(QLabel("<h3>Pronunciation sources</h3>"), 5, 0, 1, 2)
-        self.tab_s_layout.addWidget(QLabel("Lemmatization policy for pronunciation"), 6, 0, 1, 1)
-        self.tab_s_layout.addWidget(self.audio_lemma_policy, 6, 1, 1, 1)
-        self.tab_s_layout.addWidget(QLabel("Enabled pronunciation sources"), 7, 0, 1, 1)
-        self.tab_s_layout.addWidget(QLabel("Available pronunciation sources"), 7, 1, 1, 1)
-        self.tab_s_layout.addWidget(self.audio_sg_widget, 8, 0, 1, 1)
-        self.tab_s_layout.addWidget(self.all_audio_sources_widget, 8, 1, 1, 1)
+        
 
-        self.sg2_enabled.stateChanged.connect(lambda value: self.sg2_widget.setEnabled(value))
-        self.sg2_widget.setEnabled(self.sg2_enabled.isChecked())
-
-        for policy in LemmaPolicy:
-            self.audio_lemma_policy.addItem(policy.value, policy)
+        
 
     def getMatchedCards(self):
         if settings.value("enable_anki", True):
@@ -555,7 +537,6 @@ class ConfigDialog(QDialog):
                 "<disabled>")
             self.register_config_handler(self.image_field, 'image_field', "<disabled>")
 
-        self.sg2_enabled.clicked.connect(self.changeMainLayout)
         self.postproc_selector.currentTextChanged.connect(self.setupProcessing)
         self.note_type.currentTextChanged.connect(self.loadFields)
         #self.api_enabled.clicked.connect(self.setAvailable)
@@ -601,13 +582,7 @@ class ConfigDialog(QDialog):
         self.register_config_handler(self.theme, 'theme', 'auto' if platform.system() !=
                                      "Linux" else 'system')  # default to native on Linux
 
-        self.register_config_handler(self.sg2_enabled, 'sg2_enabled', False)
-        self.register_config_handler(self.sg1_widget, 'sg1', [])
-        self.register_config_handler(self.sg2_widget, 'sg2', [])
-
-        self.register_config_handler(self.audio_sg_widget, 'audio_sg', [])
-        self.register_config_handler(self.audio_lemma_policy, 'audio_lemma_policy', LemmaPolicy.first_lemma)
-
+        
         # Using the previous qdarktheme.setup_theme function would result in having
         # the default accent color when changing theme. Instead, using the setupTheme
         # function does not change the current accent color.
@@ -791,8 +766,9 @@ class ConfigDialog(QDialog):
             "and reopen the config tool.")
         msg.exec()
 
-    def changeMainLayout(self):
-        if self.sg2_enabled.isChecked():
+    @pyqtSlot(bool)
+    def changeMainLayout(self, checked: bool):
+        if checked:
             # This means user has changed from one source to two source mode,
             # need to redraw main window
             if settings.value("orientation", "Vertical") == "Vertical":
