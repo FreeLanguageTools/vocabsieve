@@ -1,5 +1,5 @@
 [MASTER]
-extension-pkg-whitelist=PyQt5
+extension-pkg-whitelist=PyQt5, lxml
 
 [MESSAGES CONTROL]
 disable=
@@ -14,4 +14,18 @@ disable=
     wrong-import-order,
     too-many-instance-attributes,
     too-many-arguments,
-    too-many-public-methods
+    too-many-public-methods,
+    duplicate-code,
+    no-else-return,
+    consider-merging-isinstance,
+    protected-access,
+    too-many-statements,
+    too-few-public-methods,
+    broad-exception-caught,
+    broad-exception-raised,
+    unnecessary-lambda,
+    too-many-branches,
+    too-many-locals,
+    too-many-lines,
+    too-many-return-statements,
+    

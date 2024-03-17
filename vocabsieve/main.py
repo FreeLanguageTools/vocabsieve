@@ -210,7 +210,7 @@ class MainWindow(MainWindowBase):
         self.read_button.clicked.connect(lambda: self.clipboardChanged(even_when_focused=True))
 
 
-        self.bar.addPermanentWidget(self.stats_label)
+        self.status_bar.addPermanentWidget(self.stats_label)
 
     def setupMenu(self) -> None:
         readermenu = self.menu.addMenu("&Reader")
@@ -1027,7 +1027,7 @@ class MainWindow(MainWindowBase):
         return QDateTime.currentDateTime().toString('[hh:mm:ss]')
 
     def status(self, msg: str) -> None:
-        self.bar.showMessage(self.time() + " " + msg, 4000)
+        self.status_bar.showMessage(self.time() + " " + msg, 4000)
 
     def warn(self, text: str) -> None:
         msg = QMessageBox()

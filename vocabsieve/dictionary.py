@@ -34,11 +34,11 @@ def preprocess_clipboard(s: str, lang: str, should_convert_to_uppercase: bool = 
     that feature has been removed for the time being due
     to maintainence and dependency concerns.
     """
+    _ = lang
     # Convert the first letter to uppercase if should_convert_to_uppercase is True
     if should_convert_to_uppercase and s:
         return s[0].upper() + s[1:]
-    else:
-        return s
+    return s
 
 
 def getDictsForLang(lang: str, dicts: list):

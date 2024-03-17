@@ -2,8 +2,7 @@ from .lemmatizer import lem_word
 import re
 from typing import Callable, Iterable
 import string
-import re
-from itertools import chain, dropwhile
+from itertools import chain
 
 b = "_"
 
@@ -15,28 +14,28 @@ def apply_bold_char(word: str) -> str:
 bolded_by_char_re = f"{b}{b}(.+?){b}{b}"
 bolded_by_markdown_re = r"\*\*(.+?)\*\*"
 
-def remove_bold_char_boldings(string: str):
+def remove_bold_char_boldings(s: str):
     """ "__{word}__" => "{word}" """
     res = re.sub(
         bolded_by_char_re,
         lambda match: match.group(1),
-        string
+        s
     )
     return res
 
-def bold_char_boldings_to_bold_tag_boldings(string: str):
+def bold_char_boldings_to_bold_tag_boldings(s: str):
     """ "__{word}__" => "<b>{word}</b>" """
     return re.subn(
         bolded_by_char_re, 
         lambda match: apply_bold_tags(match.group(1)), 
-        string)
+        s)
 
-def markdown_boldings_to_bold_tag_boldings(string: str):
+def markdown_boldings_to_bold_tag_boldings(s: str):
     """ "**{word}**" => "<b>{word}</b>" """
     return re.sub(
         bolded_by_markdown_re, 
         lambda match: apply_bold_tags(match.group(1)), 
-        string)
+        s)
 
 token_end = re.sub("'", "", string.punctuation + string.whitespace)
 def tokenize(s: str) -> Iterable[str]:
@@ -58,12 +57,12 @@ def bold_word_in_text(
     greedy_lemmatize=False):
     if not use_lemmatize:
         return re.sub(word, lambda match: apply_bold(match.group(0)), text)
-    else:
-        lemmed_word = lem_word(word, language, greedy_lemmatize)
+    
+    lemmed_word = lem_word(word, language, greedy_lemmatize)
 
-        return untokenize(map(
-            lambda w: apply_bold(w) \
-                      if lem_word(w, language, greedy_lemmatize) == lemmed_word \
-                      else w, 
-            tokenize(text)
-        ))
+    return untokenize(map(
+        lambda w: apply_bold(w) \
+                    if lem_word(w, language, greedy_lemmatize) == lemmed_word \
+                    else w, 
+        tokenize(text)
+    ))

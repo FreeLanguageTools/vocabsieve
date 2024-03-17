@@ -6,7 +6,7 @@ from ..global_names import settings
 
 class SearchableTextEdit(QTextEdit):
     def __init__(self):
-        super(SearchableTextEdit, self).__init__()
+        super().__init__()
         self.setMouseTracking(True)
         self.word_under_cursor = ""
 

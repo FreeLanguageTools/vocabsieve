@@ -7,7 +7,7 @@ from .dictformats import parseMDX, parseDSL, parseCSV, parseTSV, xdxf2text, zope
 from .lemmatizer import removeAccents
 from pystardict import Dictionary
 import json
-from .global_names import lock, datapath
+from .global_names import lock, datapath as datapath_
 
 class LocalDictionary():
     def __init__(self, datapath) -> None:
@@ -256,4 +256,4 @@ class LocalDictionary():
                     break
         return set(cognates)
     
-dictdb = LocalDictionary(datapath)
+dictdb = LocalDictionary(datapath_)

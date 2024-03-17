@@ -1,5 +1,3 @@
-from multiprocessing import process
-from unittest import result
 from PyQt5.QtGui import QWheelEvent
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QHBoxLayout
 from PyQt5.QtCore import Qt, pyqtSignal

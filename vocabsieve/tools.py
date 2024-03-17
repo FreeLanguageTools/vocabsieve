@@ -3,7 +3,7 @@ import urllib.request
 import os
 import re
 import unicodedata
-from itertools import zip_longest
+from itertools import zip_longest, islice
 import time
 from .vsnt import FIELDS, CARDS, CSS
 from bs4 import BeautifulSoup
@@ -12,9 +12,8 @@ from .local_dictionary import LocalDictionary
 
 import mobi
 from datetime import datetime
-from itertools import islice
 from lxml import etree
-from charset_normalizer import from_bytes
+from charset_normalizer import from_bytes, from_path
 from ebooklib import epub, ITEM_DOCUMENT
 from .sources import (WiktionarySource, GoogleTranslateSource,  
                       LocalDictionarySource, LocalFreqSource, 
@@ -226,7 +225,8 @@ def starts_with_cyrillic(s):
     else:
         return s
 
-def remove_ns(s: str) -> str: return str(s).split("}")[-1]
+def remove_ns(s: str) -> str: 
+    return str(s).split("}")[-1]
 
 def tostr(s):
     return str(
@@ -242,8 +242,8 @@ def ebook2text(path) -> tuple[list[str], dict[int, str]]:
     position = 0
     _, ext = os.path.splitext(path)
     if ext == ".txt":
-        with open(path, "r") as f:
-            return [f.read().replace("\n", " ")], {0: "<content>"}
+        text = str(from_path(path).best())
+        return [text.replace("\n", " ")], {0: "<content>"}
     if ext in {'.azw', '.azw3', '.kfx', '.mobi'}:
         _, newpath = mobi.extract(path)
         # newpath is either html or epub

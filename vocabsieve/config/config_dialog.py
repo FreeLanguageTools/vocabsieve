@@ -53,7 +53,7 @@ class ConfigDialog(QDialog):
 
 
     def initWidgets(self):
-        self.bar = QStatusBar()
+        self.status_bar = QStatusBar()
         self.allow_editing = QCheckBox(
             "Allow directly editing definition fields")
         self.primary = QCheckBox("*Use primary selection")
@@ -242,7 +242,7 @@ class ConfigDialog(QDialog):
 
         self._layout = QVBoxLayout(self)
         self._layout.addWidget(self.tabs)
-        self._layout.addWidget(self.bar)
+        self._layout.addWidget(self.status_bar)
 
         self.tabs.addTab(self.tab_g, "General")
         self.tabs.addTab(self.tab_s, "Sources")
@@ -484,7 +484,7 @@ class ConfigDialog(QDialog):
                 young_notes = findNotes(api, query_young)
                 young_notes = [note for note in young_notes if note not in mature_notes]
                 self.young_count_label.setText(f"Matched {str(len(young_notes))} notes")
-            except:
+            except Exception:
                 pass
 
     def setupProcessing(self):
@@ -545,9 +545,8 @@ class ConfigDialog(QDialog):
         api = self.anki_api.text()
         try:
             _ = getVersion(api)
-        except Exception as e:
+        except Exception:
             self.toggle_anki_settings(False)
-            pass
         else:
             self.loadDecks()
             self.loadFields()
@@ -829,7 +828,7 @@ class ConfigDialog(QDialog):
 
 
     def status(self, msg):
-        self.bar.showMessage(self.parent.time() + " " + msg, 4000)
+        self.status_bar.showMessage(self.parent.time() + " " + msg, 4000)
 
     def register_config_handler(self, *args, **kwargs):
         logger.error("register_config_handler is being called!")
