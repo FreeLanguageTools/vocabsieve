@@ -9,4 +9,3 @@ from .searchable_text_edit import SearchableTextEdit
 from .source_group_widget import SourceGroupWidget, AllSourcesWidget
 from .word_marking_dialog import WordMarkingDialog
 from .word_record_display import WordRecordDisplay
-from .word_rules_editor import WordRulesEditor
