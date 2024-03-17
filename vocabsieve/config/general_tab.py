@@ -68,7 +68,7 @@ class GeneralTab(BaseTab):
 
         layout.addRow(QLabel("Forvo audio format"), self.audio_format)
         layout.addRow(QLabel("<i>◊ Choose mp3 for playing on iOS, "
-                                   "but ogg may save space</i>"))
+                             "but ogg may save space</i>"))
         layout.addRow(QLabel("Frequency list"), self.freq_source)
         layout.addRow(self.lemfreq)
         layout.addRow(
@@ -88,12 +88,6 @@ class GeneralTab(BaseTab):
             langcodes.inverse[self.target_language.currentText()], custom_dicts
         )
         self.sources_reloaded_signal.emit(dicts, audio_dicts)
-        # TODO handle the following with the signal # pylint: disable=fixme
-        #self.postproc_selector.blockSignals(True)
-        #self.postproc_selector.clear()
-
-        #self.postproc_selector.addItems(dicts)
-        #self.postproc_selector.blockSignals(False)
 
     def load_freq_sources(self):
         custom_dicts = json.loads(settings.value("custom_dicts", '[]'))
@@ -108,7 +102,6 @@ class GeneralTab(BaseTab):
             settings.value(
                 "freq_source", "<disabled>"))
         self.freq_source.blockSignals(False)
-
 
     def setupAutosave(self):
         self.load_freq_sources()

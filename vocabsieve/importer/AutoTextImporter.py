@@ -12,7 +12,6 @@ if TYPE_CHECKING:
     from ..main import MainWindow
 
 
-
 class AutoTextImporter(GenericImporter):
     def __init__(self, parent: "MainWindow", path):
         self.path: str = path

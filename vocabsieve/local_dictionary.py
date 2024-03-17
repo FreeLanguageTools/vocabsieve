@@ -109,7 +109,6 @@ class LocalDictionary():
         """, (lang, name))
         return self.c.fetchall()
 
-
     def countEntries(self) -> int:
         self.c.execute("""
         SELECT COUNT(*) FROM dictionary

@@ -8,7 +8,7 @@ from markdown import markdown
 import os
 
 
-def remove_ns(s: str) -> str: 
+def remove_ns(s: str) -> str:
     return str(s).split("}")[-1]
 
 

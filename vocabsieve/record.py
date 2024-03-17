@@ -150,7 +150,7 @@ class Record():
         SELECT DISTINCT source FROM lookups
         """)
         for source, in self.c.fetchall():  # comma unpacks a single value tuple
-            if source in dictionaries.inverse: # pylint: disable=unsupported-membership-test
+            if source in dictionaries.inverse:  # pylint: disable=unsupported-membership-test
                 print(f"Replacing {source} with {dictionaries.inverse[source]}")
                 self.c.execute("""
                 UPDATE lookups SET source=? WHERE source=?
@@ -195,7 +195,6 @@ class Record():
             self.c.execute("VACUUM")
         except Exception as e:
             logger.error(e)
-        
 
     def seenContent(self, cid, name, content, language, jd):
         start = time.time()

@@ -62,7 +62,7 @@ class ConfigDialog(QDialog):
             "Capitalize first letter of sentence")
         self.capitalize_first_letter.setToolTip(
             "Capitalize the first letter of clipboard's content before pasting into the sentence field. Does not affect dictionary lookups.")
-        
+
         self.deck_name = QComboBox()
         self.tags = QLineEdit()
         self.note_type = QComboBox()
@@ -193,8 +193,6 @@ class ConfigDialog(QDialog):
             "Comma-separated list of languages that you know. These will be used to determine whether a word is cognate or not.")
 
         self.open_fieldmatcher = QPushButton("Match fields (required for using Anki data)")
-
-        
 
     def initTabs(self):
         self.tabs = QTabWidget()
@@ -400,12 +398,6 @@ class ConfigDialog(QDialog):
         self.reset_button.clicked.connect(self.reset_settings)
         self.nuke_button.clicked.connect(self.nuke_profile)
 
-        
-
-        
-
-        
-
     def getMatchedCards(self):
         if settings.value("enable_anki", True):
             try:
@@ -419,7 +411,6 @@ class ConfigDialog(QDialog):
                 self.young_count_label.setText(f"Matched {str(len(young_notes))} notes")
             except Exception:
                 pass
-
 
     def setupAutosave(self):
         if settings.value("config_ver") is None \
@@ -463,7 +454,6 @@ class ConfigDialog(QDialog):
                 "<disabled>")
             self.register_config_handler(self.image_field, 'image_field', "<disabled>")
 
-        
         self.note_type.currentTextChanged.connect(self.loadFields)
         #self.api_enabled.clicked.connect(self.setAvailable)
         self.reader_enabled.clicked.connect(self.setAvailable)
@@ -508,7 +498,6 @@ class ConfigDialog(QDialog):
         self.register_config_handler(self.theme, 'theme', 'auto' if platform.system() !=
                                      "Linux" else 'system')  # default to native on Linux
 
-        
         # Using the previous qdarktheme.setup_theme function would result in having
         # the default accent color when changing theme. Instead, using the setupTheme
         # function does not change the current accent color.
@@ -518,7 +507,6 @@ class ConfigDialog(QDialog):
         self.preview_young_button.clicked.connect(self.previewYoung)
         self.preview_mature_button.clicked.connect(self.previewMature)
         self.open_fieldmatcher.clicked.connect(self.openFieldMatcher)
-        
 
     def setAvailable(self):
         #self.api_host.setEnabled(self.api_enabled.isChecked())
@@ -709,5 +697,5 @@ class ConfigDialog(QDialog):
     def status(self, msg):
         self.status_bar.showMessage(self.parent.time() + " " + msg, 4000)
 
-    def register_config_handler(self, *args, **kwargs): # pylint: disable=unused-argument
+    def register_config_handler(self, *args, **kwargs):  # pylint: disable=unused-argument
         logger.error("register_config_handler is being called!")
