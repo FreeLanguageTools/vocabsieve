@@ -1,0 +1,6 @@
+from .forvo_audio_source import ForvoAudioSource
+from .local_freq_source import LocalFreqSource
+from .local_audio_source import LocalAudioSource
+from .local_dictionary_source import LocalDictionarySource
+from .wiktionary_source import WiktionarySource
+from .google_translate_source import GoogleTranslateSource

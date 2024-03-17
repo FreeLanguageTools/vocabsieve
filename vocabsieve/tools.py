@@ -16,16 +16,16 @@ from itertools import islice
 from lxml import etree
 from charset_normalizer import from_bytes
 from ebooklib import epub, ITEM_DOCUMENT
-from .sources.WiktionarySource import WiktionarySource
-from .sources.GoogleTranslateSource import GoogleTranslateSource
-from .sources.LocalDictionarySource import LocalDictionarySource
-from .sources.LocalFreqSource import LocalFreqSource
-from .sources.LocalAudioSource import LocalAudioSource
-from .sources.ForvoAudioSource import ForvoAudioSource
+from .sources import (WiktionarySource, GoogleTranslateSource,  
+                      LocalDictionarySource, LocalFreqSource, 
+                      LocalAudioSource,ForvoAudioSource
+                      )
 from .models import (LemmaPolicy, DictionarySourceGroup, DisplayMode, SRSNote, 
                      SourceOptions, DictionarySource, FreqSource, AnkiSettings,
-                     AudioSource, AudioSourceGroup, WordRecord, WordActionWeights
+                     AudioSource, AudioSourceGroup, WordRecord, WordActionWeights,
+                     Definition
                      )
+from .format import markdown_nop
 from .global_names import settings, logger
 
 def profile(func):
@@ -414,7 +414,7 @@ def compute_word_score(wr: WordRecord, waw: WordActionWeights):
         waw.anki_young_tgt * wr.anki_young_tgt
     )
 
-def genPreviewHTML(item: SRSNote) -> str:
+def gen_preview_html(item: SRSNote) -> str:
     result = f'''<center>{item.sentence}</center>
         <hr>
         <center>
@@ -430,3 +430,18 @@ def apply_word_rules(word: str, rules: list[str]) -> str:
         logger.debug(f"Applying rule on line {n+1}: {rule}. Result: {word} -> {new_word}")
         word = new_word
     return word
+
+def process_defi_anki(plaintext: str, markdown: str, defi: Definition, source: DictionarySource) -> str:
+    match source.display_mode:
+        case DisplayMode.raw:
+            return plaintext.replace("\n", "<br>")
+        case DisplayMode.plaintext:
+            return plaintext.replace("\n", "<br>")
+        case DisplayMode.markdown:
+            return markdown_nop(plaintext)
+        case DisplayMode.markdown_html:
+            return markdown_nop(markdown)
+        case DisplayMode.html:
+            return defi.definition or "" # no editing, just send the original html, using toHtml will change the html
+        case _:
+            raise NotImplementedError(f"Unknown display mode {source.display_mode}")

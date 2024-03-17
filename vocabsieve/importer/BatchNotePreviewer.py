@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QTextEdit, QVBoxLayout, QWidget, QPushButton, QLabel, QHBoxLayout
 from PyQt5.QtCore import Qt
-from ..tools import genPreviewHTML
+from ..tools import gen_preview_html
 from ..models import SRSNote
 
 class BatchNotePreviewer(QTextEdit):
@@ -39,7 +39,7 @@ class BatchNotePreviewer(QTextEdit):
     def setCurrentIndex(self, index: int):
         self.currentIndex = index
         self.counter.setText(f"{index+1}/{len(self.note_items)}")
-        self.setText(genPreviewHTML(self.note_items[index]))
+        self.setText(gen_preview_html(self.note_items[index]))
     
     def back(self):
         if self.currentIndex > 0:
