@@ -1,0 +1,16 @@
+[MASTER]
+extension-pkg-whitelist=PyQt5
+
+[MESSAGES CONTROL]
+disable=
+    missing-docstring,
+    trailing-whitespace,
+    line-too-long,
+    unused-import,
+    unsubscriptable-object,
+    missing-function-docstring,
+    missing-module-docstring,
+    wrong-import-order,
+    too-many-instance-attributes,
+    too-many-arguments,
+    too-many-public-methods
