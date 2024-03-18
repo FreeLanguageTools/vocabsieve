@@ -84,6 +84,7 @@ class MainWindow(MainWindowBase):
         self.got_updates.connect(self.gotUpdatesInfo)
 
         self.setupClipboardMonitor()
+        self.setMinimumWidth(settings.value("minimum_width", 0))
 
         if not settings.value("internal/configured"):
             self.configure()

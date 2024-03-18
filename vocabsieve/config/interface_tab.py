@@ -1,5 +1,5 @@
 import platform
-from PyQt5.QtWidgets import QFormLayout, QLabel, QColorDialog, QCheckBox, QComboBox, QPushButton, QSlider, QHBoxLayout, QWidget
+from PyQt5.QtWidgets import QFormLayout, QLabel, QColorDialog, QCheckBox, QComboBox, QPushButton, QSlider, QSpinBox, QHBoxLayout, QWidget
 from PyQt5.QtCore import Qt
 import qdarktheme
 from ..global_names import settings
@@ -43,6 +43,11 @@ class InterfaceTab(BaseTab):
         self.theme.addItems(qdarktheme.get_themes())
         self.theme.addItem("system")
 
+        self.minimum_main_window_width = QSpinBox()
+        self.minimum_main_window_width.setMinimum(0)
+        self.minimum_main_window_width.setMaximum(15360)
+        self.minimum_main_window_width.setToolTip("Set desired minimum window width of the main application - useful to make window snipping easier.")
+
         self.theme.currentTextChanged.connect(self.setupTheme)
         self.text_scale.valueChanged.connect(
             lambda _: self.text_scale_label.setText(format(self.text_scale.value() / 100, "1.2f") + "x")
@@ -82,6 +87,7 @@ class InterfaceTab(BaseTab):
             layout.addRow(self.primary)
         layout.addRow("Theme", self.theme)
         layout.addRow(QLabel('<i>◊ Changing to "system" requires a restart.</i>'))
+        layout.addRow("*Minimum window width (Pixels)", self.minimum_main_window_width)
         layout.addRow("Accent color", self.accent_color)
         layout.addRow(self.allow_editing)
         layout.addRow(QLabel("Frequency display mode"), self.freq_display_mode)
@@ -94,3 +100,4 @@ class InterfaceTab(BaseTab):
         self.register_config_handler(self.primary, 'primary', False)
         self.register_config_handler(self.text_scale, 'text_scale', '100')
         self.register_config_handler(self.theme, 'theme', 'auto')
+        self.register_config_handler(self.minimum_main_window_width, 'minimum_width', 0)
