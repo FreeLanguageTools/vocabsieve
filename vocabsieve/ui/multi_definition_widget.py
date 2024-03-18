@@ -76,6 +76,7 @@ class MultiDefinitionWidget(SearchableTextEdit):
         super().__init__()
         self.sources: list[DictionarySource] = []
         self.word_widget = word_widget
+        self.current_target: str = ""
         self._layout = QVBoxLayout(self)
         self.definitions: list[Definition] = []
         self.currentIndex = 0
@@ -120,6 +121,7 @@ class MultiDefinitionWidget(SearchableTextEdit):
 
     def lookup(self, word: str, no_lemma: bool, rules: list[tuple[str, str]]):
         self.reset()
+        self.current_target = word
         logger.debug(f"Looking up {word} in {self.sources}")
         for source in self.sources:
             self._lookup_in_source(source, word, no_lemma=no_lemma, rules=rules)
@@ -156,6 +158,8 @@ class MultiDefinitionWidget(SearchableTextEdit):
         self.definitions.sort(key=lambda defi: index_map[defi.source])
         # filter out error definitions
         self.definitions = [defi for defi in self.definitions if defi.definition is not None]
+        if not any(defi.definition for defi in self.definitions) and self.word_widget:
+            self.word_widget.setText(self.current_target)
         self.currentIndex = 0
         self.updateIndex()
 
