@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QDialog, QGridLayout, QLabel, QComboBox
 import json
-from .tools import getNoteTypes, getFields
-from .global_names import settings
+from ..tools import getNoteTypes, getFields
+from ..global_names import settings
 
 
 class FieldMatcher(QDialog):

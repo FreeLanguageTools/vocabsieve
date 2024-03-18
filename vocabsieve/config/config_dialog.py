@@ -9,19 +9,16 @@ import platform
 import qdarktheme
 from shutil import rmtree
 
-from ..fieldmatcher import FieldMatcher
-from ..ui import SourceGroupWidget, AllSourcesWidget
-from ..models import DisplayMode, FreqDisplayMode, LemmaPolicy
+
+from ..models import FreqDisplayMode
 from loguru import logger
-from ..tools import (addDefaultModel, getVersion, findNotes,
-                     guiBrowse, getDeckList,
-                     getNoteTypes, getFields
-                     )
+
 from .general_tab import GeneralTab
 from .source_tab import SourceTab
 from .processing_tab import ProcessingTab
 from .anki_tab import AnkiTab
 from .network_tab import NetworkTab
+from .tracking_tab import TrackingTab
 from ..global_names import settings
 
 import os
@@ -41,10 +38,6 @@ class ConfigDialog(QDialog):
         self.setupWidgets()
         logger.debug("Setting up autosave")
         self.setupAutosave()
-        logger.debug("Setting up processing")
-        logger.debug("Fetching matched cards from AnkiConnect")
-        self.getMatchedCards()
-        logger.debug("Got matched cards")
 
     def initWidgets(self):
         self.status_bar = QStatusBar()
@@ -97,43 +90,6 @@ class ConfigDialog(QDialog):
             FreqDisplayMode.rank
         ])
 
-        self.anki_query_mature = QLineEdit()
-        self.mature_count_label = QLabel("")
-        self.anki_query_young = QLineEdit()
-        self.young_count_label = QLabel("")
-
-        self.preview_young_button = QPushButton("Preview in Anki Browser")
-        self.preview_mature_button = QPushButton("Preview in Anki Browser")
-
-        self.known_data_lifetime = QSpinBox()
-        self.known_data_lifetime.setSuffix(" seconds")
-        self.known_data_lifetime.setMinimum(0)
-        self.known_data_lifetime.setMaximum(1000000)
-        self.known_threshold = QSpinBox()
-        self.known_threshold.setMinimum(1)
-        self.known_threshold.setMaximum(1000)
-        self.known_threshold_cognate = QSpinBox()
-        self.known_threshold_cognate.setMinimum(1)
-        self.known_threshold_cognate.setMaximum(1000)
-        self.w_seen = QSpinBox()
-        self.w_seen.setMinimum(0)
-        self.w_seen.setMaximum(1000)
-        self.w_lookup = QSpinBox()
-        self.w_lookup.setMinimum(0)
-        self.w_lookup.setMaximum(1000)
-        self.w_anki_ctx = QSpinBox()
-        self.w_anki_ctx.setMinimum(0)
-        self.w_anki_ctx.setMaximum(1000)
-        self.w_anki_word = QSpinBox()
-        self.w_anki_word.setMinimum(0)
-        self.w_anki_word.setMaximum(1000)
-        self.w_anki_ctx_y = QSpinBox()
-        self.w_anki_ctx_y.setMinimum(0)
-        self.w_anki_ctx_y.setMaximum(1000)
-        self.w_anki_word_y = QSpinBox()
-        self.w_anki_word_y.setMinimum(0)
-        self.w_anki_word_y.setMaximum(1000)
-
         self.theme = QComboBox()
         self.theme.addItems(qdarktheme.get_themes())
         self.theme.addItem("system")
@@ -143,29 +99,24 @@ class ConfigDialog(QDialog):
         self.accent_color.setToolTip("Hex color code (e.g. #ff0000 for red)")
         self.accent_color.clicked.connect(self.save_accent_color)
 
-        self.known_langs = QLineEdit("en")
-        self.known_langs.setToolTip(
-            "Comma-separated list of languages that you know. These will be used to determine whether a word is cognate or not.")
-
         self.open_fieldmatcher = QPushButton("Match fields (required for using Anki data)")
 
     def initTabs(self):
         self.tabs = QTabWidget()
         # block signals
-        self.tab_g = GeneralTab()  # General
-        self.tab_s = SourceTab()  # Sources
+        self.tab_g = GeneralTab()
+        self.tab_s = SourceTab()
         self.tab_g.sources_reloaded_signal.connect(self.tab_s.reloadSources)
         self.tab_s.sg2_visibility_changed.connect(self.changeMainLayout)
-        self.tab_p = ProcessingTab()  # Processing
+        self.tab_p = ProcessingTab()
         self.tab_g.sources_reloaded_signal.connect(self.tab_p.setupSelector)
-        self.tab_a = AnkiTab()  # Anki
-        self.tab_n = NetworkTab()  # Network
-        self.tab_i = QWidget()  # Interface
+        self.tab_a = AnkiTab()
+        self.tab_n = NetworkTab()
+        self.tab_t = TrackingTab()
+        self.tab_i = QWidget()
         self.tab_i_layout = QFormLayout(self.tab_i)
-        self.tab_m = QWidget()  # Miscellaneous
+        self.tab_m = QWidget()
         self.tab_m_layout = QFormLayout(self.tab_m)
-        self.tab_t = QWidget()  # Tracking
-        self.tab_t_layout = QFormLayout(self.tab_t)
         self.tab_g.load_dictionaries()
 
         self.tabs.resize(400, 400)
@@ -260,43 +211,8 @@ class ConfigDialog(QDialog):
         self.tab_m_layout.addRow(QLabel("<strong>Reset all settings to defaults</strong>"), self.reset_button)
         self.tab_m_layout.addRow(QLabel("<strong>Delete all user data</strong>"), self.nuke_button)
 
-        self.tab_t_layout.addRow(QLabel("<h3>Anki tracking</h3>"))
-        self.tab_t_layout.addRow(QLabel("Use the Anki Card Browser to make a query string. "
-                                        "<br>Mature cards are excluded from the list of young cards automatically"))
-
-        self.tab_t_layout.addRow(QLabel("Query string for 'mature' cards"), self.anki_query_mature)
-        self.tab_t_layout.addRow(self.mature_count_label, self.preview_mature_button)
-        self.tab_t_layout.addRow(QLabel("Query string for 'young' cards"), self.anki_query_young)
-        self.tab_t_layout.addRow(self.young_count_label, self.preview_young_button)
-        self.tab_t_layout.addRow(self.open_fieldmatcher)
-        self.tab_t_layout.addRow(QLabel("<h3>Word scoring</h3>"))
-        self.tab_t_layout.addRow(QLabel("Known languages (use commas)"), self.known_langs)
-        self.tab_t_layout.addRow(QLabel("Known data lifetime"), self.known_data_lifetime)
-        self.tab_t_layout.addRow(QLabel("Known threshold score"), self.known_threshold)
-        self.tab_t_layout.addRow(QLabel("Known threshold score (cognate)"), self.known_threshold_cognate)
-        self.tab_t_layout.addRow(QLabel("Score: seen"), self.w_seen)
-        self.tab_t_layout.addRow(QLabel("Score: lookup (max 1 per day)"), self.w_lookup)
-        self.tab_t_layout.addRow(QLabel("Score: mature Anki target word"), self.w_anki_word)
-        self.tab_t_layout.addRow(QLabel("Score: mature Anki card context"), self.w_anki_ctx)
-        self.tab_t_layout.addRow(QLabel("Score: young Anki target word"), self.w_anki_word_y)
-        self.tab_t_layout.addRow(QLabel("Score: young Anki card context"), self.w_anki_ctx_y)
-
         self.reset_button.clicked.connect(self.reset_settings)
         self.nuke_button.clicked.connect(self.nuke_profile)
-
-    def getMatchedCards(self):
-        if settings.value("enable_anki", True):
-            try:
-                _ = getVersion(api := settings.value('anki_api', 'http://127.0.0.1:8765'))
-                query_mature = self.anki_query_mature.text()
-                mature_notes = findNotes(api, query_mature)
-                self.mature_count_label.setText(f"Matched {str(len(mature_notes))} notes")
-                query_young = self.anki_query_young.text()
-                young_notes = findNotes(api, query_young)
-                young_notes = [note for note in young_notes if note not in mature_notes]
-                self.young_count_label.setText(f"Matched {str(len(young_notes))} notes")
-            except Exception:
-                pass
 
     def setupAutosave(self):
         if settings.value("config_ver") is None \
@@ -316,19 +232,6 @@ class ConfigDialog(QDialog):
         self.register_config_handler(self.img_format, 'img_format', 'jpg')
         self.register_config_handler(self.img_quality, 'img_quality', -1)
 
-        self.register_config_handler(self.anki_query_mature, 'tracking/anki_query_mature', "prop:ivl>=14")
-        self.register_config_handler(self.anki_query_young, 'tracking/anki_query_young', "prop:ivl<14 is:review")
-        self.register_config_handler(self.known_threshold, 'tracking/known_threshold', 100)
-        self.register_config_handler(self.known_threshold_cognate, 'tracking/known_threshold_cognate', 25)
-        self.register_config_handler(self.known_langs, 'tracking/known_langs', 'en')
-        self.register_config_handler(self.w_seen, 'tracking/w_seen', 8)
-        self.register_config_handler(self.w_lookup, 'tracking/w_lookup', 15)
-        self.register_config_handler(self.w_anki_word, 'tracking/w_anki_word', 70)
-        self.register_config_handler(self.w_anki_ctx, 'tracking/w_anki_ctx', 30)
-        self.register_config_handler(self.w_anki_word_y, 'tracking/w_anki_word_y', 40)
-        self.register_config_handler(self.w_anki_ctx_y, 'tracking/w_anki_ctx_y', 20)
-        self.register_config_handler(self.known_data_lifetime, 'tracking/known_data_lifetime', 1800)
-
         self.register_config_handler(self.theme, 'theme', 'auto' if platform.system() !=
                                      "Linux" else 'system')  # default to native on Linux
 
@@ -336,15 +239,6 @@ class ConfigDialog(QDialog):
         # the default accent color when changing theme. Instead, using the setupTheme
         # function does not change the current accent color.
         self.theme.currentTextChanged.connect(self.setupTheme)
-        self.anki_query_mature.editingFinished.connect(self.getMatchedCards)
-        self.anki_query_young.editingFinished.connect(self.getMatchedCards)
-        self.preview_young_button.clicked.connect(self.previewYoung)
-        self.preview_mature_button.clicked.connect(self.previewMature)
-        self.open_fieldmatcher.clicked.connect(self.openFieldMatcher)
-
-    def openFieldMatcher(self):
-        fieldmatcher = FieldMatcher(self)
-        fieldmatcher.exec()
 
     def setupTheme(self) -> None:
         theme = self.theme.currentText()  # auto, dark, light, system
@@ -360,20 +254,6 @@ class ConfigDialog(QDialog):
                 theme=theme,
                 custom_colors={"primary": accent_color},
             )
-
-    def previewMature(self):
-        try:
-            _ = getVersion(api := settings.value('anki_api', 'http://127.0.0.1:8765'))
-            guiBrowse(api, self.anki_query_mature.text())
-        except Exception as e:
-            logger.warning(repr(e))
-
-    def previewYoung(self):
-        try:
-            _ = getVersion(api := settings.value('anki_api', 'http://127.0.0.1:8765'))
-            guiBrowse(api, self.anki_query_young.text())
-        except Exception as e:
-            logger.warning(repr(e))
 
     def errorNoConnection(self, error):
         msg = QMessageBox()
