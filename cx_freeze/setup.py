@@ -58,7 +58,7 @@ build_exe_options = {
 base = None
 WINDOWS_OUTPUT_NAME = f"VocabSieve-v{__version__}-DEBUG-win64.msi"
 SCRIPT = "app.py"
-if sys.platform == "win32" and os.environ.get("VOCABSIEVE_DEBUG_BUILD") is None:
+if sys.platform == "win32" and not os.environ.get("VOCABSIEVE_DEBUG_BUILD"):
     # If we are on a non-debug build on Windows, we want to use the GUI base to hide the console window
     base = "Win32GUI"
     WINDOWS_OUTPUT_NAME = f"VocabSieve-v{__version__}-win64.msi"
