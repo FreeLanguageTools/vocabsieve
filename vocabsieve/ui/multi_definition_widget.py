@@ -1,12 +1,17 @@
+from ast import Dict
 from PyQt5.QtGui import QWheelEvent
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QHBoxLayout
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtCore import Qt, pyqtSignal, QThread, QObject, pyqtSlot
+
 from .searchable_text_edit import SearchableTextEdit
-from ..models import Definition, DictionarySourceGroup, DisplayMode
-from ..tools import process_defi_anki
+from ..models import Definition, DisplayMode, DictionarySource
+from ..tools import process_defi_anki, apply_word_rules
+from loguru import logger
 from typing import Optional
+import time
 
 NEXT_DEFINITION_SCROLL_COUNT_TRANSITION_THRESHOLD = 3
+
 
 def sign(number):
     if number > 0:
@@ -38,12 +43,38 @@ class ButtonsBoxWidget(QWidget):
         event.accept()
 
 
+class LookupWorker(QObject):
+    got_definitions = pyqtSignal(list)
+    finished = pyqtSignal()
+
+    def __init__(self, source: DictionarySource, word: str, no_lemma: bool, rules: list[tuple[str, str]]):
+        super().__init__()
+        self.source = source
+        self.word = word
+        self.no_lemma = no_lemma
+        self.rules = rules
+
+    def run(self):
+        start = time.time()
+        definitions = self.source.define(self.word, no_lemma=self.no_lemma)
+        any_definitions = any(defi.definition is not None for defi in definitions)
+        if not any_definitions and self.rules:
+            logger.info(f"No definitions found for {self.word} in {self.source.name}, applying word rules")
+            definitions = self.source.define(
+                apply_word_rules(self.word, self.rules),
+                no_lemma=self.no_lemma
+            )
+        self.got_definitions.emit(definitions)
+        logger.debug(f"LookupWorker: looked up {self.word} in {self.source.name} in {time.time()-start:.2f} seconds")
+        self.finished.emit()
+
+
 class MultiDefinitionWidget(SearchableTextEdit):
     nextDefinitionScrollTransitionCounter = 0
 
     def __init__(self, word_widget: Optional[QLineEdit] = None):
         super().__init__()
-        self.sg = DictionarySourceGroup([])
+        self.sources: list[DictionarySource] = []
         self.word_widget = word_widget
         self._layout = QVBoxLayout(self)
         self.definitions: list[Definition] = []
@@ -70,40 +101,62 @@ class MultiDefinitionWidget(SearchableTextEdit):
 
     def wheelEvent(self, event):
         if self.verticalScrollBar().value() == self.verticalScrollBar().minimum() and event.angleDelta().y() > 0:
-            self.nextDefinitionScrollTransitionCounter+=1
+            self.nextDefinitionScrollTransitionCounter += 1
             if self.nextDefinitionScrollTransitionCounter > NEXT_DEFINITION_SCROLL_COUNT_TRANSITION_THRESHOLD:
                 self.back()
 
         elif self.verticalScrollBar().value() == self.verticalScrollBar().maximum() and event.angleDelta().y() < 0:
-            self.nextDefinitionScrollTransitionCounter+=1
+            self.nextDefinitionScrollTransitionCounter += 1
             if self.nextDefinitionScrollTransitionCounter > NEXT_DEFINITION_SCROLL_COUNT_TRANSITION_THRESHOLD:
                 self.forward()
 
         else:
             self.nextDefinitionScrollTransitionCounter = 0
 
-        super(MultiDefinitionWidget, self).wheelEvent(event)
+        super().wheelEvent(event)
 
+    def setSourceGroup(self, sources: list[DictionarySource]):
+        self.sources = sources
 
-    def setSourceGroup(self, sg: DictionarySourceGroup):
-        self.sg = sg
-
-    def getDefinitions(self, word: str, no_lemma=False) -> list[Definition]:
-        """Can be used by other classes to get definitions from the source group
-        filters out definitions with no definition"""
-
-        return [defi for defi in self.sg.define(word, no_lemma=no_lemma) if defi.definition is not None]
-
-    def lookup(self, word: str, no_lemma: bool = False) -> bool:
+    def lookup(self, word: str, no_lemma: bool, rules: list[tuple[str, str]]):
         self.reset()
-        result = False
-        for definition in self.getDefinitions(word, no_lemma):
-            self.appendDefinition(definition)
-            result = True
-        return result
+        logger.debug(f"Looking up {word} in {self.sources}")
+        for source in self.sources:
+            self._lookup_in_source(source, word, no_lemma=no_lemma, rules=rules)
 
-    def appendDefinition(self, definition: Definition):
-        self.definitions.append(definition)
+    def _lookup_in_source(self, source: DictionarySource, word: str,
+                          no_lemma: bool, rules: list[tuple[str, str]]) -> None:
+        if source.INTERNET:
+            self.lookup_thread = QThread()
+            self.lookup_worker = LookupWorker(source, word, no_lemma, rules)
+            self.lookup_worker.moveToThread(self.lookup_thread)
+            self.lookup_thread.started.connect(self.lookup_worker.run)
+            self.lookup_worker.got_definitions.connect(self.appendDefinition)
+            self.lookup_worker.finished.connect(self.lookup_thread.quit)
+            self.lookup_worker.finished.connect(self.lookup_worker.deleteLater)
+            self.lookup_thread.finished.connect(self.lookup_thread.deleteLater)
+            self.lookup_thread.start()
+        else:  # Local source, no thread
+            self.appendDefinition(source.define(word, no_lemma=no_lemma))
+
+    def appendDefinition(self, definitions: list[Definition]):
+        self.definitions.extend(definitions)
+        # populate the definitions when all sources have been looked up
+        if len(set(defi.source for defi in self.definitions)) == len(self.sources):
+            logger.debug("All sources have been looked up")
+            self.populateDefinitions()
+
+    def populateDefinitions(self):
+        """
+        Sort and filter the definitions we found.
+        Definitions may be out of order due to concurrency
+        """
+        index_map = {source.name: i for i, source in enumerate(self.sources)}
+        # Sort definitions by source order, stable sort
+        self.definitions.sort(key=lambda defi: index_map[defi.source])
+        # filter out error definitions
+        self.definitions = [defi for defi in self.definitions if defi.definition is not None]
+        self.currentIndex = 0
         self.updateIndex()
 
     def updateIndex(self):
@@ -116,7 +169,7 @@ class MultiDefinitionWidget(SearchableTextEdit):
     def setCurrentDefinition(self, defi: Definition):
         self.currentDefinition = defi
         source_name = defi.source
-        source = self.sg.getSource(source_name)
+        source = self.getSource(source_name)
         if defi.definition is not None and source is not None:
             match source.display_mode:
                 case DisplayMode.markdown_html | DisplayMode.html:
@@ -169,6 +222,12 @@ class MultiDefinitionWidget(SearchableTextEdit):
         self.info_label.setText("")
         self.counter.setText("0/0")
 
+    def getSource(self, source_name: str) -> Optional[DictionarySource]:
+        for source in self.sources:
+            if source.name == source_name:
+                return source
+        return None
+
     def toAnki(self, defi: Optional[Definition] = None) -> str:
         """Process definitions before sending to Anki"""
         # Figure out display mode of current source
@@ -177,7 +236,7 @@ class MultiDefinitionWidget(SearchableTextEdit):
         if defi is None:
             defi = self.currentDefinition
         source_name = self.currentDefinition.source
-        source = self.sg.getSource(source_name)
+        source = self.getSource(source_name)
         if source is None:  # This means no definition is found but maybe the user typed in something
             return self.toPlainText().replace("\n", "<br>")
 

@@ -3,6 +3,8 @@ from ..local_dictionary import dictdb
 
 
 class LocalDictionarySource(DictionarySource):
+    INTERNET = False
+
     def __init__(self, langcode: str, options: SourceOptions, dictname: str) -> None:
         super().__init__(dictname, langcode, options)
         # Ensure dictname exists in db

@@ -3,6 +3,8 @@ from ..local_dictionary import LocalDictionary
 
 
 class LocalFreqSource(FreqSource):
+    INTERNET = False
+
     def __init__(self, langcode: str, lemmatized: bool, db: LocalDictionary, dictname: str) -> None:
         super().__init__(dictname, langcode, lemmatized)
         self.db = db

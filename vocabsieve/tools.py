@@ -19,10 +19,10 @@ from .sources import (WiktionarySource, GoogleTranslateSource,
                       LocalDictionarySource, LocalFreqSource,
                       LocalAudioSource, ForvoAudioSource
                       )
-from .models import (LemmaPolicy, DictionarySourceGroup, DisplayMode, SRSNote,
+from .models import (LemmaPolicy, DisplayMode, SRSNote,
                      SourceOptions, DictionarySource, FreqSource, AnkiSettings,
-                     AudioSource, AudioSourceGroup, WordRecord, WordActionWeights,
-                     Definition
+                     AudioSource, WordRecord, WordActionWeights,
+                     Definition, AudioSourceGroup
                      )
 from .format import markdown_nop
 from .global_names import settings, logger
@@ -412,13 +412,6 @@ def make_dict_source(src_name: str) -> DictionarySource:
         return LocalDictionarySource(langcode, options, src_name)
 
 
-def make_source_group(src_names: list[str]):
-    source_list = []
-    for src_name in src_names:
-        source_list.append(make_dict_source(src_name))
-    return DictionarySourceGroup(source_list)
-
-
 def compute_word_score(wr: WordRecord, waw: WordActionWeights):
     return (
         waw.seen * wr.n_seen +
@@ -441,7 +434,7 @@ def gen_preview_html(item: SRSNote) -> str:
     return result
 
 
-def apply_word_rules(word: str, rules: list[str]) -> str:
+def apply_word_rules(word: str, rules: list[tuple[str, str]]) -> str:
     for n, rule in enumerate(rules):
         new_word = re.sub(rule[0], rule[1], word, flags=re.IGNORECASE)
         logger.debug(f"Applying rule on line {n+1}: {rule}. Result: {word} -> {new_word}")

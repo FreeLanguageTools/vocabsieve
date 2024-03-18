@@ -40,13 +40,13 @@ from .tools import (
     addNote,
     findNotes,
     guiBrowse,
-    make_source_group,
+    make_dict_source,
     getVersion,
     make_freq_source,
     unix_milliseconds_to_datetime_str,
     apply_word_rules)
 from .ui import MainWindowBase, WordMarkingDialog
-from .models import (DictionarySourceGroup, KnownMetadata, LookupRecord, SRSNote, TrackingDataError,
+from .models import (KnownMetadata, LookupRecord, SRSNote, TrackingDataError,
                      WordRecord)
 from .lemmatizer import lem_word
 from .uncaught_hook import ExceptionCatcher
@@ -141,23 +141,27 @@ class MainWindow(MainWindowBase):
 
     def initSources(self):
         logger.debug("Initializing sources")
-        sg1_src_list = json.loads(settings.value("sg1", '["Wiktionary (English)"]'))
-        self.sg1 = make_source_group(sg1_src_list)
+        sg1_src_names = json.loads(settings.value("sg1", '["Wiktionary (English)"]'))
+        self.sg1 = []
+        for src_name in sg1_src_names:
+            self.sg1.append(make_dict_source(src_name))
         self.definition.setSourceGroup(self.sg1)
-        logger.debug(f"Source Group 1: {sg1_src_list} has been created.")
+        logger.debug(f"Source Group 1: {sg1_src_names} has been created.")
 
         if settings.value("freq_source", "<disabled>") != "<disabled>":
             self.freq_widget.setSource(make_freq_source(settings.value("freq_source")))
 
         if settings.value("sg2_enabled", False, type=bool):
-            sg2_src_list = json.loads(settings.value("sg2", '[]'))
-            logger.debug(f"Source Group 2: {sg2_src_list} has been created.")
-            self.sg2 = make_source_group(sg2_src_list)
-            self.definition2.setSourceGroup(self.sg2)
+            sg2_src_names = json.loads(settings.value("sg2", '[]'))
+            logger.debug(f"Source Group 2: {sg2_src_names} has been created.")
+            self.sg2 = []
+            for src_name in sg2_src_names:
+                self.sg2.append(make_dict_source(src_name))
         else:
             logger.debug("Source Group 2 is disabled, emptying source widget.")
-            self.sg2 = DictionarySourceGroup([])
-            self.definition2.setSourceGroup(self.sg2)
+            self.sg2 = []
+
+        self.definition2.setSourceGroup(self.sg2)
 
         if audio_src_list := json.loads(settings.value("audio_sg", '["Forvo"]')):
             self.audio_sg = make_audio_source_group(audio_src_list)
@@ -726,7 +730,7 @@ class MainWindow(MainWindowBase):
             logger.debug("Did not find Anki note with query: " + find_query)
             return []
 
-    def lookup(self, target: str, no_lemma=False, apply_rules=True) -> None:
+    def lookup(self, target: str, no_lemma=False) -> None:
         self.boldWordInSentence(target)
         langcode = settings.value("target_language", "en")
 
@@ -753,22 +757,11 @@ class MainWindow(MainWindowBase):
             modifier = self.rec.getModifier(langcode, lemma)
             self.word_record_display.setWordRecord(word_record, self.getWordActionWeights(), threshold, modifier)
 
-        lookup1_result_success = self.definition.lookup(target, no_lemma)
-        lookup2_result_success = settings.value(
-            "sg2_enabled",
-            False,
-            type=bool) and self.definition2.lookup(
-            target,
-            no_lemma)
-        if not (lookup1_result_success or lookup2_result_success):
-            # If no definition found, we apply word rules and try again
-            rules = json.loads(settings.value("word_regex", "[]"))
-            if apply_rules and rules:
-                logger.info(f"No definitions found for {target}, now applying word rules and trying again")
-                new_lookup_term = apply_word_rules(target, rules)
-                self.lookup(new_lookup_term, no_lemma, False)
-            else:
-                self.word.setText(target)
+        rules = json.loads(settings.value("word_regex", "[]"))
+
+        self.definition.lookup(target, no_lemma, rules)
+        if settings.value("sg2_enabled", False, type=bool):
+            self.definition2.lookup(target, no_lemma, rules)
 
         self.audio_selector.lookup(target)
         self.freq_widget.lookup(target, True, settings.value("freq_display", "Stars"))

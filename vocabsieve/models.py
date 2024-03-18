@@ -166,6 +166,7 @@ class WordActionWeights:
 
 class Source:
     '''Represents an abstract interface to a source of information in a language'''
+    INTERNET = True
 
     def __init__(self, name: str, langcode: str) -> None:
         self.name = name
@@ -340,29 +341,6 @@ class DictionarySource(Source):
         Subclass should override this method
         '''
         raise NotImplementedError
-
-
-class DictionarySourceGroup:
-    '''Wrapper for a group of Sources associated with a textbox on the main window'''
-
-    def __init__(self, sources: list[DictionarySource]) -> None:
-        self.sources = sources
-
-    def getSource(self, name: str) -> Optional[DictionarySource]:
-        '''Get a Source by name'''
-        for source in self.sources:
-            if source.name == name:
-                return source
-        return None
-
-    def define(self, word: str, no_lemma: bool = False) -> list[Definition]:
-        '''Get definitions from all sources'''
-        definitions = []
-
-        for source in self.sources:
-            definitions.extend(source.define(word, no_lemma=no_lemma))
-
-        return definitions
 
 
 def convert_display_mode(entry: str, mode: DisplayMode) -> str:

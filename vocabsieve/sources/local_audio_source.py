@@ -6,6 +6,8 @@ import os
 
 
 class LocalAudioSource(AudioSource):
+    INTERNET = False
+
     def __init__(
             self,
             langcode: str,
