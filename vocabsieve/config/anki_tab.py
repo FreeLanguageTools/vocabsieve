@@ -203,6 +203,7 @@ class AnkiTab(BaseTab):
         self.definition2_field.setEnabled(value)
         self.pronunciation_field.setEnabled(value)
         self.image_field.setEnabled(value)
+        # TODO: Implement these in the tracking tab # pylint: disable=fixme
         #self.anki_query_mature.setEnabled(value)
         #self.anki_query_young.setEnabled(value)
         #self.preview_mature_button.setEnabled(value)

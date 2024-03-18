@@ -21,6 +21,7 @@ from .general_tab import GeneralTab
 from .source_tab import SourceTab
 from .processing_tab import ProcessingTab
 from .anki_tab import AnkiTab
+from .network_tab import NetworkTab
 from ..global_names import settings
 
 import os
@@ -72,27 +73,10 @@ class ConfigDialog(QDialog):
         self.text_scale_box_layout.addWidget(self.text_scale)
         self.text_scale_box_layout.addWidget(self.text_scale_label)
 
-        #self.orientation.addItems(["Vertical", "Horizontal"])
-        self.gtrans_api = QLineEdit()
-
-        #self.api_enabled = QCheckBox("Enable VocabSieve local API")
-        #self.api_host = QLineEdit()
-        #self.api_port = QSpinBox()
-        #self.api_port.setMinimum(1024)
-        #self.api_port.setMaximum(49151)
-
-        self.reader_enabled = QCheckBox("Enable VocabSieve Web Reader")
-        self.reader_host = QLineEdit()
-        self.reader_port = QSpinBox()
-        self.reader_port.setMinimum(1024)
-        self.reader_port.setMaximum(49151)
-
         self.reset_button = QPushButton("Reset settings")
         self.reset_button.setStyleSheet('QPushButton {color: red;}')
         self.nuke_button = QPushButton("Delete data")
         self.nuke_button.setStyleSheet('QPushButton {color: red;}')
-
-        self.check_updates = QCheckBox("Check for updates")
 
         self.img_format = QComboBox()
         self.img_format.addItems(
@@ -175,9 +159,7 @@ class ConfigDialog(QDialog):
         self.tab_p = ProcessingTab()  # Processing
         self.tab_g.sources_reloaded_signal.connect(self.tab_p.setupSelector)
         self.tab_a = AnkiTab()  # Anki
-        self.tab_a_layout = QFormLayout(self.tab_a)
-        self.tab_n = QWidget()  # Network
-        self.tab_n_layout = QFormLayout(self.tab_n)
+        self.tab_n = NetworkTab()  # Network
         self.tab_i = QWidget()  # Interface
         self.tab_i_layout = QFormLayout(self.tab_i)
         self.tab_m = QWidget()  # Miscellaneous
@@ -244,24 +226,6 @@ class ConfigDialog(QDialog):
             self.parent.close()
 
     def setupWidgets(self):
-
-        self.tab_n_layout.addRow(QLabel(
-            '<h3>Network settings</h3>'
-            '◊ All settings on this tab require a restart to take effect.'
-            '<br>◊ Most users should not need to change these settings.</i>'
-        ))
-        self.tab_n_layout.addRow(self.check_updates)
-        #self.tab_n_layout.addRow(QLabel("<h4>Local API</h4>"))
-        #self.tab_n_layout.addRow(self.api_enabled)
-        #self.tab_n_layout.addRow(QLabel("API host"), self.api_host)
-        #self.tab_n_layout.addRow(QLabel("API port"), self.api_port)
-        self.tab_n_layout.addRow(QLabel("<h4>Web Reader</h4>"))
-        self.tab_n_layout.addRow(self.reader_enabled)
-        self.tab_n_layout.addRow(QLabel("Web reader host"), self.reader_host)
-        self.tab_n_layout.addRow(QLabel("Web reader port"), self.reader_port)
-        self.tab_n_layout.addRow(
-            QLabel("Google Translate API"),
-            self.gtrans_api)
 
         self.tab_i_layout.addRow(
             QLabel("<h3>Interface settings</h3>")
@@ -341,24 +305,6 @@ class ConfigDialog(QDialog):
             settings.clear()
         settings.setValue("config_ver", 1)
 
-        self.register_config_handler(self.check_updates, 'check_updates', False, True)
-
-        #self.api_enabled.clicked.connect(self.setAvailable)
-        self.reader_enabled.clicked.connect(self.setAvailable)
-
-        #self.register_config_handler(self.api_enabled, 'api_enabled', True)
-        #self.register_config_handler(self.api_host, 'api_host', '127.0.0.1')
-        #self.register_config_handler(self.api_port, 'api_port', 39284)
-        self.register_config_handler(
-            self.reader_enabled, 'reader_enabled', True)
-        self.register_config_handler(
-            self.reader_host, 'reader_host', '127.0.0.1')
-        self.register_config_handler(self.reader_port, 'reader_port', 39285)
-        self.register_config_handler(
-            self.gtrans_api,
-            'gtrans_api',
-            'https://lingva.lunar.icu')
-
         self.register_config_handler(self.freq_display_mode, "freq_display", "Stars (like Migaku)")
         self.register_config_handler(self.allow_editing, 'allow_editing', True)
         self.register_config_handler(self.primary, 'primary', False)
@@ -395,12 +341,6 @@ class ConfigDialog(QDialog):
         self.preview_young_button.clicked.connect(self.previewYoung)
         self.preview_mature_button.clicked.connect(self.previewMature)
         self.open_fieldmatcher.clicked.connect(self.openFieldMatcher)
-
-    def setAvailable(self):
-        #self.api_host.setEnabled(self.api_enabled.isChecked())
-        #self.api_port.setEnabled(self.api_enabled.isChecked())
-        self.reader_host.setEnabled(self.reader_enabled.isChecked())
-        self.reader_port.setEnabled(self.reader_enabled.isChecked())
 
     def openFieldMatcher(self):
         fieldmatcher = FieldMatcher(self)
