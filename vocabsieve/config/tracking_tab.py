@@ -51,6 +51,11 @@ class TrackingTab(BaseTab):
 
     def setupWidgets(self):
         self.getMatchedCards()
+        self.anki_query_mature.editingFinished.connect(self.getMatchedCards)
+        self.anki_query_young.editingFinished.connect(self.getMatchedCards)
+        self.preview_young_button.clicked.connect(self.previewYoung)
+        self.preview_mature_button.clicked.connect(self.previewMature)
+        self.open_fieldmatcher.clicked.connect(self.openFieldMatcher)
 
     def openFieldMatcher(self):
         fieldmatcher = FieldMatcher(self)
@@ -108,11 +113,6 @@ class TrackingTab(BaseTab):
             logger.warning(repr(e))
 
     def setupAutosave(self):
-        self.anki_query_mature.editingFinished.connect(self.getMatchedCards)
-        self.anki_query_young.editingFinished.connect(self.getMatchedCards)
-        self.preview_young_button.clicked.connect(self.previewYoung)
-        self.preview_mature_button.clicked.connect(self.previewMature)
-        self.open_fieldmatcher.clicked.connect(self.openFieldMatcher)
 
         self.register_config_handler(self.anki_query_mature, 'tracking/anki_query_mature', "prop:ivl>=14")
         self.register_config_handler(self.anki_query_young, 'tracking/anki_query_young', "prop:ivl<14 is:review")
