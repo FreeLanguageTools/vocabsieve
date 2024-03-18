@@ -6,7 +6,7 @@ on: push
 jobs:
   deploy:
     env:
-      VOCABSIEVE_DEBUG_BUILD: ${{ github.ref == 'refs/heads/master' && 'yes' || '' }}
+      VOCABSIEVE_DEBUG_BUILD: ${{ github.ref_type != 'tag' && 'yes' || '' }} # Set to 'yes' if not a tag
     strategy:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest, self-hosted]

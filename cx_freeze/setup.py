@@ -2,7 +2,7 @@ import sys
 import os
 import platform
 from vocabsieve import __version__
-from cx_Freeze import setup, Executable
+from cx_Freeze import setup, Executable  # pylint: disable=import-error
 
 # Dependencies are automatically detected, but it might need fine tuning.
 # "packages": ["os"] is used as example only
@@ -45,19 +45,29 @@ build_exe_options = {
         "packaging",
         "pynput",
         "gevent"
-        ] + PYNPUT_PLATFORM_SPECIFIC_MODULES.get(sys.platform, []),
+    ] + PYNPUT_PLATFORM_SPECIFIC_MODULES.get(sys.platform, []),
     "include_files": include_files,
     "zip_include_packages": ["PyQt5"],
     "excludes": ["tkinter"],
     "bin_includes": ["liblzo2.so"],
     "include_msvcr": True,
     "silent_level": 1
-    }
+}
+
+# base="Win32GUI" should be used only for Windows GUI app
+base = None
+WINDOWS_OUTPUT_NAME = f"VocabSieve-v{__version__}-DEBUG-win64.msi"
+SCRIPT = "app.py"
+if sys.platform == "win32" and os.environ.get("VOCABSIEVE_DEBUG_BUILD") is None:
+    # If we are on a non-debug build on Windows, we want to use the GUI base to hide the console window
+    base = "Win32GUI"
+    WINDOWS_OUTPUT_NAME = f"VocabSieve-v{__version__}-win64.msi"
+    SCRIPT = "app_win32.py"
 
 bdist_msi_options = {
     "upgrade_code": "{F10E2AE2-7629-3CA2-AA85-498478E708D7}",
-    "target_name": f"VocabSieve-v{__version__}-win64.msi" if not os.environ.get("VOCABSIEVE_DEBUG_BUILD") else f"VocabSieve-v{__version__}-DEBUG-win64.msi"
-    }
+    "target_name": WINDOWS_OUTPUT_NAME
+}
 
 # x86_64 or arm64
 PLATFORM_MACHINE_NAME = platform.machine()
@@ -74,23 +84,18 @@ bdist_dmg_options = {
 
 }
 
-# base="Win32GUI" should be used only for Windows GUI app
-base = None
-if sys.platform == "win32":
-    base = "Win32GUI"
-
 
 setup(
     name="VocabSieve",
     version=__version__,
     description="Anki companion for language learning",
     options={
-        "build_exe": build_exe_options, 
-        "bdist_msi": bdist_msi_options, 
-        "bdist_mac": bdist_mac_options, 
+        "build_exe": build_exe_options,
+        "bdist_msi": bdist_msi_options,
+        "bdist_mac": bdist_mac_options,
         "bdist_dmg": bdist_dmg_options
     },
-    executables=[Executable("app.py",
+    executables=[Executable(SCRIPT,
                             base=base,
                             icon="icon.ico",
                             shortcut_name="VocabSieve",
