@@ -48,7 +48,6 @@ from .tools import (
 from .ui import MainWindowBase, WordMarkingDialog
 from .models import (DictionarySourceGroup, KnownMetadata, LookupRecord, SRSNote, TrackingDataError,
                      WordRecord)
-from sentence_splitter import SentenceSplitter
 from .lemmatizer import lem_word
 from .uncaught_hook import ExceptionCatcher
 
@@ -922,8 +921,8 @@ class MainWindow(MainWindowBase):
         note = SRSNote(
             word=self.word.text(),
             sentence=self.sentence.textBoldedByTags.replace("\n", "<br>"),
-            definition1=self.definition.process_defi_anki(),
-            definition2=self.definition2.process_defi_anki(),
+            definition1=self.definition.toAnki(),
+            definition2=self.definition2.toAnki(),
             audio_path=self.audio_selector.current_audio_path,
             image=self.image_path,
             tags=settings.value("tags", "vocabsieve").strip().split() + self.tags.text().strip().split()
@@ -1059,7 +1058,7 @@ def main():
     # See https://github.com/5yutan5/PyQtDarkTheme/issues/239 for more info.
     qss = "QToolTip { border: 0px; }" if sys.platform == "win32" else ""
 
-    if (theme := settings.value("theme", 'auto' if platform.system() != "Linux" else 'system')) and theme != "system":
+    if (theme := settings.value("theme", 'auto')) and theme != "system":
         if color := settings.value("accent_color"):
             qdarktheme.setup_theme(theme, custom_colors={"primary": color}, additional_qss=qss)
         else:
@@ -1070,10 +1069,6 @@ def main():
 
     w.show()
     w.audio_selector.alignDiscardButton()  # fix annoying issue of misalignment
-    try:
-        app.exec()
-        if not w.is_wayland:
-            w.monitor.stop_monitoring()
-    except KeyboardInterrupt:
-        print("Exiting...")
-        sys.exit(0)
+    app.exec()
+    if not w.is_wayland:
+        w.monitor.stop_monitoring()

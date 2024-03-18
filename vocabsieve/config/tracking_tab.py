@@ -7,6 +7,10 @@ from ..global_names import settings, logger
 
 
 class TrackingTab(BaseTab):
+    def __init__(self):
+        super().__init__()
+        self.getMatchedCards()
+
     def initWidgets(self):
         self.anki_query_mature = QLineEdit()
         self.mature_count_label = QLabel("")
@@ -50,7 +54,6 @@ class TrackingTab(BaseTab):
             "Comma-separated list of languages that you know. These will be used to determine whether a word is cognate or not.")
 
     def setupWidgets(self):
-        self.getMatchedCards()
         self.anki_query_mature.editingFinished.connect(self.getMatchedCards)
         self.anki_query_young.editingFinished.connect(self.getMatchedCards)
         self.preview_young_button.clicked.connect(self.previewYoung)
