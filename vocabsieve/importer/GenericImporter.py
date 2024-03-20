@@ -207,8 +207,8 @@ class GenericImporter(QDialog):
             new_note_item = SRSNote(
                 word=word,  # fine if no definition
                 sentence=sentence,  # fine if empty string
-                definition1=definition1.definition if definition1 is not None else None,
-                definition2=definition2.definition if definition2 is not None else None,
+                definition1=self._parent.definition.toAnki(definition1) if definition1 is not None else None,
+                definition2=self._parent.definition2.toAnki(definition2) if definition2 is not None else None,
                 audio_path=audio_path or None,
                 tags=tags
             )

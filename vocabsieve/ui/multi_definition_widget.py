@@ -254,14 +254,17 @@ class MultiDefinitionWidget(SearchableTextEdit):
                 return source
         return None
 
-    def toAnki(self) -> str:
+    def toAnki(self, defi: Optional[Definition] = None) -> str:
         """Process definitions before sending to Anki"""
         # Figure out display mode of current source
-        if self.currentDefinition is None:
-            return self.toPlainText().replace("\n", "<br>")
+        maybe_user_typed_text = self.toPlainText().replace("\n", "<br>")
+        if defi is not None:  # for non-interactive use
+            self.setCurrentDefinition(defi)
+        if self.currentDefinition is None:  # This means no definition is found but maybe the user typed in something
+            return maybe_user_typed_text
         source_name = self.currentDefinition.source
         source = self.getSource(source_name)
-        if source is None:  # This means no definition is found but maybe the user typed in something
-            return self.toPlainText().replace("\n", "<br>")
+        if source is None:
+            raise ValueError(f"Source {source_name} not found, cannot process definition for Anki")
 
         return process_defi_anki(self.toPlainText(), self.toMarkdown(), self.currentDefinition, source)
