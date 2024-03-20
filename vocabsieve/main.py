@@ -45,7 +45,7 @@ from .tools import (
     unix_milliseconds_to_datetime_str,
     apply_word_rules)
 from .ui import MainWindowBase, WordMarkingDialog
-from .models import (KnownMetadata, LookupRecord, SRSNote, TrackingDataError,
+from .models import (AudioSourceGroup, KnownMetadata, LookupRecord, SRSNote, TrackingDataError,
                      WordRecord)
 from .lemmatizer import lem_word
 from .uncaught_hook import ExceptionCatcher
@@ -142,7 +142,7 @@ class MainWindow(MainWindowBase):
 
     def initSources(self):
         logger.debug("Initializing sources")
-        sg1_src_names = json.loads(settings.value("sg1", '["Wiktionary (English)"]'))
+        sg1_src_names = json.loads(settings.value("sg1", '[]'))
         self.sg1 = []
         for src_name in sg1_src_names:
             self.sg1.append(make_dict_source(src_name))
@@ -164,10 +164,13 @@ class MainWindow(MainWindowBase):
 
         self.definition2.setSourceGroup(self.sg2)
 
-        if audio_src_list := json.loads(settings.value("audio_sg", '["Forvo"]')):
+        if audio_src_list := json.loads(settings.value("audio_sg", '[]')):
             self.audio_sg = make_audio_source_group(audio_src_list)
-            self.audio_selector.setSourceGroup(self.audio_sg)
             logger.debug(f"Audio source group: {audio_src_list} has been created")
+        else:
+            logger.debug("Audio source group is empty, emptying audio source widget.")
+            self.audio_sg = AudioSourceGroup([])
+        self.audio_selector.setSourceGroup(self.audio_sg)
 
     @pyqtSlot()
     def checkUpdatesOnThread(self) -> None:
@@ -615,9 +618,9 @@ class MainWindow(MainWindowBase):
         self.shortcut_view_last_note = QShortcut(QKeySequence('Ctrl+Shift+F'), self)
         self.shortcut_view_last_note.activated.connect(self.view_last_note_button.animateClick)
         self.shortcut_getdef_e = QShortcut(QKeySequence('Ctrl+Shift+D'), self)
-        self.shortcut_getdef_e.activated.connect(self.lookupSelected)
+        self.shortcut_getdef_e.activated.connect(lambda: self.lookupSelected(no_lemma=True))
         self.shortcut_getdef = QShortcut(QKeySequence('Ctrl+D'), self)
-        self.shortcut_getdef.activated.connect(lambda: self.lookupSelected(no_lemma=True))
+        self.shortcut_getdef.activated.connect(self.lookupSelected)
         self.shortcut_paste = QShortcut(QKeySequence('Ctrl+V'), self)
         self.shortcut_paste.activated.connect(self.read_button.animateClick)
         self.shortcut_web = QShortcut(QKeySequence('Ctrl+1'), self)
@@ -662,26 +665,33 @@ class MainWindow(MainWindowBase):
         if target:  # If word not empty
             logger.info(f"Triggered lookup on {target}")
             self.lookup(target, no_lemma)
-            self.previous_word = target
 
     def getCurrentWord(self) -> str:
         """Returns currently selected word. If there isn't any, last selected word is returned"""
-        target = ''
 
+        selected = ""
         for text_field in [self.sentence, self.definition, self.definition2]:
             if text_field.hasFocus():
-                target = text_field.textCursor().selectedText()
-                break
+                if text := text_field.textCursor().selectedText():
+                    logger.debug(f"Selected text: {text} from text field")
+                    selected = text
+                    break
+        word_field_content = ""
         if self.word.hasFocus():
-            target = self.word.selectedText()
-        # will only trigger if none of the text fields are focused, like hovering on inactive window
-        hovered = self.sentence.word_under_cursor
-        target = str.strip(target
+            logger.debug(f"Word field has focus, using its text: {self.word.text()}")
+            word_field_content = self.word.text()
+
+        hovered = ""
+        # If the word under cursor is different from the previous one, we consider it
+        if self.previous_word != self.sentence.word_under_cursor.strip():
+            hovered = self.sentence.word_under_cursor.strip()
+            logger.debug(f"Using hovered word: {hovered}")
+        target = str.strip(selected
+                           or word_field_content
                            or hovered
-                           or self.previousWord
-                           or self.word.text()
+                           or self.previous_word
                            or "")
-        self.previousWord = target
+        logger.debug("Current word: " + target)
 
         return target
 
@@ -732,7 +742,7 @@ class MainWindow(MainWindowBase):
     def lookup(self, target: str, no_lemma=False) -> None:
         self.boldWordInSentence(target)
         langcode = settings.value("target_language", "en")
-
+        self.previous_word = target
         lemma = lem_word(target, langcode)
         self.rec.recordLookup(
             LookupRecord(
@@ -830,7 +840,6 @@ class MainWindow(MainWindowBase):
             copyobj = json.loads(text)
             target = copyobj['word']
             target = re.sub('[\\?\\.!«»…()\\[\\]]*', "", target)
-            self.previous_word = target
             sentence = preprocess_clipboard(copyobj['sentence'], lang, should_convert_to_uppercase)
             self.setSentence(sentence)
             self.setWord(target)

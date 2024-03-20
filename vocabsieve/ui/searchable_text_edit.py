@@ -12,6 +12,7 @@ class SearchableTextEdit(QTextEdit):
         super().__init__()
         self.setMouseTracking(True)
         self.word_under_cursor = ""
+        self.prev_emitted_word = ""
 
     @pyqtSlot()
     def mouseDoubleClickEvent(self, e) -> None:
@@ -27,10 +28,13 @@ class SearchableTextEdit(QTextEdit):
     @pyqtSlot()
     def mouseMoveEvent(self, e: QMouseEvent) -> None:
         super().mouseMoveEvent(e)
-        if not settings.value("lookup_definition_when_hovering", True, type=bool):
-            return
-
         text_cursor: QTextCursor = self.cursorForPosition(e.pos())
         text_cursor.select(QTextCursor.SelectionType.WordUnderCursor)
         word = text_cursor.selectedText()
-        self.hovered_over.emit(word)
+        self.word_under_cursor = word  # always store
+        if not settings.value("lookup_definition_when_hovering", True, type=bool):
+            return
+        # but only emit if it's different from the last one and not empty
+        if word != self.prev_emitted_word and word:
+            self.hovered_over.emit(word)
+            self.prev_emitted_word = word

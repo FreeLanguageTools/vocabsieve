@@ -42,6 +42,7 @@ class AudioSelector(QListWidget):
         return self.sg.define(word)
 
     def lookup_on_thread(self, word: str):
+        self.clear()
         for definition in self.getDefinitions(word):
             self.audio_fetched.emit(definition)
 
@@ -57,7 +58,6 @@ class AudioSelector(QListWidget):
         self.current_audio_path = ""
 
     def lookup(self, word: str):
-        self.clear()
         threading.Thread(
             target=self.lookup_on_thread,
             args=(word,)).start()
