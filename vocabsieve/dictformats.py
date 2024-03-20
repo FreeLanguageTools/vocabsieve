@@ -9,6 +9,8 @@ import gzip
 import bz2
 import csv
 import json
+from itertools import groupby
+from operator import itemgetter
 
 
 supported_dict_formats = bidict({
@@ -142,7 +144,7 @@ def parseMDX(path) -> dict[str, str]:
     for item in mdx.items():
         headword_bytes, entry_bytes = item
         headword = headword_bytes.decode()
-        entry = entry_bytes.decode()
+        entry = entry_bytes.decode()  # type: ignore
         # The following applies the stylesheet
         if stylesheet_map:
             entry = re.sub(
@@ -247,7 +249,7 @@ def parseKaikki(path, lang) -> dict[str, str]:
     (https://github.com/tatuylonen/wiktextract)
     The format is lines of json objects, each containing a word and its definition
     '''
-    d = {}
+    items: list[tuple[str, str]] = []
     with zopen(path) as f:
         logger.debug("Parsing Kaikki wiktionary dump at " + path)
         logger.debug("Only importing entries in language " + lang)
@@ -255,8 +257,13 @@ def parseKaikki(path, lang) -> dict[str, str]:
             data = json.loads(line)
             # Kaikki dumps may have multiple languages, skip others for now
             if data.get("lang_code") == lang:
-                d[data['word']] = kaikki_line_to_textdef(data)
-    return d
+                items.append((data['word'], kaikki_line_to_textdef(data)))
+        logger.debug(f"Found {len(items)} entries")
+    # Combine all definitions for each headword
+    res = dict((word, "\n\n".join([item[1] for item in itr]))
+               for word, itr in groupby(items, itemgetter(0)))
+    logger.debug(f"For {len(res)} headwords")
+    return res
 
 
 def kaikki_line_to_textdef(row: dict) -> str:
