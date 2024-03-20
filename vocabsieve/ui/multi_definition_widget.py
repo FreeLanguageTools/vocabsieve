@@ -1,4 +1,3 @@
-from ast import Dict
 from PyQt5.QtGui import QWheelEvent
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QHBoxLayout
 from PyQt5.QtCore import Qt, pyqtSignal, QThread, QObject, pyqtSlot
@@ -100,6 +99,9 @@ class MultiDefinitionWidget(SearchableTextEdit):
         prev_button.clicked.connect(self.back)
         next_button.clicked.connect(self.forward)
 
+        self.threads: list[QThread] = []
+        self.workers: list[LookupWorker] = []
+
     def wheelEvent(self, event):
         if self.verticalScrollBar().value() == self.verticalScrollBar().minimum() and event.angleDelta().y() > 0:
             self.nextDefinitionScrollTransitionCounter += 1
@@ -129,18 +131,24 @@ class MultiDefinitionWidget(SearchableTextEdit):
     def _lookup_in_source(self, source: DictionarySource, word: str,
                           no_lemma: bool, rules: list[tuple[str, str]]) -> None:
         if source.INTERNET:
-            self.lookup_thread = QThread()
-            self.lookup_worker = LookupWorker(source, word, no_lemma, rules)
-            self.lookup_worker.moveToThread(self.lookup_thread)
-            self.lookup_thread.started.connect(self.lookup_worker.run)
-            self.lookup_worker.got_definitions.connect(self.appendDefinition)
-            self.lookup_worker.finished.connect(self.lookup_thread.quit)
-            self.lookup_worker.finished.connect(self.lookup_worker.deleteLater)
-            self.lookup_thread.finished.connect(self.lookup_thread.deleteLater)
-            self.lookup_thread.start()
+            lookup_thread = QThread()
+            lookup_worker = LookupWorker(source, word, no_lemma, rules)
+            lookup_worker.moveToThread(lookup_thread)
+            lookup_thread.started.connect(lookup_worker.run)
+            lookup_worker.got_definitions.connect(self.appendDefinition)
+            lookup_worker.finished.connect(lookup_thread.quit)
+            lookup_worker.finished.connect(lookup_worker.deleteLater)
+            lookup_thread.finished.connect(lookup_thread.deleteLater)
+            lookup_thread.start()
+
+            # Keep references to avoid garbage collection, otherwise this crashes
+            self.threads.append(lookup_thread)
+            self.workers.append(lookup_worker)
+
         else:  # Local source, no thread
             self.appendDefinition(source.define(word, no_lemma=no_lemma))
 
+    @pyqtSlot(list)
     def appendDefinition(self, definitions: list[Definition]):
         self.definitions.extend(definitions)
         # populate the definitions when all sources have been looked up
@@ -225,6 +233,7 @@ class MultiDefinitionWidget(SearchableTextEdit):
         self.setText("")
         self.info_label.setText("")
         self.counter.setText("0/0")
+        # TODO try to remove references to threads and workers without crashing # pylint: disable=fixme
 
     def getSource(self, source_name: str) -> Optional[DictionarySource]:
         for source in self.sources:
