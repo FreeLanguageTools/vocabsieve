@@ -114,10 +114,6 @@ class MainWindowBase(QMainWindow):
             "Look up a word by double clicking it. Or, select it"
             ", then press \"Get definition\".")
 
-        self.lookup_button = QPushButton(f"Define [{MOD}+D]")
-        self.lookup_exact_button = QPushButton(f"Define direct [Shift+{MOD}+D]")
-        self.lookup_exact_button.setToolTip(
-            "This will look up the word without lemmatization.")
         self.toanki_button = QPushButton(f"Add note [{MOD}+S]")
         self.view_last_note_button = QPushButton("View last note")
         self.view_last_note_button.setToolTip(f"View the last added note. [{MOD}+Shift+F]")

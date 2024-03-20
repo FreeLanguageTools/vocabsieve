@@ -29,7 +29,6 @@ from .local_dictionary import dictdb
 from .importer import KindleVocabImporter, KoreaderVocabImporter, AutoTextImporter
 from .reader import ReaderServer
 from .contentmanager import ContentManager
-from .global_events import GlobalObject
 from .tools import (
     compute_word_score,
     is_json,
@@ -92,8 +91,10 @@ class MainWindow(MainWindowBase):
             self.last_got_focus = time.time()
 
     def setupClipboardMonitor(self):
-        GlobalObject().addEventListener("double clicked", self.lookupSelected)
-        GlobalObject().addEventListener("hovered over", self.lookupHovered)
+        self.sentence.double_clicked.connect(self.lookup)
+        self.sentence.hovered_over.connect(self.lookupHovered)
+        self.definition.double_clicked.connect(self.lookup)
+        self.definition2.double_clicked.connect(self.lookup)
         cant_listen_to_clipboard = (os.environ.get("XDG_SESSION_TYPE") == "wayland"
                                     or platform.system() == "Darwin")
         if settings.value("primary", False, type=bool) and QClipboard.supportsSelection(QApplication.clipboard()):
@@ -211,9 +212,6 @@ class MainWindow(MainWindowBase):
                 QDesktopServices.openUrl(QUrl(current['html_url']))
 
     def setupButtons(self) -> None:
-        self.lookup_button.clicked.connect(self.lookupSelected)
-        self.lookup_exact_button.clicked.connect(lambda: self.lookupSelected(no_lemma=True))
-
         self.web_button.clicked.connect(self.onWebButton)
 
         self.toanki_button.clicked.connect(self.createNote)
@@ -617,9 +615,9 @@ class MainWindow(MainWindowBase):
         self.shortcut_view_last_note = QShortcut(QKeySequence('Ctrl+Shift+F'), self)
         self.shortcut_view_last_note.activated.connect(self.view_last_note_button.animateClick)
         self.shortcut_getdef_e = QShortcut(QKeySequence('Ctrl+Shift+D'), self)
-        self.shortcut_getdef_e.activated.connect(self.lookup_exact_button.animateClick)
+        self.shortcut_getdef_e.activated.connect(self.lookupSelected)
         self.shortcut_getdef = QShortcut(QKeySequence('Ctrl+D'), self)
-        self.shortcut_getdef.activated.connect(self.lookup_button.animateClick)
+        self.shortcut_getdef.activated.connect(lambda: self.lookupSelected(no_lemma=True))
         self.shortcut_paste = QShortcut(QKeySequence('Ctrl+V'), self)
         self.shortcut_paste.activated.connect(self.read_button.animateClick)
         self.shortcut_web = QShortcut(QKeySequence('Ctrl+1'), self)
@@ -628,27 +626,6 @@ class MainWindow(MainWindowBase):
         self.shortcut_clearimage.activated.connect(lambda: self.setImage(None))
         self.shortcut_clearaudio = QShortcut(QKeySequence('Ctrl+Shift+X'), self)
         self.shortcut_clearaudio.activated.connect(self.audio_selector.discard_audio_button.animateClick)
-
-    def getCurrentWord(self) -> str:
-        """Returns currently selected word. If there isn't any, last selected word is returned"""
-        target = ''
-
-        for text_field in [self.sentence, self.definition, self.definition2]:
-            if text_field.hasFocus():
-                target = text_field.textCursor().selectedText()
-                break
-        if self.word.hasFocus():
-            target = self.word.selectedText()
-        # will only trigger if none of the text fields are focused, like hovering on inactive window
-        hovered = self.sentence.word_under_cursor
-        target = str.strip(target
-                           or hovered
-                           or self.previousWord
-                           or self.word.text()
-                           or "")
-        self.previousWord = target
-
-        return target
 
     def onWebButton(self) -> None:
         """Shows definitions of self.word.text() in wiktionoary in browser"""
@@ -674,17 +651,39 @@ class MainWindow(MainWindowBase):
         else:
             QDesktopServices.openUrl(QUrl(url))
 
-    def lookupHovered(self) -> None:
+    def lookupHovered(self, target, no_lemma=False) -> None:
         if not self.shift_pressed:
             return
-        self.lookupSelected()
+        self.lookup(target, no_lemma)
 
+    @pyqtSlot()
     def lookupSelected(self, no_lemma=False) -> None:
         target = self.getCurrentWord()
         if target:  # If word not empty
             logger.info(f"Triggered lookup on {target}")
             self.lookup(target, no_lemma)
             self.previous_word = target
+
+    def getCurrentWord(self) -> str:
+        """Returns currently selected word. If there isn't any, last selected word is returned"""
+        target = ''
+
+        for text_field in [self.sentence, self.definition, self.definition2]:
+            if text_field.hasFocus():
+                target = text_field.textCursor().selectedText()
+                break
+        if self.word.hasFocus():
+            target = self.word.selectedText()
+        # will only trigger if none of the text fields are focused, like hovering on inactive window
+        hovered = self.sentence.word_under_cursor
+        target = str.strip(target
+                           or hovered
+                           or self.previousWord
+                           or self.word.text()
+                           or "")
+        self.previousWord = target
+
+        return target
 
     def findDuplicates(self, word: str, sentence: str) -> list[int]:
         """Check for duplicates of note in Anki

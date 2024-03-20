@@ -1,11 +1,13 @@
 from PyQt5.QtGui import QMouseEvent, QTextCursor
 from PyQt5.QtWidgets import QTextEdit
-from PyQt5.QtCore import QEvent, Qt, QObject, pyqtSlot
-from ..global_events import GlobalObject
+from PyQt5.QtCore import pyqtSlot, pyqtSignal
 from ..global_names import settings
 
 
 class SearchableTextEdit(QTextEdit):
+    double_clicked = pyqtSignal(str)
+    hovered_over = pyqtSignal(str)
+
     def __init__(self):
         super().__init__()
         self.setMouseTracking(True)
@@ -16,9 +18,11 @@ class SearchableTextEdit(QTextEdit):
         super().mouseDoubleClickEvent(e)
         if not settings.value("lookup_definition_on_doubleclick", True, type=bool):
             return
-        GlobalObject().dispatchEvent("double clicked")
+        text_cursor: QTextCursor = self.cursorForPosition(e.pos())
+        text_cursor.select(QTextCursor.SelectionType.WordUnderCursor)
+        word = text_cursor.selectedText()
+        self.double_clicked.emit(word)
         self.textCursor().clearSelection()
-        self.original: str = ""
 
     @pyqtSlot()
     def mouseMoveEvent(self, e: QMouseEvent) -> None:
@@ -28,5 +32,5 @@ class SearchableTextEdit(QTextEdit):
 
         text_cursor: QTextCursor = self.cursorForPosition(e.pos())
         text_cursor.select(QTextCursor.SelectionType.WordUnderCursor)
-        self.word_under_cursor = text_cursor.selectedText()
-        GlobalObject().dispatchEvent("hovered over")
+        word = text_cursor.selectedText()
+        self.hovered_over.emit(word)
