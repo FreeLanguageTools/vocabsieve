@@ -80,7 +80,7 @@ class ProcessingTab(BaseTab):
             self.deactivateProcessing
         )
         self.register_config_handler(self.lemma_policy,
-                                     f"{curr_dict}/" + "lemma_policy", LemmaPolicy.try_lemma)
+                                     f"{curr_dict}/" + "lemma_policy", LemmaPolicy.first_lemma)
         self.register_config_handler(self.skip_top,
                                      f"{curr_dict}/" + "skip_top", 0)
         self.register_config_handler(self.collapse_newlines,
