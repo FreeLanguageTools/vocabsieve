@@ -13,6 +13,5 @@ def cached_get(url, forvo_headers=False):
         res = requests.get(url, headers=FORVO_HEADERS, timeout=10)
     else:
         res = requests.get(url, timeout=10)
-    print(res.text)
     res.raise_for_status()
     return res

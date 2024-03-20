@@ -108,6 +108,14 @@ class DisplayMode(str, Enum):
     html = "HTML"
 
 
+class LookupTrigger(Enum):
+    '''Represents the trigger for a lookup'''
+    double_clicked = 0
+    shortcut_normal = 1
+    shortcut_exact = 2
+    hovered = 3
+
+
 class FreqDisplayMode(str, Enum):
     '''Represents how to display the frequency of a word'''
     stars = "Stars"

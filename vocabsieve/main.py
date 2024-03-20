@@ -46,7 +46,7 @@ from .tools import (
     apply_word_rules)
 from .ui import MainWindowBase, WordMarkingDialog
 from .models import (AudioSourceGroup, KnownMetadata, LookupRecord, SRSNote, TrackingDataError,
-                     WordRecord)
+                     WordRecord, LookupTrigger)
 from .lemmatizer import lem_word
 from .uncaught_hook import ExceptionCatcher
 
@@ -68,6 +68,7 @@ class MainWindow(MainWindowBase):
         self.last_target_word_id: int = -1
         self.last_added_note_id: int = -1
         self.previous_word: str = ""
+        self.previous_trigger: LookupTrigger = LookupTrigger.double_clicked
         self.pause_polling: bool = False
         self.cognates: set[str] = set()
         app.applicationStateChanged.connect(self.onApplicationStateChanged)
@@ -618,7 +619,10 @@ class MainWindow(MainWindowBase):
         self.shortcut_view_last_note = QShortcut(QKeySequence('Ctrl+Shift+F'), self)
         self.shortcut_view_last_note.activated.connect(self.view_last_note_button.animateClick)
         self.shortcut_getdef_e = QShortcut(QKeySequence('Ctrl+Shift+D'), self)
-        self.shortcut_getdef_e.activated.connect(lambda: self.lookupSelected(no_lemma=True))
+        self.shortcut_getdef_e.activated.connect(
+            lambda: self.lookupSelected(
+                no_lemma=True,
+                trigger=LookupTrigger.shortcut_exact))
         self.shortcut_getdef = QShortcut(QKeySequence('Ctrl+D'), self)
         self.shortcut_getdef.activated.connect(self.lookupSelected)
         self.shortcut_paste = QShortcut(QKeySequence('Ctrl+V'), self)
@@ -657,14 +661,13 @@ class MainWindow(MainWindowBase):
     def lookupHovered(self, target, no_lemma=False) -> None:
         if not self.shift_pressed:
             return
-        self.lookup(target, no_lemma)
+        self.lookup(target, no_lemma, trigger=LookupTrigger.hovered)
 
     @pyqtSlot()
-    def lookupSelected(self, no_lemma=False) -> None:
+    def lookupSelected(self, no_lemma=False, trigger=LookupTrigger.shortcut_normal) -> None:
         target = self.getCurrentWord()
         if target:  # If word not empty
-            logger.info(f"Triggered lookup on {target}")
-            self.lookup(target, no_lemma)
+            self.lookup(target, no_lemma, trigger)
 
     def getCurrentWord(self) -> str:
         """Returns currently selected word. If there isn't any, last selected word is returned"""
@@ -739,10 +742,17 @@ class MainWindow(MainWindowBase):
             logger.debug("Did not find Anki note with query: " + find_query)
             return []
 
-    def lookup(self, target: str, no_lemma=False) -> None:
+    def lookup(self, target: str, no_lemma=False, trigger=LookupTrigger.double_clicked) -> None:
+        target = target.strip()
+        # refuse to look up if the word is empty
+        if not target:
+            return
+        # Refuse to look up if word is the same as previous AND trigger is the same as previous
+        if target == self.previous_word and trigger == self.previous_trigger:
+            logger.debug("Same word and trigger as previous, skipping look up")
+            return
         self.boldWordInSentence(target)
         langcode = settings.value("target_language", "en")
-        self.previous_word = target
         lemma = lem_word(target, langcode)
         self.rec.recordLookup(
             LookupRecord(
@@ -774,6 +784,9 @@ class MainWindow(MainWindowBase):
 
         self.audio_selector.lookup(target)
         self.freq_widget.lookup(target, True, settings.value("freq_display", "Stars"))
+
+        self.previous_word = target
+        self.previous_trigger = trigger
 
     def setSentence(self, content) -> None:
         self.sentence.setText(str.strip(content))

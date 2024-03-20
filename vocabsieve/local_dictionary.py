@@ -14,7 +14,6 @@ class LocalDictionary():
     def __init__(self, datapath) -> None:
         path = os.path.join(datapath, "dict.db")
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        print("Initializing local dictionary object at ", path)
         self.conn = sqlite3.connect(path, check_same_thread=False)
         self.c = self.conn.cursor()
         self.createTables()
