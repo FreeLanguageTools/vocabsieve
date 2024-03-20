@@ -1,3 +1,4 @@
+from functools import lru_cache
 import json
 import urllib.request
 import os
@@ -5,13 +6,16 @@ import re
 import unicodedata
 from itertools import zip_longest, islice
 import time
+
+from .constants import FORVO_HEADERS
 from .vsnt import FIELDS, CARDS, CSS
 from bs4 import BeautifulSoup
-from typing import List
+from typing import List, Optional
 from .local_dictionary import LocalDictionary
 from json.decoder import JSONDecodeError
 import mobi
 from datetime import datetime
+import requests
 from lxml import etree
 from charset_normalizer import from_bytes, from_path
 from ebooklib import epub, ITEM_DOCUMENT

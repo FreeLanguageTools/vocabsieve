@@ -1,4 +1,5 @@
 # mypy: ignore-errors
+from ..cached_get import cached_get
 from ..models import AudioSource, LemmaPolicy, AudioLookupResult
 
 from bs4 import BeautifulSoup
@@ -11,8 +12,6 @@ import base64
 from urllib.parse import quote, unquote
 from dataclasses import dataclass
 from ..global_names import settings
-from ..constants import FORVO_HEADERS
-
 from loguru import logger
 
 
@@ -44,7 +43,7 @@ class Forvo:
         self.accent = accent
 
     def get_pronunciations(self):
-        res = requests.get(self.url, headers=FORVO_HEADERS, timeout=5)
+        res = cached_get(self.url, forvo_headers=True)
         if res.status_code == 200:
             page = res.text
         else:

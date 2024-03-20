@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from ..models import DictionarySource, SourceOptions, LookupResult
 from loguru import logger
+from ..cached_get import cached_get
 
 
 def fmt_result(definitions):
@@ -26,13 +27,12 @@ class WiktionarySource(DictionarySource):
     def _lookup(self, word: str) -> LookupResult:
         logger.info(f"Looking up {word} in Wiktionary")
         try:
-            res = requests.get(
+            res = cached_get(
                 'https://en.wiktionary.org/api/rest_v1/page/definition/' +
-                word,
-                timeout=4)
+                word)
         except Exception as e:
+            logger.error(f"Failed to get data from Wiktionary: {repr(e)}")
             return LookupResult(error=str(e))
-
         if res.status_code != 200:
             return LookupResult(error=str(res.text))
         definitions = []
