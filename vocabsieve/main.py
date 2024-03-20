@@ -681,7 +681,7 @@ class MainWindow(MainWindowBase):
 
     def lookupSelected(self, no_lemma=False) -> None:
         target = self.getCurrentWord()
-        if target and target != self.previous_word:  # If word not empty
+        if target:  # If word not empty
             logger.info(f"Triggered lookup on {target}")
             self.lookup(target, no_lemma)
             self.previous_word = target

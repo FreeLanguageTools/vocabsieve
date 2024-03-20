@@ -90,7 +90,7 @@ class ProcessingTab(BaseTab):
         self.deactivateProcessing()
 
     def deactivateProcessing(self):
-        """We deactivate some options when HTML mode is selected"""
+        """Deactivate some options when HTML mode is selected"""
         curr_display_mode = self.display_mode.currentText()
         if curr_display_mode == 'HTML':
             self.skip_top.setDisabled(True)
