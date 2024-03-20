@@ -166,12 +166,9 @@ class GenericImporter(QDialog):
             else:
                 sentence = note.sentence
 
-            if defi1.getDefinitions(word):
-                definition1 = defi1.getDefinitions(word)[0]
-            else:
-                definition1 = None
-            if definition2_enabled and defi2.getDefinitions(word):
-                definition2 = defi2.getDefinitions(word)[0]
+            definition1 = defi1.getFirstDefinition(word)
+            if definition2_enabled:
+                definition2 = defi2.getFirstDefinition(word)
             else:
                 definition2 = None
             if not (definition1 or definition2) and not self.add_even_if_no_defi.isChecked():
@@ -210,8 +207,8 @@ class GenericImporter(QDialog):
             new_note_item = SRSNote(
                 word=word,  # fine if no definition
                 sentence=sentence,  # fine if empty string
-                definition1=self._parent.definition.toAnki(definition1) if definition1 is not None else None,
-                definition2=self._parent.definition2.toAnki(definition2) if definition2 is not None else None,
+                definition1=definition1.definition if definition1 is not None else None,
+                definition2=definition2.definition if definition2 is not None else None,
                 audio_path=audio_path or None,
                 tags=tags
             )

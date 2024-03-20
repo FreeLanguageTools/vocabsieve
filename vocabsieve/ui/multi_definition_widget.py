@@ -171,6 +171,19 @@ class MultiDefinitionWidget(SearchableTextEdit):
         self.currentIndex = 0
         self.updateIndex()
 
+    def getFirstDefinition(self, target) -> Optional[Definition]:
+        """
+        Blocking function to get the first definition from all sources
+        For use outside of the main interface
+        """
+        for source in self.sources:
+            logger.debug("Getting definition from source " + source.name)
+            for defi in source.define(target):
+                logger.debug("Got definition from source " + defi.source + ": " + str(defi))
+                if defi.definition is not None:
+                    return defi
+        return None
+
     def updateIndex(self):
         if not self.definitions:
             return
@@ -241,16 +254,14 @@ class MultiDefinitionWidget(SearchableTextEdit):
                 return source
         return None
 
-    def toAnki(self, defi: Optional[Definition] = None) -> str:
+    def toAnki(self) -> str:
         """Process definitions before sending to Anki"""
         # Figure out display mode of current source
         if self.currentDefinition is None:
             return self.toPlainText().replace("\n", "<br>")
-        if defi is None:
-            defi = self.currentDefinition
         source_name = self.currentDefinition.source
         source = self.getSource(source_name)
         if source is None:  # This means no definition is found but maybe the user typed in something
             return self.toPlainText().replace("\n", "<br>")
 
-        return process_defi_anki(self.toPlainText(), self.toMarkdown(), defi, source)
+        return process_defi_anki(self.toPlainText(), self.toMarkdown(), self.currentDefinition, source)
