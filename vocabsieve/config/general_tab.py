@@ -21,12 +21,7 @@ class GeneralTab(BaseTab):
             "Lemmatize words before trying to find them in the frequency list." +
             "\nUse this for frequency lists displayed on FLT.org, but do not use it " +
             "\nfor frequency lists from Migaku. ")
-        self.bold_style = QComboBox()
-        self.bold_style.setToolTip(
-            '"Font weight" bolds words directly on the textbox.\n'
-            '"Underscores" displays bolded words in double underscores, __word__\n'
-            '(Both will look the same in Anki)\n'
-            '"<disabled>" disables bolding words in both Vocabsieve and Anki')
+        self.bold_word = QCheckBox("Bold selected word")
         self.audio_format = QComboBox()
         self.freq_source = QComboBox()
         self.gtrans_lang = QComboBox()
@@ -48,11 +43,6 @@ class GeneralTab(BaseTab):
             "Tatoeba",
             "Custom (Enter below)"
         ])
-        self.bold_style.addItems([
-            BOLD_STYLES[1],
-            BOLD_STYLES[2],
-            BOLD_STYLES[0]
-        ])
         self.gtrans_lang.addItems(langs_supported.values())
 
         self.importdict.clicked.connect(self.dictmanager)
@@ -64,7 +54,7 @@ class GeneralTab(BaseTab):
             QLabel("Target language"),
             self.target_language)
 
-        layout.addRow(QLabel("Bold words"), self.bold_style)
+        layout.addRow(self.bold_word)
 
         layout.addRow(QLabel("Forvo audio format"), self.audio_format)
         layout.addRow(QLabel("<i>◊ Choose mp3 for playing on iOS, "
@@ -113,12 +103,6 @@ class GeneralTab(BaseTab):
         self.register_config_handler(self.audio_format, 'audio_format', 'mp3')
         self.register_config_handler(self.lemfreq, 'lemfreq', True)
 
-        self.bold_style.setCurrentText(BOLD_STYLES[
-            settings.value("bold_style", 1, type=int)])
-        self.bold_style.currentTextChanged.connect(
-            lambda t: settings.setValue(
-                "bold_style", BOLD_STYLES.index(t) if t in BOLD_STYLES else 1))
-
         self.register_config_handler(
             self.gtrans_lang,
             'gtrans_lang',
@@ -130,6 +114,7 @@ class GeneralTab(BaseTab):
             self.web_preset,
             'web_preset',
             'English Wiktionary')
+        self.register_config_handler(self.bold_word, 'bold_word', True)
         self.register_config_handler(self.custom_url, 'custom_url', "https://en.wiktionary.org/wiki/@@@@")
         self.target_language.currentTextChanged.connect(self.load_dictionaries)
         self.target_language.currentTextChanged.connect(self.load_freq_sources)

@@ -20,7 +20,6 @@ from PyQt5.QtWidgets import QApplication, QMessageBox, QAction, QShortcut, QFile
 
 import qdarktheme
 from .global_names import datapath, lock, app, settings  # First local import
-from .text_manipulation import apply_bold_char, apply_bold_tags, bold_word_in_text
 from .analyzer import BookAnalyzer
 from .config import ConfigDialog
 from .stats import StatisticsWindow
@@ -42,6 +41,7 @@ from .tools import (
     make_dict_source,
     getVersion,
     make_freq_source,
+    remove_punctuations,
     unix_milliseconds_to_datetime_str,
     apply_word_rules)
 from .ui import MainWindowBase, WordMarkingDialog
@@ -744,6 +744,7 @@ class MainWindow(MainWindowBase):
 
     def lookup(self, target: str, no_lemma=False, trigger=LookupTrigger.double_clicked) -> None:
         target = target.strip()
+        target = remove_punctuations(target)
         # refuse to look up if the word is empty
         if not target:
             return
@@ -867,29 +868,18 @@ class MainWindow(MainWindowBase):
     def discard_current_audio(self):
         self.audio_selector.clear()
 
-    def boldWordInSentence(self, word) -> None:
-        sentence_text = self.sentence.unboldedText
-        if settings.value("bold_style", type=int) != 0:
-            # Bold word that was clicked on, either with "<b>{word}</b>" or
-            # "__{word}__".
-            if settings.value("bold_style", type=int) == 1:
-                apply_bold = apply_bold_tags
-            elif settings.value("bold_style", type=int) == 2:
-                apply_bold = apply_bold_char
-            else:
-                raise ValueError("Invalid bold style")
-
-            sentence_text = bold_word_in_text(
-                word,
-                sentence_text,
-                apply_bold,
-                self.getLanguage()
-            )
-
-        if sentence_text is not None:
-            self.sentence.setHtml(sentence_text)
-
-        QCoreApplication.processEvents()
+    def boldWordInSentence(self, word: str) -> None:
+        self.sentence.unbold()
+        sentence_text = self.sentence.toPlainText()
+        # Remove all bold underscores
+        # Add bold underscores around for each word with the same lemma
+        lemma = lem_word(word, self.getLanguage())
+        already_bolded = set()
+        for token in sentence_text.split():
+            token = re.sub('[\\?\\.!«»…()\\[\\]]*', "", token)
+            if lem_word(token, self.getLanguage()) == lemma and token not in already_bolded:
+                self.sentence.bold(token)
+                already_bolded.add(token)
 
     def getLanguage(self) -> str:
         return settings.value("target_language", "en")  # type: ignore
@@ -902,7 +892,7 @@ class MainWindow(MainWindowBase):
             return
 
         allow_duplicates = False
-        sentence = self.sentence.textBoldedByTags.replace("\n", "<br>")
+        sentence = self.sentence.toAnki()
         if note_ids := self.findDuplicates(self.word.text(), sentence):
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Warning)
@@ -934,7 +924,7 @@ class MainWindow(MainWindowBase):
 
         note = SRSNote(
             word=self.word.text(),
-            sentence=self.sentence.textBoldedByTags.replace("\n", "<br>"),
+            sentence=sentence,
             definition1=self.definition.toAnki(),
             definition2=self.definition2.toAnki(),
             audio_path=self.audio_selector.current_audio_path,

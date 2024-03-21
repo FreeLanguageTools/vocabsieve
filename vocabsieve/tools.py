@@ -460,3 +460,7 @@ def process_defi_anki(plaintext: str, markdown: str, defi: Definition, source: D
             return defi.definition or ""  # no editing, just send the original html, using toHtml will change the html
         case _:
             raise NotImplementedError(f"Unknown display mode {source.display_mode}")
+
+
+def remove_punctuations(s: str) -> str:
+    return re.sub('[\\?\\.!«»…,()\\[\\]]*', "", s)

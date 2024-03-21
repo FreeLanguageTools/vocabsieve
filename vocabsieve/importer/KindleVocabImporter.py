@@ -4,8 +4,7 @@ import sqlite3
 import os
 import re
 from PyQt5.QtWidgets import QCheckBox, QLabel
-from ..tools import grouper
-from ..lemmatizer import lem_word
+from ..tools import grouper, remove_punctuations
 from .models import ReadingNote
 from ..models import LookupRecord
 from ..global_names import settings
@@ -40,7 +39,7 @@ class KindleVocabImporter(GenericImporter):
             with open(clippings_path, encoding="utf-8") as file:
                 clippings_titleauthors, _, _, clippings_words, _ = zip(
                     *list(grouper(file.read().splitlines(), 5)))  # type: ignore
-                clippings_words = [re.sub('[\\?\\.!«»…,()\\[\\]]*', "", str(word)).lower()
+                clippings_words = [remove_punctuations(str(word)).lower()
                                    for word in clippings_words]  # type: ignore
                 clippings_titles = [remove_author(titleauthor.strip("\ufeff"))
                                     for titleauthor in clippings_titleauthors]

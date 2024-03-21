@@ -6,7 +6,7 @@ from .BatchNotePreviewer import BatchNotePreviewer
 from ..ui.main_window_base import MainWindowBase
 from .models import ReadingNote
 from ..models import SRSNote
-from ..tools import prepareAnkiNoteDict, addNotes
+from ..tools import prepareAnkiNoteDict, addNotes, remove_punctuations
 from .utils import truncate_middle
 
 import re
@@ -160,9 +160,9 @@ class GenericImporter(QDialog):
             logger.debug(f"Handling reading note: {note}")
             self.lastDate = max(note.date, self.lastDate)
             # Remove punctuations
-            word = re.sub('[\\?\\.!«»…,()\\[\\]]*', "", note.lookup_term)
+            word = remove_punctuations(note.lookup_term)
             if settings.value("bold_word", True, type=bool):
-                sentence = note.sentence.replace("_", "").replace(word, f"<strong>{word}</strong>")
+                sentence = note.sentence.replace(word, f"<strong>{word}</strong>")
             else:
                 sentence = note.sentence
 

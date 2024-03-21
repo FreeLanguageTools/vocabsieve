@@ -56,6 +56,10 @@ class BaseTab(QWidget):
         def update_json(v):
             settings.setValue(key, json.dumps(v))
 
+        # Initialize the setting if not present
+        if settings.value(key) is None:
+            settings.setValue(key, default)
+
         if isinstance(widget, QCheckBox):
             widget.setChecked(settings.value(key, default, type=bool))
             widget.clicked.connect(update)
