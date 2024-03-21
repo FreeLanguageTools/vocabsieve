@@ -25,15 +25,9 @@ VocabSieve supports a range of different local resources, which you can use with
 
 ### Hu Zheng (StarDict author) personal website, over 100 dictionaries
 
-<http://download.huzheng.org/>
+The website has been dead on a while, but some of the files are archived on Wayback Machine:
 
-### Russian Wiktionary Exports (Multiple languages with definitions in Russian)
-
-<http://libredict.org/en/> (Might have formatting issues)
-
-### English Wiktionary Exports
-
-<http://www.dictinfo.com/> (Disclaimer: Not tested by author)
+<https://web.archive.org/web/20230717122310/https://download.huzheng.org/>
 
 ### GTongue Dictionaries
 
@@ -57,7 +51,7 @@ Navigate to "json" folder and download items for your language. Note that the bi
 
 ## Kaikki Wiktionary dumps
 
-High-quality parsed data of Wiktionary in various languages. Recommended over the online Wiktionary API as they contain more information.
+High-quality parsed data of Wiktionary in various languages. Prefer these over the online Wiktionary API as they contain more information.
 
 <https://kaikki.org/>
 
@@ -76,10 +70,9 @@ Another website with Lingvo dictionaries (Website in Russian, mostly free resour
 
 <http://lingvodics.com/main/>
 
+A bunch of dictionaries for GoldenDict, organized by language. Avoid MDX format as they usually look worse than DSL.
 
-FreeMDict post with a bunch of dictionaries, organized by language.
-
-<https://forum.freemdict.com/t/topic/12050>
+<https://cloud.freemdict.com/index.php/s/pgKcDcbSDTCzXCs>
 
 ## Frequency lists
 
