@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 from PyQt5.QtWidgets import QDialog, QTreeWidget, QPushButton, QStatusBar, QVBoxLayout, QLabel, QFileDialog, QMessageBox, QTreeWidgetItem, QLineEdit, QComboBox, QFormLayout
-from PyQt5.QtCore import QDateTime, QCoreApplication, QStandardPaths
+from PyQt5.QtCore import QDateTime, QCoreApplication, QStandardPaths, QUrl
+from PyQt5.QtGui import QDesktopServices
 import time
 from ..constants import langcodes
 from ..dictionary import getDictsForLang, getFreqlistsForLang, getAudioDictsForLang
@@ -28,6 +29,9 @@ class DictManager(QDialog):
         self.tview = QTreeWidget()
         self.tview.setColumnCount(4)
         self.tview.setHeaderLabels(["Name", "Type", "Language", "Headwords"])
+        self.open_resources_manual_page = QPushButton("Open Resources page in browser")
+        self.open_resources_manual_page.clicked.connect(
+            lambda: QDesktopServices.openUrl(QUrl("https://docs.freelanguagetools.org/resources.html")))
         self.add_dict = QPushButton("Import dictionary, frequency list, or cognate data...")
         self.add_dict.clicked.connect(self.onAdd)
         self.add_audio = QPushButton(
@@ -53,6 +57,7 @@ to be reimported, otherwise this operation will fail.\
                 "<strong>Do not</strong> delete any files after importing them!<br>"
                 "VocabSieve does not store a copy of these files; it only indexes and caches them.<br>"
                 "If you delete the files, your dictionaries will disappear when the database is rebuilt."))
+        self._layout.addWidget(self.open_resources_manual_page)
         self._layout.addWidget(self.tview)
         self._layout.addWidget(self.add_dict)
         self._layout.addWidget(self.add_audio)

@@ -11,6 +11,7 @@ VocabSieve supports a range of different local resources, which you can use with
 - StarDict, the most commonly available free dictionary format online
 - Migaku (.json)
 - JSON (.json, plain key-value pairs)
+- Kaikki.org Wiktionary data dumps
 - CSV
 - DSL
 - MDX
@@ -38,14 +39,7 @@ VocabSieve supports a range of different local resources, which you can use with
 
 <https://sites.google.com/site/gtonguedict/home/stardict-dictionaries> 
 
-### Converted Apple Dictionaries, 41 dictionaries, some bilingual
-<https://rutracker.org/forum/viewtopic.php?t=6093047> (Torrent)
 
-<https://mega.nz/folder/Ll0wxYqa#2YLA7IHZhRZEfGHyZNqGdw> (MEGA)
-
-### Wiktionary for eBook Readers, also available in StarDict
-
-<https://github.com/BoboTiG/ebook-reader-dict>
 
 ## Migaku
 
@@ -55,19 +49,20 @@ Migaku Official MEGA Folder, 11 languages
 
 ## Simple JSONs
 
-{: .note}
-This is mainly meant for technical users to create their own dictionaries. This is the easiest format to create, as you simply make a big json file with keys for the words and values for definitions.
+### Apple Dictionaries, 41 dictionaries, some bilingual
 
-### English Wiktionary for Russian words, ~400k entries
+<https://cloud.freemdict.com/index.php/s/HsC7ybBWsbZ7B4N>
 
-<https://freelanguagetools.org/wikt-kaikki-ru.json>
+Navigate to "json" folder and download items for your language. Note that the bilingual dictionaries listed include entries in **both** directions. For example, an English-Spanish dictionary contains both English words defined in Spanish as well as Spanish words defined in English. You do not need to extract the files in order to import them.
 
-This file is produced from Kaikki’s Wiktionary dumps. It should produce results very similar to using the default Wiktionary (English) option without using the internet. I may create similar files for other languages at a later date and/or if there is a demand for it. If you need a such a file, message me on the chatroom linked on the sidebar.
+## Kaikki Wiktionary dumps
+
+High-quality parsed data of Wiktionary in various languages. Recommended over the online Wiktionary API as they contain more information.
+
+<https://kaikki.org/>
+
 
 ## Lingvo DSL
-
-{: .note}
-Support for DSL has been added in version 0.8. It is not fully mature but should work with most dictionaries. Report any issues to Github or the chat group.
 
 Rutracker GoldenDict Dictionaries (Russian, English, Ukrainian)
 
@@ -85,3 +80,18 @@ Another website with Lingvo dictionaries (Website in Russian, mostly free resour
 FreeMDict post with a bunch of dictionaries, organized by language.
 
 <https://forum.freemdict.com/t/topic/12050>
+
+## Frequency lists
+
+Lemmatized English frequency list
+
+<https://github.com/FreeLanguageTools/resources/raw/master/freq/freq_en.json.gz>
+
+Lemmatized Russian frequency list
+
+<https://github.com/FreeLanguageTools/resources/raw/master/freq/freq_ru.json.gz>
+
+## Cognate data
+CogNet processed data, includes all languages, may take a while to import.
+
+<https://github.com/FreeLanguageTools/resources/raw/master/cognates.json.gz>

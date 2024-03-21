@@ -11,6 +11,7 @@ class SourceGroupWidget(QListWidget):
 
     def __init__(self) -> None:
         super().__init__()
+        self.setToolTip("Drop dictionaries here from the right panel")
         self.setDragDropMode(QAbstractItemView.DragDrop)
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setAcceptDrops(True)
