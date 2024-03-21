@@ -19,6 +19,7 @@ from PyQt5.QtGui import QClipboard, QKeySequence, QPixmap, QDesktopServices, QIm
 from PyQt5.QtWidgets import QApplication, QMessageBox, QAction, QShortcut, QFileDialog
 
 import qdarktheme
+
 from .global_names import datapath, lock, app, settings  # First local import
 from .analyzer import BookAnalyzer
 from .config import ConfigDialog
@@ -30,6 +31,7 @@ from .reader import ReaderServer
 from .contentmanager import ContentManager
 from .tools import (
     compute_word_score,
+    failCards,
     is_json,
     make_audio_source_group,
     modelFieldNames,
@@ -897,13 +899,14 @@ class MainWindow(MainWindowBase):
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Warning)
             msgBox.setText(
-                f'Note(s) with {self.note_type_first_field} "{self.word.text() if self.note_type_first_field == "word" else sentence}" already exists in Anki. <br>' +
-                f"Do you still want to add the note?<br>" +
-                "<br>".join(
+                f'Note(s) with {self.note_type_first_field} "{self.word.text() if self.note_type_first_field == "word" else sentence}" already exists in your Anki database.\n' +
+                f"Do you still want to add the note?\n" +
+                "\n".join(
                     f"Note id: {id}, created {unix_milliseconds_to_datetime_str(id)}" for id in note_ids))
             msgBox.setWindowTitle("Note already exists")
             msgBox.addButton("Add anyway", QMessageBox.AcceptRole)
             msgBox.addButton("Cancel", QMessageBox.RejectRole)
+            msgBox.addButton("Fail existing", QMessageBox.DestructiveRole)
             msgBox.addButton("View note(s)", QMessageBox.HelpRole)
             msgBox.exec()
             result = msgBox.buttonRole(msgBox.clickedButton())
@@ -917,6 +920,10 @@ class MainWindow(MainWindowBase):
             elif result == QMessageBox.AcceptRole:
                 logger.info("User decided to add duplicate note")
                 allow_duplicates = True
+            elif result == QMessageBox.DestructiveRole:
+                logger.info("User decided to fail existing note")
+                failCards(settings.value("anki_api"), note_ids)
+                return
 
         anki_settings = self.getAnkiSettings()
 

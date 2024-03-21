@@ -168,8 +168,27 @@ def modelFieldNames(server, modelName):
     return invoke('modelFieldNames', server, modelName=modelName)
 
 
+def failCards(server, note_ids):
+    notes = notesInfo(server, note_ids)
+    card_ids = []
+    for note in notes:
+        card_ids.extend(note['cards'])
+    logger.info("Failing cards: " + str(card_ids))
+    answers = []
+    for card_id in card_ids:
+        answers.append({
+            "cardId": card_id,
+            "ease": 1
+        })
+    return invoke('answerCards', server, answers=answers)
+
+
 def findNotes(server, query):
     return invoke('findNotes', server, query=query)
+
+
+def findCards(server, query):
+    return invoke('findCards', server, query=query)
 
 
 def guiBrowse(server, query):
@@ -187,15 +206,6 @@ def is_json(myjson) -> bool:
     if json_object and json_object.get('word') and json_object.get('sentence'):
         return True
     return False
-
-
-def failed_lookup(word) -> str:
-    return str("<b>Definition for \"" + str(word) + "\" not found.</b><br>Check the following:<br>" +
-               "- Language setting (Current: " + settings.value("target_language", 'en') + ")<br>" +
-               "- Is the correct word being looked up?<br>" +
-               "- Are you connected to the Internet?<br>" +
-               "Otherwise, then " + settings.value("dict_source", "Wiktionary (English)") +
-               " probably just does not have this word listed.")
 
 
 def is_oneword(s) -> bool:
