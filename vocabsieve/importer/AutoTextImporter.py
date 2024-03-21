@@ -33,12 +33,21 @@ class AutoTextImporter(GenericImporter):
         reading_notes = []
         norepeat = True
         #only_1t = True
+        treat_capital_words_as_known = self.lang not in ('de', 'lb')
         for sentence in sentences:
             unknowns = []
+            start = False
+            # Detect the unknown words in sentence
             for word, lemma in zip(sentence.split(), map(lambda x: lem_word(x, self.lang), sentence.split())):
                 word = lem_pre(word, self.lang)
-                if lemma not in known_words and lemma.isalpha() and lemma not in already_mined:
+                is_capital_but_not_initial = word and word[0].isupper() and not start
+                if lemma not in known_words \
+                        and lemma.isalpha() \
+                        and lemma not in already_mined \
+                        and not (is_capital_but_not_initial and treat_capital_words_as_known):
+
                     unknowns.append(word)
+
             if len(unknowns) == 1:
                 if not (norepeat and lem_word(unknowns[0], self.lang) in already_mined):
                     #target_sentences.append(sentence)
