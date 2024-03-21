@@ -1,8 +1,4 @@
-from PyQt5.QtWidgets import (QDialog, QStatusBar, QCheckBox, QComboBox, QLineEdit,
-                             QSpinBox, QPushButton, QSlider, QLabel, QHBoxLayout,
-                             QWidget, QTabWidget, QMessageBox, QColorDialog, QListWidget,
-                             QFormLayout, QGridLayout, QVBoxLayout
-                             )
+from PyQt5.QtWidgets import (QCheckBox, QComboBox, QLineEdit, QSpinBox, QSlider, QWidget, QListWidget)
 from PyQt5.QtCore import QTimer
 from enum import Enum
 import json
@@ -55,10 +51,6 @@ class BaseTab(QWidget):
 
         def update_json(v):
             settings.setValue(key, json.dumps(v))
-
-        # Initialize the setting if not present
-        if settings.value(key) is None:
-            settings.setValue(key, default)
 
         if isinstance(widget, QCheckBox):
             widget.setChecked(settings.value(key, default, type=bool))
