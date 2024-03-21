@@ -26,7 +26,7 @@ from .config import ConfigDialog
 from .stats import StatisticsWindow
 from .dictionary import preprocess_clipboard
 from .local_dictionary import dictdb
-from .importer import KindleVocabImporter, KoreaderVocabImporter, AutoTextImporter
+from .importer import KindleVocabImporter, KoreaderVocabImporter, AutoTextImporter, WordListImporter
 from .reader import ReaderServer
 from .contentmanager import ContentManager
 from .tools import (
@@ -271,7 +271,8 @@ class MainWindow(MainWindowBase):
         self.repeat_last_import_action = QAction("&Repeat last import")
         self.import_koreader_vocab_action = QAction("K&OReader vocab builder")
         self.import_kindle_vocab_action = QAction("K&indle lookups")
-        self.import_auto_text = QAction("Auto import vocab from text")
+        self.import_auto_text_action = QAction("Auto import from text")
+        self.import_wordlist_action = QAction("Import word list from file")
 
         self.export_notes_csv_action = QAction("Export &notes to CSV")
         self.export_lookups_csv_action = QAction("Export &lookup data to CSV")
@@ -287,7 +288,8 @@ class MainWindow(MainWindowBase):
         self.repeat_last_import_action.triggered.connect(self.repeatLastImport)
         self.import_koreader_vocab_action.triggered.connect(self.importKoreader)
         self.import_kindle_vocab_action.triggered.connect(self.importKindle)
-        self.import_auto_text.triggered.connect(self.importAutoText)
+        self.import_wordlist_action.triggered.connect(self.importWordlist)
+        self.import_auto_text_action.triggered.connect(self.importAutoText)
         self.export_notes_csv_action.triggered.connect(self.exportNotes)
         self.export_lookups_csv_action.triggered.connect(self.exportLookups)
         self.stats_action.triggered.connect(self.onStats)
@@ -302,7 +304,8 @@ class MainWindow(MainWindowBase):
                 self.repeat_last_import_action,
                 self.import_koreader_vocab_action,
                 self.import_kindle_vocab_action,
-                self.import_auto_text
+                self.import_auto_text_action,
+                self.import_wordlist_action
             ]
         )
 
@@ -589,6 +592,17 @@ class MainWindow(MainWindowBase):
                 "Check if you've picked the right directory. It should be a folder containing both all of your books and KOReader settings.")
         except Exception as e:
             QMessageBox.warning(self, "Something went wrong", "Error: " + repr(e))
+
+    def importWordlist(self) -> None:
+        path = QFileDialog.getOpenFileName(
+            parent=self,
+            caption="Select a UTF-8 encoded word list file, where words are separated by newlines",
+            directory=QStandardPaths.writableLocation(QStandardPaths.HomeLocation)
+        )[0]
+        if path:
+            with open(path, 'r', encoding='utf-8') as file:
+                words = file.read().splitlines()
+                WordListImporter(self, words).exec()
 
     def repeatLastImport(self):
         method = settings.value("last_import_method")
