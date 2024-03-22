@@ -13,9 +13,6 @@ from .models import LookupRecord, WordRecord, KnownMetadata, SRSNote
 from .tools import findNotes, notesInfo
 from .global_names import logger, settings
 
-dictionaries = bidict({"Wiktionary (English)": "wikt-en",
-                       "Google Translate": "gtrans"})
-
 
 class Record():
     """Class to store user data"""
@@ -28,54 +25,19 @@ class Record():
             check_same_thread=False)
         self.c = self.conn.cursor()
         self.c.execute("PRAGMA foreign_keys = ON")
-        self.createTables()
-        self.fixOld()
-        if not parent_settings.value("internal/db_no_definitions"):
-            self.dropDefinitions()
-            parent_settings.setValue("internal/db_no_definitions", True)
-        if not parent_settings.value("internal/db_new_source"):
-            self.fixSource()
-            parent_settings.setValue("internal/db_new_source", True)
-        self.conn.commit()
-        if not parent_settings.value("internal/seen_has_no_word"):
-            self.fixSeen()
-            parent_settings.setValue("internal/seen_has_no_word", True)
-        if not parent_settings.value("internal/timestamps_are_seconds", True):
-            self.fixBadTimestamps()
-            parent_settings.setValue("internal/timestamps_are_seconds", True)
+        self._createTables()
         if not parent_settings.value("internal/lookup_unique_index"):
-            self.makeLookupUnique()
+            self._makeLookupUnique()
             parent_settings.setValue("internal/lookup_unique_index", True)
+        self.conn.commit()
 
         self.last_known_data: Optional[tuple[dict[str, WordRecord], KnownMetadata]] = None
         self.last_known_data_date: float = 0.0  # 1970-01-01
 
-    def fixSeen(self):
-        try:
-            self.c.execute("""
-                ALTER TABLE seen DROP COLUMN word
-                """)
-            self.conn.commit()
-            self.c.execute("VACUUM")
-        except Exception as e:
-            print(e)
-
-    def fixSource(self):
-        self.c.execute("""
-            UPDATE lookups SET source='vocabsieve'
-            """)
-        self.conn.commit()
-
-    def fixBadTimestamps(self):
-        "In the past some lookups were imported with millisecond timestamps"
-        self.c.execute("""
-            UPDATE lookups SET timestamp=timestamp/1000 WHERE timestamp > 1000000000000
-            """)
-
-    def createTables(self):
+    def _createTables(self):
         self.c.execute("""
         CREATE TABLE IF NOT EXISTS lookups (
-            timestamp FLOAT,
+            timestamp REAL,
             word TEXT,
             lemma TEXT,
             language TEXT,
@@ -87,7 +49,7 @@ class Record():
         """)
         self.c.execute("""
         CREATE TABLE IF NOT EXISTS notes (
-            timestamp FLOAT,
+            timestamp REAL,
             data TEXT,
             success INTEGER,
             sentence TEXT,
@@ -100,12 +62,11 @@ class Record():
         )
         """)
         self.c.execute("""
-        CREATE TABLE IF NOT EXISTS seen (
+        CREATE TABLE IF NOT EXISTS seen_new (
             language TEXT,
             lemma TEXT,
-            jd INTEGER,
-            source INTEGER,
-            FOREIGN KEY(source) REFERENCES contents(id) ON DELETE CASCADE
+            count INTEGER DEFAULT 1,
+            UNIQUE(language, lemma)
         )
         """)
         self.c.execute("""
@@ -128,49 +89,14 @@ class Record():
         self.c.execute("""
                        CREATE UNIQUE INDEX IF NOT EXISTS modifier_index ON modifiers (language, lemma)
         """)
+        # Non-unique index for seen_new
+        self.c.execute("""CREATE INDEX IF NOT EXISTS seen_index_lang ON seen_new (language)""")
+        # Clean up old seen table
+        self.c.execute("""DROP TABLE IF EXISTS seen""")
+        self.c.execute("""VACUUM""")
         self.conn.commit()
 
-    def fixOld(self):
-        """
-        1. In the past language name rather than code was recorded
-        2. In the past some dictonaries had special names.
-        3. Add proper columns in the notes table rather than just a json dump
-        """
-        self.c.execute("""
-        SELECT DISTINCT language FROM lookups
-        """)
-        for languagename, in self.c.fetchall():  # comma unpacks a single value tuple
-            if not langcodes.get(languagename) and langcodes.inverse.get(languagename):
-                print(f"Replacing {languagename} with {langcodes.inverse[languagename]}")
-                self.c.execute("""
-                UPDATE lookups SET language=? WHERE language=?
-                """, (langcodes.inverse[languagename], languagename))
-                self.conn.commit()
-        self.c.execute("""
-        SELECT DISTINCT source FROM lookups
-        """)
-        for source, in self.c.fetchall():  # comma unpacks a single value tuple
-            if source in dictionaries.inverse:  # pylint: disable=unsupported-membership-test
-                print(f"Replacing {source} with {dictionaries.inverse[source]}")
-                self.c.execute("""
-                UPDATE lookups SET source=? WHERE source=?
-                """, (dictionaries.inverse[source], source))
-                self.conn.commit()
-        try:
-            self.c.executescript("""
-                ALTER TABLE notes ADD COLUMN sentence TEXT;
-                ALTER TABLE notes ADD COLUMN word TEXT;
-                ALTER TABLE notes ADD COLUMN definition TEXT;
-                ALTER TABLE notes ADD COLUMN definition2 TEXT;
-                ALTER TABLE notes ADD COLUMN pronunciation TEXT;
-                ALTER TABLE notes ADD COLUMN image TEXT;
-                ALTER TABLE notes ADD COLUMN tags TEXT;
-            """)
-        except sqlite3.OperationalError:
-            pass
-        self.c.execute("VACUUM")
-
-    def makeLookupUnique(self):
+    def _makeLookupUnique(self):
         """
         In the past, lookups were not unique, which made it very slow
         to avoid inserting duplicates"""
@@ -188,20 +114,16 @@ class Record():
         """)
         self.conn.commit()
 
-    def dropDefinitions(self):
-        print('dropping definition')
-        try:
-            self.c.execute("""ALTER TABLE lookups DROP COLUMN definition""")
-            self.c.execute("VACUUM")
-        except Exception as e:
-            logger.error(e)
-
-    def seenContent(self, cid, name, content, language, jd):
+    def _seenContent(self, name, content, language):
         start = time.time()
         for word in content.replace("\\n", "\n").replace("\\N", "\n").split():
             lemma = lem_word(word, language)
-            self.c.execute('INSERT INTO seen(source, language, lemma, jd) VALUES(?,?,?,?)', (cid, language, lemma, jd))
-        print("Lemmatized", name, "in", time.time() - start, "seconds")
+            self.c.execute("""
+                    INSERT INTO seen_new(language, lemma) VALUES(?,?)
+                    ON CONFLICT(language, lemma) DO UPDATE SET count = count + 1
+            """, (language, lemma))
+        self.conn.commit()
+        logger.info("Lemmatized", name, "in", time.time() - start, "seconds")
 
     def importContent(self, name: str, content: str, language: str, jd: int):
         start = time.time()
@@ -216,12 +138,12 @@ class Record():
 
             self.c.execute("SELECT last_insert_rowid()")
             source = self.c.fetchone()[0]
-            print("ID for content", name, "is", source)
-            self.seenContent(source, name, content, language, jd)
+            logger.debug("ID for content", name, "is", source)
+            self._seenContent(name, content, language)
             self.conn.commit()
-            print("Recorded", name, "in", time.time() - start, "seconds")
+            logger.debug("Recorded", name, "in", time.time() - start, "seconds")
             return True
-        print(name, "already exists")
+        logger.info(name, "already exists")
         return False
 
     def getContents(self, language):
@@ -248,25 +170,24 @@ class Record():
         self.conn.commit()
 
     def rebuildSeen(self):
-        self.c.execute("DELETE FROM seen")
+        self.c.execute("DELETE FROM seen_new")
         self.c.execute('SELECT id, name, content, language, jd FROM contents')
-        for cid, name, content, language, jd in self.c.fetchall():
-            print("Lemmatizing", name)
-            self.seenContent(cid, name, content, language, jd)
+        for _, name, content, language, _ in self.c.fetchall():
+            self._seenContent(name, content, language)
         self.conn.commit()
         self.c.execute("VACUUM")
 
     def getSeen(self, language):
         return self.c.execute('''
-            SELECT lemma, COUNT (lemma)
-            FROM seen
+            SELECT lemma, count
+            FROM seen_new
             WHERE language=?
-            GROUP BY lemma''', (language,))
+            ''', (language,))
 
     def countSeen(self, language):
         self.c.execute('''
-            SELECT COUNT(lemma), COUNT (DISTINCT lemma)
-            FROM seen
+            SELECT SUM (count), COUNT (DISTINCT lemma)
+            FROM seen_new
             WHERE language=?''', (language,))
         return self.c.fetchone()
 
@@ -403,9 +324,9 @@ class Record():
 
     def purge(self):
         self.c.execute("""
-        DROP TABLE IF EXISTS lookups,notes,contents,seen
+        DROP TABLE IF EXISTS lookups,notes,contents,seen_new,seen
         """)
-        self.createTables()
+        self._createTables()
         self.c.execute("VACUUM")
 
     def getKnownData(self) -> tuple[dict[str, WordRecord], KnownMetadata]:

@@ -31,7 +31,7 @@ If you want to test the latest features, you can go to [CI artifacts page](https
 Go to the [Github releases page](https://github.com/FreeLanguageTools/vocabsieve/releases) for standalone versions. You may have to dismiss some warnings from the browser or Windows to install it, as it is unsigned.
 
 <details markdown=1>
-<summary> Click to open instructions for advanced users </summary>
+<summary> Click to open instructions to download test releases </summary>
 
 If you want to test the latest features, you can go to [CI artifacts page](https://nightly.link/FreeLanguageTools/vocabsieve/workflows/build-binaries/master) page to obtain the latest builds, but they are not guaranteed to run. If you notice anything wrong from those builds, open an issue on GitHub. Note: ensure you are using the latest nightly build before reporting anything.
 </details>
@@ -40,9 +40,6 @@ If you want to test the latest features, you can go to [CI artifacts page](https
 Only 64 bit Windows 10+ is supported
 
 ### MacOS
-
-{: .warning }
-MacOS support is often broken due to the me not being able to test it. If you discovered an issue and can help test or fix it, please reach out by opening a Github issue or using the chatroom.
 
 Go to the [Github releases page](https://github.com/FreeLanguageTools/vocabsieve/releases) for standalone versions. You may have to dismiss some warnings from the browser or Windows to install it, as it is unsigned.
 
@@ -53,7 +50,7 @@ Open a new terminal window and type the following command
 `xattr -d com.apple.quarantine /path/to/app.app` (replacing "/path/to/app.app" with path to VocabSieve app). This unquarantines the app and allows it to run on your Mac without being certified by Apple.
 
 <details markdown=1>
-<summary> Click to open instructions for advanced users </summary>
+<summary> Click to open instructions to download test releases </summary>
 
 If you want to test the latest features, you can go to [CI artifacts page](https://nightly.link/FreeLanguageTools/vocabsieve/workflows/build-binaries/master) page to obtain the latest builds, but they are not guaranteed to run. If you notice anything wrong from those builds, open an issue on GitHub. Note: ensure you are using the latest nightly build before reporting anything.
 </details>

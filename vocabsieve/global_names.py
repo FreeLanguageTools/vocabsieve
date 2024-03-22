@@ -54,6 +54,8 @@ app = QApplication(sys.argv)
 settings = QSettings(app_organization, app_name)
 datapath = QStandardPaths.writableLocation(QStandardPaths.DataLocation)
 forvopath = os.path.join(datapath, "forvo")
+_imagepath = os.path.join(datapath, "images")
+os.makedirs(_imagepath, exist_ok=True)
 
 _today_log_name = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 os.makedirs(os.path.join(datapath, "log"), exist_ok=True)

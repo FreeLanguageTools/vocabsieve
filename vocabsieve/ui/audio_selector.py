@@ -58,9 +58,17 @@ class AudioSelector(QListWidget):
         self.current_audio_path = ""
 
     def lookup(self, word: str):
-        threading.Thread(
-            target=self.lookup_on_thread,
-            args=(word,)).start()
+        # check if all sources are online
+        if self.sg is not None:
+            all_online = all(not source.INTERNET for source in self.sg.sources)
+            if all_online:
+                # Use threads only if all online because sqlite cursor
+                # can't be accessed from multiple threads
+                threading.Thread(
+                    target=self.lookup_on_thread,
+                    args=(word,)).start()
+            else:
+                self.lookup_on_thread(word)
 
     def play_audio_if_exists(self, x):
         if x is not None:

@@ -17,7 +17,7 @@ VocabSieve supports a variety of different workflows. They can be broadly classi
 When you see any sentence from anywhere, you can simply copy it to the clipboard. It will appear on the Sentence field right away. Then, double click on any word. A definition should appear if found. You can look up words from the Definition field too. Then, when you are satisfied with the data, click on Add Note button to send it to Anki. You can add tags just like in Anki.
 
 {: .note}
-On MacOS and Linux with Wayland, clipboard change may not be detected due to OS restrictions. A workaround is implemented to use the focus event to retrieve clipboard content, but this may not work every time. Use the "Read clipboard" button if necessary.
+On MacOS and Linux with Wayland, clipboard change may not be detected due to OS restrictions. A workaround is implemented to use polling to retrieve clipboard content, but this may not work every time. Use the "Read clipboard" button if necessary.
 
 ### Browser
 When you turn on the extension, you will notice that sentences are underlined in green. Whenever you click on any word, VocabSieve will receive both the whole sentence and the word under your cursor. The word will be looked up immediately too. Chances are, with lemmatization on, this is exactly the word you want. In that case, just press Ctrl/Cmd + S to save the card, and you can keep reading!

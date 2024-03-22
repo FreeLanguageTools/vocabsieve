@@ -799,8 +799,8 @@ class MainWindow(MainWindowBase):
         if settings.value("sg2_enabled", False, type=bool):
             self.definition2.lookup(target, no_lemma, rules)
 
-        self.audio_selector.lookup(target)
         self.freq_widget.lookup(target, True, settings.value("freq_display", "Stars"))
+        self.audio_selector.lookup(target)
 
         self.previous_word = target
         self.previous_trigger = trigger
