@@ -6,7 +6,7 @@ from .base_tab import BaseTab
 from ..constants import langcodes
 from .dictmanager import DictManager
 from ..dictionary import getFreqlistsForLang, getDictsForLang, getAudioDictsForLang, langs_supported
-from ..global_names import settings
+from ..global_names import settings, logger
 
 BOLD_STYLES = ["<disabled>", "Font weight", "Underscores"]
 
@@ -83,18 +83,22 @@ class GeneralTab(BaseTab):
         custom_dicts = json.loads(settings.value("custom_dicts", '[]'))
         sources = getFreqlistsForLang(
             langcodes.inverse[self.target_language.currentText()], custom_dicts)
+        logger.info(
+            "Loading frequency sources for language " +
+            self.target_language.currentText() +
+            ": " +
+            str(sources))
         self.freq_source.blockSignals(True)
         self.freq_source.clear()
         self.freq_source.addItem("<disabled>")
         for item in sources:
             self.freq_source.addItem(item)
+        self.freq_source.blockSignals(False)
         self.freq_source.setCurrentText(
             settings.value(
                 "freq_source", "<disabled>"))
-        self.freq_source.blockSignals(False)
 
     def setupAutosave(self):
-        self.load_freq_sources()
         self.register_config_handler(
             self.target_language,
             'target_language',
@@ -109,8 +113,6 @@ class GeneralTab(BaseTab):
             'en',
             code_translate=True)
         self.register_config_handler(
-            self.freq_source, 'freq_source', '<disabled>')
-        self.register_config_handler(
             self.web_preset,
             'web_preset',
             'English Wiktionary')
@@ -123,6 +125,8 @@ class GeneralTab(BaseTab):
         self.gtrans_lang.currentTextChanged.connect(self.load_url)
         self.load_url()
         self.load_freq_sources()
+        self.register_config_handler(
+            self.freq_source, 'freq_source', '<disabled>')
 
     def load_url(self):
         lang = settings.value("target_language", "en")

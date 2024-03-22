@@ -15,7 +15,7 @@ Before opening the configuration panel, it is recommended to have Anki with Anki
 VocabSieve is meant to have sane defaults, so that only minimal configuration is required to start using it, but a few things are still necessary. The configuration window will pop up when you first open it. 
 
 1. On the first tab, select a target language from the list.
-2. Then, select a dictionary.
+2. Then, select at least one dictionary in the Source tab by dragging an item from the right box to the left. Dictionaries can be removed by dragging it out of the left box.
     > {: .highlight}
     Use Google translation only if you have no other option. Translations are less detailed than dictionary definitions and may not provide the full range of meanings needed to understand the sentence.
 3. You are recommended to leave lemmatization on as it is by default. It can greatly boost dictionary coverage for many languages. The setting is ignored if your language is not supported.

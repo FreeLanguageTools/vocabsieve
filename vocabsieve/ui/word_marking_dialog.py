@@ -32,7 +32,7 @@ class TogglableLabel(QLabel):
                 WordRecord(
                     text,
                     self.langcode)),
-            self.parent_.waw)  # type: ignore
+            self.waw)  # type: ignore
         self.threshold = settings.value(
             "tracking/known_threshold",
             100,
