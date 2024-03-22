@@ -4,7 +4,7 @@
 
 ## Manual
 
-[New manual, most up to date](https://docs.freelanguagetools.org/)
+[New manual](https://docs.freelanguagetools.org/)
 
 ## Support
 
@@ -60,6 +60,13 @@ To run from source:
 For debugging purposes, set the environmental variable `VOCABSIEVE_DEBUG` to any value. This will create a separate profile (settings and databases for records and dictionaries) so you may perform tests without affecting your normal profile. For each different value of `VOCABSIEVE_DEBUG`, a separate profile is generated. This can be any number or string.
 
 Pull requests are welcome! If you want to implement a significant feature, be sure to first ask by creating an issue so that no effort is wasted on doing the same work twice.
+
+## Status
+This is currently beta software. You should not expect it to be completely bug-free, but you may expect that:
+- You should not lose data by upgrading to a new release. However, downgrading is not guaranteed to work! When in doubt, back up your data and ask in the chatroom before attempting to downgrade.
+    - This does not include your settings, which may need to be reset for a new release. This will be indicated on the release notes.
+- Using the `master` branch and only upgrading should *usually* not break things, but this is not guaranteed. You are expected to read commit messages to take proper precaution.
+    - Using feature branches may break things!
 
 ## Feedback
 You are welcome to report bugs, suggest features/enhancements, or ask for clarifications by opening a GitHub issue.

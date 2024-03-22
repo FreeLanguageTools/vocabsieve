@@ -1,3 +1,4 @@
+from operator import gt
 from typing import Optional
 from bidict import bidict
 
@@ -18,12 +19,10 @@ gtrans_languages = ['af', 'sq', 'am', 'ar', 'hy', 'az', 'eu', 'be', 'bn',
 
 langs_supported = bidict(
     dict(zip(gtrans_languages, [langcodes[item] for item in gtrans_languages])))
-
-gdict_languages = [
-    'en', 'hi', 'es', 'fr', 'ja', 'ru', 'de', 'it', 'ko', 'ar', 'tr', 'pt'
-]
-
-pronunciation_sources = ["Forvo (all)", "Forvo (best)"]
+langs_supported['grc'] = "Ancient Greek"
+# sort by the full name
+langs_supported = bidict(
+    sorted(langs_supported.items(), key=lambda x: x[1]))
 
 
 def preprocess_clipboard(s: str, lang: str, should_convert_to_uppercase: bool = False) -> str:
@@ -43,9 +42,12 @@ def preprocess_clipboard(s: str, lang: str, should_convert_to_uppercase: bool = 
 def getDictsForLang(lang: str, dicts: list):
     "Get the list of dictionaries for a given language"
     # These are for all the languages
-    results = ["Wiktionary (English)", "Google Translate"]
-    results.extend([item['name'] for item in dicts if item['lang'] ==
-                   lang and item['type'] != "freq" and item['type'] != 'audiolib'])
+    results = []
+    results.append("Wiktionary (English)")
+    if lang in gtrans_languages:
+        results.append("Google Translate")
+    results.extend([item['name'] for item in dicts
+                    if item['lang'] == lang and item['type'] != "freq" and item['type'] != 'audiolib'])
     return results
 
 
