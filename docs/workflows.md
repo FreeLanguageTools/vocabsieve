@@ -25,7 +25,7 @@ When you turn on the extension, you will notice that sentences are underlined in
 ### Built-in reader
 If you have an epub to read and would like to use VocabSieve in interactive mode while reading on your computer, you can use the built in reader, which can be accessed by the "Reader" button on the top bar.
 
-![](https://camo.githubusercontent.com/ea02ac411022c3f99b812cfb4c24ed9ba70ebea0c620fd68b56cb7df4e337768/68747470733a2f2f692e706f7374696d672e63632f766d3766727637702f6f75742e676966)
+![](https://i.postimg.cc/vm7frv7p/out.gif)
 
 ## Synchronous workflows (Videos)
 
@@ -38,8 +38,13 @@ You can use VocabSieve as a dictionary tool with [asbplayer](https://github.com/
 ## Asynchronous workflows (Ereaders)
 
 ### KOReader and Kindle
-If you have an ereader or phone with KOReader installed, you can use the [KOReader Importer]({{site.baseurl}}/importers/KOReader)
+If you have an ereader or phone with KOReader installed, you can use the [KOReader Importer]({{site.baseurl}}/importers/KOReader.html)
 
-Alternatively, if you use a Kindle, you can use the [Kindle Importer]({{site.baseurl}}/importers/Kindle). They have essentially the same features.
+Alternatively, if you use a Kindle, you can use the [Kindle Importer]({{site.baseurl}}/importers/Kindle.html). They have essentially the same features.
 
-![](https://camo.githubusercontent.com/3f08051e2956b5d20c14ffcb5fcc91c694c2fa61359315fa8ca9b5ea15f2e24e/68747470733a2f2f692e706f7374696d672e63632f35796a33566a50422f6f75742e676966)
+![](https://i.postimg.cc/5yj3VjPB/out.gif)
+
+## Automatic mining (Experimental)
+With the addition of the vocabulary tracking functionalities it is also now possible to automatically detect words you don't know from an article, book, or a podcast/video transcript. Transcripts can be generated using Whisper. To use this, you can select "Auto import from text" in the Import menu. See [Auto Text Importer]({{site.baseurl}}/importers/Autotext.html) for more information.
+
+At first, this is likely to result in a large number of false positives, i.e. words you know but VocabSieve thinks you don't. The best course of action here is to make sure your Anki query string in Config > Tracking matches either suspended or flagged cards to treat them as mature. This is a fast way to teach VocabSieve what words you really know.

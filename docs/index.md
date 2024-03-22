@@ -10,7 +10,7 @@ Welcome to VocabSieve manual.
 ## Quickstart
 
 Go to [Installation]({{site.baseurl}}/installation.html) and [Configuration]({{site.baseurl}}/configuration.html) 
-if you are already familiar with immersion and Anki and just want to quickly set up VocabSieve.
+if you are already familiar with immersion and Anki and just want to quickly set up VocabSieve. If you already have VocabSieve set up, you may want to look at [Resources]({{site.baseurl}}/resources.html) to find dictionaries and other files to use with VocabSieve.
 
 ## Community support
 

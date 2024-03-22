@@ -1,8 +1,7 @@
 ---
 layout: default
 title: Vocabulary tracking
-nav_order: 1
-parent: Configuration
+nav_order: 6
 ---
 # Vocabulary tracking
 
@@ -12,7 +11,7 @@ By default, 100 points is needed for a non-cognate word to be classified as know
 
 | Event | Default score | Note |
 | ----- | ----- | ---- |
-| Seen  | 8 [1]| [Paper](https://core.ac.uk/download/pdf/323110125.pdf) assumes 12 exposures is needed to acquire a word |
+| Seen  | 8 | [Paper](https://core.ac.uk/download/pdf/323110125.pdf) assumes 12 exposures is needed to acquire a word |
 | Lookup | 15 | Max one lookup event per day | 
 | Mature Anki card target word | 80 | |
 | Mature Anki card context | 30 | |
