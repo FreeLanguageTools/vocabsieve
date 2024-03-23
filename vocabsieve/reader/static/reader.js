@@ -622,9 +622,9 @@ App.prototype.doWordObjects = function () {
     var sentences = iframeDocument.querySelectorAll("span.sentence");
     sentences.forEach(function (paragraph) {
         var words = paragraph.innerText.split(/\s/).map(function (v) {
-            let pre_punctuation = v.match(/^[^\w-']+/) || [""];
-            let post_punctuation = v.match(/[^\w-']+$/) || [""];
-            v = v.replace(/[^\w-']+/g, ''); // remove punctuations
+            let pre_punctuation = v.match(/^[^\p{L}\-']+/u) || [""];
+            let post_punctuation = v.match(/[^\p{L}\-']+$/u) || [""];
+            v = v.replace(/[^\p{L}\-']+/gu, ''); // remove punctuations
             return " " + pre_punctuation[0] + '<span class="word">' + v.trim() + '</span>' + post_punctuation[0] + " ";
         });
         paragraph.innerHTML = words.join('');
