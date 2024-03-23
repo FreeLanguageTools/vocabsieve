@@ -38,6 +38,7 @@ let App = function (el) {
 
     document.body.addEventListener("keyup", this.onKeyUp.bind(this));
 
+
     this.qsa(".tab-list .item").forEach(el => el.addEventListener("click", this.onTabClick.bind(this, el.dataset.tab)));
     this.qs(".sidebar .search-bar .search-box").addEventListener("keydown", event => {
         if (event.keyCode == 13) this.qs(".sidebar .search-bar .search-button").click();
@@ -55,6 +56,7 @@ let App = function (el) {
             this.setChipActive(el.dataset.chips, cel.dataset.value);
         }));
     });
+    // scrolling should trigger prev/next
     this.qs("button.prev").addEventListener("click", () => this.state.rendition.prev());
     this.qs("button.next").addEventListener("click", () => this.state.rendition.next());
     //this.qs("button.open").addEventListener("click", () => this.doOpenBook());
@@ -127,7 +129,7 @@ App.prototype.doBook = function (url, opts) {
     this.state.rendition.on("relocated", this.onRenditionRelocated.bind(this));
 
     //this.state.rendition.on("click", this.onRenditionClick.bind(this));
-    this.state.rendition.on("keyup", this.onKeyUp.bind(this));
+    //this.state.rendition.on("keyup", this.onKeyUp.bind(this));
     this.state.rendition.on("displayed", this.onRenditionDisplayedTouchSwipe.bind(this));
     this.state.rendition.on("relocated", this.onRenditionRelocatedUpdateIndicators.bind(this));
     this.state.rendition.on("relocated", this.onRenditionRelocatedSavePos.bind(this));
@@ -135,6 +137,11 @@ App.prototype.doBook = function (url, opts) {
     this.state.rendition.on("displayError", this.fatal.bind(this, "error rendering book"));
     this.state.rendition.display();
 
+};
+
+App.prototype.onWheel = function (event) {
+    if (event.deltaY < 0) this.state.rendition.prev();
+    if (event.deltaY > 0) this.state.rendition.next();
 };
 
 App.prototype.loadSettingsFromStorage = function () {
@@ -264,7 +271,6 @@ App.prototype.onRenditionRelocated = function (event) {
 };
 
 App.prototype.onBookMetadataLoaded = function (metadata) {
-    console.log("metadata", metadata);
     this.qs(".bar .book-title").innerText = metadata.title.trim();
     this.qs(".bar .book-author").innerText = metadata.creator.trim();
     this.qs(".info .title").innerText = metadata.title.trim();
@@ -338,6 +344,29 @@ App.prototype.applyTheme = function () {
         ul: this.getChipActive("underline-color")
     };
 
+    var c = theme.bg.substring(1);      // strip #
+    var rgb;
+    if (c.length == 3) {
+        // expand short form (e.g. "03F") to full form (e.g. "0033FF")
+        rgb = parseInt(c[0] + c[0] + c[1] + c[1] + c[2] + c[2], 16);
+    } else {
+        rgb = parseInt(c, 16);
+    }
+
+    var r = (rgb >> 16) & 0xff;  // extract red
+    var g = (rgb >>  8) & 0xff;  // extract green
+    var b = (rgb >>  0) & 0xff;  // extract blue
+    
+    var luma = 0.2126 * r + 0.7152 * g + 0.0722 * b; // per ITU-R BT.709
+    let hlcolor;
+    if (luma < 40) {
+        // dark background -> slightly lighter highlight color
+        hlcolor = "rgba(255, 255, 255, 0.15)";
+    }
+    else {
+        // light background -> slightly darker highlight color
+        hlcolor = "rgba(0, 0, 0, 0.1)";
+    }
     let rules = {
         "body": {
             "background": theme.bg,
@@ -369,6 +398,9 @@ App.prototype.applyTheme = function () {
         "img": {
             "max-width": "100% !important"
         },
+        "span.sentence:hover": {
+            "background": `${hlcolor} !important`
+        }
     };
 
     try {
@@ -469,15 +501,14 @@ App.prototype.onRenditionRelocatedUpdateIndicators = function (event) {
 
 App.prototype.onRenditionRelocatedSavePos = function (event) {
     if (!this.started) return;
-    console.log("savePos", event.start.cfi);
     localStorage.setItem(`${this.state.book.key()}:pos`, event.start.cfi);
 };
 
 App.prototype.onRenditionStartedRestorePos = async function (event) {
     try {
         let stored = localStorage.getItem(`${this.state.book.key()}:pos`);
-        console.log("restorePos", stored);
         if (stored) {
+            // workaround for epub.js bug with race condition
             await this.state.rendition.display(stored);
             await this.state.rendition.display(stored);
             await this.state.rendition.display(stored);
@@ -585,30 +616,33 @@ App.prototype.doWordObjects = function () {
     console.log("createWordObjects is called");
 
     var iframeDocument = document.querySelector('iframe').contentDocument || document.querySelector('iframe').contentWindow.document;
+    iframeDocument.addEventListener("wheel", this.onWheel.bind(this));
+
+
 
     var sentences = iframeDocument.querySelectorAll("span.sentence");
     sentences.forEach(function (paragraph) {
         var words = paragraph.innerText.split(/\s/).map(function (v) {
-            return ' <span class="word">' + v + '</span> ';
+            let pre_punctuation = v.match(/^[^\w-']+/) || [""];
+            let post_punctuation = v.match(/[^\w-']+$/) || [""];
+            v = v.replace(/[^\w-']+/g, ''); // remove punctuations
+            return " " + pre_punctuation[0] + '<span class="word">' + v.trim() + '</span>' + post_punctuation[0] + " ";
         });
         paragraph.innerHTML = words.join('');
     });
-
-    var wordSpans = iframeDocument.querySelectorAll('span.word');
-    var copy = this.copyTextToClipboard;
 };
 
 App.prototype.doSentenceObjects = function () {
-    console.log("createSentenceObjects is called");
+    console.log("doSentenceObjects is called");
 
     var iframeDocument = document.querySelector('iframe').contentDocument || document.querySelector('iframe').contentWindow.document;
 
     var paragraphs = iframeDocument.querySelectorAll("p");
     paragraphs.forEach(function (paragraph) {
         var sentences = paragraph.innerText.split(/(?<=[\.\?!…] )/).map(function (v) {
-            return ' <span class="sentence">' + v.trimRight() + '</span> ';
+            return '<span class="sentence">' + v.trim() + '</span>';
         });
-        paragraph.innerHTML = sentences.join('');
+        paragraph.innerHTML = sentences.join(' ');
     });
 
     var sentenceSpans = iframeDocument.querySelectorAll('span.sentence');
@@ -616,23 +650,14 @@ App.prototype.doSentenceObjects = function () {
     sentenceSpans.forEach(function (span) {
         span.addEventListener('click', async function (event) {
             console.log(word);
-            console.log(event);
+            console.log(this.innerText.trim());
             var word = "";
             var copyobj = {
-                "sentence": this.textContent.trim(),
-                "word": event.target.textContent.trim()
+                "sentence": this.innerText.trim(),
+                "word": event.target.innerText.trim()
             };
             console.log(copyobj);
             await copy(JSON.stringify(copyobj));
-        });
-
-        span.addEventListener('mouseenter', function () {
-            this.style.textDecoration = "underline green solid 3px";
-            this.style.textDecorationSkipInk = "none";
-        });
-
-        span.addEventListener('mouseleave', function () {
-            this.style.textDecoration = "";
         });
     });
 };

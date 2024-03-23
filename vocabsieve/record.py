@@ -178,7 +178,8 @@ class Record():
         self.c.execute("VACUUM")
 
     def getSeen(self, language):
-        return self.c.execute('''
+        cursor = self.conn.cursor()
+        return cursor.execute('''
             SELECT lemma, count
             FROM seen_new
             WHERE language=?
@@ -267,11 +268,13 @@ class Record():
         return self.c.fetchone()[0]
 
     def countLookups(self, language):
-        self.c.execute('''SELECT COUNT (*) FROM lookups WHERE language=?''', (language,))
-        return self.c.fetchone()[0]
+        cursor = self.conn.cursor()
+        cursor.execute('''SELECT COUNT (*) FROM lookups WHERE language=?''', (language,))
+        return cursor.fetchone()[0]
 
     def countAllLemmaLookups(self, language):
-        return self.c.execute(
+        cursor = self.conn.cursor()
+        return cursor.execute(
             '''SELECT lemma, COUNT (DISTINCT date(timestamp, "unixepoch"))
                FROM lookups
                WHERE language=?
