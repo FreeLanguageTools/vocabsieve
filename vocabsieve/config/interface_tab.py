@@ -46,7 +46,8 @@ class InterfaceTab(BaseTab):
         self.minimum_main_window_width = QSpinBox()
         self.minimum_main_window_width.setMinimum(0)
         self.minimum_main_window_width.setMaximum(15360)
-        self.minimum_main_window_width.setToolTip("Set desired minimum window width of the main application - useful to make window snipping easier.")
+        self.minimum_main_window_width.setToolTip(
+            "Set desired minimum window width of the main application - useful to make window snipping easier.")
 
         self.theme.currentTextChanged.connect(self.setupTheme)
         self.text_scale.valueChanged.connect(
@@ -100,4 +101,4 @@ class InterfaceTab(BaseTab):
         self.register_config_handler(self.primary, 'primary', False)
         self.register_config_handler(self.text_scale, 'text_scale', '100')
         self.register_config_handler(self.theme, 'theme', 'auto')
-        self.register_config_handler(self.minimum_main_window_width, 'minimum_width', 0)
+        self.register_config_handler(self.minimum_main_window_width, 'minimum_width', 550)
