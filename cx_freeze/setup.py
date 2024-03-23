@@ -79,7 +79,7 @@ bdist_mac_options = {
 }
 
 bdist_dmg_options = {
-    'volume_label': f"VocabSieve-v{__version__}-macos",
+    'volume_label': f"VocabSieve-v{__version__}-macos-" + PLATFORM_MACHINE_NAME,
     'applications_shortcut': True,
 
 }
