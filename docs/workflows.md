@@ -25,7 +25,7 @@ When you turn on the extension, you will notice that sentences are underlined in
 ### Built-in reader
 If you have an epub to read and would like to use VocabSieve in interactive mode while reading on your computer, you can use the built in reader, which can be accessed by the "Reader" button on the top bar.
 
-![](https://i.postimg.cc/vm7frv7p/out.gif)
+![]({{site.baseurl}}/assets/demo-0.12.gif)
 
 ## Synchronous workflows (Videos)
 
