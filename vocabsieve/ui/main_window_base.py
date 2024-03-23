@@ -166,10 +166,6 @@ class MainWindowBase(QMainWindow):
                     "allow_editing",
                     True,
                     type=bool)))
-        self.definition.setPlaceholderText(
-            f'Look up a word by double clicking it or by selecting it, then pressing {MOD}+D.\nUse Shift-{MOD}+D to look up the word without lemmatization.')
-        self.definition2.setPlaceholderText(
-            f'Look up a word by double clicking it or by selecting it, then pressing {MOD}+D.\nUse Shift-{MOD}+D to look up the word without lemmatization.')
 
         self.image_viewer = QLabel("<center><b>&lt;No image&gt;</center>")
         self.image_viewer.setScaledContents(True)

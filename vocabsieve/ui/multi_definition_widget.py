@@ -8,7 +8,10 @@ from ..tools import process_defi_anki, apply_word_rules
 from loguru import logger
 from typing import Optional
 import time
+from ..global_names import MOD
 
+
+DEFAULT_PLACEHOLDER_TEXT = f"Look up a word by double clicking it or by selecting it, then pressing {MOD}+D.\nUse Shift-{MOD}+D to look up the word without lemmatization."
 NEXT_DEFINITION_SCROLL_COUNT_TRANSITION_THRESHOLD = 3
 
 
@@ -120,6 +123,11 @@ class MultiDefinitionWidget(SearchableTextEdit):
 
     def setSourceGroup(self, sources: list[DictionarySource]):
         self.sources = sources
+        if not self.sources:
+            self.setPlaceholderText(
+                "Hint: No sources are set, so no lookups can be performed. Go to Configure -> Sources to add some sources.")
+        else:
+            self.setPlaceholderText(DEFAULT_PLACEHOLDER_TEXT)
 
     def lookup(self, word: str, no_lemma: bool, rules: list[tuple[str, str]]):
         self.reset()
@@ -171,6 +179,8 @@ class MultiDefinitionWidget(SearchableTextEdit):
                 self.word_widget.setText(self.current_target)
             self.setPlaceholderText("No definitions found for \"" + self.current_target
                                     + "\". You can still type in a definition manually to add to Anki.")
+        else:
+            self.setPlaceholderText(DEFAULT_PLACEHOLDER_TEXT)
         self.currentIndex = 0
         self.updateIndex()
 
