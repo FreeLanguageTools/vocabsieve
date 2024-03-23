@@ -166,8 +166,11 @@ class MultiDefinitionWidget(SearchableTextEdit):
         self.definitions.sort(key=lambda defi: index_map[defi.source])
         # filter out error definitions
         self.definitions = [defi for defi in self.definitions if defi.definition is not None]
-        if not any(defi.definition for defi in self.definitions) and self.word_widget:
-            self.word_widget.setText(self.current_target)
+        if not any(defi.definition for defi in self.definitions):
+            if self.word_widget:
+                self.word_widget.setText(self.current_target)
+            self.setPlaceholderText("No definitions found for \"" + self.current_target
+                                    + "\". You can still type in a definition manually to add to Anki.")
         self.currentIndex = 0
         self.updateIndex()
 

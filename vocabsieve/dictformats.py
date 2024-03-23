@@ -271,8 +271,16 @@ def kaikki_line_to_textdef(row: dict) -> str:
     res = ""
     if row.get("pos"):
         res += f"<i>{row['pos'].capitalize()}</i>"
+    res += "\n<strong>"
     if row.get("head_templates"):
-        res += f"\n{row['head_templates'][-1]['expansion']}"
+        res += f"{row['head_templates'][-1]['expansion']}"
+    res += "</strong>\n"
+    if row.get("sounds"):
+        for item in row['sounds']:
+            if item.get('ipa'):
+                res += f" {item['ipa']} "
+                if item.get('tags'):
+                    res += f" [{','.join(item['tags'])}]"
     count = 1
     if row.get("senses"):
         for item in row['senses']:

@@ -24,7 +24,7 @@ class WiktionarySource(DictionarySource):
                 f"https://kaikki.org/dictionary/{language_longname}/meaning/{word[0]}/{word[0:2]}/{word}.json")
         except Exception as e:
             logger.error(f"Failed to get data from Wiktionary: {repr(e)}")
-            return LookupResult(error=str(e))
+            return LookupResult(error=repr(e))
         if res.status_code != 200:
             return LookupResult(error=str(res.text))
         datalines = res.content.decode('utf-8').splitlines()
@@ -33,6 +33,6 @@ class WiktionarySource(DictionarySource):
             data = json.loads(line)
             items.append(kaikki_line_to_textdef(data))
         if items:
-            return LookupResult(definition="\n\n".join(items))
+            return LookupResult(definition="<br>\n".join(items))
         else:
             return LookupResult(error="No definitions found")
