@@ -340,8 +340,7 @@ App.prototype.applyTheme = function () {
         fs: this.getChipActive("font-size"),
         lh: this.getChipActive("line-spacing"),
         ta: "justify",
-        m: this.getChipActive("margin"),
-        ul: this.getChipActive("underline-color")
+        m: this.getChipActive("margin")
     };
 
     var c = theme.bg.substring(1);      // strip #
