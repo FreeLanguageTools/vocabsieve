@@ -625,9 +625,9 @@ App.prototype.doWordObjects = function () {
             let pre_punctuation = v.match(/^[^\p{L}\-']+/u) || [""];
             let post_punctuation = v.match(/[^\p{L}\-']+$/u) || [""];
             v = v.replace(/[^\p{L}\-']+/gu, ''); // remove punctuations
-            return " " + pre_punctuation[0] + '<span class="word">' + v.trim() + '</span>' + post_punctuation[0] + " ";
+            return pre_punctuation[0] + '<span class="word">' + v.trim() + '</span>' + post_punctuation[0];
         });
-        paragraph.innerHTML = words.join('');
+        paragraph.innerHTML = words.join(' ');
     });
 };
 

@@ -36,12 +36,16 @@ Weights can be changed in the Tracking tab"""
         )
 
     def setWordRecord(self, wr: WordRecord, waw: WordActionWeights, threshold: int, modifier: float):
-        self.setText(
-            f"{compute_word_score(wr, waw)}/{modifier_threshold_display(modifier, threshold)} "
-            f"({pretty_symbol_display('S', wr.n_seen)}"
-            f"{pretty_symbol_display('L', wr.n_lookups)}"
-            f"{pretty_symbol_display('T', wr.anki_mature_tgt)}"
-            f"{pretty_symbol_display('C', wr.anki_mature_ctx)}"
-            f"{pretty_symbol_display('t', wr.anki_young_tgt)}"
-            f"{pretty_symbol_display('c', wr.anki_young_ctx)}".strip() + ")"
-        )
+        score = compute_word_score(wr, waw)
+        if (score > 0):
+            self.setText(
+                f"{score}/{modifier_threshold_display(modifier, threshold)} "
+                f"({pretty_symbol_display('S', wr.n_seen)}"
+                f"{pretty_symbol_display('L', wr.n_lookups)}"
+                f"{pretty_symbol_display('T', wr.anki_mature_tgt)}"
+                f"{pretty_symbol_display('C', wr.anki_mature_ctx)}"
+                f"{pretty_symbol_display('t', wr.anki_young_tgt)}"
+                f"{pretty_symbol_display('c', wr.anki_young_ctx)}".strip() + ")"
+            )
+        else:
+            self.setText("new word")
