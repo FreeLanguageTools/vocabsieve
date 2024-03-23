@@ -249,6 +249,7 @@ def parseKaikki(path, lang) -> dict[str, str]:
     (https://github.com/tatuylonen/wiktextract)
     The format is lines of json objects, each containing a word and its definition
     '''
+    print("Parsing Kaikki wiktionary dump at " + path)
     items: list[tuple[str, str]] = []
     with zopen(path) as f:
         logger.debug("Parsing Kaikki wiktionary dump at " + path)

@@ -322,6 +322,15 @@ class MainWindow(MainWindowBase):
         self.setMenuBar(self.menu)
 
     def markWords(self):
+        if settings.value("freq_source", "<disabled>") == "<disabled>":
+            self.warn("No frequency source is set. Please set a frequency source in the configuration dialog.")
+            return
+        if not settings.value("lemfreq", False, type=bool):
+            self.warn("Marking words requires a lemmatized frequency list to work properly.")
+            return
+        if self.known_data is None:
+            self.warnKnownDataNotReady()
+            return
         words = self.freq_widget.getAllWords()
         dialog = WordMarkingDialog(self, words)
         dialog.exec()
@@ -423,6 +432,7 @@ class MainWindow(MainWindowBase):
         with lock:
             self.known_data, self.known_metadata = self.rec.getKnownData()
             self.known_data_timestamp = time.time()
+            self.status("Known data is ready")
 
     def exportWordData(self):
         path, _ = QFileDialog.getSaveFileName(
@@ -1058,7 +1068,7 @@ class MainWindow(MainWindowBase):
         return QDateTime.currentDateTime().toString('[hh:mm:ss]')
 
     def status(self, msg: str) -> None:
-        self.status_bar.showMessage(self.time() + " " + msg, 4000)
+        self.status_bar.showMessage(self.time() + " " + msg)
 
     def warn(self, text: str) -> None:
         msg = QMessageBox()
