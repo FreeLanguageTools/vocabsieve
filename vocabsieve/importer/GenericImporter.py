@@ -67,6 +67,7 @@ class GenericImporter(QDialog):
         self.anki_button = QPushButton("Add notes to Anki")
         self.anki_button.setEnabled(False)
         self.anki_button.clicked.connect(self.to_anki)
+        self.selected_reading_notes: list[ReadingNote] = []
         if show_selector_date:
             possible_start_dates = sorted(set(self.orig_dates_day))
             self.datewidget = QComboBox()
@@ -92,6 +93,7 @@ class GenericImporter(QDialog):
             self.src_selector_scrollarea = QScrollArea()
             self.src_selector_scrollarea.setWidget(self.src_selector)
             self._layout.addRow(self.src_selector_scrollarea)
+            self.updateHighlightCount()
         else:
             self.updateHighlightCount(filter_by_notes=False)
 
