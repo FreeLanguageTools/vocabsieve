@@ -20,7 +20,7 @@ VocabSieve is a companion program for language learning with Anki. Its primary f
 
 ## Screenshots
 
-![image](https://github.com/FreeLanguageTools/vocabsieve/assets/22680475/6dadb14e-2d19-423f-8b59-8a26f7229aac)
+![](https://github.com/FreeLanguageTools/vocabsieve/blob/04d0b169c66017f5bdce8d0d8dddb3329b6fb971/docs/assets/demo-0.12.gif)
 [![out.gif](https://i.postimg.cc/5yj3VjPB/out.gif)](https://postimg.cc/kR38NMPG)
 [![20230220-163240.png](https://i.postimg.cc/rwT8HvJ8/20230220-163240.png)](https://postimg.cc/TpkMLNFS)
 
