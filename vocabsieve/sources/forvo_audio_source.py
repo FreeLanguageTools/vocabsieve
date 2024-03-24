@@ -35,12 +35,11 @@ class PronunciationList:
 
 
 class Forvo:
-    def __init__(self, word, lang, accent=""):
+    def __init__(self, word, lang):
         self.url = "https://forvo.com/word/" + quote(word)
         self.pronunciations = []
         self.session = requests.Session()
         self.language = lang
-        self.accent = accent
 
     def get_pronunciations(self):
         res = cached_get(self.url, forvo_headers=True)
@@ -64,11 +63,6 @@ class Forvo:
             filter(
                 lambda el: el.language == self.language,
                 available_pronunciations_lists))
-        if self.accent:
-            available_pronunciations_lists = list(
-                filter(
-                    lambda el: el.accent == self.accent,
-                    available_pronunciations_lists))
 
         for l in available_pronunciations_lists:
             pronunciation_item = l.pronunciation_list
@@ -139,7 +133,7 @@ class Forvo:
                                                  )
 
             self.pronunciations.append(pronunciation_object)
-        self.pronunciations = sorted(self.pronunciations, key=lambda x: x.votes, reverse=True)
+        self.pronunciations = sorted(self.pronunciations, key=lambda x: (x.accent != settings.value("preferred_accent", ""), -x.votes)) # Non-matching accents after, then sort by votes descending
         return self
 
 
