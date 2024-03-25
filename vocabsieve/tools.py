@@ -13,7 +13,10 @@ from bs4 import BeautifulSoup
 from typing import List, Optional
 from .local_dictionary import LocalDictionary
 from json.decoder import JSONDecodeError
-import mobi
+try:
+    import mobi
+except ImportError:
+    mobi = None
 from datetime import datetime
 import requests
 from lxml import etree
@@ -272,7 +275,7 @@ def ebook2text(path) -> tuple[list[str], dict[int, str]]:
     if ext == ".txt":
         text = str(from_path(path).best())
         return [text.replace("\n", " ")], {0: "<content>"}
-    if ext in {'.azw', '.azw3', '.kfx', '.mobi'}:
+    if mobi and ext in {'.azw', '.azw3', '.kfx', '.mobi'}:
         _, newpath = mobi.extract(path)
         # newpath is either html or epub
         return ebook2text(newpath)
@@ -383,13 +386,22 @@ def make_audio_source(src_name: str) -> AudioSource:
         if this_dict:
             return LocalAudioSource(langcode, lemma_policy, src_name, this_dict["path"])
         else:
-            raise Exception("Custom dictionary not found")
+            raise Exception(f'Custom dictionary "{src_name}" not found')
 
 
 def make_audio_source_group(src_names: list[str]) -> AudioSourceGroup:
     source_list = []
     for src_name in src_names:
-        source_list.append(make_audio_source(src_name))
+        try:
+            source_list.append(make_audio_source(src_name))
+        except Exception as e:
+            logger.error(f"Error creating audio source {src_name}: {e}, removing it")
+            settings.setValue("audio_sg",
+                              json.dumps(
+                                  [x for x in json.loads(settings.value("audio_sg", "[]"))
+                                   if x != src_name]
+                              )
+                              )
     return AudioSourceGroup(source_list)
 
 
