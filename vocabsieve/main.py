@@ -702,10 +702,25 @@ class MainWindow(MainWindowBase):
         selected = ""
         for text_field in [self.sentence, self.definition, self.definition2]:
             if text_field.hasFocus():
-                if text := text_field.textCursor().selectedText():
-                    logger.debug(f"Selected text: {text} from text field")
-                    selected = text
+                cursor = text_field.textCursor()
+                if selected := cursor.selectedText():
+                    logger.debug(f"Manually selected text: {selected} from text field {text_field}")
                     break
+                else:
+                    cursor_position = cursor.position()
+
+                    cursor.movePosition(QTextCursor.StartOfWord, QTextCursor.MoveAnchor)
+                    word_start_position = cursor.position()
+
+                    cursor.movePosition(QTextCursor.EndOfWord, QTextCursor.KeepAnchor)
+                    word_end_position = cursor.position()
+
+                    if word_start_position != word_end_position and (word_start_position <= cursor_position <= word_end_position):
+                        selected = text_field.toPlainText()[word_start_position:word_end_position].replace('_', '')
+                        logger.debug(f"Automatic selection of touched word: {selected} from text field {text_field}")
+                    else:
+                        logger.debug("Attempted automatic selection but cursor isn't touching any word")
+
         word_field_content = ""
         if self.word.hasFocus():
             logger.debug(f"Word field has focus, using its text: {self.word.text()}")
