@@ -9,7 +9,13 @@ class SearchableBoldableTextEdit(SearchableTextEdit):
 
     def bold(self, word):
         logger.debug(f'bolding {word}')
-        self.setPlainText(re.sub(r'\b' + re.escape(word) + r'\b', '__' + word + '__', self.toPlainText()))
+        bolded_sentence = re.sub(r'\b' + re.escape(word) + r'\b', '__' + word + '__', self.toPlainText())
+        self.setPlainText(bolded_sentence)
+
+        bolded_word = '__' + word
+        cursor = self.textCursor()
+        cursor.setPosition(bolded_sentence.rfind(bolded_word) + len(bolded_word))
+        self.setTextCursor(cursor)
 
     def toAnki(self):
         # substitute __word__ with <b>word</b>
