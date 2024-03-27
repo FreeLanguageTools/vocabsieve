@@ -913,7 +913,6 @@ class MainWindow(MainWindowBase):
     def boldWordInSentence(self, word: str) -> None:
         self.sentence.unbold()
         sentence_text = self.sentence.toPlainText()
-        # Remove all bold underscores
         # Add bold underscores around for each word with the same lemma
         lemma = lem_word(word, self.getLanguage())
         already_bolded = set()
