@@ -7,12 +7,12 @@ from ..ui.main_window_base import MainWindowBase
 from .models import ReadingNote
 from ..models import SRSNote
 from ..tools import prepareAnkiNoteDict, addNotes, remove_punctuations
-from .utils import truncate_middle
 
 import re
+import os
 import json
 from datetime import datetime as dt
-from ..global_names import logger, settings
+from ..global_names import datapath, logger, settings
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
@@ -45,6 +45,7 @@ class GenericImporter(QDialog):
         self.path = path
         self.setMinimumWidth(500)
         self.src_name = src_name
+        self.last_import_books_file = os.path.join(datapath, "last_import_books.json")
         self._layout = QFormLayout(self)
         self._layout.addRow(QLabel(
             f"<h2>Import {src_name}</h2>"
@@ -85,9 +86,15 @@ class GenericImporter(QDialog):
             self.src_checkboxes = []
             self.src_selector._layout = QVBoxLayout(self.src_selector)  # type: ignore
             self._layout.addRow(QLabel("<h3>Select books to extract highlights from</h3>"))
+            try:
+                with open(self.last_import_books_file, "r") as file:
+                    book_names = json.load(file)
+            except FileNotFoundError:
+                book_names = []
             for book_name in set(self.orig_book_names):
-                self.src_checkboxes.append(
-                    QCheckBox(truncate_middle(book_name, 90)))
+                self.src_checkboxes.append(QCheckBox(book_name))
+                if book_name in book_names:
+                    self.src_checkboxes[-1].setChecked(True)
                 self.src_selector._layout.addWidget(self.src_checkboxes[-1])  # type: ignore
                 self.src_checkboxes[-1].clicked.connect(self.updateHighlightCount)
             self.src_selector_scrollarea = QScrollArea()
@@ -236,6 +243,8 @@ class GenericImporter(QDialog):
             settings.setValue("last_import_method", self.methodname)
             settings.setValue("last_import_path", self.path)
             settings.setValue(f"last_import_date_{self.methodname}", self.lastDate[:10])
+            with open(self.last_import_books_file, "w") as file:
+                json.dump([cb.text() for cb in self.src_checkboxes if cb.isChecked()], file)
 
         self._layout.addRow(QLabel(
             QDateTime.currentDateTime().toString('[hh:mm:ss]') + " "

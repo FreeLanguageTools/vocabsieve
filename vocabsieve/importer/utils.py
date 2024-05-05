@@ -12,14 +12,6 @@ def uniq_preserve_order(l: list) -> list:
     return sorted(set(l), key=lambda x: l.index(x))
 
 
-def truncate_middle(s, n):
-    if len(s) <= n:
-        return s
-    n_2 = int(n / 2 - 3)
-    n_1 = int(n - n_2 - 3)
-    return f'{s[:n_1]}...{s[-n_2:]}'
-
-
 def date_to_timestamp(datestr: str):
     return dt.strptime(datestr, "%Y-%m-%d %H:%M:%S").timestamp()
 
