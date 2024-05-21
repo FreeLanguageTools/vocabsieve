@@ -45,7 +45,7 @@ class GenericImporter(QDialog):
         self.path = path
         self.setMinimumWidth(500)
         self.src_name = src_name
-        self.last_import_books_file = os.path.join(datapath, "last_import_books.json")
+        self.last_import_books_file = os.path.join(datapath, f"{methodname}_last_import_books.json")
         self._layout = QFormLayout(self)
         self._layout.addRow(QLabel(
             f"<h2>Import {src_name}</h2>"
@@ -87,7 +87,7 @@ class GenericImporter(QDialog):
             self.src_selector._layout = QVBoxLayout(self.src_selector)  # type: ignore
             self._layout.addRow(QLabel("<h3>Select books to extract highlights from</h3>"))
             try:
-                with open(self.last_import_books_file, "r") as file:
+                with open(self.last_import_books_file, "r", encoding='utf-8') as file:
                     book_names = json.load(file)
             except FileNotFoundError:
                 book_names = []
@@ -243,7 +243,7 @@ class GenericImporter(QDialog):
             settings.setValue("last_import_method", self.methodname)
             settings.setValue("last_import_path", self.path)
             settings.setValue(f"last_import_date_{self.methodname}", self.lastDate[:10])
-            with open(self.last_import_books_file, "w") as file:
+            with open(self.last_import_books_file, "w", encoding='utf-8') as file:
                 json.dump([cb.text() for cb in self.src_checkboxes if cb.isChecked()], file)
 
         self._layout.addRow(QLabel(
