@@ -106,18 +106,21 @@ class MultiDefinitionWidget(SearchableTextEdit):
         self.workers: list[LookupWorker] = []
 
     def wheelEvent(self, event):
-        if self.verticalScrollBar().value() == self.verticalScrollBar().minimum() and event.angleDelta().y() > 0:
-            self.nextDefinitionScrollTransitionCounter += 1
-            if self.nextDefinitionScrollTransitionCounter > NEXT_DEFINITION_SCROLL_COUNT_TRANSITION_THRESHOLD:
-                self.back()
+        if len(self.sources) > 1:
+            if self.verticalScrollBar().value() == self.verticalScrollBar().minimum() and event.angleDelta().y() > 0:
+                self.nextDefinitionScrollTransitionCounter += 1
+                if self.nextDefinitionScrollTransitionCounter > NEXT_DEFINITION_SCROLL_COUNT_TRANSITION_THRESHOLD:
+                    self.back()
+                    return
 
-        elif self.verticalScrollBar().value() == self.verticalScrollBar().maximum() and event.angleDelta().y() < 0:
-            self.nextDefinitionScrollTransitionCounter += 1
-            if self.nextDefinitionScrollTransitionCounter > NEXT_DEFINITION_SCROLL_COUNT_TRANSITION_THRESHOLD:
-                self.forward()
+            elif self.verticalScrollBar().value() == self.verticalScrollBar().maximum() and event.angleDelta().y() < 0:
+                self.nextDefinitionScrollTransitionCounter += 1
+                if self.nextDefinitionScrollTransitionCounter > NEXT_DEFINITION_SCROLL_COUNT_TRANSITION_THRESHOLD:
+                    self.forward()
+                    return
 
-        else:
-            self.nextDefinitionScrollTransitionCounter = 0
+            else:
+                self.nextDefinitionScrollTransitionCounter = 0
 
         super().wheelEvent(event)
 
