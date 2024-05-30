@@ -34,6 +34,7 @@ jobs:
       if: ${{ matrix.os == 'windows-latest' }}
     - name: Build Mac App
       run: |
+        brew install lzo
         cd cx_freeze
         python setup.py bdist_dmg
       if: ${{ matrix.os == 'macos-latest' || matrix.os == 'self-hosted'}}
