@@ -9,7 +9,7 @@ jobs:
       VOCABSIEVE_DEBUG_BUILD: ${{ github.ref_type != 'tag' && 'yes' || '' }} # Set to 'yes' if not a tag
     strategy:
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest, self-hosted]
+        os: [windows-latest, macos-13, ubuntu-latest, self-hosted]
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
@@ -22,10 +22,6 @@ jobs:
       run: |
         sudo apt install -y liblzo2-dev zlib1g-dev
       if: ${{ matrix.os == 'ubuntu-latest' }}
-    - name: Install Mac dependencies
-      run: |
-        brew install lzo
-      if: ${{ matrix.os == 'macos-latest' }}
     - name: Install dependencies
       run: |
         pip install wheel
@@ -41,7 +37,7 @@ jobs:
         brew install lzo
         cd cx_freeze
         python setup.py bdist_dmg
-      if: ${{ matrix.os == 'macos-latest' || matrix.os == 'self-hosted'}}
+      if: ${{ matrix.os == 'macos-13' || matrix.os == 'self-hosted'}}
     - name: Build Linux AppImage
       run: |
         pip install python-appimage
@@ -53,11 +49,11 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.os == 'windows-latest' && 'Windows' || matrix.os == 'macos-latest' && 'MacOS (Intel)' || matrix.os == 'self-hosted' && 'MacOS (Apple M1)' }} App
+        name: ${{ matrix.os == 'windows-latest' && 'Windows' || matrix.os == 'macos-13' && 'MacOS (Intel)' || matrix.os == 'self-hosted' && 'MacOS (Apple M1)' }} App
         path: |
           cx_freeze/dist/*
           cx_freeze/build/*.dmg
-      if: ${{ matrix.os == 'windows-latest' || matrix.os == 'macos-latest' || matrix.os == 'self-hosted' }}
+      if: ${{ matrix.os == 'windows-latest' || matrix.os == 'macos-13' || matrix.os == 'self-hosted' }}
     - name: Upload Linux AppImage
       uses: actions/upload-artifact@v4
       with:
