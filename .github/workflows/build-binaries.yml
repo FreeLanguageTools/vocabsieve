@@ -22,6 +22,10 @@ jobs:
       run: |
         sudo apt install -y liblzo2-dev zlib1g-dev
       if: ${{ matrix.os == 'ubuntu-latest' }}
+    - name: Install Mac dependencies
+      run: |
+        brew install lzo
+      if: ${{ matrix.os == 'macos-latest' }}
     - name: Install dependencies
       run: |
         pip install wheel
