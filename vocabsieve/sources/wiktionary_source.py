@@ -21,7 +21,7 @@ class WiktionarySource(DictionarySource):
         language_longname = langcodes[self.langcode]
         try:
             res = cached_get(
-                f"https://kaikki.org/dictionary/{language_longname}/meaning/{word[0]}/{word[0:2]}/{word}.json")
+                f"https://kaikki.org/dictionary/{language_longname}/meaning/{word[0]}/{word[0:2]}/{word}.jsonl")
         except Exception as e:
             logger.error(f"Failed to get data from Wiktionary: {repr(e)}")
             return LookupResult(error=repr(e))
