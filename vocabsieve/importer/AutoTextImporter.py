@@ -7,6 +7,7 @@ import os
 from ..lemmatizer import lem_word, lem_pre
 from .models import ReadingNote
 from ..tools import ebook2text
+from .AutoTextVisualizer import AutoTextVisualizer
 
 if TYPE_CHECKING:
     from ..main import MainWindow
@@ -34,9 +35,11 @@ class AutoTextImporter(GenericImporter):
         norepeat = True
         #only_1t = True
         treat_capital_words_as_known = self.lang not in ('de', 'lb')
+        visualizer_data: list[str] = []
         for sentence in sentences:
             unknowns = []
             start = False
+            visualizer_sentence = sentence
             # Detect the unknown words in sentence
             for word, lemma in zip(sentence.split(), map(lambda x: lem_word(x, self.lang), sentence.split())):
                 word = lem_pre(word, self.lang)
@@ -47,6 +50,7 @@ class AutoTextImporter(GenericImporter):
                         and not (is_capital_but_not_initial and treat_capital_words_as_known):
 
                     unknowns.append(word)
+                    visualizer_sentence = visualizer_sentence.replace(word, f"[{word}]")
 
             if len(unknowns) == 1:
                 if not (norepeat and lem_word(unknowns[0], self.lang) in already_mined):
@@ -59,4 +63,9 @@ class AutoTextImporter(GenericImporter):
                         book_name=bookname,
                         date=str(dt.now().astimezone())[:19]
                     ))
+
+            visualizer_data.append(visualizer_sentence)
+
+        AutoTextVisualizer(self, visualizer_data).show()
+
         return reading_notes
