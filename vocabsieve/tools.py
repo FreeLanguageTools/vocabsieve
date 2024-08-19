@@ -491,4 +491,4 @@ def process_defi_anki(plaintext: str, markdown: str, defi: Definition, source: D
 
 
 def remove_punctuations(s: str) -> str:
-    return re.sub('[\\?\\.!«»…,()\\[\\]]*', "", s)
+    return re.sub('[\\?\\.!«»…,()\\[\\]]*_', "", s)
