@@ -28,7 +28,7 @@ supported_dict_formats = bidict({
 })
 
 supported_dict_extensions = [
-    ".json", ".ifo", ".mdx", ".dsl", ".dz", ".csv", ".tsv", ".xz", ".bz2", ".gz"
+    ".json", ".jsonl", ".ifo", ".mdx", ".dsl", ".dz", ".csv", ".tsv", ".xz", ".bz2", ".gz"
 ]
 
 
@@ -84,7 +84,7 @@ def dictinfo(path) -> dict[str, str]:
         return {"type": "audiolib", "basename": basename, "path": path}
     if ext not in supported_dict_extensions:
         raise NotImplementedError("Unsupported format")
-    if ext in ('.json', '.xz', '.bz2', '.gz'):
+    if ext in ('.json', '.jsonl', '.xz', '.bz2', '.gz'):
         with zopen(path) as f:
             try:
                 d = json.load(f)
@@ -251,6 +251,10 @@ def parseKaikki(path, lang) -> dict[str, str]:
     '''
     print("Parsing Kaikki wiktionary dump at " + path)
     items: list[tuple[str, str]] = []
+
+    if path.endswith(".json"):
+        logger.warning("Legacy Kaikki JSON dump detected, this may cause issues. New exports have a .jsonl suffix")
+
     with zopen(path) as f:
         logger.debug("Parsing Kaikki wiktionary dump at " + path)
         logger.debug("Only importing entries in language " + lang)
