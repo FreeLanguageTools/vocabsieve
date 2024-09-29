@@ -44,7 +44,7 @@ build_exe_options = {
         "readmdict",
         "packaging",
         "pynput",
-        "gevent"
+        "waitress"
     ] + PYNPUT_PLATFORM_SPECIFIC_MODULES.get(sys.platform, []),
     "include_files": include_files,
     "zip_include_packages": ["PyQt5"],

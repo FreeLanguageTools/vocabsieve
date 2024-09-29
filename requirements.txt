@@ -8,7 +8,7 @@ simplemma
 pystardict
 bidict
 flask
-gevent
+waitress
 charset-normalizer
 slpp
 mobi

@@ -1,6 +1,6 @@
 from ast import parse
 from flask import Flask, render_template, flash, request, redirect, url_for, send_from_directory
-from gevent.pywsgi import WSGIServer
+from waitress import serve
 from requests import get
 import os
 import re
@@ -64,5 +64,4 @@ class ReaderServer(QObject):
                 return "No books directory set"
             return send_from_directory(books_dir, path)
 
-        http_server = WSGIServer((self.host, self.port), app)
-        http_server.serve_forever()
+        serve(app, host=self.host, port=self.port)
