@@ -1,7 +1,8 @@
 import json
 from bidict import bidict
 from PyQt5.QtWidgets import QLabel, QComboBox, QLineEdit, QPushButton, QCheckBox, QFormLayout
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, QRegExp
+from PyQt5.QtGui import QRegExpValidator
 from .base_tab import BaseTab
 from ..constants import langcodes
 from .dictmanager import DictManager
@@ -23,6 +24,8 @@ class GeneralTab(BaseTab):
             "\nfor frequency lists from Migaku. ")
         self.bold_word = QCheckBox("Bold selected word")
         self.audio_format = QComboBox()
+        self.preferred_accent = QLineEdit()
+        self.preferred_accent.setValidator(QRegExpValidator(QRegExp("[a-z]{2}")))
         self.freq_source = QComboBox()
         self.gtrans_lang = QComboBox()
         self.web_preset = QComboBox()
@@ -59,6 +62,9 @@ class GeneralTab(BaseTab):
         layout.addRow(QLabel("Forvo audio format"), self.audio_format)
         layout.addRow(QLabel("<i>◊ Choose mp3 for playing on iOS, "
                              "but ogg may save space</i>"))
+        layout.addRow(QLabel("Forvo preferred accent"), self.preferred_accent)
+        layout.addRow(QLabel("<i>Will prefer provided accent by sorting it to the top of the pronunciations list</i>"))
+        layout.addRow(QLabel("<i>Pronunciations have an accent in brackets e.g. yelkoastur(es)/gracias</i>"))
         layout.addRow(QLabel("Frequency list"), self.freq_source)
         layout.addRow(self.lemfreq)
         layout.addRow(
@@ -105,6 +111,7 @@ class GeneralTab(BaseTab):
             'en',
             code_translate=True)
         self.register_config_handler(self.audio_format, 'audio_format', 'mp3')
+        self.register_config_handler(self.preferred_accent, 'preferred_accent', '')
         self.register_config_handler(self.lemfreq, 'lemfreq', True)
 
         self.register_config_handler(
