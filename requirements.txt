@@ -20,7 +20,7 @@ pysubs2
 ebooklib
 markdown
 pyqtgraph
-pyqtdarktheme
+pyqtdarktheme-fork
 markdownify
 readmdict
 python-lzo
