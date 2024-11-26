@@ -112,9 +112,9 @@ class WordGridWidget(QWidget):
             for j in range(COLS):
                 self.word_labels.append(self.word_labels[i * COLS + j])
                 self.layout_.addWidget(self.word_labels[-1], i + 1, j)
-        self.update()
+        self.update_page()
 
-    def update(self):
+    def update_page(self) -> None:
         offset = (self.page - 1) * self.page_size
         self.index_offset_label.setText(f"<b>Rank {offset}</b>")
         for i in range(self.page_size):
@@ -127,25 +127,25 @@ class WordGridWidget(QWidget):
     def forward(self):
         if self.page < self.last_page:
             self.page += 1
-        self.update()
+        self.update_page()
 
     def back(self):
         if self.page > 1:
             self.page -= 1
-        self.update()
+        self.update_page()
 
     def first(self):
         self.page = 1
-        self.update()
+        self.update_page()
 
     def last(self):
         self.page = self.last_page
-        self.update()
+        self.update_page()
 
     def resetModifiers(self):
         logger.info("Resetting all modifiers to default by user request")
         self.rec.deleteModifiers(settings.value("target_language", "en"))
-        self.update()
+        self.update_page()
 
 
 class WordMarkingDialog(QDialog):
