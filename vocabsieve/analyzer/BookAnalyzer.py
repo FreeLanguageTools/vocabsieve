@@ -45,7 +45,7 @@ class BookAnalyzer(QDialog):
             # Kyrgyz, Mongolian, Tajik, Uzbek
             self.known_words = {word for word in self.known_words if starts_with_cyrillic(word)}
         else:
-            self.known_words = list(self.known_words)
+            self.known_words = set(self.known_words)
         logger.debug(f"Known words: {len(self.known_words)}")
         self.content = "\n".join(self.chapters)
 
@@ -91,8 +91,8 @@ class BookAnalyzer(QDialog):
         self.vocab_coverage = ""
         occurrences = sorted(Counter(self.words).items(), key=itemgetter(1), reverse=True)
         topN = list(zip(*occurrences[:100]))[0]
-        self.known_words.update(topN)
         self.known_words = set(self.known_words)
+        self.known_words.update(topN)
         unknown_words = [word for word in self.words if word not in self.known_words]
         self.vocab_coverage += "Unknown lemmas: " + amount_and_percent(len(unknown_words), len(self.words))
         self.vocab_coverage += "<br>Unknown unique lemmas: " + \
