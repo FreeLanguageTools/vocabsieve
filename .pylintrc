@@ -15,6 +15,7 @@ disable=
     wrong-import-order,
     too-many-instance-attributes,
     too-many-arguments,
+    too-many-positional-arguments,
     too-many-public-methods,
     duplicate-code,
     no-else-return,
@@ -34,4 +35,3 @@ disable=
     attribute-defined-outside-init, # to be dropped
     use-maxsplit-arg,
     no-member # to be dropped, for various enum classes of PyQt5
-    

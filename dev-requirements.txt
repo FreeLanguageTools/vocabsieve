@@ -1,8 +1,12 @@
 PyQt5-stubs
+autopep8
 lxml-stubs
 mypy
+pre-commit
+pylint
 pytest
 types-Markdown
 types-beautifulsoup4
 types-html5lib
 types-requests
+types-waitress

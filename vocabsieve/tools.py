@@ -144,6 +144,12 @@ def addNote(server, content, allow_duplicates=False) -> int:
 
 def addNotes(server, content) -> List[int]:
     result = invoke('addNotes', server, notes=content)
+    # This now throws if not successful
+    return list(result)
+
+
+def canAddNotes(server, content) -> List[int]:
+    result = invoke('canAddNotes', server, notes=content)
     return list(result)
 
 

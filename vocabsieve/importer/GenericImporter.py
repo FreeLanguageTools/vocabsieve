@@ -6,11 +6,12 @@ from .BatchNotePreviewer import BatchNotePreviewer
 from ..ui.main_window_base import MainWindowBase
 from .models import ReadingNote
 from ..models import SRSNote
-from ..tools import prepareAnkiNoteDict, addNotes, remove_punctuations
+from ..tools import prepareAnkiNoteDict, addNotes, remove_punctuations, canAddNotes
 
 import re
 import os
 import json
+import itertools
 from datetime import datetime as dt
 from ..global_names import datapath, logger, settings
 from typing import TYPE_CHECKING, Optional
@@ -236,6 +237,13 @@ class GenericImporter(QDialog):
             notes_data.append(
                 prepareAnkiNoteDict(self._parent.getAnkiSettings(), note)
             )
+
+        # Check if we can add notes
+        logger.info(f"Trying to add {len(notes_data)} notes to Anki.")
+        checks = canAddNotes(settings.value("anki_api"), notes_data)
+        logger.info(f"{sum(checks)} out of {len(checks)} notes can be added to Anki, proceeding.")
+        # Filter out the notes that can't be added
+        notes_data = list(itertools.compress(notes_data, checks))
 
         res = addNotes(settings.value("anki_api"), notes_data)
         # Record last import data
