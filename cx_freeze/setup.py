@@ -74,7 +74,7 @@ PLATFORM_MACHINE_NAME = platform.machine()
 
 bdist_mac_options = {
     'iconfile': "icon.icns",
-    'bundle_name': f"VocabSieve-v{__version__}-macos-" + PLATFORM_MACHINE_NAME,
+    'bundle_name': f"VocabSieve",
     'custom_info_plist': 'Info.plist',
 }
 
