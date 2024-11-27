@@ -670,11 +670,7 @@ class MainWindow(MainWindowBase):
 
     def onReaderOpen(self) -> None:
         """Opens reader in browser"""
-        url = f"http://{settings.value('reader_host',
-                                       '127.0.0.1',
-                                       type=str)}:{settings.value('reader_port',
-                                                                  '39285',
-                                                                  type=str)}"
+        url = f"http://{settings.value('reader_host', '127.0.0.1', type=str)}:{settings.value('reader_port', '39285', type=str)}"
         books_dir = settings.value("books_dir")
         if not books_dir:
             QMessageBox.warning(
@@ -771,8 +767,7 @@ class MainWindow(MainWindowBase):
             self.note_type_first_field = "word"
         elif fields[0] == settings.value("sentence_field"):
             logger.info(
-                f'First field is sentence field, trying to find a note with field "{
-                    fields[0]}" having value "{sentence}"')
+                f'First field is sentence field, trying to find a note with field "{fields[0]}" having value "{sentence}"')
             find_query = f"\"{fields[0]}:{sentence}\""
             self.note_type_first_field = "sentence"
         else:
@@ -946,13 +941,10 @@ class MainWindow(MainWindowBase):
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Warning)
             msgBox.setText(
-                f'Note(s) with {
-                    self.note_type_first_field} "{
-                    self.word.text() if self.note_type_first_field == "word" else sentence}" already exists in your Anki database.\n' +
+                f'Note(s) with {self.note_type_first_field} "{self.word.text() if self.note_type_first_field == "word" else sentence}" already exists in your Anki database.\n' +
                 f"Do you still want to add the note?\n" +
                 "\n".join(
-                    f"Note id: {id}, created {
-                        unix_milliseconds_to_datetime_str(id)}" for id in note_ids))
+                    f"Note id: {id}, created {unix_milliseconds_to_datetime_str(id)}" for id in note_ids))
             msgBox.setWindowTitle("Note already exists")
             msgBox.addButton("Add anyway", QMessageBox.AcceptRole)
             msgBox.addButton("Cancel", QMessageBox.RejectRole)
