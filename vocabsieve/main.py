@@ -705,23 +705,22 @@ class MainWindow(MainWindowBase):
                 cursor = text_field.textCursor()
                 if selected := cursor.selectedText():
                     logger.debug(f"Manually selected text: {selected} from text field {text_field}")
-                    break
+                else:
+                    cursor_position = text_field.textCursor().position()
 
-        if not selected and self.sentence.hasFocus():
-            cursor_position = self.sentence.textCursor().position()
+                    cursor.movePosition(QTextCursor.StartOfWord, QTextCursor.MoveAnchor)
+                    word_start_position = cursor.position()
 
-            cursor.movePosition(QTextCursor.StartOfWord, QTextCursor.MoveAnchor)
-            word_start_position = cursor.position()
+                    cursor.movePosition(QTextCursor.EndOfWord, QTextCursor.KeepAnchor)
+                    word_end_position = cursor.position()
 
-            cursor.movePosition(QTextCursor.EndOfWord, QTextCursor.KeepAnchor)
-            word_end_position = cursor.position()
-
-            if word_start_position != word_end_position and (
-                    word_start_position <= cursor_position <= word_end_position):
-                selected = self.sentence.toPlainText()[word_start_position:word_end_position].replace('_', '')
-                logger.debug(f"Automatic selection of touched word: {selected}")
-            else:
-                logger.debug("Attempted automatic selection but cursor isn't touching any word")
+                    if word_start_position != word_end_position and (
+                        word_start_position <= cursor_position <= word_end_position):
+                        selected = text_field.toPlainText()[word_start_position:word_end_position].replace('_', '')
+                        logger.debug(f"Automatic selection of touched word: {selected}")
+                    else:
+                        logger.debug("Attempted automatic selection, but cursor isn't touching any word")
+                break
 
         word_field_content = ""
         if self.word.hasFocus():
