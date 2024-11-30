@@ -24,6 +24,7 @@ If you use other distributions, you should run it from an AppImage distributed o
 If you prefer to install it anyways, you can use `pip3 install vocabsieve`  (add `-–user` if appropriate). (**Note**: Newer versions of Python will stop you from installing into your global Python environment by default. You may need to create a virtual environment). This will install a desktop file which you should be able to see from your launcher menu. If you do not use a desktop environment, you can launch it through the command line `vocabsieve`.
 
 If you want to test the latest features, you can go to [CI artifacts page](https://nightly.link/FreeLanguageTools/vocabsieve/workflows/build-binaries/master) page to obtain the latest builds, but they are not guaranteed to run. If you notice anything wrong from those builds, open an issue on GitHub. Ensure you are using the latest nightly build before reporting anything.
+
 </details>
 
 ### Windows
@@ -34,6 +35,7 @@ Go to the [Github releases page](https://github.com/FreeLanguageTools/vocabsieve
 <summary> Click to open instructions to download test releases </summary>
 
 If you want to test the latest features, you can go to [CI artifacts page](https://nightly.link/FreeLanguageTools/vocabsieve/workflows/build-binaries/master) page to obtain the latest builds, but they are not guaranteed to run. If you notice anything wrong from those builds, open an issue on GitHub. Note: ensure you are using the latest nightly build before reporting anything.
+
 </details>
 
 {: .note}
@@ -53,6 +55,7 @@ Open a new terminal window and type the following command
 <summary> Click to open instructions to download test releases </summary>
 
 If you want to test the latest features, you can go to [CI artifacts page](https://nightly.link/FreeLanguageTools/vocabsieve/workflows/build-binaries/master) page to obtain the latest builds, but they are not guaranteed to run. If you notice anything wrong from those builds, open an issue on GitHub. Note: ensure you are using the latest nightly build before reporting anything.
+
 </details>
 
 ## AnkiConnect (Required for card creation)
@@ -69,10 +72,20 @@ Then, install the [AnkiConnect](https://ankiweb.net/shared/info/2055492159) addo
 {: .note}
 The browser extension should work as is, but is mostly unmaintained
 
-Install the extension for your browser: 
+Install the extension for your browser:
 
- - [Firefox](https://addons.mozilla.org/en-GB/firefox/addon/click-copy-sentence/)
+- [Firefox](https://addons.mozilla.org/en-GB/firefox/addon/click-copy-sentence/)
 
- - [Chrome/Chromium](https://chrome.google.com/webstore/detail/click-copy-sentence/klhlkoabjmofmjkhbmelmfnhkbjaohdj) (incl. derivatives such as Edge, Brave, etc.)
+- [Chrome/Chromium](https://chrome.google.com/webstore/detail/click-copy-sentence/klhlkoabjmofmjkhbmelmfnhkbjaohdj) (incl. derivatives such as Edge, Brave, etc.)
 
 Note that if you have local ebook files to read, you can use the built-in reader too, accessible by the "Reader" button on the menu bar. When using the reader, you do not need the browser extension.
+
+## Running from source (advanced)
+
+To run from source:
+
+1. Set up a virtual environment `python3 -m venv env`
+2. `pip install -r requirements.txt`
+3. `python3 vocabsieve.py`
+
+For debugging purposes, set the environmental variable `VOCABSIEVE_DEBUG` to any value. This will create a separate profile (settings and databases for records and dictionaries) so you may perform tests without affecting your normal profile. For each different value of `VOCABSIEVE_DEBUG`, a separate profile is generated. This can be any number or string.
