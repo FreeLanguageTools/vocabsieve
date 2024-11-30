@@ -7,4 +7,4 @@ has_children: true
 
 # Importers
 
-Importers are a central feature of VocabSieve, as they enable asynchronous workflows. Importers can be accessed through the "Import" option on the menu bar. As of version 0.11, there are three importers.
+Importers are a central feature of VocabSieve, as they enable asynchronous workflows. Importers can be accessed through the "Import" option on the menu bar. As of version 0.12, there are three importers.
