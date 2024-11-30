@@ -3,24 +3,25 @@ title: Home
 layout: default
 nav_order: 1
 ---
+
 # Home
 
 Welcome to VocabSieve manual.
 
 ## Quickstart
 
-Go to [Installation]({{site.baseurl}}/installation.html) and [Configuration]({{site.baseurl}}/configuration.html) 
+Go to [Installation]({{site.baseurl}}/installation.html) and [Configuration]({{site.baseurl}}/configuration)
 if you are already familiar with immersion and Anki and just want to quickly set up VocabSieve. If you already have VocabSieve set up, you may want to look at [Resources]({{site.baseurl}}/resources.html) to find dictionaries and other files to use with VocabSieve.
 
 ## Community support
 
 You can join FreeLanguageTools chatrooms on multiple platforms. All chatrooms are bridged, so you will not miss any answers by choosing to use one over the other. Please be civil and do not post adult content.
 
-| Platform                | Address                         |
-|  ---                    |    ----                         | 
-| Matrix (Recommended)    | [#general:freelanguagetools.org](https://matrix.to/#/#general:freelanguagetools.org)  |       
-| Telegram (*partly proprietary*)      | <https://t.me/fltchat>          |       
-| Discord (*proprietary with history of anti-user behavior*) | <https://discord.gg/DNSsTtHRxz>              |       
+| Platform                                                   | Address                                                                              |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Matrix (Recommended)                                       | [#general:freelanguagetools.org](https://matrix.to/#/#general:freelanguagetools.org) |
+| Telegram (_partly proprietary_)                            | <https://t.me/fltchat>                                                               |
+| Discord (_proprietary with history of anti-user behavior_) | <https://discord.gg/DNSsTtHRxz>                                                      |
 
 ## Contributing
 
