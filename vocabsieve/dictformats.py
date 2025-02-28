@@ -189,17 +189,17 @@ def parseDSL(path) -> dict[str, str]:
     data = {}
     items = []
     for item in allLines.splitlines():
-        if not item.startswith("#") and not item.startswith("\t"):
+        if not item.startswith("#") and not item.startswith("\t") and not item.startswith(" "):
             data[current_term] = re.sub(r'(\d+\.)<br>\s*(\D+)', r'\1 \2', current_defi)\
                                    .removesuffix("<br>").strip()
 
             current_defi = ""
             current_term = item
-        if item.startswith("\t"):
+        if item.startswith("\t") or item.startswith(" "):
             items.append(item)
             if item.endswith(".wav"):  # Don't include audio file names
                 continue
-            current_defi += item.removeprefix("\t").replace("~", current_term) + "<br>"
+            current_defi += item.lstrip().replace("~", current_term) + "<br>"
 
     return data
 
