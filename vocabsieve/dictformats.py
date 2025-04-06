@@ -206,7 +206,17 @@ def parseDSL(path) -> dict[str, str]:
 
 def xdxf2text(xdxf_string: str) -> str:
     """Transform an XDXF stardict entry into plain text
-    This largely follows the implementation in sdcv without the color"""
+    This largely follows the implementation in sdcv without the color
+
+    Original copyright notice from sdcv:
+    * Copyright (C) 2005-2006 Evgeniy <dushistov@mail.ru>
+    * This program is free software; you can redistribute it and/or modify
+    * it under the terms of the GNU General Public License as published by
+    * the Free Software Foundation; either version 2 of the License, or
+    * (at your option) any later version.
+
+    Used under GPLv3 terms.
+    """
     # Remove content in <k> tags
     s = re.sub(r"<k>\w+</k>", "", xdxf_string, flags=re.IGNORECASE)
     # Convert <tr> into [ ]
