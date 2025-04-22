@@ -26,6 +26,24 @@ class KindleVocabImporter(GenericImporter):
             self.notes = None
         self.updateHighlightCount()
 
+    def groupBySeparator(self, lines, separator="=========="):
+        blocks = []
+        current_block = []
+        for line in lines:
+            if line.strip() == separator:
+                if current_block:
+                    current_block.append(line)
+                    blocks.append(current_block)
+                    current_block = []
+            else:
+                if len(current_block) == 4:
+                    current_block[3] += "\n" + line
+                else:
+                    current_block.append(line)
+        if current_block:
+            blocks.append(current_block)
+        return blocks
+
     def getNotes(self):
         if self.path is None:
             return []
@@ -38,7 +56,7 @@ class KindleVocabImporter(GenericImporter):
         try:
             with open(clippings_path, encoding="utf-8") as file:
                 clippings_titleauthors, _, _, clippings_words, _ = zip(
-                    *list(grouper(file.read().splitlines(), 5)))  # type: ignore
+                    *self.groupBySeparator(file.read().splitlines()))  # type: ignore
                 clippings_words = [remove_punctuations(str(word)).lower()
                                    for word in clippings_words]  # type: ignore
                 clippings_titles = [remove_author(titleauthor.strip("\ufeff"))
