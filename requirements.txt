@@ -27,4 +27,3 @@ python-lzo
 packaging
 typing_extensions
 loguru
-pynput

@@ -12,11 +12,6 @@ include_files = [
     ('../vocabsieve/reader/static/',
      'lib/vocabsieve/reader/static/')]
 
-PYNPUT_PLATFORM_SPECIFIC_MODULES = {
-    "win32": ["pynput.keyboard._win32", "pynput.mouse._win32"],
-    "darwin": ["pynput.keyboard._darwin", "pynput.mouse._darwin"]
-}
-
 build_exe_options = {
     "includes": [
         "vocabsieve",
@@ -43,9 +38,8 @@ build_exe_options = {
         "lzo",
         "readmdict",
         "packaging",
-        "pynput",
         "waitress"
-    ] + PYNPUT_PLATFORM_SPECIFIC_MODULES.get(sys.platform, []),
+    ],
     "include_files": include_files,
     "zip_include_packages": ["PyQt5"],
     "excludes": ["tkinter"],
