@@ -7,6 +7,15 @@ from ..cached_get import cached_get
 from ..dictformats import kaikki_line_to_textdef
 from ..constants import langcodes
 
+def fmt_result(definitions):
+    "Format the result of dictionary lookup"
+    lines = []
+    for defn in definitions:
+        if defn['pos'] != "":
+            lines.append("<i>" + defn['pos'] + "</i>")
+        lines.extend([str(item[0] + 1) + ". " + item[1]
+                     for item in list(enumerate(defn['meaning']))])
+    return "<br>".join(lines)
 
 class WiktionarySource(DictionarySource):
     def __init__(self, langcode: str, options: SourceOptions) -> None:
@@ -17,22 +26,27 @@ class WiktionarySource(DictionarySource):
         super().__init__("Wiktionary (English)", langcode, options)
 
     def _lookup(self, word: str) -> LookupResult:
-        logger.info(f"Looking up {word} in Wiktionary")
-        language_longname = langcodes[self.langcode]
+        logger.info(f"Looking up {word} in Wiktionary (English), langcode {self.langcode}")
         try:
             res = cached_get(
-                f"https://kaikki.org/dictionary/{language_longname}/meaning/{word[0]}/{word[0:2]}/{word}.jsonl")
+                'https://en.wiktionary.org/api/rest_v1/page/definition/' +
+                word)
         except Exception as e:
             logger.error(f"Failed to get data from Wiktionary: {repr(e)}")
-            return LookupResult(error=repr(e))
+            return LookupResult(error=str(e))
         if res.status_code != 200:
             return LookupResult(error=str(res.text))
-        datalines = res.content.decode('utf-8').splitlines()
-        items: list[str] = []
-        for line in datalines:
-            data = json.loads(line)
-            items.append(kaikki_line_to_textdef(data))
-        if items:
-            return LookupResult(definition="<br>\n".join(items))
-        else:
-            return LookupResult(error="No definitions found")
+        definitions = []
+        data = res.json()
+        if self.langcode not in data.keys():
+            return LookupResult(error="Word not defined in language")
+        data = data[self.langcode]
+        for item in data:
+            meanings = []
+            for defn in item['definitions']:
+                parsed_meaning = BeautifulSoup(defn['definition'], features="lxml")
+                meanings.append(parsed_meaning.text)
+
+            meaning_item = {"pos": item['partOfSpeech'], "meaning": meanings}
+            definitions.append(meaning_item)
+        return LookupResult(definition=fmt_result(definitions))
