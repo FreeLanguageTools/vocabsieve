@@ -21,7 +21,6 @@ from ..models import AnkiSettings, WordActionWeights, KeyAction
 import platform
 import os
 from sentence_splitter import SentenceSplitter, SentenceSplitterException
-from pynput import keyboard
 
 
 # If on macOS, display the modifier key as "Cmd", else display it as "Ctrl".
@@ -55,21 +54,8 @@ class MainWindowBase(QMainWindow):
         self.setupWidgetsV()
 
         # Setup Key monitoring to monitor the shit key
-        if not self.is_wayland:
-            self.monitor = ShiftMonitor()
-            self.monitor.keyEvent.connect(self.shiftMonitorEvent)
-            self.monitor.start_monitoring()
 
         self.shift_pressed: bool = False
-
-    def shiftMonitorEvent(self, action):
-        match action:
-            case KeyAction.pressed:
-                self.shift_pressed = True
-            case KeyAction.released:
-                self.shift_pressed = False
-            case _:
-                self.shift_pressed = False
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if self.is_wayland and event.key() == Qt.Key.Key_Shift:
@@ -254,26 +240,3 @@ class MainWindowBase(QMainWindow):
             threshold=settings.value("tracking/known_threshold", 100, type=int),
             threshold_cognate=settings.value("tracking/known_threshold_cognate", 25, type=int)
         )
-
-
-class ShiftMonitor(QObject):
-    """Monitors the activity of the shift key"""
-    keyEvent = pyqtSignal(KeyAction)
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.listener = keyboard.Listener(on_press=self.on_press, on_release=self.on_release)
-
-    def on_press(self, key):
-        if key == keyboard.Key.shift:
-            self.keyEvent.emit(KeyAction.pressed)
-
-    def on_release(self, key):
-        if key == keyboard.Key.shift:
-            self.keyEvent.emit(KeyAction.released)
-
-    def stop_monitoring(self):
-        self.listener.stop()
-
-    def start_monitoring(self):
-        self.listener.start()

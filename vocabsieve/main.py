@@ -1122,5 +1122,3 @@ def main():
     w.show()
     w.audio_selector.alignDiscardButton()  # fix annoying issue of misalignment
     app.exec()
-    if not w.is_wayland:
-        w.monitor.stop_monitoring()
