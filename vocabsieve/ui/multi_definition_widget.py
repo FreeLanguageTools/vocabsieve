@@ -92,9 +92,11 @@ class MultiDefinitionWidget(SearchableTextEdit):
         buttons_box_widget.scrolled.connect(self.move_)
 
         prev_button = QPushButton("<")
+        prev_button.setFocusPolicy(Qt.NoFocus)
         self.counter = QLabel("0/0")
         self.counter.setAlignment(Qt.AlignCenter)
         next_button = QPushButton(">")
+        next_button.setFocusPolicy(Qt.NoFocus)
         buttons_box_layout.addWidget(prev_button)
         buttons_box_layout.addWidget(next_button)
         buttons_box_layout.addWidget(self.counter)

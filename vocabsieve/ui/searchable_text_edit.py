@@ -10,6 +10,7 @@ class SearchableTextEdit(QTextEdit):
 
     def __init__(self):
         super().__init__()
+        self.setTabChangesFocus(True);
         self.setMouseTracking(True)
         self.word_under_cursor = ""
         self.prev_emitted_word = ""
