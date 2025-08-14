@@ -73,7 +73,7 @@
             cp vocabsieve.png $out/share/pixmaps/
             
             substituteInPlace $out/share/applications/vocabsieve.desktop \
-              --replace "Exec=vocabsieve" "Exec=$out/bin/vocabsieve" \
+              --replace "Exec=vocabsieve" "Exec=$out/bin/vocabsieve"
           '';
 
           preFixup = ''
