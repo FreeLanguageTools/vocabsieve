@@ -284,11 +284,11 @@ def parseKaikki(path, lang) -> dict[str, str]:
 def kaikki_line_to_textdef(row: dict) -> str:
     res = ""
     if row.get("pos"):
-        res += f"<i>{row['pos'].capitalize()}</i>"
-    res += "\n<strong>"
+        res += f"<i>{row['pos'].capitalize()}</i> <br>\n"
+    res += "<strong>"
     if row.get("head_templates"):
-        res += f"{row['head_templates'][-1]['expansion']}"
-    res += "</strong>\n"
+        res += f"{row['head_templates'][-1]['expansion']}".replace("\n","").replace("<br>","")
+    res += "</strong><br>\n"
     if row.get("sounds"):
         for item in row['sounds']:
             if item.get('ipa'):
@@ -300,10 +300,10 @@ def kaikki_line_to_textdef(row: dict) -> str:
         for item in row['senses']:
             if item.get("raw_glosses"):
                 for defi in item['raw_glosses']:
-                    res += "\n" + str(count) + ". " + defi
+                    res += "<br>\n" + str(count) + ". " + defi
                     count += 1
             elif item.get("glosses"):
                 for defi in item['glosses']:
-                    res += "\n" + str(count) + ". " + defi
+                    res += "<br>\n" + str(count) + ". " + defi
                     count += 1
     return res
