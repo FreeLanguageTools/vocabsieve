@@ -28,7 +28,7 @@ class KindleVocabImporter(GenericImporter):
 
     def groupBySeparator(self, lines, separator="=========="):
         blocks = []
-        current_block = []
+        current_block: list[str] = []
         for line in lines:
             if line.strip() == separator:
                 if current_block:

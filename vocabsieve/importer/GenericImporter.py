@@ -244,10 +244,10 @@ class GenericImporter(QDialog):
         logger.info(f"{sum(checks)} out of {len(checks)} notes can be added to Anki, proceeding.")
         # Filter out the notes that can't be added
         notes_data = list(itertools.compress(notes_data, checks))
-
+        logger.info(f"Sending {len(notes_data)} notes to AnkiConnect")
         res = addNotes(settings.value("anki_api"), notes_data)
         # Record last import data
-        if self.methodname != "auto":  # don't save for auto vocab extraction
+        if self.methodname not in ('auto', 'wordlist'):  # don't save for auto vocab extraction
             settings.setValue("last_import_method", self.methodname)
             settings.setValue("last_import_path", self.path)
             settings.setValue(f"last_import_date_{self.methodname}", self.lastDate[:10])

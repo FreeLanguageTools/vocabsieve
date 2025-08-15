@@ -142,10 +142,22 @@ def addNote(server, content, allow_duplicates=False) -> int:
     return int(result)
 
 
-def addNotes(server, content) -> List[int]:
-    result = invoke('addNotes', server, notes=content)
+def addNotes(server, content) -> list[Optional[int]]:
+    # result = invoke('addNotes', server, notes=content)
     # This now throws if not successful
-    return list(result)
+    # return list(result)
+    # workaround: just use addNote in a loop, catch exceptions
+    results: list[Optional[int]] = []
+    for note in content:
+        try:
+            result = addNote(server, note)
+            results.append(result)
+        except Exception as e:
+            logger.error(f"Error adding note: {note}. Exception: {e}")
+            # If we want to continue adding notes even if one fails, we can
+            # just append None or some error code here.
+            results.append(None)
+    return results
 
 
 def canAddNotes(server, content) -> List[int]:
