@@ -89,6 +89,8 @@ def lemmatize(word, language, greedy=False):
             return morph[language].parse(word)[0].normal_form
         if language in simplemma_languages:
             return simplemma.lemmatize(word, lang=language, greedy=greedy)  # pyright: ignore[reportPrivateImportUsage]
+        if language in ['bs', 'hr', 'sr']:
+            return simplemma.lemmatize(word, lang='hbs', greedy=greedy)  # pyright: ignore[reportPrivateImportUsage]
         else:
             return word
     except ValueError as e:  # pylint: disable=redefined-outer-name
