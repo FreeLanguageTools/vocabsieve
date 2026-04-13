@@ -173,6 +173,10 @@ class GenericImporter(QDialog):
             word = remove_punctuations(note.lookup_term)
             if settings.value("bold_word", True, type=bool):
                 sentence = note.sentence.replace(word, f"<strong>{word}</strong>")
+
+                if note.highlight and (note.highlight != note.lookup_term):
+                    highlight = remove_punctuations(note.highlight)
+                    sentence = note.sentence.replace(highlight, f"<strong>{highlight}</strong>")
             else:
                 sentence = note.sentence
 

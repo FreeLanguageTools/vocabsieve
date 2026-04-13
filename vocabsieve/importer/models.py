@@ -5,6 +5,7 @@ from dataclasses import dataclass
 class ReadingNote:
     """Represents a highlight/note/whatever in an ereader vocab builder"""
     lookup_term: str
+    highlight: str
     sentence: str
     date: str
     book_name: str

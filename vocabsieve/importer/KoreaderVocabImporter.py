@@ -63,16 +63,22 @@ class KoreaderVocabImporter(GenericImporter):
                 bookmap[bookid] = bookname
 
         reading_notes = []
-        for timestamp, word, title_id, prev_context, next_context in cur.execute(
-                "SELECT create_time, word, title_id, prev_context, next_context FROM vocabulary"):
+        for timestamp, word, title_id, prev_context, next_context, highlight in cur.execute(
+                "SELECT create_time, word, title_id, prev_context, next_context, highlight FROM vocabulary"):
             if title_id in bookmap:
+                # highlight is only populated if the word differs from the
+                # lookup term, e.g. if the language changes noun endings based
+                # on case.
+                if not highlight:
+                    highlight = word
+
                 if prev_context and next_context:
-                    ctx = prev_context.strip() + f" {word} " + next_context.strip()  # ensure space before and after
+                    ctx = prev_context.strip() + f" {highlight} " + next_context.strip()  # ensure space before and after
                 else:
                     continue
                 sentence = ""
                 for sentence_ in self.splitter.split(ctx):
-                    if word in sentence_:
+                    if highlight in sentence_:
                         sentence = sentence_
                 if sentence:
                     count += 1
@@ -80,6 +86,7 @@ class KoreaderVocabImporter(GenericImporter):
                     reading_notes.append(
                         ReadingNote(
                             lookup_term=word,
+                            highlight=highlight,
                             sentence=sentence,
                             book_name=bookmap[title_id],
                             date=str(dt.fromtimestamp(timestamp).astimezone())[:19]
